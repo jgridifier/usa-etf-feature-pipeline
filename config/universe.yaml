@@ -1,0 +1,60 @@
+# Universe gate configuration — Milestone 1
+universe_csv: data/raw/usa_universe_categorized.csv
+ticker_column: Ticker
+category_column: Category
+source_section_column: Source_Section
+
+# Explicit Appendix-3 / deny list (hard fail even if somehow present in CSV)
+appendix3_deny:
+  - VUG
+  - IWF
+  - IVW
+  - IUSG
+  - DIA
+  - XLF
+  - XLU
+  - IYR
+  - UPRO
+  - AAXJ
+
+# Off-list semis / leverage proxies — never inject (not on USA pre-approved CSV)
+off_list_hard_deny:
+  - SMH
+  - SOXX
+  - SOXL
+  - PSI
+
+# Thin-history names to flag in scores output
+thin_history_tickers:
+  - QQQM
+  - LOUP
+  - GTEK
+  - GINN
+
+# Illustrative growth-mode building blocks (subset of eligible set)
+growth_building_blocks:
+  - QQQ
+  - QQQM
+  - IJK
+  - IWP
+  - IJT
+  - IWO
+  - VIOG
+  - XSD
+  - XBI
+  - LOUP
+  - GTEK
+  - GINN
+  - QUAL
+  - USMV
+  - VLUE
+  - GSEW
+  - VXF
+  - IWM
+  - IJR
+  - VOO
+  - VTI
+  - VEA
+  - EEM
+  - GVIP
+  - BBC

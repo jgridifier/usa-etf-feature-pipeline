@@ -1,0 +1,22 @@
+# Portfolio constraints — stub for Milestone 1 (optimizer in later milestone)
+mode: growth
+fully_invested: true
+long_only: true
+equity_sleeve_min: 0.90
+single_name_cap_core: 0.40
+single_name_cap_thematic: 0.15
+thematic_cap: 0.25
+min_weight_if_selected: 0.05
+cardinality_min: 4
+cardinality_max: 8
+thematic_tickers:
+  - XSD
+  - XBI
+  - LOUP
+  - GTEK
+  - GINN
+  - BBC
+thematic_rotate_eligible:
+  - XSD
+rotate_thematic_default: false
+hysteresis_months: 2
