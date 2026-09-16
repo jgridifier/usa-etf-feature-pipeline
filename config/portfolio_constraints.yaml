@@ -1,4 +1,4 @@
-# Portfolio constraints — stub for Milestone 1 (optimizer in later milestone)
+# Portfolio constraints — Milestone 2 (rotation + growth caps)
 mode: growth
 fully_invested: true
 long_only: true
@@ -9,6 +9,8 @@ thematic_cap: 0.25
 min_weight_if_selected: 0.05
 cardinality_min: 4
 cardinality_max: 8
+
+# Thematic names for sleeve / cap accounting
 thematic_tickers:
   - XSD
   - XBI
@@ -16,7 +18,24 @@ thematic_tickers:
   - GTEK
   - GINN
   - BBC
+
+# Eligible for --rotate-thematic (must also pass universe gate). Default: XSD only.
 thematic_rotate_eligible:
   - XSD
+
+# Rotation defaults (CLI --rotate-thematic is OFF unless flagged)
 rotate_thematic_default: false
-hysteresis_months: 2
+rotate_signal: mom12_1_rel_voo   # primary; ScoreSimple = mom + vol gate
+rotate_on_weight: 0.10          # weight when thematic ON (≤ single_name_cap_thematic)
+hysteresis_months: 2            # stay ON until signal fails this many consecutive MEs
+vol_gate_quantile: 0.90         # expanding Q through t-1 only
+vol_gate_min_periods: 21
+
+# Core when all thematic OFF (Option A spirit)
+core_when_thematic_off:
+  VOO: 0.70
+  QQQM: 0.20
+  IJR: 0.10
+
+# Benchmark for relative Mom / excess
+rotate_benchmark: VOO

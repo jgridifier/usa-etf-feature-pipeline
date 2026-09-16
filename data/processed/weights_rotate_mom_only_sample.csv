@@ -1,0 +1,5 @@
+ticker,weight,role,rotate_on,thesis_tag,mode
+VOO,0.63,core,False,core_option_a,growth_rotate
+QQQM,0.18,core,False,core_option_a,growth_rotate
+IJR,0.09,core,False,core_option_a,growth_rotate
+XSD,0.1,thematic,True,rotate_thematic,growth_rotate
