@@ -7,4 +7,8 @@ venv/
 dist/
 build/
 .DS_Store
+# Full price history lives on the research box; keep only the slim sample in git
 data/raw/growth_alpha_adj_close.csv
+.pytest_cache/
+*.egg-info/
+src/*.egg-info/

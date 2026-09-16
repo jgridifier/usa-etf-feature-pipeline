@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "usa-etf-features"
-version = "0.1.0"
+version = "0.2.0"
 description = "Transparent USA pre-approved ETF feature scorer (research tooling; not investment advice)"
 readme = "README.md"
 requires-python = ">=3.10"
@@ -17,7 +17,8 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
-dev = ["pytest>=7.0"]
+dev = ["pytest>=7.0", "openpyxl>=3.1"]
+excel = ["openpyxl>=3.1"]
 
 [project.scripts]
 usa-etf-features = "usa_etf_features.cli:main"
