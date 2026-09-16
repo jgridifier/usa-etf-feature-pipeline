@@ -7,6 +7,7 @@ import pandas as pd
 import pytest
 
 from usa_etf_features.portfolio import (
+    build_optimized_portfolio,
     build_portfolio,
     build_static_from_scores,
     enforce_thematic_caps,
@@ -77,3 +78,53 @@ def test_smh_in_eligible_raises():
     }
     with pytest.raises(UniverseGateError):
         build_portfolio(prices=px, rotate_thematic=True, use_vol_gate=False, constraints=cfg)
+
+
+def test_p2_thematic_can_go_to_zero_when_gate_off():
+    idx = pd.bdate_range("2018-01-02", periods=1200)
+    trend = np.linspace(0, 1, len(idx))
+    px = pd.DataFrame(
+        {
+            "VOO": 100 * (1 + 0.45 * trend),
+            "QQQM": 100 * (1 + 0.55 * trend),
+            "IJR": 100 * (1 + 0.30 * trend),
+            "QUAL": 100 * (1 + 0.40 * trend),
+            # Persistent decline keeps ScoreSimple OFF despite a high S_i.
+            "XSD": 100 * (1 - 0.35 * trend),
+        },
+        index=idx,
+    )
+    scores = pd.DataFrame(
+        {
+            "ticker": ["VOO", "QQQM", "IJR", "QUAL", "XSD"],
+            "S_i": [0.1, 0.2, 0.0, 0.3, 5.0],
+        }
+    )
+    cfg = {
+        "core_when_thematic_off": {"VOO": 0.70, "QQQM": 0.20, "IJR": 0.10},
+        "thematic_tickers": ["XSD"],
+        "thematic_cap": 0.25,
+        "single_name_cap_thematic": 0.15,
+        "single_name_cap_core": 0.40,
+    }
+    w = build_optimized_portfolio(scores, px, optimizer="P2", constraints=cfg)
+    xsd = w.loc[w["ticker"].eq("XSD")].iloc[0]
+    assert xsd["weight"] == pytest.approx(0.0)
+    assert bool(xsd["rotate_on"]) is False
+
+
+def test_optimizer_smh_hard_fails():
+    idx = pd.bdate_range("2018-01-02", periods=500)
+    rng = np.random.default_rng(1)
+    px = pd.DataFrame(
+        {
+            "VOO": 100 * np.cumprod(1 + rng.normal(0.0003, 0.01, len(idx))),
+            "QQQM": 100 * np.cumprod(1 + rng.normal(0.0004, 0.011, len(idx))),
+            "IJR": 100 * np.cumprod(1 + rng.normal(0.0002, 0.012, len(idx))),
+            "SMH": 100 * np.cumprod(1 + rng.normal(0.0005, 0.02, len(idx))),
+        },
+        index=idx,
+    )
+    scores = pd.DataFrame({"ticker": ["VOO", "QQQM", "IJR", "SMH"], "S_i": [0.1, 0.2, 0.0, 1.0]})
+    with pytest.raises(UniverseGateError):
+        build_optimized_portfolio(scores, px, optimizer="P1")
