@@ -14,8 +14,14 @@ import numpy as np
 import pandas as pd
 
 from .features import compute_raw_features
+from .portfolio import (
+    TURNOVER_COST_BPS,
+    build_optimized_portfolio,
+    optimizer_strategy_registry,
+)
 from .rotation import compute_rotation_signals, month_end_trading_dates
 from .scores import composite_scores, load_feature_weights
+from .universe import assert_eligible, load_universe_config, load_universe_csv
 
 
 def next_month_excess(
@@ -201,5 +207,117 @@ def write_ic_csv(ic_df: pd.DataFrame, path: str | Path) -> Path:
     out = ic_df.copy()
     if "date" in out.columns:
         out["date"] = pd.to_datetime(out["date"]).dt.strftime("%Y-%m-%d")
+    out.to_csv(path, index=False)
+    return path
+
+
+def walkforward_optimization_tables(
+    prices: pd.DataFrame,
+    categories: pd.Series | dict[str, str],
+    *,
+    tickers: list[str],
+    universe_csv: str | Path | None = None,
+    benchmark: str = "VOO",
+    weights_cfg: dict | None = None,
+    constraints: dict | None = None,
+    optimizer: str = "P2",
+    window_months: int = 36,
+    min_history_months: int = 36,
+    top_n: int = 6,
+) -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
+    """
+    Walk-forward optimizer artifacts.
+
+    Decision at t computes features/scores/weights using data <= t only.
+    Evaluation return is the next month (t, t+1], with 5 bps one-way turnover cost.
+    """
+    cols = list(dict.fromkeys([*tickers, benchmark]))
+    px = prices[[c for c in cols if c in prices.columns]].copy()
+    if universe_csv is not None:
+        uni_df = load_universe_csv(universe_csv)
+        assert_eligible(list(px.columns), uni_df, load_universe_config())
+    me_dates = month_end_trading_dates(px)
+    me_px = px.loc[me_dates]
+    me_ret = me_px.pct_change()
+    cfg = weights_cfg or load_feature_weights()
+    cat = pd.Series(categories) if isinstance(categories, dict) else categories
+
+    weight_rows: list[dict] = []
+    ic_rows: list[dict] = []
+    prev_w: pd.Series | None = None
+    family = optimizer.upper()
+    strategy = (
+        f"P1_MaxSharpe_roll{window_months}_t25"
+        if family == "P1"
+        else f"P2_CoreRotate_roll{window_months}_t25"
+        if family == "P2"
+        else f"P3_RiskParity_top{top_n}_roll{window_months}"
+    )
+
+    for i, d in enumerate(me_dates):
+        if i < min_history_months or i + 1 >= len(me_dates):
+            continue
+        hist_px = px.loc[:d]
+        live = [t for t in tickers if t in hist_px.columns and hist_px[t].dropna().shape[0] > 260]
+        if len(live) < 3 or benchmark not in hist_px.columns:
+            continue
+        raw = compute_raw_features(hist_px[list(dict.fromkeys([*live, benchmark]))], benchmark=benchmark)
+        raw = raw.loc[[t for t in live if t in raw.index]]
+        scored = composite_scores(raw, cat.reindex(raw.index).fillna("Unknown"), cfg)
+        labels = next_month_excess(me_ret, d, list(scored.index), benchmark=benchmark)
+        ic = spearman_ic(scored["S_i"], labels)
+        n_ic = int(pd.concat([scored["S_i"], labels], axis=1).dropna().shape[0])
+        nxt = me_dates[i + 1]
+        ic_rows.append({"date": d, "next_date": nxt, "IC": ic, "n": n_ic})
+
+        try:
+            weights = build_optimized_portfolio(
+                scored,
+                hist_px,
+                optimizer=family,
+                constraints=constraints,
+                asof=d,
+                universe_csv=universe_csv,
+                window_months=window_months,
+                benchmark=benchmark,
+                top_n=top_n,
+                w_prev=prev_w,
+            )
+        except Exception:
+            continue
+        w = weights.set_index("ticker")["weight"].astype(float)
+        tick_cols = [t for t in w.index if t in me_ret.columns]
+        gross = float((w.reindex(tick_cols).fillna(0.0) * me_ret.loc[nxt, tick_cols]).sum())
+        turnover = 0.5 * float((w.subtract(prev_w, fill_value=0.0).abs()).sum()) if prev_w is not None else 0.5 * float(w.abs().sum())
+        cost = turnover * (TURNOVER_COST_BPS / 10000.0)
+        net = gross - cost
+        row = {
+            "date": d,
+            "eval_date": nxt,
+            "strategy": strategy,
+            "gross_return": gross,
+            "turnover": turnover,
+            "turnover_cost_bps_one_way": TURNOVER_COST_BPS,
+            "cost_return": cost,
+            "net_return": net,
+        }
+        for t, val in w.items():
+            row[f"w_{t}"] = float(val)
+        for t, val in scored["S_i"].items():
+            row[f"S_{t}"] = float(val)
+        weight_rows.append(row)
+        prev_w = w
+
+    weights_df = pd.DataFrame(weight_rows)
+    ic_df = pd.DataFrame(ic_rows)
+    registry = optimizer_strategy_registry()
+    registry = registry[registry["family"].eq(family) | registry["strategy"].str.contains(family, regex=False)]
+    return weights_df, ic_df, registry.reset_index(drop=True)
+
+
+def write_strategy_registry(path: str | Path, registry: pd.DataFrame | None = None) -> Path:
+    path = Path(path)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    out = registry if registry is not None else optimizer_strategy_registry()
     out.to_csv(path, index=False)
     return path

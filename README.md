@@ -10,7 +10,7 @@ Transparent, unit-tested feature scorer and **optional thematic rotation sleeve*
 |-----------|----------|
 | **M1** | Universe gate, transparent features, `score-universe` CLI |
 | **M2** | `--rotate-thematic` (ScoreSimple Mom+vol vs VOO), caps, walk-forward IC |
-| M3 | Optimizer study — **out of scope** for this branch |
+| **M3** | `--optimize` / `--walkforward-optimize` research optimizer artifacts |
 
 ## Install
 
@@ -86,6 +86,56 @@ w_i^{\mathrm{core}}=\mathrm{CORE}_i\cdot(1-w),\quad i\in\{\mathrm{VOO},\mathrm{Q
 
 Research backing: `xsd_rotation_memo.md` (2026-09-16 ET) on the investments box.
 
+### Build portfolio — optimized (M3)
+
+```bash
+python -m usa_etf_features.cli build-portfolio \
+  --scores data/processed/scores_YYYYMMDD.csv \
+  --prices /path/to/growth_alpha_adj_close.csv \
+  --universe data/raw/usa_universe_categorized.csv \
+  --optimize \
+  --optimizer P2 \
+  --window-months 36 \
+  --out data/processed/weights_optimize_YYYYMMDD.csv \
+  --registry-out data/processed/wf_strategy_registry_YYYYMMDD.csv
+```
+
+| Flag | Meaning |
+|------|---------|
+| `--optimize` | Build a current M3 optimized research portfolio |
+| `--optimizer {P1,P2,P3}` | `P1` constrained MV, `P2` hierarchical core/satellite, `P3` risk-parity top-N |
+| `--window-months N` | Monthly estimation window length (default **36**) |
+| `--top-n N` | Top-N by `S_i` for `P3` (default **6**) |
+| `--registry-out PATH` | Strategy registry CSV path |
+
+M3 primary expected returns use `0.5 * James-Stein historical excess mean + 0.5 * score→mu map`; covariance uses Ledoit-Wolf shrinkage. P2 keeps core weight at least 60% and applies ScoreSimple gates to thematic satellites, so thematics such as `XSD` can be written at weight `0.0`.
+
+### Walk-forward optimize (M3)
+
+```bash
+python -m usa_etf_features.cli build-portfolio \
+  --prices /path/to/growth_alpha_adj_close.csv \
+  --universe data/raw/usa_universe_categorized.csv \
+  --walkforward-optimize \
+  --optimizer P2 \
+  --window-months 36 \
+  --min-history-months 36 \
+  --out data/processed/wf_optimization_monthly_weights_YYYYMMDD.csv \
+  --ic-out data/processed/wf_optimization_ic_by_date_YYYYMMDD.csv \
+  --registry-out data/processed/wf_strategy_registry_YYYYMMDD.csv
+```
+
+| Flag | Meaning |
+|------|---------|
+| `--walkforward-optimize` | Write walk-forward optimized monthly weights plus IC and registry |
+| `--ic-out PATH` | Walk-forward IC CSV path |
+| `--min-history-months N` | Earliest rebalance history requirement (default **36**) |
+| `--tickers A,B,C` | Optional ticker filter for walk-forward optimization |
+| `--benchmark TICKER` | Benchmark for excess labels / expected return blend (default **VOO**) |
+| `--weights PATH` | Feature weights YAML for walk-forward scoring |
+
+Walk-forward decisions at month-end `t` use data `<= t`; evaluation labels are next-month returns on `(t,t+1]`, forbidding same-month label leakage. Turnover-cost documentation follows the reference study: **5 bps one-way** on monthly turnover, recorded in the strategy registry and monthly weights artifact.
+
 ### Walk-forward IC (M2)
 
 ```bash
@@ -119,7 +169,7 @@ python -m usa_etf_features.cli walkforward-ic \
 1. Load `Ticker` from universe CSV → \(U_{\mathrm{approved}}\).
 2. Deny Appendix-3 list from `config/universe.yaml`.
 3. Hard deny off-list semis: **SMH, SOXX, SOXL, PSI**.
-4. Eligible \(E = U_{\mathrm{approved}} \setminus \mathrm{deny}\). Any \(t \notin E\) **hard-fails**.
+4. Eligible \(E = U_{\mathrm{approved}} \setminus \mathrm{deny}\). Any \(t \notin E\) **hard-fails**. Semiconductor exposure is XSD-only under rotation/optimization paths.
 
 ## Math appendix
 
