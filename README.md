@@ -11,6 +11,7 @@ Transparent, unit-tested feature scorer and **optional thematic rotation sleeve*
 | **M1** | Universe gate, transparent features, `score-universe` CLI |
 | **M2** | `--rotate-thematic` (ScoreSimple Mom+vol vs VOO), caps, walk-forward IC |
 | **M3** | `--optimize` / `--walkforward-optimize` research optimizer artifacts |
+| **Allocation alpha** | `walkforward-vol-target` scale-down-only volatility-managed Option A research |
 
 ## Install
 
@@ -151,6 +152,26 @@ python -m usa_etf_features.cli walkforward-ic \
 - Labels = **next-month** excess vs VOO on \((T_{k-1}, T_k]\) — **no same-month leakage**.
 - IC = cross-sectional Spearman of \(S_i\) vs next-month excess.
 
+### Walk-forward vol target — allocation alpha
+
+```bash
+python -m usa_etf_features.cli walkforward-vol-target \
+  --prices /workspace/investments/growth_alpha_adj_close.csv \
+  --universe /workspace/investments/usa_universe_categorized.csv \
+  --core option_a \
+  --lookback 63 \
+  --f-max 1.0 \
+  --cash BIL \
+  --cost-bps 5 \
+  --out data/processed/vol_target_oos_summary.csv \
+  --weights data/processed/vol_target_monthly_weights.csv \
+  --registry data/processed/vol_target_trial_registry.csv
+```
+
+This command keeps selection fixed at Option A (VOO 70 / QQQM 20 / IJR 10), estimates realized portfolio volatility at each month-end with data `<= t`, applies the resulting scale factor to month `t+1`, and parks residual weight in eligible cash (`BIL`; fallbacks remain subject to the universe gate). If the growth-panel price file does not include BIL, the engine records `cash_price_source=zero_return_proxy_rf0`, matching the rf=0 research parity convention.
+
+Outputs include `vol_target_oos_summary.csv`, `vol_target_monthly_weights.csv`, `vol_target_oos_returns.csv`, `vol_target_trial_registry.csv`, and `vol_target_regime_table.csv`.
+
 ## Sample artifacts (committed)
 
 | Path | Contents |
@@ -234,6 +255,42 @@ Weights live in `config/feature_weights.yaml`.
 ### Purged / embargo sketch
 
 For overlapping label horizons, purge ± embargo around test folds so label windows do not leak into training (Lopez de Prado-style). M2 IC uses non-overlapping next-month labels after each decision ME.
+
+### Allocation alpha: volatility-managed Option A
+
+Static policy weights:
+
+\[
+w^A=(w_{\mathrm{VOO}},w_{\mathrm{QQQM}},w_{\mathrm{IJR}})=(0.70,0.20,0.10)
+\]
+
+Daily core return:
+
+\[
+r^A_\tau=\sum_i w_i^A r_{i,\tau}
+\]
+
+At month-end \(t\), estimate realized portfolio volatility with data through \(t\) only:
+
+\[
+\hat\sigma_t=\sqrt{252}\cdot\mathrm{std}(\{r^A_\tau\}_{\tau=t-L+1}^{t})
+\]
+
+Primary scale-down-only rule:
+
+\[
+f_t=\mathrm{clip}\left(\frac{\sigma^*}{\hat\sigma_t}, f_{\min}, f_{\max}\right),
+\quad f_{\min}=0.25,\ f_{\max}=1.0
+\]
+
+Default \(\sigma^*\) is expanding Option A annualized volatility through \(t-1\); fixed grid values such as 0.12 or 0.15 are registered in the trial registry when swept. Portfolio weights are:
+
+\[
+w_{i,t}=f_t w_i^A,\quad
+w_{\mathrm{BIL},t}=1-f_t
+\]
+
+Weights decided at \(t\) earn next-month returns on \((t,t+1]\). Monthly cost is `cost_bps_one_way * 0.5 * sum(abs(delta weights)) / 10000`. The benchmark is static Option A with rf=0 Sharpe parity. Internal method references: `/workspace/investments/allocation_alpha_method_memo.md` and teaching HTML `/workspace/investments/methods/allocation_alpha_vol_target.html`.
 
 ## Layout
 

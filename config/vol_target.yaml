@@ -1,0 +1,11 @@
+vol_target:
+  lookbacks: [21, 63, 252]
+  f_min: 0.25
+  f_max: 1.0
+  sigma_star: expanding_annvol
+  cash_ticker: BIL
+  cash_fallbacks: [SGOV, GBIL, SHV]
+  apply_to: [option_a]
+  cost_bps_one_way: 5
+  bootstrap_block_months: 3
+  bootstrap_samples: 1000

@@ -1,4 +1,4 @@
-"""CLI: score-universe, build-portfolio, walkforward-ic."""
+"""CLI: score-universe, build-portfolio, walkforward-ic, walkforward-vol-target."""
 
 from __future__ import annotations
 
@@ -22,6 +22,11 @@ from .universe import (
     load_universe_config,
     load_universe_csv,
     thin_history_set,
+)
+from .vol_target import (
+    load_vol_target_config,
+    make_trials,
+    run_vol_target_grid,
 )
 from .walkforward import (
     rotation_on_off_next_month_table,
@@ -277,6 +282,82 @@ def cmd_walkforward_ic(args: argparse.Namespace) -> int:
     return 0
 
 
+def _parse_csv_list(value: str | None, *, cast=str) -> list:
+    if value is None:
+        return []
+    return [cast(x.strip()) for x in str(value).split(",") if x.strip()]
+
+
+def _write_csv(df: pd.DataFrame, path: str | Path) -> Path:
+    out = Path(path)
+    out.parent.mkdir(parents=True, exist_ok=True)
+    tmp = df.copy()
+    for col in tmp.columns:
+        if pd.api.types.is_datetime64_any_dtype(tmp[col]):
+            tmp[col] = pd.to_datetime(tmp[col]).dt.strftime("%Y-%m-%d")
+    tmp.to_csv(out, index=False)
+    return out
+
+
+def cmd_walkforward_vol_target(args: argparse.Namespace) -> int:
+    prices_path = Path(args.prices)
+    universe_path = Path(args.universe)
+    out_path = Path(args.out)
+    weights_path = Path(args.weights)
+    registry_path = Path(args.registry)
+    returns_path = Path(args.returns) if args.returns else out_path.with_name("vol_target_oos_returns.csv")
+    regime_path = Path(args.regime) if args.regime else out_path.with_name("vol_target_regime_table.csv")
+
+    cfg_path = Path(args.config) if args.config else _repo_root() / "config" / "vol_target.yaml"
+    vt_cfg = load_vol_target_config(cfg_path if cfg_path.exists() else None).get("vol_target", {})
+    uni_cfg_path = Path(args.universe_config) if args.universe_config else _repo_root() / "config" / "universe.yaml"
+    uni_cfg = load_universe_config(uni_cfg_path if uni_cfg_path.exists() else None)
+
+    prices = load_adj_close_csv(prices_path)
+    if args.grid:
+        cores = _parse_csv_list(args.cores or ",".join(vt_cfg.get("apply_to", ["option_a"])), cast=str)
+        lookbacks = _parse_csv_list(args.lookbacks or ",".join(map(str, vt_cfg.get("lookbacks", [21, 63, 252]))), cast=int)
+        sigma_stars = _parse_csv_list(args.sigma_stars or "expanding,0.12,0.15", cast=str)
+    else:
+        cores = [args.core]
+        lookbacks = [int(args.lookback)]
+        sigma_stars = [args.sigma_star]
+
+    sigma_stars = ["expanding_annvol" if str(s).lower() in {"expanding", "expanding_annvol"} else s for s in sigma_stars]
+    trials = make_trials(
+        cores=[c.lower() for c in cores],
+        lookbacks=lookbacks,
+        sigma_stars=sigma_stars,
+        f_min=float(args.f_min if args.f_min is not None else vt_cfg.get("f_min", 0.25)),
+        f_max=float(args.f_max if args.f_max is not None else vt_cfg.get("f_max", 1.0)),
+        cash_ticker=str(args.cash or vt_cfg.get("cash_ticker", "BIL")).upper(),
+        cost_bps_one_way=float(args.cost_bps if args.cost_bps is not None else vt_cfg.get("cost_bps_one_way", 5)),
+    )
+    summary, weights, returns, registry, regimes = run_vol_target_grid(
+        prices,
+        trials,
+        universe_csv=universe_path,
+        universe_config=uni_cfg,
+        bootstrap_samples=int(args.bootstrap_samples if args.bootstrap_samples is not None else vt_cfg.get("bootstrap_samples", 1000)),
+        bootstrap_block_months=int(vt_cfg.get("bootstrap_block_months", 3)),
+    )
+    if summary.empty:
+        print("error: no vol-target OOS rows produced; check common price history", file=sys.stderr)
+        return 1
+
+    _write_csv(summary, out_path)
+    _write_csv(weights, weights_path)
+    _write_csv(returns, returns_path)
+    _write_csv(registry, registry_path)
+    _write_csv(regimes, regime_path)
+    print(f"wrote vol-target summary → {out_path}")
+    print(f"wrote monthly weights → {weights_path}")
+    print(f"wrote OOS returns → {returns_path}")
+    print(f"wrote trial registry → {registry_path}")
+    print(f"wrote regime table → {regime_path}")
+    return 0
+
+
 def build_parser() -> argparse.ArgumentParser:
     p = argparse.ArgumentParser(
         prog="usa_etf_features",
@@ -355,6 +436,30 @@ def build_parser() -> argparse.ArgumentParser:
     w.add_argument("--universe-config", default=None)
     w.add_argument("--weights", default=None)
     w.set_defaults(func=cmd_walkforward_ic)
+
+    vt = sub.add_parser("walkforward-vol-target", help="Walk-forward vol-target Option A vs static core")
+    vt.add_argument("--prices", required=True, help="Wide adj-close CSV (Date + tickers)")
+    vt.add_argument("--universe", required=True, help="Path to usa_universe_categorized.csv")
+    vt.add_argument("--core", default="option_a", choices=["option_a", "g1"])
+    vt.add_argument("--lookback", type=int, default=63)
+    vt.add_argument("--f-min", type=float, default=None)
+    vt.add_argument("--f-max", type=float, default=1.0)
+    vt.add_argument("--sigma-star", default="expanding_annvol")
+    vt.add_argument("--cash", default="BIL")
+    vt.add_argument("--cost-bps", type=float, default=5.0)
+    vt.add_argument("--out", required=True, help="vol_target_oos_summary.csv")
+    vt.add_argument("--weights", required=True, help="vol_target_monthly_weights.csv")
+    vt.add_argument("--registry", required=True, help="vol_target_trial_registry.csv")
+    vt.add_argument("--returns", default=None, help="Optional vol_target_oos_returns.csv path")
+    vt.add_argument("--regime", default=None, help="Optional vol_target_regime_table.csv path")
+    vt.add_argument("--config", default=None, help="Vol-target YAML config")
+    vt.add_argument("--universe-config", default=None)
+    vt.add_argument("--grid", action="store_true", default=False, help="Run robustness grid")
+    vt.add_argument("--cores", default=None, help="Comma-separated cores for --grid, e.g. option_a,g1")
+    vt.add_argument("--lookbacks", default=None, help="Comma-separated lookbacks for --grid")
+    vt.add_argument("--sigma-stars", default=None, help="Comma-separated sigma targets for --grid")
+    vt.add_argument("--bootstrap-samples", type=int, default=None)
+    vt.set_defaults(func=cmd_walkforward_vol_target)
 
     return p
 
