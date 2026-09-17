@@ -194,11 +194,13 @@ python -m usa_etf_features.cli run-strategies \
 
 The registry runner writes `suggested_weights.csv`, `strategy_diagnostics.csv`, `strategy_comparison.csv`, `strategy_registry_used.csv`, and `strategy_comparison.xlsx`. Every artifact carries the research-only disclaimer. The v1 registry is in `config/strategies.yaml` and includes `static_option_a`, `vol_target_option_a`, `score_rotate_xsd`, and `m3_p2_core_rotate`.
 
+`run-strategies --walkforward` keeps `suggested_weights.csv` as the latest available decision book. The comparison table is built from each strategy's generated out-of-sample monthly return path where signals/weights use data through the decision date and the evaluated return is the next month; the flag also stamps `strategy_diagnostics.csv` with `walkforward=True`.
+
 The full growth price panel is on the investments box at `/workspace/investments/growth_alpha_adj_close.csv`. The committed sample at `data/raw/growth_alpha_adj_close_sample.csv` includes `BIL`, `SGOV`, `GBIL`, and `SHV`; when BIL is present, vol target records `cash_price_source=prices` instead of using the zero-return proxy.
 
 ### Add a Strategy
 
-1. Add a new entry to `config/strategies.yaml` with `id`, `display_name`, `method_citation`, `entrypoint`, `default_params`, and `enabled`.
+1. Add a new entry to `config/strategies.yaml` with `id`, `display_name`, stable `method_citation_id`, human-readable `method_citation`, `entrypoint`, `default_params`, and `enabled`.
 2. Point `entrypoint` at an existing runner path in `usa_etf_features.strategy_registry` or add a small adapter there that calls the existing math module.
 3. Keep universe validation unchanged: only approved tickers, Appendix 3 deny, and hard-deny semis such as `SMH` / `SOXX` must fail.
 4. Add a focused test proving the registry loads the entry, disabled entries skip, and emitted weights sum to 1.

@@ -52,6 +52,7 @@ M3_P2_ENTRYPOINT = "usa_etf_features.strategy_registry:m3_p2_core_rotate"
 class StrategySpec:
     id: str
     display_name: str
+    method_citation_id: str
     method_citation: str
     entrypoint: str
     default_params: dict[str, Any]
@@ -74,6 +75,7 @@ def load_strategy_registry(path: str | Path) -> list[StrategySpec]:
             StrategySpec(
                 id=str(item["id"]),
                 display_name=str(item.get("display_name", item["id"])),
+                method_citation_id=str(item.get("method_citation_id", "")),
                 method_citation=str(item.get("method_citation", "")),
                 entrypoint=str(item["entrypoint"]),
                 default_params=dict(item.get("default_params") or {}),
@@ -108,6 +110,7 @@ def registry_used_frame(specs: list[StrategySpec]) -> pd.DataFrame:
             {
                 "strategy_id": s.id,
                 "display_name": s.display_name,
+                "method_citation_id": s.method_citation_id,
                 "method_citation": s.method_citation,
                 "entrypoint": s.entrypoint,
                 "enabled": s.enabled,
@@ -246,7 +249,16 @@ def _rotate_returns(
             continue
         turnover = 0.5 * float(w.subtract(prev_w, fill_value=0.0).abs().sum()) if prev_w is not None else 0.5
         ret = float((w.reindex(cols).fillna(0.0) * me_ret.loc[nxt, cols]).sum())
-        rows.append({"date": nxt, "decision_date": d, "strategy_id": spec.id, "return": ret, "turnover": turnover})
+        rows.append(
+            {
+                "date": nxt,
+                "decision_date": d,
+                "feature_end": d,
+                "strategy_id": spec.id,
+                "return": ret,
+                "turnover": turnover,
+            }
+        )
         prev_w = w
     return pd.DataFrame(rows)
 
@@ -283,6 +295,7 @@ def _m3_returns(
         {
             "date": pd.to_datetime(weights_df["eval_date"]),
             "decision_date": pd.to_datetime(weights_df["date"]),
+            "feature_end": pd.to_datetime(weights_df["date"]),
             "strategy_id": spec.id,
             "return": weights_df["net_return"].astype(float),
             "turnover": weights_df["turnover"].astype(float),
@@ -331,7 +344,9 @@ def _vol_target_result(
     diag["strategy_id"] = spec.id
     diag["research_disclaimer"] = RESEARCH_DISCLAIMER
     ret = returns.rename(columns={"r_vt": "return", "decision_date": "decision_date"})
-    ret = ret.assign(strategy_id=spec.id)[["date", "decision_date", "strategy_id", "return", "turnover"]]
+    ret = ret.assign(strategy_id=spec.id, feature_end=lambda x: x["decision_date"])[
+        ["date", "decision_date", "feature_end", "strategy_id", "return", "turnover"]
+    ]
     return StrategyResult(weights=weights, diagnostics=diag, returns=ret)
 
 
@@ -537,6 +552,7 @@ def run_strategy_registry(
         "strategy_diagnostics": diagnostics,
         "strategy_comparison": comparison,
         "strategy_registry_used": registry_used,
+        "strategy_returns": returns,
     }
 
 

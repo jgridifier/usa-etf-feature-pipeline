@@ -30,7 +30,7 @@ def _universe(path) -> None:
         {
             "Ticker": ["VOO", "QQQM", "IJR", "XSD", "BIL"],
             "Source_Section": ["APPENDIX 2"] * 5,
-            "Category": ["Core", "Core", "Core", "Thematic", "Cash"],
+            "Category": ["Core", "Core", "Core", "Specialty / Other", "Cash"],
         }
     ).to_csv(path, index=False)
 
@@ -42,6 +42,7 @@ version: 1
 strategies:
   - id: static_option_a
     display_name: Static Option A
+    method_citation_id: baseline_id
     method_citation: baseline
     entrypoint: usa_etf_features.strategy_registry:static_option_a
     default_params:
@@ -50,6 +51,7 @@ strategies:
     enabled: true
   - id: score_rotate_xsd
     display_name: Rotate
+    method_citation_id: rotate_id
     method_citation: rotate
     entrypoint: usa_etf_features.strategy_registry:score_rotate_xsd
     default_params:
@@ -62,6 +64,41 @@ strategies:
     )
 
 
+def _registry_vol_rotate(path) -> None:
+    path.write_text(
+        """
+version: 1
+strategies:
+  - id: vol_target_option_a
+    display_name: Vol Target Option A
+    method_citation_id: moreira_muir_2017_vol_managed
+    method_citation: Moreira and Muir 2017 Journal of Finance doi:10.1111/jofi.12513
+    entrypoint: usa_etf_features.strategy_registry:vol_target_option_a
+    default_params:
+      core: option_a
+      lookback: 21
+      f_min: 0.25
+      f_max: 1.0
+      sigma_star: expanding_annvol
+      cash_ticker: BIL
+      cost_bps_one_way: 5.0
+    enabled: true
+  - id: score_rotate_xsd
+    display_name: Rotate
+    method_citation_id: xsd_rotation_memo_2026_09_16
+    method_citation: XSD rotation memo 2026-09-16
+    entrypoint: usa_etf_features.strategy_registry:score_rotate_xsd
+    default_params:
+      rotate_eligible: [XSD]
+      benchmark: VOO
+      use_vol_gate: false
+      hysteresis_months: 0
+    enabled: true
+""",
+        encoding="utf-8",
+    )
+
+
 def test_registry_load_and_disable_flag(tmp_path):
     reg = tmp_path / "strategies.yaml"
     _registry(reg, enabled_rotate=False)
@@ -69,6 +106,7 @@ def test_registry_load_and_disable_flag(tmp_path):
     assert [s.id for s in specs] == ["static_option_a", "score_rotate_xsd"]
     assert specs[0].enabled is True
     assert specs[1].enabled is False
+    assert specs[0].method_citation_id == "baseline_id"
 
 
 def test_run_strategies_weight_sum_and_disable_skip(tmp_path):
@@ -93,6 +131,8 @@ def test_run_strategies_weight_sum_and_disable_skip(tmp_path):
     assert (out / "strategy_registry_used.csv").exists()
     used = pd.read_csv(out / "strategy_registry_used.csv")
     assert used.loc[used["strategy_id"].eq("score_rotate_xsd"), "enabled"].iloc[0] in {False, "False"}
+    assert "method_citation_id" in used.columns
+    assert "method_citation" in used.columns
 
 
 def test_run_strategies_smh_hard_fails(tmp_path):
@@ -120,3 +160,38 @@ def test_registry_walkforward_leakage_helper():
         label_start=pd.Timestamp("2024-03-29"),
         label_end=pd.Timestamp("2024-04-30"),
     )
+
+
+def test_registry_vol_target_and_rotate_walkforward_dates_do_not_leak(tmp_path):
+    reg = tmp_path / "strategies.yaml"
+    uni = tmp_path / "universe.csv"
+    out = tmp_path / "out"
+    _registry_vol_rotate(reg)
+    _universe(uni)
+
+    result = run_strategy_registry(
+        prices=_prices(n_days=900),
+        universe_csv=uni,
+        registry_path=reg,
+        out_dir=out,
+        asof=pd.Timestamp("2023-05-31"),
+        walkforward=True,
+        universe_config_path=None,
+    )
+
+    returns = result["strategy_returns"].copy()
+    for sid in ["vol_target_option_a", "score_rotate_xsd"]:
+        sub = returns.loc[returns["strategy_id"].eq(sid)].dropna(subset=["decision_date", "feature_end", "date"])
+        assert not sub.empty
+        assert (pd.to_datetime(sub["feature_end"]) <= pd.to_datetime(sub["decision_date"])).all()
+        assert (pd.to_datetime(sub["date"]) > pd.to_datetime(sub["decision_date"])).all()
+        for _, row in sub.iterrows():
+            assert_no_same_period_leakage(
+                decision_date=pd.Timestamp(row["decision_date"]),
+                feature_end=pd.Timestamp(row["feature_end"]),
+                label_start=pd.Timestamp(row["decision_date"]) + pd.Timedelta(days=1),
+                label_end=pd.Timestamp(row["date"]),
+            )
+
+    diagnostics = result["strategy_diagnostics"]
+    assert diagnostics["walkforward"].eq(True).all()
