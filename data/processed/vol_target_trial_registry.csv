@@ -1,0 +1,2 @@
+trial_id,core,lookback,f_min,f_max,sigma_star,cash_ticker,cost_bps_one_way,cash_price_source,method,not_investment_advice
+VT_option_a_L63_sigexpanding_fmax1p0,option_a,63,0.25,1.0,expanding_annvol,BIL,5.0,zero_return_proxy_rf0,target_vol_scale_down,True
