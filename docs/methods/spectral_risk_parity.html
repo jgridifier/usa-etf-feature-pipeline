@@ -1,6 +1,7 @@
 <!doctype html>
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Spectral Risk Parity | USA ETF Lab</title><link rel="stylesheet" href="../assets/style.css"></head>
 <body><main class="page"><h1>Spectral Risk Parity</h1>
+<p class="callout"><strong>Research archive — not a promoted method.</strong> Walk-forward OOS did not beat Ledoit–Wolf MinVar (name) and lagged all nulls (sleeve). Teaching note + OOS tables kept for documentation; no book map / showcase.</p>
 <p>Experimental research only; not investment advice. <a href="spectral_risk_parity_adia.html">ADIA Lab / Agnostic Risk Parity teaching note and citations</a> · <a href="index.html">Methods</a></p>
 <p>This implementation maps the teaching sketch to correlation PCs with a unit-variance MP edge. Signal exposures are inverse square-root eigenvalue weighted. A nonnegative quadratic projection penalizes noise exposures; inverse volatility converts these exposures to capital weights. This is a research mapping, not an exact ADIA replication.</p>
 <p>Weights decided at month-end use only prior and current observations. The next complete month earns returns, less 5 bps times half the absolute target-weight change (initial turnover 0.5). Category sleeves use equal ETF weights internally. Missing next-month observations raise an error.</p>
