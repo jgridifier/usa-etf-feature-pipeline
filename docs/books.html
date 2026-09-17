@@ -1,7 +1,75 @@
 <!doctype html>
-<html lang="en"><head><meta charset="utf-8">
+<html lang="en">
+<head>
+<meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Books / strategies | USA ETF Lab</title>
-<link rel="stylesheet" href="assets/style.css"></head>
-<body><nav aria-label="Main"><a href="index.html">Home</a> <a href="methods/index.html">Methods</a> <a href="books.html">Books</a> <a href="runs.html">Runs</a></nav><main><h1>Books / strategies</h1><div class="table-scroll" tabindex="0" role="region" aria-label="CIO shortlist — three research books"><table><caption>CIO shortlist — three research books</caption><thead><tr><th scope="col">ID</th><th scope="col">Book</th><th scope="col">Research role</th></tr></thead><tbody><tr><td>static_option_a</td><td>Static Option A</td><td>VOO 70% / QQQM 20% / IJR 10%</td></tr><tr><td>vol_target_option_a</td><td>Vol-target Option A</td><td>Default research recommended path: f_max=1, cash=BIL; Moreira &amp; Muir (2017)</td></tr><tr><td>score_rotate_xsd</td><td>ScoreSimple XSD sleeve</td><td>Optional thematic research sleeve</td></tr></tbody></table></div><p><code>m3_p2</code> is held off. The default recommendation above concerns the research workflow only.</p><p>Weights refresh via <code>run-strategies --asof</code>. Until refreshed artifacts are published, this snapshot shows the static template and the latest decision month in the archived primary vol-target trial; it is not a live allocation.</p><div class="table-scroll" tabindex="0" role="region" aria-label="latest weights snapshot"><table><caption>latest weights snapshot</caption><thead><tr><th scope="col">strategy_id</th><th scope="col">decision_date</th><th scope="col">eval_date</th><th scope="col">ticker</th><th scope="col">weight</th><th scope="col">basis</th></tr></thead><tbody><tr><td>static_option_a</td><td></td><td></td><td>VOO</td><td>0.7</td><td>static research template</td></tr><tr><td>static_option_a</td><td></td><td></td><td>QQQM</td><td>0.2</td><td>static research template</td></tr><tr><td>static_option_a</td><td></td><td></td><td>IJR</td><td>0.1</td><td>static research template</td></tr><tr><td>vol_target_option_a</td><td>2026-08-31</td><td>2026-09-16</td><td>VOO</td><td>0.7</td><td>historical OOS sample: VT_option_a_L63_sigexpanding_fmax1p0</td></tr><tr><td>vol_target_option_a</td><td>2026-08-31</td><td>2026-09-16</td><td>QQQM</td><td>0.2</td><td>historical OOS sample: VT_option_a_L63_sigexpanding_fmax1p0</td></tr><tr><td>vol_target_option_a</td><td>2026-08-31</td><td>2026-09-16</td><td>IJR</td><td>0.1</td><td>historical OOS sample: VT_option_a_L63_sigexpanding_fmax1p0</td></tr><tr><td>vol_target_option_a</td><td>2026-08-31</td><td>2026-09-16</td><td>BIL</td><td>0.0</td><td>historical OOS sample: VT_option_a_L63_sigexpanding_fmax1p0</td></tr></tbody></table></div><p><a href="data/latest_weights_snapshot.csv">Download CSV</a></p></main>
-<footer>Research only; not investment advice; experimental panel; no performance guarantees.</footer></body></html>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/style.css">
+
+</head>
+<body>
+<header class="site-header"><div class="site-header-inner"><a class="brand" href="index.html">USA ETF Lab</a><nav class="site-nav" aria-label="Main"><a href="index.html">Home</a><a href="methods/index.html">Methods</a><a href="books.html" class="is-active">Books</a><a href="runs.html">Runs</a></nav></div></header>
+<main class="page">
+
+<section class="hero hero-compact">
+  <div class="hero-inner">
+    <span class="badge">CIO shortlist</span>
+    <h1>Books / strategies</h1>
+    <p class="lede">Three research books. <code>m3_p2</code> is held off. Default recommendation is the research workflow for Book 2 (vol-target), not a live allocation.</p>
+  </div>
+</section>
+<section class="band">
+  <div class="band-inner">
+    <div class="section-head">
+      <h2>Comparison</h2>
+      <p class="lede">From <code>strategy_comparison.csv</code> (Books 1–3). Mobile-friendly table.</p>
+    </div>
+    <div id="comparison-table" class="comparison-host" data-viz="comparison"></div>
+  </div>
+</section>
+<section class="band soft">
+  <div class="band-inner">
+    <div class="section-head">
+      <h2>Current weights</h2>
+      <p class="lede">Latest as-of bars from monthly weights / suggested_weights. Not a live broker allocation.</p>
+    </div>
+    <div class="chart-grid">
+      <div class="chart-card">
+        <h3>Book 1 — Static Option A</h3>
+        <div class="chart" data-chart="weights" data-book="static_option_a" style="min-height:280px"></div>
+      </div>
+      <div class="chart-card">
+        <h3>Book 2 — Vol-target Option A</h3>
+        <div class="chart" data-chart="weights" data-book="vol_target_option_a" style="min-height:280px"></div>
+      </div>
+      <div class="chart-card">
+        <h3>Book 3 — XSD sleeve</h3>
+        <div class="chart" data-chart="weights" data-book="score_rotate_xsd" style="min-height:280px"></div>
+      </div>
+    </div>
+  </div>
+</section>
+<section class="band">
+  <div class="band-inner">
+    <div class="section-head">
+      <h2>XSD ON / OFF</h2>
+      <p class="lede">ScoreSimple gate from <code>strategy_diagnostics.csv</code> (<code>on</code> / <code>rotate_on</code>).</p>
+    </div>
+    <div class="chart-card">
+      <div class="chart" data-chart="xsd-timeline" style="min-height:200px"></div>
+    </div>
+  </div>
+</section>
+<section class="band soft">
+  <div class="band-inner">
+    <div class="section-head"><h2>Weight snapshot CSV</h2></div>
+<div class="table-scroll" tabindex="0" role="region" aria-label="latest weights snapshot"><table><caption>latest weights snapshot</caption><thead><tr><th scope="col">strategy_id</th><th scope="col">decision_date</th><th scope="col">eval_date</th><th scope="col">ticker</th><th scope="col">weight</th><th scope="col">basis</th></tr></thead><tbody><tr><td>static_option_a</td><td></td><td></td><td>VOO</td><td>0.7</td><td>static research template</td></tr><tr><td>static_option_a</td><td></td><td></td><td>QQQM</td><td>0.2</td><td>static research template</td></tr><tr><td>static_option_a</td><td></td><td></td><td>IJR</td><td>0.1</td><td>static research template</td></tr><tr><td>vol_target_option_a</td><td>2026-08-31</td><td>2026-09-16</td><td>VOO</td><td>0.7</td><td>historical OOS sample: VT_option_a_L63_sigexpanding_fmax1p0</td></tr><tr><td>vol_target_option_a</td><td>2026-08-31</td><td>2026-09-16</td><td>QQQM</td><td>0.2</td><td>historical OOS sample: VT_option_a_L63_sigexpanding_fmax1p0</td></tr><tr><td>vol_target_option_a</td><td>2026-08-31</td><td>2026-09-16</td><td>IJR</td><td>0.1</td><td>historical OOS sample: VT_option_a_L63_sigexpanding_fmax1p0</td></tr><tr><td>vol_target_option_a</td><td>2026-08-31</td><td>2026-09-16</td><td>BIL</td><td>0.0</td><td>historical OOS sample: VT_option_a_L63_sigexpanding_fmax1p0</td></tr></tbody></table></div><p class="dl"><a href="data/latest_weights_snapshot.csv">Download CSV</a></p></div></section>
+</main>
+<footer class="site-footer">
+<p>Research only; not investment advice; experimental panel; no performance guarantees.</p>
+<p class="muted">Design tokens adapted from public institutional UI patterns (Inter / JetBrains Mono stand-ins). Research panel only.</p>
+</footer>
+<script src="https://cdn.jsdelivr.net/npm/echarts@5.5.1/dist/echarts.min.js"></script><script src="assets/app.js" defer></script>
+</body>
+</html>

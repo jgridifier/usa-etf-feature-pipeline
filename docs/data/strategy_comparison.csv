@@ -1,0 +1,5 @@
+strategy_id,AnnReturn,AnnVol,MaxDD,Sharpe_rf0,NW_t_vs_option_a,turnover_per_year,n_months,start_date,end_date,research_disclaimer
+m3_p2_core_rotate,0.11850899072864918,0.1614660862202142,-0.25315960829200335,0.733955925376315,-2.171833395084374,1.6524198989127075,68,2021-02-26,2026-09-16,Research-only; not investment advice; no trading or broker routing.
+score_rotate_xsd,0.15026333568884875,0.1686857820565902,-0.26268460968996077,0.8907883868863284,0.40860001222437403,0.30422535211267604,68,2021-02-26,2026-09-16,Research-only; not investment advice; no trading or broker routing.
+static_option_a,0.1468414603389736,0.15886906598980804,-0.25562713849928165,0.9242923373666334,,0.0,68,2021-02-26,2026-09-16,Research-only; not investment advice; no trading or broker routing.
+vol_target_option_a,0.14725536694852637,0.13903843066788696,-0.201285918526651,1.0590983100224047,-0.2236410579342544,0.33745994313629074,68,2021-02-26,2026-09-16,Research-only; not investment advice; no trading or broker routing.

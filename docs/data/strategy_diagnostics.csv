@@ -1,0 +1,5 @@
+strategy_id,date,cash_price_source,research_disclaimer,eval_date,trial_id,core,f,sigma_hat,sigma_star,lookback,f_min,f_max,cash_ticker,thin_history_tickers,qqqm_first_valid,turnover,cost_return,w_VOO,w_QQQM,w_IJR,w_BIL,ticker,mom12_1,mom12_1_bench,excess_mom,z_mom,vol63,vol_ok,raw_on,on,optimizer,n_holdings_gt0,pct_thematic_on
+static_option_a,2026-09-16 00:00:00,,Research-only; not investment advice; no trading or broker routing.,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+vol_target_option_a,2026-08-31 00:00:00,prices,Research-only; not investment advice; no trading or broker routing.,2026-09-16 00:00:00,vol_target_option_a,option_a,1.0,0.15305663613371565,0.17495279845462508,63,0.25,1.0,BIL,QQQM,2020-10-13,0.0,0.0,0.7,0.2,0.1,0.0,,,,,,,,,,,,
+score_rotate_xsd,2026-09-16 00:00:00,,Research-only; not investment advice; no trading or broker routing.,,,,,,,,,,,,,,,,,,,XSD,0.7068696477387849,0.17144353903156492,0.53542610870722,1.777815281354005,0.555804671275814,False,False,False,,,
+m3_p2_core_rotate,2026-09-16 00:00:00,,Research-only; not investment advice; no trading or broker routing.,,,,,,,,,,,,,,,,,,,,,,,,,,,,P2,18.0,0.8571428571428571

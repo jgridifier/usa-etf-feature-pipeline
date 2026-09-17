@@ -358,17 +358,21 @@ Preview locally with `python -m http.server 8000 --directory docs`.
 
 After a new `run-strategies --asof YYYY-MM-DD` run:
 
-1. Copy the intended CSV artifacts (including strategy comparison / suggested weights when available)
-   into `docs/data/`. Refresh the `vol_target_*.csv` set together after a new vol-target run,
-   and copy its `README_OOS_note.md`. Pages reads this directory, not `data/processed/`.
+1. Copy the intended CSV artifacts into `docs/data/` (or rely on `scripts/build_pages.py`, which
+   copies from `/workspace/investments/cio_book_shortlist/` when present: shortlist/strategy
+   comparison, suggested weights, strategy diagnostics, book weight CSVs). Refresh the
+   `vol_target_*.csv` set together after a new vol-target run, and copy its `README_OOS_note.md`.
+   Pages reads this directory, not `data/processed/`.
 2. Scrub brand names and institutional policy claims from imported artifacts and teaching HTML
    before publication. Keep academic citations and neutral research framing. Universe legal names
    are neutralized where necessary; every source section is `experimental_research_universe`.
-3. Run `python scripts/build_pages.py`. This regenerates HTML tables and the historical primary-trial
-   weights snapshot from the local CSVs; extra CSVs are also rendered on Runs. The snapshot is
-   explicitly historical, while refreshed strategy weights remain available in the Runs tables.
-4. Run `pytest`, review the site, and commit `docs/` alongside source changes. No GitHub build step
-   is required. CI checks branding and that generated pages match the committed inputs.
+3. Run `python scripts/build_pages.py`. This (a) copies CIO CSVs when available, (b) builds
+   `docs/data/viz_*.json` snapshots (equity/drawdown from `r_vt`/`r_option_a`, `f_t` + `w_BIL`,
+   weight bars, XSD diagnostics snapshot, comparison table), and (c) regenerates Home/Books/Runs
+   HTML plus shared Methods chrome. Charts load via Apache ECharts CDN + `docs/assets/app.js`.
+4. Run `pytest`, preview with `python -m http.server 8000 --directory docs`, and commit `docs/`
+   alongside source changes. No GitHub build step is required. Branding is gated by
+   `tests/test_no_brand_tokens.py`.
 
 All pages describe an experimental panel: research only; not investment advice; no performance
 guarantees. `tests/test_no_brand_tokens.py` enforces the brand scrub across source, tests,
