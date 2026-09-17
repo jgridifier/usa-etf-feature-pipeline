@@ -1,0 +1,50 @@
+version: 1
+strategies:
+  - id: static_option_a
+    display_name: Static Option A
+    method_citation_id: brinson_hood_beebower_1986_policy
+    method_citation: "Brinson, Gary P., L. Randolph Hood, and Gilbert L. Beebower. 1986. \"Determinants of Portfolio Performance.\" Financial Analysts Journal 42(4): 39-44. doi:10.2469/faj.v42.n4.39. Used here as a policy/benchmark baseline, not as a predictive strategy paper."
+    entrypoint: usa_etf_features.strategy_registry:static_option_a
+    default_params:
+      weights:
+        VOO: 0.70
+        QQQM: 0.20
+        IJR: 0.10
+    enabled: true
+  - id: vol_target_option_a
+    display_name: Vol Target Option A
+    method_citation_id: moreira_muir_2017_vol_managed
+    method_citation: "Moreira, Alan, and Tyler Muir. 2017. \"Volatility-Managed Portfolios.\" Journal of Finance 72(4): 1611-1644. doi:10.1111/jofi.12513. Implementation constraint: f_max=1 scale-down only, with residual weight in BIL and 5 bps one-way turnover costs."
+    entrypoint: usa_etf_features.strategy_registry:vol_target_option_a
+    default_params:
+      core: option_a
+      lookback: 63
+      f_min: 0.25
+      f_max: 1.0
+      sigma_star: expanding_annvol
+      cash_ticker: BIL
+      cost_bps_one_way: 5.0
+    enabled: true
+  - id: score_rotate_xsd
+    display_name: ScoreSimple XSD Rotate
+    method_citation_id: xsd_rotation_memo_2026_09_16
+    method_citation: "Jegadeesh, Narasimhan, and Sheridan Titman. 1993. \"Returns to Buying Winners and Selling Losers: Implications for Stock Market Efficiency.\" Journal of Finance 48(1): 65-91. doi:10.1111/j.1540-6261.1993.tb04702.x; Harvey, Campbell R., Edward Hoyle, Russell Korgaonkar, Sandy Rattray, Matthew Sargaison, and Otto van Hemert. 2018. \"The Impact of Volatility Targeting.\" Journal of Portfolio Management 45(1): 14-33. doi:10.3905/jpm.2018.45.1.014. Implemented per /workspace/investments/xsd_rotation_memo.md as Mom12_1 vs VOO plus expanding vol gate through t-1."
+    entrypoint: usa_etf_features.strategy_registry:score_rotate_xsd
+    default_params:
+      rotate_eligible: [XSD]
+      benchmark: VOO
+      use_vol_gate: true
+      hysteresis_months: 2
+    enabled: true
+  - id: m3_p2_core_rotate
+    display_name: M3 P2 Core Rotate
+    method_citation_id: wf_optimization_memo_2026_09_16_p2
+    method_citation: "Markowitz, Harry. 1952. \"Portfolio Selection.\" Journal of Finance 7(1): 77-91. doi:10.1111/j.1540-6261.1952.tb01525.x; Ledoit, Olivier, and Michael Wolf. 2004. \"A Well-Conditioned Estimator for Large-Dimensional Covariance Matrices.\" Journal of Multivariate Analysis 88(2): 365-411. doi:10.1016/S0047-259X(03)00096-4. Implemented per /workspace/investments/wf_optimization_memo.md as P2 hierarchy: core >= 60%, ScoreSimple-gated thematic satellites may go to 0."
+    entrypoint: usa_etf_features.strategy_registry:m3_p2_core_rotate
+    default_params:
+      optimizer: P2
+      window_months: 36
+      min_history_months: 36
+      top_n: 6
+      benchmark: VOO
+    enabled: true

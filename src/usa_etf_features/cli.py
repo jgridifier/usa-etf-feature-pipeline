@@ -14,6 +14,7 @@ from .portfolio import build_portfolio, build_optimized_portfolio, optimizer_str
 from .prices import load_adj_close_csv
 from .rotation import load_portfolio_constraints
 from .scores import composite_scores, load_feature_weights
+from .strategy_registry import run_strategy_registry
 from .universe import (
     UniverseGateError,
     assert_eligible,
@@ -358,6 +359,34 @@ def cmd_walkforward_vol_target(args: argparse.Namespace) -> int:
     return 0
 
 
+def cmd_run_strategies(args: argparse.Namespace) -> int:
+    prices = load_adj_close_csv(args.prices)
+    asof = pd.Timestamp(args.asof) if args.asof else None
+    try:
+        run_strategy_registry(
+            prices=prices,
+            universe_csv=args.universe,
+            registry_path=args.registry,
+            out_dir=args.out_dir,
+            asof=asof,
+            walkforward=bool(args.walkforward),
+            universe_config_path=args.universe_config,
+            constraints_path=args.constraints,
+            weights_path=args.weights,
+        )
+    except Exception as e:
+        print(f"error: {e}", file=sys.stderr)
+        return 1
+
+    out = Path(args.out_dir)
+    print(f"wrote suggested weights → {out / 'suggested_weights.csv'}")
+    print(f"wrote diagnostics → {out / 'strategy_diagnostics.csv'}")
+    print(f"wrote comparison → {out / 'strategy_comparison.csv'}")
+    print(f"wrote registry snapshot → {out / 'strategy_registry_used.csv'}")
+    print(f"wrote xlsx → {out / 'strategy_comparison.xlsx'}")
+    return 0
+
+
 def build_parser() -> argparse.ArgumentParser:
     p = argparse.ArgumentParser(
         prog="usa_etf_features",
@@ -460,6 +489,18 @@ def build_parser() -> argparse.ArgumentParser:
     vt.add_argument("--sigma-stars", default=None, help="Comma-separated sigma targets for --grid")
     vt.add_argument("--bootstrap-samples", type=int, default=None)
     vt.set_defaults(func=cmd_walkforward_vol_target)
+
+    rs = sub.add_parser("run-strategies", help="Run enabled strategies from config registry")
+    rs.add_argument("--asof", default=None, help="Decision date YYYY-MM-DD")
+    rs.add_argument("--walkforward", action="store_true", default=False, help="Run walk-forward comparison mode")
+    rs.add_argument("--prices", required=True, help="Wide adj-close CSV (Date + tickers)")
+    rs.add_argument("--universe", required=True, help="Path to usa_universe_categorized.csv")
+    rs.add_argument("--registry", default=str(_repo_root() / "config" / "strategies.yaml"))
+    rs.add_argument("--out-dir", required=True)
+    rs.add_argument("--universe-config", default=None)
+    rs.add_argument("--constraints", default=None)
+    rs.add_argument("--weights", default=None, help="Feature weights YAML")
+    rs.set_defaults(func=cmd_run_strategies)
 
     return p
 
