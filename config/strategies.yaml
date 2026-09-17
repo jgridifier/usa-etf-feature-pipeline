@@ -48,3 +48,20 @@ strategies:
       top_n: 6
       benchmark: VOO
     enabled: true
+  - id: spectral_risk_parity
+    display_name: Experimental Spectral Risk Parity
+    method_citation_id: adia_spectral_rp_2026_agp_1610_08818
+    method_citation: "ADIA Lab, Spectral Risk Parity (2026), https://www.adialab.ae/research-series/spectral-risk-parity; Benichou et al., Agnostic Risk Parity (Eigenrisk Parity), arXiv:1610.08818, https://arxiv.org/abs/1610.08818. Experimental teaching-note mapping, not an exact replication."
+    entrypoint: usa_etf_features.strategy_registry:spectral_risk_parity
+    default_params:
+      returns_csv: data/raw/usa_universe_panel_monthly_returns.csv
+      coverage_csv: data/raw/usa_universe_panel_history_coverage.csv
+      lookback: 60
+      gamma: 1.0
+      mp_rule: unit
+      mode: name
+      include_thin: false
+      min_names: 100
+      adv_min: 0.0
+      cost_bps: 5.0
+    enabled: true

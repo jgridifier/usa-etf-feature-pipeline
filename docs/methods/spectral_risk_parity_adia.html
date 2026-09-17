@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>Spectral Risk Parity (ADIA Lab) — USA ETF Panel Teaching Note</title>
+<style>
+  :root { --fg:#1a1a1a; --muted:#555; --border:#ddd; --bg:#fafafa; --accent:#0b5fff; --ok:#0a7a3e; }
+  * { box-sizing: border-box; }
+  body { font-family: Georgia, "Times New Roman", serif; color: var(--fg); line-height: 1.55; max-width: 42rem; margin: 2rem auto; padding: 0 1.25rem; background: #fff; }
+  h1,h2,h3 { font-family: system-ui, -apple-system, Segoe UI, sans-serif; line-height: 1.25; }
+  h1 { font-size: 1.65rem; margin-bottom: 0.25rem; }
+  h2 { font-size: 1.25rem; margin-top: 2rem; border-bottom: 1px solid var(--border); padding-bottom: 0.3rem; }
+  h3 { font-size: 1.05rem; margin-top: 1.4rem; color: #222; }
+  .meta { color: var(--muted); font-family: system-ui, sans-serif; font-size: 0.9rem; margin-bottom: 1.5rem; }
+  .disclaimer { background: #fff8e6; border: 1px solid #f0d78c; padding: 0.75rem 1rem; border-radius: 6px; font-size: 0.92rem; margin: 1rem 0 1.5rem; }
+  .callout { background: var(--bg); border-left: 4px solid var(--accent); padding: 0.75rem 1rem; margin: 1rem 0; }
+  .ok { border-left-color: var(--ok); }
+  table { border-collapse: collapse; width: 100%; font-size: 0.92rem; margin: 0.75rem 0 1rem; }
+  th, td { border: 1px solid var(--border); padding: 0.4rem 0.55rem; text-align: left; vertical-align: top; }
+  th { background: var(--bg); font-family: system-ui, sans-serif; font-weight: 600; }
+  code, .math { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 0.88em; }
+  .math-block { background: var(--bg); padding: 0.85rem 1rem; border-radius: 6px; overflow-x: auto; margin: 0.75rem 0; font-family: ui-monospace, Menlo, Consolas, monospace; font-size: 0.86rem; white-space: pre-wrap; }
+  ul, ol { padding-left: 1.25rem; }
+  li { margin: 0.35rem 0; }
+  a { color: var(--accent); }
+  .toc { font-family: system-ui, sans-serif; font-size: 0.92rem; background: var(--bg); padding: 0.75rem 1rem; border-radius: 6px; }
+  .toc ol { margin: 0.4rem 0 0; }
+  footer { margin-top: 2.5rem; padding-top: 1rem; border-top: 1px solid var(--border); color: var(--muted); font-size: 0.85rem; font-family: system-ui, sans-serif; }
+</style>
+</head>
+<body>
+
+<h1>Spectral Risk Parity (ADIA Lab)</h1>
+<p class="meta">Teaching note · 2026-09-17 (ET) · USA ETF research panel · Justina shortlist #1 · Experimental research only</p>
+
+<div class="disclaimer">
+<strong>Research only — not investment advice.</strong> This note explains a proposed walk-forward test of spectral / eigenstructure risk budgeting on the experimental USA ETF panel. It does not recommend buying or selling any security. Confirm tickers against the research panel before any use.
+</div>
+
+<nav class="toc" aria-label="Contents">
+<strong>Contents</strong>
+<ol>
+  <li><a href="#why">Why this paper</a></li>
+  <li><a href="#original">What the original work found</a></li>
+  <li><a href="#math">Core math / intuition</a></li>
+  <li><a href="#ourdata">What we will do on the USA ETF / category panel</a></li>
+  <li><a href="#worked">How we will know it worked</a></li>
+  <li><a href="#cite">Full citation + links</a></li>
+</ol>
+</nav>
+
+<h2 id="why">1. Why this paper / blog</h2>
+
+<p>The Aug 2026 Justina newsletter highlighted <strong>Spectral Risk Parity</strong> from the ADIA Lab research series (López de Prado, Lipton &amp; Balasubramanian, Feb 2026). For a ~377-name USA ETF panel with heavy Defined Outcome / Specialty sleeves, classical equal-risk-contribution (ERC) and sample-covariance Markowitz both degrade: eigenvalues are noisy, and “risk parity” on raw assets can silently load noisy eigenmodes.</p>
+
+<div class="callout">
+<strong>Why it fits this panel:</strong> Spectral RP uses random-matrix / Marčenko–Pastur structure to separate informative principal components from noise, then builds a risk-parity portfolio that <em>tracks the PC portfolio while penalizing noise exposure</em> (López de Prado, Lipton &amp; Balasubramanian, 2026, ADIA Lab). That scales to ≥100 liquid names <em>and</em> to category sleeves without being a growth-25 toy.
+</div>
+
+<p>Related eigenrisk literature (Benichou et al., 2016; Bernardi, Leippold &amp; Lohre, 2019) shows that equalizing risk across eigenvectors is more robust to estimation error than asset-level ERC. Spectral RP is the CIO shortlist pick that makes that idea operational with an explicit noise penalty.</p>
+
+<h2 id="original">2. What the original work found</h2>
+
+<h3>López de Prado, Lipton &amp; Balasubramanian (2026), ADIA Lab Research Paper Series</h3>
+<ul>
+  <li><strong>Setup:</strong> Construct risk-parity portfolios in the eigenbasis of the covariance/correlation matrix; identify signal vs noise eigenvalues via the Marčenko–Pastur (MP) law from random matrix theory (RMT).</li>
+  <li><strong>Claim:</strong> A spectral portfolio that tracks the principal-component portfolio while explicitly penalizing exposure to noisy components is robust to noise by construction and outperforms equal-risk-contribution (ERC) and minimum-variance (MinVar) empirically (López de Prado, Lipton &amp; Balasubramanian, 2026).</li>
+  <li><strong>Economic intuition:</strong> Most sample eigenvalues of a high-N / moderate-T correlation matrix are sampling noise. Allocating “equal risk” on raw assets can still concentrate on noisy modes. Penalizing those modes is a structural fix, not a heuristic shrinkage knob.</li>
+  <li><strong>Limitations (as framed for our test):</strong> Full empirical tables / asset universe of the ADIA note were not re-run here; MP edge depends on aspect ratio \(q = N/T\); long-only ETF constraints and turnover costs are ours to add. Cite ADIA Lab page for the published abstract claims; treat OOS numbers as to-be-replicated, not gospel.</li>
+</ul>
+
+<h3>Supporting eigenrisk / RMT context</h3>
+<ul>
+  <li><strong>Benichou et al. (2016), arXiv:1610.08818 — Agnostic / Eigenrisk Parity:</strong> Equal realized risk on all principal components; “agnostic” form \(\boldsymbol{\pi}^* \propto \mathbf{C}_{\mathrm{RIE}}^{-1/2}\mathbf{p}\) when indicator correlations are unknown. Motivates eigenbasis risk budgeting.</li>
+  <li><strong>Bernardi, Leippold &amp; Lohre (2019), <em>Journal of Risk</em>:</strong> Principal risk parity is immune to second-order (estimation) risk among alternative RP strategies; eigenvalue adjustment mitigates SOR bias for others.</li>
+  <li><strong>López de Prado (2016), <em>Journal of Portfolio Management</em> — HRP:</strong> Related ADIA-lineage risk-parity family using hierarchy rather than spectral noise penalties; useful null / sibling, not the same method.</li>
+</ul>
+
+<h2 id="math">3. Core math / intuition</h2>
+
+<p><strong>Sample correlation / covariance and eigendecomposition</strong> (at month-end \(t\), using only returns ≤ \(t\)):</p>
+<div class="math-block">Σ̂_t = cov({r_{t-L+1}, …, r_t})     or correlation R̂_t
+R̂_t = U Λ Uᵀ ,   Λ = diag(λ₁ ≥ … ≥ λ_N)</div>
+
+<p><strong>Marčenko–Pastur noise bulk</strong> (for aspect ratio \(q = N/T\), variance σ² of residuals; classic RMT — Marčenko &amp; Pastur, 1967; applied to finance in Laloux et al. / Bun–Bouchaud–Potters cleaning literature):</p>
+<div class="math-block">λ ∈ [λ₋, λ₊]  treated as noise bulk
+λ₊ = σ² (1 + √q)²    (upper MP edge; use cleaned / fitted σ² in practice)
+Signal set S = { k : λ_k > λ₊ }   (plus optional market mode handling)
+Noise set  N = { k : λ_k ≤ λ₊ }</div>
+
+<p><strong>Spectral Risk Parity intuition</strong> (López de Prado, Lipton &amp; Balasubramanian, 2026):</p>
+<div class="math-block">1) Form PC / eigen-risk-parity weights on signal modes (equal risk per informative PC).
+2) Explicitly penalize exposures that load on noise modes N.
+3) Map back to asset (or sleeve) weights; long-only + sum-to-1 for ETFs.
+4) Compare to ERC (asset-level equal risk contribution) and MinVar.</div>
+
+<p><strong>Implementable research sketch (panel mapping — not a claim that this is the ADIA closed form verbatim):</strong></p>
+<div class="math-block">w_signal ∝ U_S · (equal-risk-on-modes in S)
+w ← proj_longonly( w_signal − γ · load_on_noise(U_N) )
+normalize 1ᵀw = 1,  w ≥ 0</div>
+
+<p>Intuition in one sentence: pay for risk that lives in the informative spectrum; refuse to fund the Marčenko–Pastur junk pile.</p>
+
+<div class="callout ok">
+<strong>What we are <em>not</em> doing in v1:</strong> full RIE/QuEST nonlinear shrinkage as the primary path; black-box ML; growth-25-only toys; claiming ADIA’s exact proprietary solver without the paper’s equations in hand.
+</div>
+
+<h2 id="ourdata">4. What we will do on the USA ETF / category panel</h2>
+
+<h3>Assumptions</h3>
+<ul>
+  <li>Universe gate: only tickers in <code>usa_universe_categorized.csv</code> (~377). Returns panel: <code>usa_universe_panel_monthly_returns.csv</code> (~339 series). Coverage / <code>thin_lt5y</code>: <code>usa_universe_panel_history_coverage.csv</code> (117 of 339 flagged thin &lt;5y).</li>
+  <li><strong>Primary implementable universe:</strong> ≥100 liquid names with <code>thin_lt5y=False</code> and sufficient ADV proxy (research default: ADV ≥ ~$10M → ~125 names as of panel pull) <strong>and/or</strong> category sleeves (EW or ERC within category, then spectral RP across sleeves).</li>
+  <li>Defined Outcome / Buffer / Structured (139 names) and Specialty / Other (76): default <strong>exclude from primary spectral cov</strong> or sleeve-aggregate only; always carry <code>thin_lt5y</code> flags in outputs.</li>
+  <li>Monthly walk-forward; decision at month-end \(t\) uses returns ≤ \(t\); P&amp;L on month \(t+1\) only — no same-month leakage.</li>
+  <li>Costs: ~5 bps one-way on monthly turnover (parity with existing WF memos). Sharpe_rf0 for cross-memo parity; also report excess vs cash sleeve.</li>
+  <li>Research framing only — not advice.</li>
+</ul>
+
+<h3>Inputs</h3>
+<ul>
+  <li>Monthly returns: <code>/workspace/investments/usa_universe_panel_monthly_returns.csv</code></li>
+  <li>Adj closes (if daily cov / MP edges needed): <code>usa_universe_adj_close.csv</code></li>
+  <li>Categories: <code>usa_universe_categorized.csv</code></li>
+  <li>History flags: <code>usa_universe_panel_history_coverage.csv</code> (<code>thin_lt5y</code>, <code>years_monthly</code>, <code>adv_proxy</code>)</li>
+</ul>
+
+<h3>Walk-forward / leakage rules</h3>
+<ul>
+  <li>Lookback \(L\) months for Σ̂/R̂ at \(t\) uses only months ≤ \(t\) (primary grid: 36 / 60 / 84).</li>
+  <li>MP edge / noise cut fitted inside the lookback only; never peek \(t+1\).</li>
+  <li>Eligible set at \(t\): names with enough history inside lookback + not thin unless sleeve-level.</li>
+  <li>Register every trial <code>(L, MP-cut rule, γ noise penalty, long-only, sleeve vs name)</code> in strategy registry for DSR / multiplicity.</li>
+</ul>
+
+<h3>Nulls</h3>
+<ul>
+  <li><strong>Primary null:</strong> Static ERC on the same eligible set / same rebalance calendar (Maillard–Roncalli–Teiletche-style ERC; Roncalli, 2013).</li>
+  <li><strong>Secondary null:</strong> Static long-only MinVar (Ledoit–Wolf cov) and equal-weight.</li>
+  <li><strong>Optional sibling:</strong> Hierarchical Risk Parity (López de Prado, 2016) — same panel, same costs — to show spectral vs hierarchical diversification.</li>
+  <li><strong>H0:</strong> Spectral RP does not improve OOS Sharpe_rf0 / MaxDD vs ERC after costs once DSR adjusts for the trial grid.</li>
+</ul>
+
+<h3>Thin history</h3>
+<table>
+  <tr><th>Flag / bucket</th><th>Rule</th></tr>
+  <tr><td><code>thin_lt5y=True</code> (~117 series)</td><td>Exclude from name-level spectral cov primary; may appear only inside category sleeve aggregates with disclosure.</td></tr>
+  <tr><td>Defined Outcome / Specialty</td><td>High count, often short history — sleeve or exclude; never silent.</td></tr>
+  <tr><td>Crypto / Leveraged</td><td>Optional robustness sleeve only; default off in primary.</td></tr>
+</table>
+
+<h2 id="worked">5. How we will know it worked</h2>
+
+<p><strong>Success (research bar — not a trade signal):</strong></p>
+<ol>
+  <li>OOS walk-forward equity curve + metrics table vs ERC / MinVar / EW exist and are reproducible from a CLI in <code>jgridifier/usa-etf-feature-pipeline</code>.</li>
+  <li>Primary config (≥100 liquid names <em>or</em> category-sleeve spectral RP) shows either (a) higher Sharpe_rf0 with Newey–West t meaningfully positive vs ERC, or (b) clearly better MaxDD / left-tail with modest Sharpe give-up — Jared chooses which bar binds.</li>
+  <li><strong>Raw Sharpe_rf0 AND Deflated Sharpe Ratio (DSR)</strong> reported for the selected config. DSR mandatory: Bailey &amp; López de Prado (2014), <em>Journal of Portfolio Management</em> — corrects selection bias under multiple testing and non-normality. Use strategy-registry trial count \(N\) and variance of trial Sharpes; optionally unified search-adjusted DSR if Eng wires the Aug 2026 newsletter variant. <strong>Do not ship a “win” on raw Sharpe alone.</strong></li>
+  <li>Leakage unit tests pass; costs applied; thin_lt5y flags in every OOS table.</li>
+  <li>Eigen diagnostics: fraction of variance in signal modes; average noise-penalty contribution — shows the method used the spectrum, not a silent ERC clone.</li>
+</ol>
+
+<p><strong>Failure is informative:</strong> If spectral RP fails to beat ERC OOS after DSR, document that MP noise penalties did not add skill on this ETF panel (plausible if N is large but T is short, or if sleeves are already low-rank).</p>
+
+<table>
+  <tr><th>Metric</th><th>Compare to</th></tr>
+  <tr><td>AnnReturn, AnnVol, MaxDD, Sharpe_rf0</td><td>ERC; MinVar; EW</td></tr>
+  <tr><td>Deflated Sharpe (DSR) / PSR</td><td>Bailey &amp; López de Prado (2014); registry \(N\)</td></tr>
+  <tr><td>Newey–West t on monthly excess vs ERC</td><td>0</td></tr>
+  <tr><td>Block-bootstrap Sharpe 95% CI</td><td>Overlap vs ERC</td></tr>
+  <tr><td>Turnover / year + cost drag</td><td>Disclose</td></tr>
+  <tr><td>% variance in signal modes; # modes kept</td><td>Descriptive spectral table</td></tr>
+</table>
+
+<h2 id="cite">6. Full citation + links</h2>
+
+<ol>
+  <li>López de Prado, Marcos, Alexander Lipton, and Koushik Balasubramanian. 2026. “Spectral Risk Parity.” ADIA Lab Research Paper Series (published February 2026; newsletter highlight Aug 2026). <a href="https://www.adialab.ae/research-series/spectral-risk-parity">adialab.ae/research-series/spectral-risk-parity</a>. <em>Citation note:</em> SSRN abstract ID 7145418 has been mentioned in secondary indexes; confirm PDF/SSRN landing when accessible.</li>
+  <li>Raphael Benichou, Yves Lempérière, Emmanuel Sérié, Julien Kockelkoren, Philip Seager, Jean-Philippe Bouchaud, and Marc Potters. <em>Agnostic Risk Parity: Taming Known and Unknown-Unknowns</em>. arXiv:1610.08818 (2016). <a href="https://arxiv.org/abs/1610.08818">https://arxiv.org/abs/1610.08818</a>.</li>
+  <li>Bernardi, Simone, Markus Leippold, and Harald Lohre. 2019. “Second-Order Risk of Alternative Risk Parity Strategies.” <em>Journal of Risk</em> 21 (3): 1–25. SSRN: <a href="https://papers.ssrn.com/sol3/papers.cfm?abstract_id=3090624">abstract 3090624</a></li>
+  <li>López de Prado, Marcos. 2016. “Building Diversified Portfolios that Outperform Out-of-Sample” (Hierarchical Risk Parity). <em>Journal of Portfolio Management</em> 42 (4): 59–69. <a href="https://doi.org/10.3905/jpm.2016.42.4.059">doi:10.3905/jpm.2016.42.4.059</a> · SSRN <a href="https://papers.ssrn.com/sol3/papers.cfm?abstract_id=2708678">2708678</a></li>
+  <li>Bailey, David H., and Marcos López de Prado. 2014. “The Deflated Sharpe Ratio: Correcting for Selection Bias, Backtest Overfitting, and Non-Normality.” <em>Journal of Portfolio Management</em> 40 (5): 94–107. <a href="https://doi.org/10.3905/jpm.2014.40.5.094">doi:10.3905/jpm.2014.40.5.094</a> · SSRN <a href="https://papers.ssrn.com/sol3/papers.cfm?abstract_id=2460551">2460551</a> · PDF <a href="https://davidhbailey.com/dhbpapers/deflated-sharpe.pdf">davidhbailey.com</a></li>
+  <li>Roncalli, Thierry. 2013. <em>Introduction to Risk Parity and Budgeting</em>. Chapman &amp; Hall/CRC. (ERC baseline.)</li>
+</ol>
+
+<p><strong>Internal artifacts:</strong> CIO shortlist <code>/workspace/investments/justina_shortlist/cio_top10_methods.md</code> · Eng ticket <code>ENGINEERING_TICKET_spectral_risk_parity.md</code> · pick note <code>quant_pick_2.md</code> · panel <code>usa_universe_*</code>.</p>
+
+<footer>
+USA ETF research panel · Quant research support · 2026-09-17 ET<br/>
+Experimental research only — not personalized investment advice.
+</footer>
+
+</body>
+</html>
