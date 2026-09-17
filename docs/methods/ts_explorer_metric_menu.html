@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Time Series Explorer — Quant metric menu (v1)</title>
+<style>
+  :root { --fg:#0f172a; --muted:#475569; --line:#e2e8f0; --bg:#fff; --accent:#0052ff; --card:#f8fafc; }
+  body { font: 16px/1.55 Inter, system-ui, sans-serif; color: var(--fg); max-width: 920px; margin: 2rem auto; padding: 0 1.25rem; background: var(--bg); }
+  h1 { font-size: 1.6rem; letter-spacing: -0.02em; margin-bottom: 0.25rem; }
+  h2 { font-size: 1.15rem; margin-top: 2rem; border-bottom: 1px solid var(--line); padding-bottom: 0.35rem; }
+  h3 { font-size: 1rem; margin-top: 1.25rem; color: var(--accent); }
+  .sub { color: var(--muted); margin-top: 0; }
+  .pill { display:inline-block; font-size: 0.75rem; font-weight: 600; padding: 0.15rem 0.5rem; border-radius: 999px; background:#eef2ff; color:#3730a3; margin-right: 0.35rem; }
+  .pill.nice { background:#ecfdf5; color:#065f46; }
+  .pill.later { background:#f1f5f9; color:#334155; }
+  table { width:100%; border-collapse: collapse; font-size: 0.92rem; margin: 0.75rem 0 1.25rem; }
+  th, td { text-align:left; border-bottom: 1px solid var(--line); padding: 0.45rem 0.4rem; vertical-align: top; }
+  th { color: var(--muted); font-weight: 600; font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.04em; }
+  code { font-family: "JetBrains Mono", ui-monospace, monosserif; font-size: 0.86em; background: var(--card); padding: 0.05rem 0.3rem; border-radius: 4px; }
+  .callout { background: var(--card); border-left: 3px solid var(--accent); padding: 0.85rem 1rem; margin: 1rem 0; border-radius: 0 8px 8px 0; }
+  .math { font-family: "JetBrains Mono", ui-monospace, monospace; font-size: 0.9em; }
+  ul { padding-left: 1.2rem; }
+  li { margin: 0.35rem 0; }
+  footer { margin: 2.5rem 0 1rem; font-size: 0.85rem; color: var(--muted); }
+  a { color: var(--accent); }
+</style>
+</head>
+<body>
+  <p><span class="pill">Research tooling</span><span class="pill">Not a book</span><span class="pill">Experimental USA ETF panel</span></p>
+  <h1>Time Series Explorer — Quant metric menu (v1)</h1>
+  <p class="sub">What a quant should see on one raw-series page for the Growth-25 panel first, with a path to the ~339-ticker universe panel. Research only — not investment advice.</p>
+
+  <div class="callout">
+    <strong>Page intent.</strong> One ticker (or a small multi-select) → dense, honest analytics on the <em>price path we actually have</em>. No portfolio “book” framing. Prefer transparent close-to-close formulas, visible sample windows, and thin-history flags over black-box scores.
+  </div>
+
+  <h2>1. Why this menu</h2>
+  <p>Exploratory time-series work on ETFs is mostly about <em>stylized facts</em> and <em>relative co-movement</em>, not a new alpha claim. Cont (2001) catalogues the facts every quant checks first (heavy tails, vol clustering, weak return autocorrelation, slow decay in absolute returns). Campbell, Lo &amp; MacKinlay (1997) give the standard β / correlation language for co-movement with a market proxy. This page should make those checks one click away on our experimental panel.</p>
+
+  <h2>2. What the literature says (short)</h2>
+  <ul>
+    <li><strong>Cont (2001), <em>Quantitative Finance</em></strong> — asset returns: near-zero linear autocorrelation, heavy tails, volatility clustering (persistent |r| / r² dependence). Explorer must show ACF of r and of |r| (or r²), plus a simple vol path.</li>
+    <li><strong>Campbell, Lo &amp; MacKinlay (1997), <em>The Econometrics of Financial Markets</em>, Ch. 4–5</strong> — market-model β, correlation, and rolling estimation discipline. Use VOO as the default market proxy on this USA panel.</li>
+    <li><strong>Tsay (2010), <em>Analysis of Financial Time Series</em>, Ch. 1–3</strong> — log returns, rolling moments, QQ plots vs Normal as the default diagnostic stack.</li>
+    <li><strong>RiskMetrics (J.P. Morgan / Reuters, 1996 technical document)</strong> — EWMA variance (λ ≈ 0.94 daily) as a transparent alternative to equal-weight rolling vol. Nice-to-have in v1.1.</li>
+  </ul>
+
+  <h2>3. Core math / intuition (close-to-close only)</h2>
+  <p>Inputs are adjusted closes \(P_t\). Primary return:</p>
+  <p class="math">r_t = \ln(P_t / P_{t-1})</p>
+  <p>Annualized trailing realized vol over window \(W\) (trading days):</p>
+  <p class="math">\sigmâ_t(W) = \sqrt{252} \cdot \mathrm{std}(r_{t-W+1:t})</p>
+  <p>Peak-to-trough drawdown on a wealth index \(W_t = \exp(\sum_{s\le t} r_s)\):</p>
+  <p class="math">DD_t = W_t / \max_{s\le t} W_s - 1</p>
+  <p>Rolling market β vs proxy \(m\) (default VOO):</p>
+  <p class="math">\betâ_t(W) = \widehat{\mathrm{Cov}}(r, r^m)_W / \widehat{\mathrm{Var}}(r^m)_W</p>
+  <p>Rolling Sharpe (rf = 0 for v1 simplicity; optional excess vs BIL later):</p>
+  <p class="math">SR̂_t(W) = \sqrt{252} \cdot \bar{r}_W / \mathrm{std}(r)_W</p>
+  <p><strong>Leakage / honesty rules:</strong> every rolling chart titles the exact window; summary stats print start/end and <code>n_obs</code>; tickers with short history get a visible thin-history badge (from coverage CSV). No forward-filled returns across gaps — drop or break the series.</p>
+
+  <h2>4. What we will do on the USA ETF / growth-panel data</h2>
+  <p><strong>v1 universe:</strong> columns of <code>growth_alpha_adj_close.csv</code> (Growth-25 equities + on-panel cash names if present). Default landing ticker: <code>VOO</code>. Peer default for pairwise plots: <code>QQQM</code> (or <code>QQQ</code> if QQQM window is short).</p>
+  <p><strong>v1.1 path:</strong> same UI against <code>usa_universe_adj_close.csv</code> (~339 tickers) with search/typeahead + category filter from <code>usa_universe_categorized.csv</code>.</p>
+
+  <h3><span class="pill">Must-have</span> v1 metric menu</h3>
+  <table>
+    <thead><tr><th>Block</th><th>What</th><th>Default windows / notes</th></tr></thead>
+    <tbody>
+      <tr><td>Header strip</td><td>Ticker, name/role if known, sample start/end, n_obs, years, thin badge</td><td>From <code>growth_panel_history_coverage.csv</code></td></tr>
+      <tr><td>Price &amp; wealth</td><td>Adj close + rebased wealth (100 at first valid)</td><td>Full available history</td></tr>
+      <tr><td>Returns</td><td>Daily log returns; optional toggle simple returns</td><td>Full history</td></tr>
+      <tr><td>Drawdown</td><td>Underwater chart from peak wealth</td><td>Full history</td></tr>
+      <tr><td>Realized vol</td><td>Trailing σ̂ annualized</td><td>W ∈ {21, 63, 252}; default show 21 + 63</td></tr>
+      <tr><td>Rolling Sharpe</td><td>Trailing SR (rf=0)</td><td>W ∈ {63, 252}</td></tr>
+      <tr><td>Market model</td><td>Rolling β and rolling corr vs VOO</td><td>W ∈ {63, 252}; secondary proxy toggle QQQM</td></tr>
+      <tr><td>Panel corr</td><td>Full-sample Spearman (and Pearson) corr of chosen ticker vs all Growth-25; bar or heat row</td><td>Pairwise on overlapping dates only</td></tr>
+      <tr><td>Corr matrix</td><td>Growth-25 × Growth-25 heat (toggle 63d rolling “as-of” last date)</td><td>Must stay readable on mobile (scroll / brush)</td></tr>
+      <tr><td>Distribution</td><td>Histogram of r; QQ vs Normal; skew, excess kurtosis, hit rate r&lt;0</td><td>Full overlap sample</td></tr>
+      <tr><td>Dependence (stylized facts)</td><td>ACF of r and of |r| (lags 1…40)</td><td>Cont (2001) check</td></tr>
+      <tr><td>Pairwise lab</td><td>Pick peer → scatter r vs r_peer, rolling corr, lead–lag cross-corr at lags −5…+5</td><td>Default peer QQQM</td></tr>
+      <tr><td>Stats table</td><td>AnnReturn, AnnVol, MaxDD, Sharpe_rf0, Best/Worst month (month-end), start/end</td><td>Match pipeline annualization (252d / 12m)</td></tr>
+      <tr><td>Export</td><td>Download CSV of displayed computed series</td><td>Client-side</td></tr>
+    </tbody>
+  </table>
+
+  <h3><span class="pill nice">Nice-to-have</span> v1.1</h3>
+  <table>
+    <thead><tr><th>Block</th><th>What</th><th>Why</th></tr></thead>
+    <tbody>
+      <tr><td>EWMA vol</td><td>RiskMetrics λ=0.94 overlay on rolling σ̂</td><td>Shows vol-of-vol sensitivity to window choice</td></tr>
+      <tr><td>Excess vs cash</td><td>r − r_BIL (or SGOV) for Sharpe/wealth</td><td>Honest excess when cash series exists</td></tr>
+      <tr><td>Cross-section ranks</td><td>Rank of σ̂_63, Mom12-1, MaxDD within Growth-25 as-of last date</td><td>Quick “where does this sit?”</td></tr>
+      <tr><td>PCA sketch</td><td>First 3 PC loadings on Growth-25 monthly returns</td><td>Factor-ish structure without a black box</td></tr>
+      <tr><td>Calendar slices</td><td>Mean r by month-of-year / DOW (exploratory)</td><td>Label clearly as descriptive, not a seasonality claim</td></tr>
+      <tr><td>Full universe</td><td>Same page on <code>usa_universe_adj_close.csv</code> + category filter</td><td>~339 names; needs search + lazy load</td></tr>
+    </tbody>
+  </table>
+
+  <h3><span class="pill later">Out of scope (v1)</span></h3>
+  <ul>
+    <li>Portfolio optimizers, book weights, or “recommended allocation” language.</li>
+    <li>OHLC range estimators (we only publish adj close).</li>
+    <li>Machine-learning forecasts or regime classifiers as productized signals.</li>
+    <li>Any employer/firm branding (forbidden-token gate stays green).</li>
+  </ul>
+
+  <h2>5. How we’ll know it worked</h2>
+  <ul>
+    <li>Picker lists every Growth-25 ticker; switching ticker updates all blocks &lt; 300ms on a laptop for Growth-25 client-side.</li>
+    <li>VOO vs QQQM: β≈1 for VOO vs VOO (sanity), corr(QQQM, QQQ) very high on overlap, thin badges appear for short names (e.g. QQQM/GTEK-class history).</li>
+    <li>ACF(|r|) stays elevated vs ACF(r) ≈ 0 — Cont stylized-fact smoke test.</li>
+    <li>Corr heat uses pairwise overlapping dates only (no silent fill).</li>
+    <li>Mobile: charts resize; tables scroll; firm-token CI green.</li>
+    <li>Research disclaimer visible; no book framing in nav copy.</li>
+  </ul>
+
+  <h2>6. Full citation + links</h2>
+  <ul>
+    <li>Cont, R. (2001). Empirical properties of asset returns: stylized facts and statistical issues. <em>Quantitative Finance</em>, 1(2), 223–236. <a href="https://doi.org/10.1080/713665554">doi:10.1080/713665554</a></li>
+    <li>Campbell, J. Y., Lo, A. W., &amp; MacKinlay, A. C. (1997). <em>The Econometrics of Financial Markets</em>. Princeton University Press. Chapters 4–5.</li>
+    <li>Tsay, R. S. (2010). <em>Analysis of Financial Time Series</em> (3rd ed.). Wiley. Chapters 1–3.</li>
+    <li>J.P. Morgan / Reuters. (1996). <em>RiskMetrics — Technical Document</em> (4th ed.). EWMA variance.</li>
+  </ul>
+
+  <footer>
+    Written for the experimental USA ETF Portfolios research stream. Time Series Explorer is research tooling on an arbitrary panel — not personalized investment advice.
+  </footer>
+</body>
+</html>

@@ -29,6 +29,7 @@ CIO_COPIES = [
 NAV = [
     ('index.html', 'Home'),
     ('methods/index.html', 'Methods'),
+    ('explorer/index.html', 'Explorer'),
     ('books.html', 'Books'),
     ('runs.html', 'Runs'),
 ]
@@ -439,6 +440,7 @@ def build_index() -> None:
     <div class="cta-row">
       <a class="btn btn-primary" href="books.html">Explore books</a>
       <a class="btn btn-secondary" href="methods/index.html">Methods</a>
+      <a class="btn btn-secondary" href="explorer/index.html">Time Series Explorer</a>
     </div>
   </div>
 </section>
@@ -590,6 +592,8 @@ def build_runs() -> None:
     <div class="section-head"><h2>Archived tables</h2></div>
 '''
     skip = {
+        'growth_alpha_adj_close.csv',
+        'growth_panel_history_coverage.csv',
         'latest_weights_snapshot.csv',
         'suggested_weights.csv',
         'book1_static_option_a_weights.csv',
@@ -615,6 +619,7 @@ def build_methods_index() -> None:
     methods = [
         ('allocation_alpha_vol_target.html', 'Allocation alpha: volatility-managed Option A'),
         ('ot_short_term_forecasting.html', 'Optimal transport: short-term forecasting'),
+        ('ts_explorer_metric_menu.html', 'Time Series Explorer: quant metric menu'),
     ]
     content = (
         '<section class="hero hero-compact"><div class="hero-inner">'

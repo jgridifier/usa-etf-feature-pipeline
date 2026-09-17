@@ -354,3 +354,25 @@ body > h1:first-of-type { margin-top: 2rem; }
   .band { padding: 2.5rem 1rem; }
   th, td { padding: 0.5rem 0.65rem; }
 }
+
+/* Time Series Explorer: scoped, dense research controls and charts. */
+.explorer-page .band { padding-top: 1.5rem; }
+.explorer-toolbar { display: flex; flex-wrap: wrap; align-items: end; gap: 0.75rem; }
+.explorer-toolbar label { display: grid; gap: 0.3rem; font-size: 0.8rem; color: var(--body); }
+.explorer-toolbar input, .explorer-toolbar select { min-height: 44px; max-width: 100%; border: 1px solid var(--hairline); border-radius: 8px; background: var(--canvas); color: var(--ink); padding: 0.5rem; font: inherit; }
+.explorer-toolbar input { width: 100px; font-family: var(--mono); }
+.explorer-toolbar :focus-visible { outline: 3px solid var(--primary); outline-offset: 2px; }
+.explorer-toolbar button { cursor: pointer; font-size: 0.85rem; }
+.explorer-toolbar :disabled { opacity: 0.5; cursor: wait; }
+.explorer-sample { display: flex; flex-wrap: wrap; gap: 0.5rem 1.25rem; align-items: center; font-family: var(--mono); font-size: 0.85rem; padding: 1rem; background: var(--surface-soft); border-radius: 12px; }
+.badge.thin { color: var(--semantic-down); border: 1px solid var(--semantic-down); background: var(--canvas); }
+.explorer-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1rem; margin: 1.5rem 0; }
+.explorer-grid .chart-card { min-width: 0; }
+.explorer-grid h2 { font-size: 0.9rem; font-weight: 600; margin: 0 0 0.5rem; }
+.explorer-grid .chart { height: 320px; }
+.explorer-grid #chart-panel { height: 590px; }
+.explorer-wide { grid-column: 1 / -1; }
+.heat-scroll { overflow-x: auto; }
+.explorer-grid #chart-heat { min-width: 740px; height: 700px; }
+.explorer-page summary { cursor: pointer; color: var(--primary); padding: 0.75rem 0; }
+@media (max-width: 700px) { .explorer-grid { grid-template-columns: 1fr; } .explorer-grid .chart-card { padding: 1rem 0.5rem 0.5rem; } }
