@@ -1,0 +1,4 @@
+date,asof,strategy_id,ticker,weight,role,thesis_tag,research_disclaimer,rotate_on,mode,optimizer,S_i
+2026-09-16,2026-09-16,static_option_a,VOO,0.7,core,static_option_a,Research-only; not investment advice; no trading or broker routing.,,,,
+2026-09-16,2026-09-16,static_option_a,QQQM,0.2,core,static_option_a,Research-only; not investment advice; no trading or broker routing.,,,,
+2026-09-16,2026-09-16,static_option_a,IJR,0.1,core,static_option_a,Research-only; not investment advice; no trading or broker routing.,,,,

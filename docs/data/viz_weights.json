@@ -1,0 +1,36 @@
+{
+  "books": {
+    "static_option_a": {
+      "label": "Book 1 \u2014 Static Option A",
+      "asof": "",
+      "weights": {
+        "VOO": 0.7,
+        "QQQM": 0.2,
+        "IJR": 0.1
+      }
+    },
+    "vol_target_option_a": {
+      "label": "Book 2 \u2014 Vol-target Option A",
+      "asof": "2026-08-31",
+      "eval_date": "2026-09-16",
+      "f": 1.0,
+      "weights": {
+        "VOO": 0.7,
+        "QQQM": 0.2,
+        "IJR": 0.1,
+        "BIL": 0.0
+      }
+    },
+    "score_rotate_xsd": {
+      "label": "Book 3 \u2014 ScoreSimple XSD sleeve",
+      "asof": "2026-09-16",
+      "rotate_on": "False",
+      "weights": {
+        "VOO": 0.7,
+        "QQQM": 0.2,
+        "IJR": 0.1,
+        "XSD": 0.0
+      }
+    }
+  }
+}

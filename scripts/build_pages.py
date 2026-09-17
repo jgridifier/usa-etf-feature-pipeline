@@ -1,78 +1,278 @@
 #!/usr/bin/env python3
-"""Build the committed research lab using only Python's standard library."""
+"""Build the committed research lab (stdlib only): copy CSVs → viz JSON → HTML."""
+from __future__ import annotations
+
 import csv
+import json
+import re
+import shutil
 from html import escape
 from pathlib import Path
-import re
 
 ROOT = Path(__file__).resolve().parents[1]
 DOCS = ROOT / 'docs'
 DATA = DOCS / 'data'
+ASSETS = DOCS / 'assets'
 DISCLAIMER = 'Research only; not investment advice; experimental panel; no performance guarantees.'
 
+# Optional CIO shortlist inputs (graceful skip if absent).
+CIO = Path('/workspace/investments/cio_book_shortlist')
+CIO_COPIES = [
+    (CIO / 'shortlist_comparison.csv', 'shortlist_comparison.csv'),
+    (CIO / 'book1_static_option_a_weights.csv', 'book1_static_option_a_weights.csv'),
+    (CIO / 'book2_vol_target_option_a_weights.csv', 'book2_vol_target_option_a_weights.csv'),
+    (CIO / 'run_latest' / 'strategy_comparison.csv', 'strategy_comparison.csv'),
+    (CIO / 'run_latest' / 'suggested_weights.csv', 'suggested_weights.csv'),
+    (CIO / 'run_latest' / 'strategy_diagnostics.csv', 'strategy_diagnostics.csv'),
+]
 
-def nav(prefix=''):
-    return '<nav aria-label="Main">' + ' '.join(
-        f'<a href="{prefix}{path}">{label}</a>' for path, label in
-        [('index.html', 'Home'), ('methods/index.html', 'Methods'),
-         ('books.html', 'Books'), ('runs.html', 'Runs')]) + '</nav>'
+NAV = [
+    ('index.html', 'Home'),
+    ('methods/index.html', 'Methods'),
+    ('books.html', 'Books'),
+    ('runs.html', 'Runs'),
+]
 
 
-def table(headers, rows, caption):
-    return (f'<div class="table-scroll" tabindex="0" role="region" aria-label="{escape(caption)}">'
-            f'<table><caption>{escape(caption)}</caption><thead><tr>'
-            + ''.join(f'<th scope="col">{escape(str(h))}</th>' for h in headers)
-            + '</tr></thead><tbody>'
-            + ''.join('<tr>' + ''.join(f'<td>{escape(str(v))}</td>' for v in row)
-                      + '</tr>' for row in rows) + '</tbody></table></div>')
-
-
-def read_csv(name):
-    with (DATA / name).open(newline='', encoding='utf-8') as f:
+def read_csv(name: str) -> list[dict]:
+    path = DATA / name
+    if not path.exists():
+        return []
+    with path.open(newline='', encoding='utf-8') as f:
         return list(csv.DictReader(f))
 
 
-def csv_table(path, prefix='data/'):
-    with path.open(newline='', encoding='utf-8') as f:
-        rows = list(csv.reader(f))
-    return (table(rows[0], rows[1:], path.stem.replace('_', ' '))
-            + f'<p><a href="{prefix}{escape(path.name)}">Download CSV</a></p>')
+def write_json(name: str, payload: object) -> None:
+    path = DATA / name
+    path.write_text(json.dumps(payload, indent=2) + '\n', encoding='utf-8')
 
 
-def page(path, title, content, prefix=''):
-    (DOCS / path).write_text(f'''<!doctype html>
-<html lang="en"><head><meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>{escape(title)} | USA ETF Lab</title>
-<link rel="stylesheet" href="{prefix}assets/style.css"></head>
-<body>{nav(prefix)}<main><h1>{escape(title)}</h1>{content}</main>
-<footer>{DISCLAIMER}</footer></body></html>
-''', encoding='utf-8')
+def copy_cio_inputs() -> None:
+    DATA.mkdir(parents=True, exist_ok=True)
+    for src, dest_name in CIO_COPIES:
+        if src.is_file():
+            shutil.copy2(src, DATA / dest_name)
 
 
-def main():
-    page('index.html', 'Experimental USA ETF research panel lab',
-         '<p>A research lab for transparent ETF features, fixed allocation books, '
-         'and volatility-managed portfolio experiments.</p>'
-         '<p>Research only; not investment advice. Explore the teaching notes, '
-         'three-book CIO shortlist, and archived out-of-sample (OOS) runs.</p>'
-         '<p><a href="books.html">Explore the books</a> · '
-         '<a href="runs.html">Inspect OOS results</a></p>')
-    methods = [('allocation_alpha_vol_target.html', 'Allocation alpha: volatility-managed Option A'),
-               ('ot_short_term_forecasting.html', 'Optimal transport: short-term forecasting')]
-    page('methods/index.html', 'Methods', '<ul>' + ''.join(
-        f'<li><a href="{name}">{title}</a></li>' for name, title in methods) + '</ul>', '../')
-    # Replace only the marked shared chrome on rebuild; preserve teaching content and citations.
-    for name, _ in methods:
-        p = DOCS / 'methods' / name
-        s = re.sub(r'<!-- lab:start -->.*?<!-- lab:end -->', '', p.read_text(), flags=re.S)
-        s = s.replace('</head>', '<!-- lab:start --><link rel="stylesheet" href="../assets/style.css"><!-- lab:end --></head>')
-        s = s.replace('<body>', '<body><!-- lab:start -->' + nav('../') + '<!-- lab:end -->')
-        s = s.replace('</body>', '<!-- lab:start --><footer>' + DISCLAIMER + '</footer><!-- lab:end --></body>')
-        p.write_text(s, encoding='utf-8')
+def cumprod_wealth(returns: list[float]) -> list[float]:
+    wealth = [1.0]
+    w = 1.0
+    for r in returns:
+        w *= 1.0 + r
+        wealth.append(w)
+    return wealth  # length = n+1 with t0=1; we align to dates below
+
+
+def drawdowns(wealth: list[float]) -> list[float]:
+    out = []
+    peak = wealth[0]
+    for w in wealth:
+        peak = max(peak, w)
+        out.append(w / peak - 1.0)
+    return out
+
+
+def build_viz() -> None:
+    """Exact column wiring for CIO charts — do not invent series."""
+    oos = read_csv('vol_target_oos_returns.csv')
+    # Prefer primary trial if multiple; current archive is one trial.
+    if oos:
+        trial = oos[0]['trial_id']
+        oos = [r for r in oos if r['trial_id'] == trial]
+
+    dates = [r['date'] for r in oos]
+    r_vt = [float(r['r_vt']) for r in oos]
+    r_a = [float(r['r_option_a']) for r in oos]
+    # Wealth starts at 1.0 on the day before first return; plot against return dates
+    # as end-of-period wealth after each month.
+    w_vt, w_a = 1.0, 1.0
+    equity_vt, equity_a = [], []
+    for rv, ra in zip(r_vt, r_a):
+        w_vt *= 1.0 + rv
+        w_a *= 1.0 + ra
+        equity_vt.append(w_vt)
+        equity_a.append(w_a)
+    dd_vt = drawdowns(equity_vt)
+    dd_a = drawdowns(equity_a)
+    write_json('viz_equity_drawdown.json', {
+        'source': 'vol_target_oos_returns.csv',
+        'columns': {'vol_target': 'r_vt', 'static_option_a': 'r_option_a'},
+        'citation': 'Moreira & Muir (2017)',
+        'callout': 'Path/risk improvement, not return alpha (NW t ≈ 0)',
+        'dates': dates,
+        'equity': {
+            'vol_target_option_a': equity_vt,
+            'static_option_a': equity_a,
+        },
+        'drawdown': {
+            'vol_target_option_a': dd_vt,
+            'static_option_a': dd_a,
+        },
+        'max_dd': {
+            'vol_target_option_a': min(dd_vt) if dd_vt else None,
+            'static_option_a': min(dd_a) if dd_a else None,
+        },
+    })
 
     weights = read_csv('vol_target_monthly_weights.csv')
-    primary = read_csv('vol_target_oos_summary.csv')[0]['trial_id']
+    if weights and oos:
+        weights = [r for r in weights if r['trial_id'] == oos[0]['trial_id']]
+    write_json('viz_ft_history.json', {
+        'source': 'vol_target_monthly_weights.csv (+ f on oos returns)',
+        'dates': [r['date'] for r in weights],
+        'f': [float(r['f']) for r in weights],
+        'w_BIL': [float(r['w_BIL']) for r in weights],
+        'sigma_hat': [float(r['sigma_hat']) for r in weights],
+    })
+
+    # Current weight bars: latest as-of from monthly weights + static template + suggested
+    latest = weights[-1] if weights else None
+    books = {
+        'static_option_a': {
+            'label': 'Book 1 — Static Option A',
+            'asof': '',
+            'weights': {'VOO': 0.7, 'QQQM': 0.2, 'IJR': 0.1},
+        },
+    }
+    if latest:
+        books['vol_target_option_a'] = {
+            'label': 'Book 2 — Vol-target Option A',
+            'asof': latest['date'],
+            'eval_date': latest.get('eval_date', ''),
+            'f': float(latest['f']),
+            'weights': {
+                'VOO': float(latest['w_VOO']),
+                'QQQM': float(latest['w_QQQM']),
+                'IJR': float(latest['w_IJR']),
+                'BIL': float(latest['w_BIL']),
+            },
+        }
+    suggested = read_csv('suggested_weights.csv')
+    book3 = [r for r in suggested if r['strategy_id'] == 'score_rotate_xsd']
+    if book3:
+        books['score_rotate_xsd'] = {
+            'label': 'Book 3 — ScoreSimple XSD sleeve',
+            'asof': book3[0].get('asof') or book3[0].get('date', ''),
+            'rotate_on': book3[0].get('rotate_on', ''),
+            'weights': {r['ticker']: float(r['weight']) for r in book3},
+        }
+    write_json('viz_weights.json', {'books': books})
+
+    # XSD ON/OFF from strategy_diagnostics (on / rotate_on) — snapshot only today
+    diag = read_csv('strategy_diagnostics.csv')
+    xsd_rows = [r for r in diag if r.get('strategy_id') == 'score_rotate_xsd']
+    if xsd_rows:
+        row = xsd_rows[0]
+        on_raw = (row.get('on') or '').strip()
+        rotate_raw = (row.get('rotate_on') or '').strip()
+        # Normalize bool-ish
+        def as_bool(v: str):
+            if v == '':
+                return None
+            return v.lower() in ('1', 'true', 'yes', 'on')
+        on_val = as_bool(on_raw)
+        if on_val is None:
+            on_val = as_bool(rotate_raw)
+        write_json('viz_xsd_timeline.json', {
+            'available': False,
+            'note': 'No historical XSD ON/OFF series published yet in run_latest diagnostics; showing latest snapshot only.',
+            'source': 'strategy_diagnostics.csv',
+            'snapshot': {
+                'strategy_id': 'score_rotate_xsd',
+                'date': row.get('date', ''),
+                'on': on_val,
+                'on_raw': on_raw,
+                'rotate_on': rotate_raw or None,
+                'ticker': row.get('ticker', 'XSD'),
+                'vol_ok': row.get('vol_ok', ''),
+                'raw_on': row.get('raw_on', ''),
+            },
+            'dates': [],
+            'xsd_on': [],
+        })
+    else:
+        write_json('viz_xsd_timeline.json', {
+            'available': False,
+            'note': 'No series yet — strategy_diagnostics.csv has no score_rotate_xsd row.',
+            'source': 'strategy_diagnostics.csv',
+            'snapshot': None,
+            'dates': [],
+            'xsd_on': [],
+        })
+
+    # Comparison table: prefer strategy_comparison, fall back to shortlist
+    comparison = read_csv('strategy_comparison.csv') or read_csv('shortlist_comparison.csv')
+    # Filter to CIO shortlist books when full registry present
+    shortlist_ids = {'static_option_a', 'vol_target_option_a', 'score_rotate_xsd'}
+    short = [r for r in comparison if r['strategy_id'] in shortlist_ids]
+    if not short:
+        short = comparison
+    labels = {
+        'static_option_a': 'Book 1 — Static Option A',
+        'vol_target_option_a': 'Book 2 — Vol-target Option A',
+        'score_rotate_xsd': 'Book 3 — ScoreSimple XSD',
+        'm3_p2_core_rotate': 'M3 P2 (held off)',
+    }
+    stances = {
+        'static_option_a': 'Benchmark policy baseline',
+        'vol_target_option_a': 'Default research path — risk path, not return alpha',
+        'score_rotate_xsd': 'Optional thematic sleeve',
+        'm3_p2_core_rotate': 'Held off the shortlist',
+    }
+    rows_out = []
+    for r in short:
+        sid = r['strategy_id']
+        nw = r.get('NW_t_vs_option_a', '')
+        rows_out.append({
+            'strategy_id': sid,
+            'label': labels.get(sid, sid),
+            'AnnReturn': float(r['AnnReturn']),
+            'AnnVol': float(r['AnnVol']),
+            'MaxDD': float(r['MaxDD']),
+            'Sharpe_rf0': float(r['Sharpe_rf0']),
+            'NW_t_vs_option_a': float(nw) if nw not in ('', None) else None,
+            'turnover_per_year': float(r['turnover_per_year']) if r.get('turnover_per_year') not in ('', None) else None,
+            'n_months': int(float(r['n_months'])) if r.get('n_months') else None,
+            'start_date': r.get('start_date', ''),
+            'end_date': r.get('end_date', ''),
+            'stance': stances.get(sid, ''),
+        })
+    write_json('viz_comparison.json', {
+        'source': 'strategy_comparison.csv' if (DATA / 'strategy_comparison.csv').exists() else 'shortlist_comparison.csv',
+        'rows': rows_out,
+    })
+
+    # Metrics for home cards from oos summary + comparison
+    summary = read_csv('vol_target_oos_summary.csv')
+    metrics = {}
+    if summary:
+        s = summary[0]
+        metrics = {
+            'trial_id': s['trial_id'],
+            'AnnReturn_vt': float(s['AnnReturn']),
+            'AnnVol_vt': float(s['AnnVol']),
+            'MaxDD_vt': float(s['MaxDD']),
+            'Sharpe_vt': float(s['Sharpe_rf0']),
+            'AnnReturn_a': float(s['OptionA_AnnReturn']),
+            'AnnVol_a': float(s['OptionA_AnnVol']),
+            'MaxDD_a': float(s['OptionA_MaxDD']),
+            'Sharpe_a': float(s['OptionA_Sharpe_rf0']),
+            'NW_t': float(s['NW_t_vs_OptionA']),
+            'n_months': int(float(s['n_months'])),
+            'start_date': s['start_date'],
+            'end_date': s['end_date'],
+            'mean_f': float(s['mean_f']),
+            'pct_months_f_lt_1': float(s['pct_months_f_lt_1']),
+        }
+    write_json('viz_metrics.json', metrics)
+
+
+def refresh_weights_snapshot() -> None:
+    weights = read_csv('vol_target_monthly_weights.csv')
+    summary = read_csv('vol_target_oos_summary.csv')
+    if not weights or not summary:
+        return
+    primary = summary[0]['trial_id']
     latest = max((r for r in weights if r['trial_id'] == primary), key=lambda r: r['date'])
     snapshot = DATA / 'latest_weights_snapshot.csv'
     with snapshot.open('w', newline='', encoding='utf-8') as f:
@@ -81,35 +281,404 @@ def main():
         for ticker, weight in [('VOO', .7), ('QQQM', .2), ('IJR', .1)]:
             writer.writerow(['static_option_a', '', '', ticker, weight, 'static research template'])
         for ticker in ['VOO', 'QQQM', 'IJR', 'BIL']:
-            writer.writerow(['vol_target_option_a', latest['date'], latest['eval_date'], ticker,
-                             latest['w_' + ticker], 'historical OOS sample: ' + primary])
-    books = table(['ID', 'Book', 'Research role'], [
-        ['static_option_a', 'Static Option A', 'VOO 70% / QQQM 20% / IJR 10%'],
-        ['vol_target_option_a', 'Vol-target Option A', 'Default research recommended path: f_max=1, cash=BIL; Moreira & Muir (2017)'],
-        ['score_rotate_xsd', 'ScoreSimple XSD sleeve', 'Optional thematic research sleeve'],
-    ], 'CIO shortlist — three research books')
-    page('books.html', 'Books / strategies', books +
-         '<p><code>m3_p2</code> is held off. The default recommendation above concerns '
-         'the research workflow only.</p><p>Weights refresh via <code>run-strategies --asof</code>. '
-         'Until refreshed artifacts are published, this snapshot shows the static template and '
-         'the latest decision month in the archived primary vol-target trial; it is not a live allocation.</p>'
-         + csv_table(snapshot))
-    summary = read_csv('vol_target_oos_summary.csv')
-    comparison = table(['Trial', 'Metric', 'Vol-target Option A', 'Static Option A'], [
-        [r['trial_id'], metric, f"{float(r[metric]):.4f}", f"{float(r['OptionA_' + metric]):.4f}"]
-        for r in summary for metric in ['AnnReturn', 'AnnVol', 'MaxDD', 'Sharpe_rf0']
-    ], 'OOS comparison (returns, volatility and drawdown in decimal units)')
-    content = ('<p>Archived real-BIL run: weights use data through the decision date; '
-               'returns evaluate the following period. The final September 2026 observation '
-               'ends September 16 and is a partial month.</p>'
-               '<p>These results show lower volatility and drawdown, without a statistically '
-               'significant return edge in the supplied note. '
-               '<a href="data/README_OOS_note.md">Read the OOS note</a>.</p>' + comparison)
+            writer.writerow([
+                'vol_target_option_a', latest['date'], latest['eval_date'], ticker,
+                latest['w_' + ticker], 'historical OOS sample: ' + primary,
+            ])
+
+
+def nav_html(prefix: str = '', active: str = '') -> str:
+    links = []
+    for path, label in NAV:
+        href = prefix + path
+        cls = ' class="is-active"' if active == path else ''
+        links.append(f'<a href="{href}"{cls}>{escape(label)}</a>')
+    return (
+        '<header class="site-header">'
+        '<div class="site-header-inner">'
+        '<a class="brand" href="' + prefix + 'index.html">USA ETF Lab</a>'
+        '<nav class="site-nav" aria-label="Main">' + ''.join(links) + '</nav>'
+        '</div></header>'
+    )
+
+
+def table_html(headers, rows, caption: str) -> str:
+    return (
+        f'<div class="table-scroll" tabindex="0" role="region" aria-label="{escape(caption)}">'
+        f'<table><caption>{escape(caption)}</caption><thead><tr>'
+        + ''.join(f'<th scope="col">{escape(str(h))}</th>' for h in headers)
+        + '</tr></thead><tbody>'
+        + ''.join(
+            '<tr>' + ''.join(f'<td>{escape(str(v))}</td>' for v in row) + '</tr>'
+            for row in rows
+        )
+        + '</tbody></table></div>'
+    )
+
+
+def csv_table(path: Path, prefix: str = 'data/') -> str:
+    with path.open(newline='', encoding='utf-8') as f:
+        rows = list(csv.reader(f))
+    if not rows:
+        return ''
+    return (
+        table_html(rows[0], rows[1:], path.stem.replace('_', ' '))
+        + f'<p class="dl"><a href="{prefix}{escape(path.name)}">Download CSV</a></p>'
+    )
+
+
+def page_shell(
+    title: str,
+    content: str,
+    prefix: str = '',
+    active: str = '',
+    extra_head: str = '',
+    include_charts: bool = False,
+) -> str:
+    scripts = ''
+    if include_charts:
+        scripts = (
+            '<script src="https://cdn.jsdelivr.net/npm/echarts@5.5.1/dist/echarts.min.js"></script>'
+            f'<script src="{prefix}assets/app.js" defer></script>'
+        )
+    fonts = (
+        '<link rel="preconnect" href="https://fonts.googleapis.com">'
+        '<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>'
+        '<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">'
+    )
+    return f'''<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{escape(title)} | USA ETF Lab</title>
+{fonts}
+<link rel="stylesheet" href="{prefix}assets/style.css">
+{extra_head}
+</head>
+<body>
+{nav_html(prefix, active)}
+<main class="page">
+{content}
+</main>
+<footer class="site-footer">
+<p>{escape(DISCLAIMER)}</p>
+<p class="muted">Design tokens adapted from public institutional UI patterns (Inter / JetBrains Mono stand-ins). Research panel only.</p>
+</footer>
+{scripts}
+</body>
+</html>
+'''
+
+
+def write_page(rel: str, html: str) -> None:
+    path = DOCS / rel
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(html, encoding='utf-8')
+
+
+def fmt_pct(x: float | None, digits: int = 1) -> str:
+    if x is None:
+        return '—'
+    return f'{100 * x:.{digits}f}%'
+
+
+def fmt_num(x: float | None, digits: int = 2) -> str:
+    if x is None:
+        return '—'
+    return f'{x:.{digits}f}'
+
+
+def build_index() -> None:
+    metrics = json.loads((DATA / 'viz_metrics.json').read_text()) if (DATA / 'viz_metrics.json').exists() else {}
+    cards = ''
+    if metrics:
+        cards = f'''
+<section class="band">
+  <div class="band-inner">
+    <div class="section-head">
+      <span class="badge">OOS scorecard</span>
+      <h2>Book 2 vs static Option A</h2>
+      <p class="lede">Archived real-BIL sample · {escape(str(metrics.get('n_months', '')))} months · {escape(metrics.get('start_date', ''))} → {escape(metrics.get('end_date', ''))}</p>
+    </div>
+    <div class="metric-grid">
+      <article class="metric-card">
+        <h3>Sharpe (vt)</h3>
+        <p class="metric-value">{fmt_num(metrics.get('Sharpe_vt'))}</p>
+        <p class="metric-sub">Static A: {fmt_num(metrics.get('Sharpe_a'))}</p>
+      </article>
+      <article class="metric-card">
+        <h3>Max drawdown (vt)</h3>
+        <p class="metric-value down">{fmt_pct(metrics.get('MaxDD_vt'))}</p>
+        <p class="metric-sub">Static A: {fmt_pct(metrics.get('MaxDD_a'))}</p>
+      </article>
+      <article class="metric-card">
+        <h3>Ann. vol (vt)</h3>
+        <p class="metric-value">{fmt_pct(metrics.get('AnnVol_vt'))}</p>
+        <p class="metric-sub">Static A: {fmt_pct(metrics.get('AnnVol_a'))}</p>
+      </article>
+      <article class="metric-card">
+        <h3>NW t vs A</h3>
+        <p class="metric-value">{fmt_num(metrics.get('NW_t'))}</p>
+        <p class="metric-sub">Path/risk improvement, not return alpha</p>
+      </article>
+    </div>
+    <p class="callout">Moreira &amp; Muir (2017) · mean f = {fmt_num(metrics.get('mean_f'))} · months with f&lt;1: {fmt_pct(metrics.get('pct_months_f_lt_1'), 0)}</p>
+    <div class="cta-row">
+      <a class="btn btn-primary" href="runs.html">Open OOS charts</a>
+      <a class="btn btn-secondary" href="books.html">CIO shortlist</a>
+    </div>
+  </div>
+</section>'''
+    content = f'''
+<section class="hero">
+  <div class="hero-inner">
+    <span class="badge">Research panel</span>
+    <h1>Experimental USA ETF research lab</h1>
+    <p class="lede">Transparent ETF features, fixed allocation books, and volatility-managed portfolio experiments — static GitHub Pages, no live trading.</p>
+    <div class="cta-row">
+      <a class="btn btn-primary" href="books.html">Explore books</a>
+      <a class="btn btn-secondary" href="methods/index.html">Methods</a>
+    </div>
+  </div>
+</section>
+{cards}
+<section class="band soft">
+  <div class="band-inner card-grid">
+    <a class="feature-card" href="methods/allocation_alpha_vol_target.html">
+      <span class="badge">Method</span>
+      <h3>Allocation alpha · vol-target</h3>
+      <p>Scale-down Option A with BIL residual. Open teaching note + viz.</p>
+    </a>
+    <a class="feature-card" href="books.html">
+      <span class="badge">Books</span>
+      <h3>Three-book CIO shortlist</h3>
+      <p>Static A, vol-target A, optional XSD sleeve — weights and comparison.</p>
+    </a>
+    <a class="feature-card" href="runs.html">
+      <span class="badge">Runs</span>
+      <h3>Out-of-sample archive</h3>
+      <p>Equity curves, drawdowns, f<sub>t</sub> history, and downloadable CSVs.</p>
+    </a>
+  </div>
+</section>
+'''
+    write_page('index.html', page_shell(
+        'Experimental USA ETF research panel lab', content, active='index.html', include_charts=False,
+    ))
+
+
+def build_books() -> None:
+    content = '''
+<section class="hero hero-compact">
+  <div class="hero-inner">
+    <span class="badge">CIO shortlist</span>
+    <h1>Books / strategies</h1>
+    <p class="lede">Three research books. <code>m3_p2</code> is held off. Default recommendation is the research workflow for Book 2 (vol-target), not a live allocation.</p>
+  </div>
+</section>
+<section class="band">
+  <div class="band-inner">
+    <div class="section-head">
+      <h2>Comparison</h2>
+      <p class="lede">From <code>strategy_comparison.csv</code> (Books 1–3). Mobile-friendly table.</p>
+    </div>
+    <div id="comparison-table" class="comparison-host" data-viz="comparison"></div>
+  </div>
+</section>
+<section class="band soft">
+  <div class="band-inner">
+    <div class="section-head">
+      <h2>Current weights</h2>
+      <p class="lede">Latest as-of bars from monthly weights / suggested_weights. Not a live broker allocation.</p>
+    </div>
+    <div class="chart-grid">
+      <div class="chart-card">
+        <h3>Book 1 — Static Option A</h3>
+        <div class="chart" data-chart="weights" data-book="static_option_a" style="min-height:280px"></div>
+      </div>
+      <div class="chart-card">
+        <h3>Book 2 — Vol-target Option A</h3>
+        <div class="chart" data-chart="weights" data-book="vol_target_option_a" style="min-height:280px"></div>
+      </div>
+      <div class="chart-card">
+        <h3>Book 3 — XSD sleeve</h3>
+        <div class="chart" data-chart="weights" data-book="score_rotate_xsd" style="min-height:280px"></div>
+      </div>
+    </div>
+  </div>
+</section>
+<section class="band">
+  <div class="band-inner">
+    <div class="section-head">
+      <h2>XSD ON / OFF</h2>
+      <p class="lede">ScoreSimple gate from <code>strategy_diagnostics.csv</code> (<code>on</code> / <code>rotate_on</code>).</p>
+    </div>
+    <div class="chart-card">
+      <div class="chart" data-chart="xsd-timeline" style="min-height:200px"></div>
+    </div>
+  </div>
+</section>
+<section class="band soft">
+  <div class="band-inner">
+    <div class="section-head"><h2>Weight snapshot CSV</h2></div>
+'''
+    snapshot = DATA / 'latest_weights_snapshot.csv'
+    if snapshot.exists():
+        content += csv_table(snapshot)
+    content += '</div></section>'
+    write_page('books.html', page_shell(
+        'Books / strategies', content, active='books.html', include_charts=True,
+    ))
+
+
+def build_runs() -> None:
+    content = '''
+<section class="hero hero-compact">
+  <div class="hero-inner">
+    <span class="badge">OOS archive</span>
+    <h1>Out-of-sample runs</h1>
+    <p class="lede">Weights use data through the decision date; returns evaluate the following period. Final September 2026 observation ends September 16 (partial month).</p>
+    <p class="callout">Book 2 · Moreira &amp; Muir (2017) · path/risk improvement, not return alpha (NW t ≈ 0). <a href="data/README_OOS_note.md">Read the OOS note</a>.</p>
+  </div>
+</section>
+<section class="band">
+  <div class="band-inner">
+    <div class="section-head">
+      <h2>Equity curves</h2>
+      <p class="lede">Cumulative wealth from <code>r_vt</code> vs <code>r_option_a</code> in <code>vol_target_oos_returns.csv</code> (cumprod).</p>
+    </div>
+    <div class="chart-card">
+      <div class="chart" data-chart="equity" style="min-height:360px"></div>
+    </div>
+  </div>
+</section>
+<section class="band soft">
+  <div class="band-inner">
+    <div class="section-head">
+      <h2>Drawdowns</h2>
+      <p class="lede">Peak-to-trough from the same wealth paths.</p>
+    </div>
+    <div class="chart-card">
+      <div class="chart" data-chart="drawdown" style="min-height:320px"></div>
+    </div>
+  </div>
+</section>
+<section class="band">
+  <div class="band-inner">
+    <div class="section-head">
+      <h2>Vol-target f<sub>t</sub></h2>
+      <p class="lede">Scale factor and BIL residual share from <code>vol_target_monthly_weights.csv</code>.</p>
+    </div>
+    <div class="chart-card">
+      <div class="chart" data-chart="ft" style="min-height:320px"></div>
+    </div>
+  </div>
+</section>
+<section class="band soft">
+  <div class="band-inner">
+    <div class="section-head">
+      <h2>XSD gate snapshot</h2>
+    </div>
+    <div class="chart-card">
+      <div class="chart" data-chart="xsd-timeline" style="min-height:200px"></div>
+    </div>
+  </div>
+</section>
+<section class="band">
+  <div class="band-inner">
+    <div class="section-head"><h2>Archived tables</h2></div>
+'''
+    skip = {
+        'latest_weights_snapshot.csv',
+        'suggested_weights.csv',
+        'book1_static_option_a_weights.csv',
+        'book2_vol_target_option_a_weights.csv',
+    }
     for p in sorted(DATA.glob('*.csv')):
-        if p.name == snapshot.name:
+        if p.name in skip or p.name.startswith('viz_'):
             continue
-        content += '<section><h2>' + escape(p.stem.replace('_', ' ').title()) + '</h2>' + csv_table(p) + '</section>'
-    page('runs.html', 'Out-of-sample runs', content)
+        content += (
+            '<section class="table-block"><h3>'
+            + escape(p.stem.replace('_', ' ').title())
+            + '</h3>'
+            + csv_table(p)
+            + '</section>'
+        )
+    content += '</div></section>'
+    write_page('runs.html', page_shell(
+        'Out-of-sample runs', content, active='runs.html', include_charts=True,
+    ))
+
+
+def build_methods_index() -> None:
+    methods = [
+        ('allocation_alpha_vol_target.html', 'Allocation alpha: volatility-managed Option A'),
+        ('ot_short_term_forecasting.html', 'Optimal transport: short-term forecasting'),
+    ]
+    content = (
+        '<section class="hero hero-compact"><div class="hero-inner">'
+        '<span class="badge">Teaching notes</span><h1>Methods</h1>'
+        '<p class="lede">Citation-backed method pages. Open viz deep-links to the Runs lab.</p>'
+        '<div class="cta-row"><a class="btn btn-primary" href="../runs.html">Open OOS viz</a></div>'
+        '</div></section>'
+        '<section class="band"><div class="band-inner"><ul class="method-list">'
+        + ''.join(
+            f'<li><a href="{name}">{escape(title)}</a></li>' for name, title in methods
+        )
+        + '</ul></div></section>'
+    )
+    write_page('methods/index.html', page_shell(
+        'Methods', content, prefix='../', active='methods/index.html', include_charts=False,
+    ))
+
+
+def restyle_methods_shell() -> None:
+    methods = [
+        'allocation_alpha_vol_target.html',
+        'ot_short_term_forecasting.html',
+    ]
+    for name in methods:
+        p = DOCS / 'methods' / name
+        if not p.exists():
+            continue
+        s = p.read_text(encoding='utf-8')
+        s = re.sub(r'<!-- lab:start -->.*?<!-- lab:end -->', '', s, flags=re.S)
+        # Inject shared stylesheet + fonts link marker
+        inject_head = (
+            '<!-- lab:start -->'
+            '<link rel="preconnect" href="https://fonts.googleapis.com">'
+            '<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>'
+            '<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">'
+            '<link rel="stylesheet" href="../assets/style.css">'
+            '<!-- lab:end -->'
+        )
+        s = s.replace('</head>', inject_head + '</head>')
+        s = s.replace(
+            '<body>',
+            '<body><!-- lab:start -->' + nav_html('../', 'methods/index.html') + '<!-- lab:end -->',
+        )
+        s = s.replace(
+            '</body>',
+            '<!-- lab:start --><footer class="site-footer"><p>'
+            + DISCLAIMER
+            + '</p></footer><!-- lab:end --></body>',
+        )
+        p.write_text(s, encoding='utf-8')
+
+
+def main() -> None:
+    ASSETS.mkdir(parents=True, exist_ok=True)
+    DATA.mkdir(parents=True, exist_ok=True)
+    copy_cio_inputs()
+    refresh_weights_snapshot()
+    build_viz()
+    build_index()
+    build_books()
+    build_runs()
+    build_methods_index()
+    restyle_methods_shell()
+    print('Built docs pages + viz JSON under', DOCS)
 
 
 if __name__ == '__main__':

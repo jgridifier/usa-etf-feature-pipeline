@@ -1,7 +1,90 @@
 <!doctype html>
-<html lang="en"><head><meta charset="utf-8">
+<html lang="en">
+<head>
+<meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Experimental USA ETF research panel lab | USA ETF Lab</title>
-<link rel="stylesheet" href="assets/style.css"></head>
-<body><nav aria-label="Main"><a href="index.html">Home</a> <a href="methods/index.html">Methods</a> <a href="books.html">Books</a> <a href="runs.html">Runs</a></nav><main><h1>Experimental USA ETF research panel lab</h1><p>A research lab for transparent ETF features, fixed allocation books, and volatility-managed portfolio experiments.</p><p>Research only; not investment advice. Explore the teaching notes, three-book CIO shortlist, and archived out-of-sample (OOS) runs.</p><p><a href="books.html">Explore the books</a> · <a href="runs.html">Inspect OOS results</a></p></main>
-<footer>Research only; not investment advice; experimental panel; no performance guarantees.</footer></body></html>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/style.css">
+
+</head>
+<body>
+<header class="site-header"><div class="site-header-inner"><a class="brand" href="index.html">USA ETF Lab</a><nav class="site-nav" aria-label="Main"><a href="index.html" class="is-active">Home</a><a href="methods/index.html">Methods</a><a href="books.html">Books</a><a href="runs.html">Runs</a></nav></div></header>
+<main class="page">
+
+<section class="hero">
+  <div class="hero-inner">
+    <span class="badge">Research panel</span>
+    <h1>Experimental USA ETF research lab</h1>
+    <p class="lede">Transparent ETF features, fixed allocation books, and volatility-managed portfolio experiments — static GitHub Pages, no live trading.</p>
+    <div class="cta-row">
+      <a class="btn btn-primary" href="books.html">Explore books</a>
+      <a class="btn btn-secondary" href="methods/index.html">Methods</a>
+    </div>
+  </div>
+</section>
+
+<section class="band">
+  <div class="band-inner">
+    <div class="section-head">
+      <span class="badge">OOS scorecard</span>
+      <h2>Book 2 vs static Option A</h2>
+      <p class="lede">Archived real-BIL sample · 68 months · 2021-02-26 → 2026-09-16</p>
+    </div>
+    <div class="metric-grid">
+      <article class="metric-card">
+        <h3>Sharpe (vt)</h3>
+        <p class="metric-value">1.06</p>
+        <p class="metric-sub">Static A: 0.92</p>
+      </article>
+      <article class="metric-card">
+        <h3>Max drawdown (vt)</h3>
+        <p class="metric-value down">-20.1%</p>
+        <p class="metric-sub">Static A: -25.6%</p>
+      </article>
+      <article class="metric-card">
+        <h3>Ann. vol (vt)</h3>
+        <p class="metric-value">13.9%</p>
+        <p class="metric-sub">Static A: 15.9%</p>
+      </article>
+      <article class="metric-card">
+        <h3>NW t vs A</h3>
+        <p class="metric-value">-0.22</p>
+        <p class="metric-sub">Path/risk improvement, not return alpha</p>
+      </article>
+    </div>
+    <p class="callout">Moreira &amp; Muir (2017) · mean f = 0.93 · months with f&lt;1: 26%</p>
+    <div class="cta-row">
+      <a class="btn btn-primary" href="runs.html">Open OOS charts</a>
+      <a class="btn btn-secondary" href="books.html">CIO shortlist</a>
+    </div>
+  </div>
+</section>
+<section class="band soft">
+  <div class="band-inner card-grid">
+    <a class="feature-card" href="methods/allocation_alpha_vol_target.html">
+      <span class="badge">Method</span>
+      <h3>Allocation alpha · vol-target</h3>
+      <p>Scale-down Option A with BIL residual. Open teaching note + viz.</p>
+    </a>
+    <a class="feature-card" href="books.html">
+      <span class="badge">Books</span>
+      <h3>Three-book CIO shortlist</h3>
+      <p>Static A, vol-target A, optional XSD sleeve — weights and comparison.</p>
+    </a>
+    <a class="feature-card" href="runs.html">
+      <span class="badge">Runs</span>
+      <h3>Out-of-sample archive</h3>
+      <p>Equity curves, drawdowns, f<sub>t</sub> history, and downloadable CSVs.</p>
+    </a>
+  </div>
+</section>
+
+</main>
+<footer class="site-footer">
+<p>Research only; not investment advice; experimental panel; no performance guarantees.</p>
+<p class="muted">Design tokens adapted from public institutional UI patterns (Inter / JetBrains Mono stand-ins). Research panel only.</p>
+</footer>
+
+</body>
+</html>

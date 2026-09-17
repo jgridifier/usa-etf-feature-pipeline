@@ -1,0 +1,17 @@
+{
+  "available": false,
+  "note": "No historical XSD ON/OFF series published yet in run_latest diagnostics; showing latest snapshot only.",
+  "source": "strategy_diagnostics.csv",
+  "snapshot": {
+    "strategy_id": "score_rotate_xsd",
+    "date": "2026-09-16 00:00:00",
+    "on": false,
+    "on_raw": "False",
+    "rotate_on": null,
+    "ticker": "XSD",
+    "vol_ok": "False",
+    "raw_on": "False"
+  },
+  "dates": [],
+  "xsd_on": []
+}

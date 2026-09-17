@@ -1,0 +1,47 @@
+{
+  "source": "strategy_comparison.csv",
+  "rows": [
+    {
+      "strategy_id": "score_rotate_xsd",
+      "label": "Book 3 \u2014 ScoreSimple XSD",
+      "AnnReturn": 0.15026333568884875,
+      "AnnVol": 0.1686857820565902,
+      "MaxDD": -0.26268460968996077,
+      "Sharpe_rf0": 0.8907883868863284,
+      "NW_t_vs_option_a": 0.40860001222437403,
+      "turnover_per_year": 0.30422535211267604,
+      "n_months": 68,
+      "start_date": "2021-02-26",
+      "end_date": "2026-09-16",
+      "stance": "Optional thematic sleeve"
+    },
+    {
+      "strategy_id": "static_option_a",
+      "label": "Book 1 \u2014 Static Option A",
+      "AnnReturn": 0.1468414603389736,
+      "AnnVol": 0.15886906598980804,
+      "MaxDD": -0.25562713849928165,
+      "Sharpe_rf0": 0.9242923373666334,
+      "NW_t_vs_option_a": null,
+      "turnover_per_year": 0.0,
+      "n_months": 68,
+      "start_date": "2021-02-26",
+      "end_date": "2026-09-16",
+      "stance": "Benchmark policy baseline"
+    },
+    {
+      "strategy_id": "vol_target_option_a",
+      "label": "Book 2 \u2014 Vol-target Option A",
+      "AnnReturn": 0.14725536694852637,
+      "AnnVol": 0.13903843066788696,
+      "MaxDD": -0.201285918526651,
+      "Sharpe_rf0": 1.0590983100224047,
+      "NW_t_vs_option_a": -0.2236410579342544,
+      "turnover_per_year": 0.33745994313629074,
+      "n_months": 68,
+      "start_date": "2021-02-26",
+      "end_date": "2026-09-16",
+      "stance": "Default research path \u2014 risk path, not return alpha"
+    }
+  ]
+}
