@@ -172,6 +172,37 @@ This command keeps selection fixed at Option A (VOO 70 / QQQM 20 / IJR 10), esti
 
 Outputs include `vol_target_oos_summary.csv`, `vol_target_monthly_weights.csv`, `vol_target_oos_returns.csv`, `vol_target_trial_registry.csv`, and `vol_target_regime_table.csv`.
 
+### Run strategy registry
+
+```bash
+python -m usa_etf_features.cli run-strategies \
+  --asof 2026-09-16 \
+  --prices /workspace/investments/growth_alpha_adj_close.csv \
+  --universe /workspace/investments/usa_universe_categorized.csv \
+  --registry config/strategies.yaml \
+  --out-dir data/processed/strategy_run_20260916/
+```
+
+```bash
+python -m usa_etf_features.cli run-strategies \
+  --walkforward \
+  --prices /workspace/investments/growth_alpha_adj_close.csv \
+  --universe /workspace/investments/usa_universe_categorized.csv \
+  --registry config/strategies.yaml \
+  --out-dir data/processed/strategy_wf/
+```
+
+The registry runner writes `suggested_weights.csv`, `strategy_diagnostics.csv`, `strategy_comparison.csv`, `strategy_registry_used.csv`, and `strategy_comparison.xlsx`. Every artifact carries the research-only disclaimer. The v1 registry is in `config/strategies.yaml` and includes `static_option_a`, `vol_target_option_a`, `score_rotate_xsd`, and `m3_p2_core_rotate`.
+
+The full growth price panel is on the investments box at `/workspace/investments/growth_alpha_adj_close.csv`. The committed sample at `data/raw/growth_alpha_adj_close_sample.csv` includes `BIL`, `SGOV`, `GBIL`, and `SHV`; when BIL is present, vol target records `cash_price_source=prices` instead of using the zero-return proxy.
+
+### Add a Strategy
+
+1. Add a new entry to `config/strategies.yaml` with `id`, `display_name`, `method_citation`, `entrypoint`, `default_params`, and `enabled`.
+2. Point `entrypoint` at an existing runner path in `usa_etf_features.strategy_registry` or add a small adapter there that calls the existing math module.
+3. Keep universe validation unchanged: only approved tickers, Appendix 3 deny, and hard-deny semis such as `SMH` / `SOXX` must fail.
+4. Add a focused test proving the registry loads the entry, disabled entries skip, and emitted weights sum to 1.
+
 ## Sample artifacts (committed)
 
 | Path | Contents |

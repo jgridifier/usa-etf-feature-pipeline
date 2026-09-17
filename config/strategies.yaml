@@ -1,0 +1,46 @@
+version: 1
+strategies:
+  - id: static_option_a
+    display_name: Static Option A
+    method_citation: "Option A policy core: VOO 70% / QQQM 20% / IJR 10%; research-only baseline."
+    entrypoint: usa_etf_features.strategy_registry:static_option_a
+    default_params:
+      weights:
+        VOO: 0.70
+        QQQM: 0.20
+        IJR: 0.10
+    enabled: true
+  - id: vol_target_option_a
+    display_name: Vol Target Option A
+    method_citation: "Allocation alpha PR #5: scale-down-only realized-vol target on Option A, residual in BIL, 5 bps one-way costs."
+    entrypoint: usa_etf_features.strategy_registry:vol_target_option_a
+    default_params:
+      core: option_a
+      lookback: 63
+      f_min: 0.25
+      f_max: 1.0
+      sigma_star: expanding_annvol
+      cash_ticker: BIL
+      cost_bps_one_way: 5.0
+    enabled: true
+  - id: score_rotate_xsd
+    display_name: ScoreSimple XSD Rotate
+    method_citation: "M2 ScoreSimple XSD sleeve: Mom12_1 vs VOO plus expanding vol gate through t-1; proportional Option A core trim."
+    entrypoint: usa_etf_features.strategy_registry:score_rotate_xsd
+    default_params:
+      rotate_eligible: [XSD]
+      benchmark: VOO
+      use_vol_gate: true
+      hysteresis_months: 2
+    enabled: true
+  - id: m3_p2_core_rotate
+    display_name: M3 P2 Core Rotate
+    method_citation: "M3 P2 hierarchical optimizer: core>=60%, ScoreSimple-gated thematic satellites may go to 0, Ledoit-Wolf covariance."
+    entrypoint: usa_etf_features.strategy_registry:m3_p2_core_rotate
+    default_params:
+      optimizer: P2
+      window_months: 36
+      min_history_months: 36
+      top_n: 6
+      benchmark: VOO
+    enabled: true
