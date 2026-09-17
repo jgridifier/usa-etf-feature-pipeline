@@ -1,0 +1,5 @@
+lookback,gamma,mp_rule,mode,include_thin,min_names,adv_min,exclude_categories,cost_bps,strategy_id,trial_id,dsr_method,configuration_id
+60,1.0,unit,sleeve,False,100,0.0,"('Defined Outcome / Buffer / Structured', 'Specialty / Other')",5.0,spectral_risk_parity__0,spectral_risk_parity__0,normal approximation; monthly Sharpe,0
+60,1.0,unit,sleeve,False,100,0.0,"('Defined Outcome / Buffer / Structured', 'Specialty / Other')",5.0,erc__0,erc__0,normal approximation; monthly Sharpe,0
+60,1.0,unit,sleeve,False,100,0.0,"('Defined Outcome / Buffer / Structured', 'Specialty / Other')",5.0,minvar_lw__0,minvar_lw__0,normal approximation; monthly Sharpe,0
+60,1.0,unit,sleeve,False,100,0.0,"('Defined Outcome / Buffer / Structured', 'Specialty / Other')",5.0,equal_weight__0,equal_weight__0,normal approximation; monthly Sharpe,0

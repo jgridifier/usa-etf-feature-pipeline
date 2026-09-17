@@ -377,3 +377,36 @@ After a new `run-strategies --asof YYYY-MM-DD` run:
 All pages describe an experimental panel: research only; not investment advice; no performance
 guarantees. `tests/test_no_brand_tokens.py` enforces the brand scrub across source, tests,
 configuration, raw data, scripts, and the published site with no content allowlist.
+
+### Experimental Spectral Risk Parity
+
+```bash
+usa-etf-features walkforward-spectral-rp \
+  --returns data/raw/usa_universe_panel_monthly_returns.csv \
+  --universe data/raw/usa_universe_categorized.csv \
+  --coverage data/raw/usa_universe_panel_history_coverage.csv \
+  --out-dir data/processed/spectral_rp/ \
+  --lookback 60 --gamma 1.0 --mode name --include-thin false
+```
+
+Use `--mode sleeve` for equal-weight category constituents, or `--include-thin true`
+for the thin-history sensitivity. `--adv-min 10000000` enables the snapshot liquidity
+filter; the primary name run raises if fewer than 100 names remain. Inception
+warm-up waits for 100 names using past data only. `--asof YYYY-MM-DD` truncates input.
+The enabled `spectral_risk_parity` registry entry uses the full panel; remove its
+`returns_csv` parameter to derive monthly returns from `run-strategies` daily prices.
+
+Outputs include `oos_returns.csv`, `weights.csv`, `summary.csv`,
+`eigen_diagnostics.csv`, `trial_registry.csv`, and `null_comparison.csv`.
+Nulls are asset ERC, genuine Ledoit–Wolf long-only MinVar, and equal weight.
+Costs are 5 bps times half absolute target-weight changes, including initial entry.
+DSR is the existing normal approximation using monthly Sharpe and four trials
+(one configuration plus three nulls). For a combined search use
+`run_spectral_grid(panel, universe, coverage, trials)` with `SpectralTrial` objects
+for every tested lookback/gamma/mode/thin setting; it counts every executed trial
+and aligns summaries to shared OOS dates. Supported MP rule: `unit`.
+
+Snapshot membership/coverage can introduce survivorship bias. Missing held OOS
+returns fail explicitly. This is a teaching-note research mapping, not an exact
+ADIA solver or a claim of outperformance. See the
+[method page](docs/methods/spectral_risk_parity.html) for conventions and limitations.

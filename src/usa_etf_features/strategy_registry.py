@@ -350,6 +350,33 @@ def _vol_target_result(
     return StrategyResult(weights=weights, diagnostics=diag, returns=ret)
 
 
+def spectral_risk_parity(prices, spec, *, universe_csv, asof=None) -> StrategyResult:
+    """Run full panel or derive monthly returns from the supplied daily prices."""
+    from .spectral_risk_parity import SpectralTrial, read_returns, run_spectral_trial
+    params = dict(spec.default_params)
+    path = params.pop("returns_csv", None)
+    coverage_path = params.pop("coverage_csv", None)
+    panel = read_returns(path) if path else monthly_returns(prices)
+    cutoff = pd.Timestamp(asof) if asof is not None else None
+    if cutoff is not None:
+        panel = panel.loc[:cutoff]
+        if cutoff < cutoff + pd.offsets.BMonthEnd(0):
+            panel = panel.loc[panel.index.to_period("M") < cutoff.to_period("M")]
+    result = run_spectral_trial(panel, pd.read_csv(universe_csv),
+                                pd.read_csv(coverage_path) if coverage_path else None,
+                                SpectralTrial(**params))
+    weights = result["weights"].query("strategy_id == 'spectral_risk_parity'")
+    latest = weights[weights.decision_date == weights.decision_date.max()]
+    formatted = _format_weights(latest[["ticker", "weight"]], strategy_id=spec.id,
+                                date=latest.decision_date.iloc[0])
+    diagnostics = result["eigen_diagnostics"].merge(
+        result["summary"].query("strategy_id == 'spectral_risk_parity'"), how="cross")
+    diagnostics["strategy_id"] = spec.id
+    returns = result["oos_returns"].query("strategy_id == 'spectral_risk_parity'").copy()
+    returns["strategy_id"] = spec.id
+    return StrategyResult(formatted, diagnostics, returns)
+
+
 def _strategy_current_result(
     spec: StrategySpec,
     *,
@@ -363,6 +390,8 @@ def _strategy_current_result(
     tickers: list[str],
     asof: pd.Timestamp | None,
 ) -> StrategyResult:
+    if spec.entrypoint == "usa_etf_features.strategy_registry:spectral_risk_parity":
+        return spectral_risk_parity(prices, spec, universe_csv=universe_csv, asof=asof)
     decision_date = _asof_date(prices, asof)
     if spec.entrypoint == STATIC_ENTRYPOINT:
         weights = _format_weights(_static_weights(spec.default_params), strategy_id=spec.id, date=decision_date)

@@ -338,11 +338,11 @@ def blended_expected_returns(
     return 0.5 * mu_js.fillna(grand) + 0.5 * mu_score.fillna(grand)
 
 
-def ledoit_wolf_cov(returns: pd.DataFrame) -> pd.DataFrame:
+def ledoit_wolf_cov(returns: pd.DataFrame, *, force_shrinkage: bool = False) -> pd.DataFrame:
     """Ledoit-Wolf shrinkage covariance, with a tiny-ridge fallback for short panels."""
     clean = returns.dropna(how="any")
     cols = list(returns.columns)
-    if len(clean) >= max(12, len(cols) + 2):
+    if len(clean) >= (2 if force_shrinkage else max(12, len(cols) + 2)):
         lw = LedoitWolf().fit(clean.values)
         return pd.DataFrame(lw.covariance_, index=clean.columns, columns=clean.columns)
     cov = returns.cov().reindex(index=cols, columns=cols).fillna(0.0)

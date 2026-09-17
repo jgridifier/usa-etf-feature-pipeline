@@ -502,7 +502,33 @@ def build_parser() -> argparse.ArgumentParser:
     rs.add_argument("--weights", default=None, help="Feature weights YAML")
     rs.set_defaults(func=cmd_run_strategies)
 
+    sp = sub.add_parser("walkforward-spectral-rp", help="Experimental panel spectral RP and nulls")
+    sp.add_argument("--returns", required=True)
+    sp.add_argument("--universe", required=True)
+    sp.add_argument("--coverage", required=True)
+    sp.add_argument("--out-dir", required=True)
+    sp.add_argument("--lookback", type=int, default=60)
+    sp.add_argument("--gamma", type=float, default=1.0)
+    sp.add_argument("--mode", choices=["name", "sleeve"], default="name")
+    sp.add_argument("--include-thin", choices=["true", "false"], default="false")
+    sp.add_argument("--adv-min", type=float, default=0.0)
+    sp.add_argument("--asof", default=None)
+    sp.set_defaults(func=cmd_walkforward_spectral_rp)
+
     return p
+
+
+def cmd_walkforward_spectral_rp(args) -> int:
+    from .spectral_risk_parity import SpectralTrial, read_returns, run_spectral_trial, write_artifacts
+    trial = SpectralTrial(lookback=args.lookback, gamma=args.gamma, mode=args.mode,
+                          include_thin=args.include_thin == "true", adv_min=args.adv_min)
+    panel = read_returns(args.returns)
+    if args.asof:
+        panel = panel.loc[:args.asof]
+    result = run_spectral_trial(panel, pd.read_csv(args.universe), pd.read_csv(args.coverage), trial)
+    write_artifacts(result, args.out_dir)
+    print(result["summary"].to_string(index=False))
+    return 0
 
 
 def main(argv: list[str] | None = None) -> None:
