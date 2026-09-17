@@ -64,4 +64,18 @@ strategies:
       min_names: 100
       adv_min: 0.0
       cost_bps: 5.0
+  - id: regime_aware_dual_regime
+    display_name: Regime-Aware Dual-Regime
+    method_citation_id: luo_mulvey_2026_regime_aware_jfds
+    method_citation: 'Yirui Luo and John M. Mulvey. 2026. "Regime-Aware Asset Allocation with Dual-Regime Signals and Regime-Dependent Asset Selection." Journal of Financial Data Science 8(3): 104-134. https://www.pm-research.com/content/iijjfds/8/3/104 ; blueprint: Shu, Yu, and Mulvey. 2024. "Dynamic Asset Allocation with Asset-Specific Regime Forecasts." arXiv:2406.09578. Research implementation on category sleeves; not investment advice.'
+    entrypoint: usa_etf_features.strategy_registry:regime_aware_dual_regime
+    default_params:
+      k: 2
+      fit_mode: expanding
+      min_history_months: 36
+      feature_set: vol_corr_spread
+      allocator: erc
+      name_level: false
+      vol_window: 6
+      corr_window: 12
     enabled: true

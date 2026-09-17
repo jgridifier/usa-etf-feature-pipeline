@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>Regime-Aware Dual-Regime Allocation — Teaching Note</title>
+<style>
+  :root { --fg:#1a1a1a; --muted:#555; --border:#ddd; --bg:#fafafa; --accent:#0b5fff; --ok:#0a7a3e; }
+  * { box-sizing: border-box; }
+  body { font-family: Georgia, "Times New Roman", serif; color: var(--fg); line-height: 1.55; max-width: 42rem; margin: 2rem auto; padding: 0 1.25rem; background: #fff; }
+  h1,h2,h3 { font-family: system-ui, -apple-system, Segoe UI, sans-serif; line-height: 1.25; }
+  h1 { font-size: 1.65rem; margin-bottom: 0.25rem; }
+  h2 { font-size: 1.25rem; margin-top: 2rem; border-bottom: 1px solid var(--border); padding-bottom: 0.3rem; }
+  h3 { font-size: 1.05rem; margin-top: 1.4rem; color: #222; }
+  .meta { color: var(--muted); font-family: system-ui, sans-serif; font-size: 0.9rem; margin-bottom: 1.5rem; }
+  .disclaimer { background: #fff8e6; border: 1px solid #f0d78c; padding: 0.75rem 1rem; border-radius: 6px; font-size: 0.92rem; margin: 1rem 0 1.5rem; }
+  .callout { background: var(--bg); border-left: 4px solid var(--accent); padding: 0.75rem 1rem; margin: 1rem 0; }
+  .ok { border-left-color: var(--ok); }
+  table { border-collapse: collapse; width: 100%; font-size: 0.92rem; margin: 0.75rem 0 1rem; }
+  th, td { border: 1px solid var(--border); padding: 0.4rem 0.55rem; text-align: left; vertical-align: top; }
+  th { background: var(--bg); font-family: system-ui, sans-serif; font-weight: 600; }
+  code, .math { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 0.88em; }
+  .math-block { background: var(--bg); padding: 0.85rem 1rem; border-radius: 6px; overflow-x: auto; margin: 0.75rem 0; font-family: ui-monospace, Menlo, Consolas, monospace; font-size: 0.86rem; white-space: pre-wrap; }
+  ul, ol { padding-left: 1.25rem; }
+  li { margin: 0.35rem 0; }
+  a { color: var(--accent); }
+  .toc { font-family: system-ui, sans-serif; font-size: 0.92rem; background: var(--bg); padding: 0.75rem 1rem; border-radius: 6px; }
+  .toc ol { margin: 0.4rem 0 0; }
+  footer { margin-top: 2.5rem; padding-top: 1rem; border-top: 1px solid var(--border); color: var(--muted); font-size: 0.85rem; font-family: system-ui, sans-serif; }
+</style>
+<!-- lab:start --><link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet"><link rel="stylesheet" href="../assets/style.css"><!-- lab:end --></head>
+<body><!-- lab:start --><header class="site-header"><div class="site-header-inner"><a class="brand" href="../index.html">USA ETF Lab</a><nav class="site-nav" aria-label="Main"><a href="../index.html">Home</a><a href="../methods/index.html" class="is-active">Methods</a><a href="../explorer/index.html">Explorer</a><a href="../books.html">Books</a><a href="../runs.html">Runs</a></nav></div></header><!-- lab:end -->
+
+<h1>Regime-Aware Allocation with Dual-Regime Signals</h1>
+<p class="meta">Teaching note · Justina Quant shortlist pick #2 · Category sleeves + ≥100 ETF panel · Experimental research only</p>
+
+<div class="disclaimer">
+<strong>Research only — not investment advice.</strong> This note designs a walk-forward test of regime-conditioned selection and weighting on an experimental USA ETF panel. It does not recommend any allocation for real capital.
+</div>
+
+<nav class="toc" aria-label="Contents">
+<strong>Contents</strong>
+<ol>
+  <li><a href="#why">Why this paper</a></li>
+  <li><a href="#original">What the original work found</a></li>
+  <li><a href="#math">Core math / intuition</a></li>
+  <li><a href="#ourdata">What we will do on USA ETF / category-panel data</a></li>
+  <li><a href="#worked">How we will know it worked</a></li>
+  <li><a href="#cite">Full citation + links</a></li>
+</ol>
+</nav>
+
+<h2 id="why">1. Why this paper</h2>
+
+<p>Static ERC / MVO and Spectral Risk Parity still assume one “average” return distribution. Jared’s research ask explicitly wants <strong>category sub-analysis</strong> and many options — which only makes sense if the <em>ranking of categories</em> (and which names belong in the opportunity set) changes with the market state.</p>
+
+<p>Luo &amp; Mulvey (2026), <em>Journal of Financial Data Science</em>, study <strong>regime-aware allocation with dual-regime signals and regime-dependent asset selection</strong>: detect regimes, then let both the signal and the eligible asset set depend on the regime.</p>
+
+<div class="callout">
+<strong>Fit to the mandate:</strong> category sleeves as the natural “assets” inside regimes; name-level panel (≥100) as a stress test; unconditional ERC / MVO as nulls. Complements Spectral RP (risk budgeting) with a selection/timing layer.
+</div>
+
+<h2 id="original">2. What the original work found</h2>
+
+<h3>Luo &amp; Mulvey (2026), JFDS — dual-regime signals + regime-dependent selection</h3>
+<ul>
+  <li><strong>Setup:</strong> Dual-regime signal architecture; asset eligibility and/or weights change with the inferred regime (Journal of Financial Data Science, Summer 2026, 8(3), 104–134).</li>
+  <li><strong>Claim (as published in JFDS listing):</strong> Regime-conditioned selection improves allocation versus one-regime / unconditional designs in their reported experiments.</li>
+  <li><strong>Limitation for us:</strong> We must re-implement the <em>architecture</em> on ETF category sleeves with strict walk-forward labeling (no peeking at month-t returns when labeling regime for month-t weights). Paper sample and features may differ from a Defined-Outcome-heavy ETF panel.</li>
+</ul>
+
+<h3>Adjacent papers we will also use</h3>
+<ul>
+  <li><strong>Shu, Mulvey et al.–style line / Nystrup et al. tradition:</strong> regime models for allocation are older; we need an implementable 2020s recipe.</li>
+  <li><strong>Yang &amp; Mulvey-adjacent open literature:</strong> Shu, Yu, and Mulvey-class work; practically we lean on <em>Dynamic Asset Allocation with Asset-Specific Regime Forecasts</em> (arXiv:2406.09578) — jump-model labels + supervised regime forecast + Markowitz — as a transparent blueprint when JFDS full text is gated.</li>
+  <li><strong>Ielpo, Muhammetgulyyeva &amp; Royer (2026),</strong> “Building a Regime-Resilient ERC Portfolio,” <em>Journal of Portfolio Management</em> — regime-specific ERC blended by regime frequencies (regime parity). Excellent null / cousin for risk-based regime work (LOIM line).</li>
+</ul>
+
+<h2 id="math">3. Core math / intuition</h2>
+
+<p><strong>Two layers:</strong></p>
+<ol>
+  <li><strong>Regime inference</strong> — latent state <span class="math">s_t ∈ {1,…,K}</span> (we start with K=2: calm vs stress) from features available at <span class="math">t</span>: trailing panel vol, average pairwise corr, equity–bond / growth–defensive relative vol, etc. HMM, statistical jump models, or simple thresholds are all allowed; pick one primary and freeze it before OOS.</li>
+  <li><strong>Regime-dependent policy</strong> — given <span class="math">ŝ_t</span>,
+    <ul>
+      <li>select eligible category set <span class="math">A(ŝ_t)</span> (e.g., stress: Treasuries / quality / gold sleeves; calm: broad equity / growth / thematic sleeves), then</li>
+      <li>allocate with a within-regime rule (EW, ERC, or light shrinkage MVO on <span class="math">A(ŝ_t)</span>).</li>
+    </ul>
+  </li>
+</ol>
+
+<div class="math-block">w_{t+1} = Π( ŝ_t ; data_{≤t} )
+ŝ_t = g( features_{≤t} )   # no month-t+1 information
+Π may zero-out assets outside A(ŝ_t)</div>
+
+<div class="callout ok">
+<strong>Plain language:</strong> First guess the weather. Then only put the umbrella sleeve (or the picnic sleeve) in the shopping cart, and risk-budget inside that cart. Dual-regime signals means the weather forecast can use more than one indicator family — still causally timed.
+</div>
+
+<h2 id="ourdata">4. What we will do on USA ETF / category-panel data</h2>
+
+<table>
+  <tr><th>Item</th><th>Choice</th></tr>
+  <tr><td>Primary assets</td><td>Category sleeves built from <code>usa_universe_categorized.csv</code> (EW within category among names with enough history).</td></tr>
+  <tr><td>Secondary stress</td><td>Name-level ≥100 liquid ETFs (exclude or flag <code>thin_lt5y</code>) to see if regime selection still helps when N is large.</td></tr>
+  <tr><td>Regime features</td><td>Trailing 3–12m panel vol; mean corr; stress spread (e.g. defensive vs cyclical sleeve returns) — all lagged one month.</td></tr>
+  <tr><td>K</td><td>Start K=2; optional K=3 only as a registered extra trial (counts against DSR).</td></tr>
+  <tr><td>Within-regime allocator</td><td>Primary: ERC on eligible sleeves. Alt: EW. Optional light MVO with Ledoit–Wolf — each is a separate trial.</td></tr>
+  <tr><td>Leakage</td><td>Regime label and weights for month t+1 use information ≤ t only. No fitting HMM on full sample then “playing” OOS labels.</td></tr>
+  <tr><td>Nulls</td><td>(1) Unconditional ERC on all sleeves; (2) Unconditional EW; (3) Single-regime always-calm policy; (4) Cousin: regime-parity ERC blend (Ielpo et al. 2026) if Eng capacity allows.</td></tr>
+</table>
+
+<h2 id="worked">5. How we will know it worked</h2>
+
+<ul>
+  <li><strong>Primary:</strong> OOS Sharpe, vol, max DD, and turnover vs unconditional ERC/EW on the same sleeves.</li>
+  <li><strong>Regime diagnostics:</strong> time in each state; transition matrix stability; performance conditional on ex-post stress months (does the policy actually de-risk when realized stress hits?).</li>
+  <li><strong>Mandatory:</strong> Deflated Sharpe / Bailey–López de Prado (2014) with trial count = all K choices × feature sets × allocators registered before looking at OOS.</li>
+  <li><strong>Pass bar:</strong> Better risk-adjusted path <em>or</em> materially better left-tail vs unconditional ERC with DSR surviving multiplicity; if not, publish the miss — still useful for the book.</li>
+</ul>
+
+<h2 id="cite">6. Full citation + links</h2>
+
+<ol>
+  <li>Yirui Luo and John M. Mulvey. “Regime-Aware Asset Allocation with Dual-Regime Signals and Regime-Dependent Asset Selection.” <em>The Journal of Financial Data Science</em> 8 (3) 104–134 (Summer 2026). <a href="https://www.pm-research.com/content/iijjfds/8/3/104">https://www.pm-research.com/content/iijjfds/8/3/104</a></li>
+  <li>Yizhan Shu, Chenyu Yu, and John M. Mulvey. “Dynamic Asset Allocation with Asset-Specific Regime Forecasts.” arXiv:2406.09578 (2024). Annals of Operations Research (forthcoming/related). <a href="https://arxiv.org/abs/2406.09578">https://arxiv.org/abs/2406.09578</a></li>
+  <li>Florian Ielpo, Selbi Muhammetgulyyeva, and Julien Royer. “Building a Regime-Resilient ERC Portfolio.” <em>Journal of Portfolio Management</em>, 2026. <a href="https://doi.org/10.3905/jpm.2026.030">https://doi.org/10.3905/jpm.2026.030</a></li>
+  <li>David H. Bailey and Marcos López de Prado. “The Deflated Sharpe Ratio: Correcting for Selection Bias, Backtest Overfitting, and Non-Normality.” <em>Journal of Portfolio Management</em>, 2014. arXiv:1401.1138.</li>
+  <li>Sébastien Maillard, Thierry Roncalli, and Jérôme Teiletche. “The Properties of Equally Weighted Risk Contribution Portfolios.” <em>JPM</em>, 2010. (unconditional ERC null)</li>
+</ol>
+
+<footer>
+USA ETF experimental research panel · Justina shortlist · Regime-aware dual-regime teaching note · Not investment advice
+</footer>
+</body>
+</html>

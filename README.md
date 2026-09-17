@@ -172,6 +172,35 @@ This command keeps selection fixed at Option A (VOO 70 / QQQM 20 / IJR 10), esti
 
 Outputs include `vol_target_oos_summary.csv`, `vol_target_monthly_weights.csv`, `vol_target_oos_returns.csv`, `vol_target_trial_registry.csv`, and `vol_target_regime_table.csv`.
 
+### Regime-aware category allocation
+
+`regime_aware_dual_regime` runs K=2 expanding (or rolling) inference with conditional
+category eligibility. The fixed grid has four trials (two feature sets × ERC/EW),
+with unconditional ERC, unconditional EW and always-calm ERC nulls. Every decision
+at t is evaluated at t+1. DSR uses monthly Sharpe and the predeclared trial count.
+
+```bash
+python -m usa_etf_features.cli walkforward-regime-dual --out-dir /tmp/regime-dual
+```
+
+Inputs default to the three `usa_universe_*` CSVs under `/workspace/investments/`;
+override with `--panel-returns-path`, `--categorized-path`, and `--coverage-path`
+(or the underscore parameter names in the strategy registry). The command writes
+weights, OOS returns, summary, trial registry, states, and transition diagnostics.
+The registry uses its selected variant's last evaluated decision as suggested
+weights, marked `asset_type=category_sleeve`. Missing inputs raise a file error.
+
+Sleeves require 12 prior monthly observations per name. Features and covariance
+use only data through the decision; the final incomplete source month is excluded.
+Unknown categories remain in unconditional nulls but require an explicit
+`eligibility` mapping to enter conditional policies. Crypto is excluded unless
+`crypto_calm: true`. Coverage thin flags are snapshot diagnostics only. The optional
+name-level experiment is not implemented (`name_level` must remain false).
+Returns are gross of costs, missing held returns invalidate that month, and the
+static universe retains survivorship bias. Ex-post stress diagnostics use the
+bottom quintile of realized sleeve-market returns, never as model inputs.
+See the [teaching note](docs/methods/regime_aware_dual_regime_allocation.html).
+
 ### Run strategy registry
 
 ```bash
