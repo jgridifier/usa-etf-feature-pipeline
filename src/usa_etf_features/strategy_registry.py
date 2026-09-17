@@ -34,6 +34,7 @@ from .vol_target import (
     VolTargetTrial,
     annualized_return,
     annualized_vol,
+    deflated_sharpe_approx,
     max_drawdown,
     newey_west_tstat,
     run_vol_target_trial,
@@ -42,6 +43,7 @@ from .vol_target import (
 from .walkforward import walkforward_optimization_tables
 
 RESEARCH_DISCLAIMER = "Research-only; not investment advice; no trading or broker routing."
+REGIME_DUAL_ENTRYPOINT = "usa_etf_features.strategy_registry:regime_aware_dual_regime"
 STATIC_ENTRYPOINT = "usa_etf_features.strategy_registry:static_option_a"
 VOL_TARGET_ENTRYPOINT = "usa_etf_features.strategy_registry:vol_target_option_a"
 ROTATE_ENTRYPOINT = "usa_etf_features.strategy_registry:score_rotate_xsd"
@@ -161,7 +163,15 @@ def _validate_weights(
     universe_df: pd.DataFrame,
     universe_config: dict,
 ) -> None:
-    tickers = sorted(set(weights.loc[weights["weight"].abs() > 1e-12, "ticker"].astype(str).str.upper()))
+    sleeves = weights.get("asset_type", pd.Series("ticker", index=weights.index)).eq("category_sleeve")
+    if sleeves.any():
+        from .regime_dual import REGIME_ELIGIBILITY
+        allowed = set().union(*REGIME_ELIGIBILITY.values(), {"Crypto / Digital Assets"},
+                              set(universe_df["Category"]))
+        if not set(weights.loc[sleeves, "ticker"]).issubset(allowed):
+            raise ValueError("unknown category sleeve in suggested weights")
+    ticker_weights = weights.loc[~sleeves]
+    tickers = sorted(set(ticker_weights.loc[ticker_weights["weight"].abs() > 1e-12, "ticker"].astype(str).str.upper()))
     assert_rotate_tickers_eligible(tickers, universe_df, universe_config)
     assert_eligible(tickers, universe_df, universe_config)
     sums = weights.groupby(["strategy_id", "date"])["weight"].sum()
@@ -377,6 +387,36 @@ def spectral_risk_parity(prices, spec, *, universe_csv, asof=None) -> StrategyRe
     return StrategyResult(formatted, diagnostics, returns)
 
 
+def regime_aware_dual_regime(spec: StrategySpec, *, asof: pd.Timestamp | None = None) -> StrategyResult:
+    """Registry adapter; category identifiers are explicit sleeves, not tickers."""
+    from .regime_dual import load_and_run
+
+    tables = load_and_run(spec.default_params, asof)
+    trial_id = f"k2_{spec.default_params.get('feature_set', 'vol_corr_spread')}_{spec.default_params.get('allocator', 'erc')}"
+    monthly = tables["monthly_weights"]
+    monthly = monthly.loc[monthly.trial_id.eq(trial_id)]
+    if monthly.empty:
+        raise ValueError(f"unregistered regime trial: {trial_id}")
+    last = monthly.loc[monthly.decision_date.eq(monthly.decision_date.max())].copy()
+    last = last.rename(columns={"asset": "ticker", "date": "eval_date"})
+    if "asset_type" not in last.columns:
+        last["asset_type"] = "category_sleeve"
+    weights = _format_weights(last, strategy_id=spec.id, date=last.decision_date.iloc[0])
+    diagnostics = tables["diagnostics"].loc[
+        lambda x: x.feature_set.eq(spec.default_params.get("feature_set", "vol_corr_spread"))
+    ].copy()
+    metrics = tables["summary"].set_index("trial_id").loc[trial_id]
+    for key, value in metrics.items():
+        if key != "feature_set":
+            diagnostics[key] = value
+    diagnostics["strategy_id"] = spec.id
+    diagnostics["regime"] = last.regime.iloc[0]
+    diagnostics["decision_date"] = last.decision_date.iloc[0]
+    returns = tables["oos_returns"].loc[lambda x: x.trial_id.eq(trial_id)].copy()
+    returns["strategy_id"] = spec.id
+    return StrategyResult(weights, diagnostics, returns)
+
+
 def _strategy_current_result(
     spec: StrategySpec,
     *,
@@ -392,6 +432,8 @@ def _strategy_current_result(
 ) -> StrategyResult:
     if spec.entrypoint == "usa_etf_features.strategy_registry:spectral_risk_parity":
         return spectral_risk_parity(prices, spec, universe_csv=universe_csv, asof=asof)
+    if spec.entrypoint == REGIME_DUAL_ENTRYPOINT:
+        return regime_aware_dual_regime(spec, asof=asof)
     decision_date = _asof_date(prices, asof)
     if spec.entrypoint == STATIC_ENTRYPOINT:
         weights = _format_weights(_static_weights(spec.default_params), strategy_id=spec.id, date=decision_date)
@@ -482,8 +524,12 @@ def _strategy_current_result(
 
 
 def comparison_frame(returns: pd.DataFrame, option_a: pd.Series) -> pd.DataFrame:
+    # Monthly sleeve dates are calendar ends; price strategies use trading ends.
+    # Align by month so holidays/weekends do not silently remove observations.
+    option_a = option_a.copy()
+    option_a.index = pd.to_datetime(option_a.index).to_period("M").to_timestamp("M")
     date_sets = [
-        set(pd.to_datetime(sub["date"]).dt.normalize())
+        set(pd.to_datetime(sub["date"]).dt.to_period("M").dt.to_timestamp("M"))
         for _sid, sub in returns.dropna(subset=["return"]).groupby("strategy_id")
         if not sub.empty
     ]
@@ -491,7 +537,7 @@ def comparison_frame(returns: pd.DataFrame, option_a: pd.Series) -> pd.DataFrame
     rows = []
     for sid, sub in returns.groupby("strategy_id"):
         tmp = sub.copy()
-        tmp["date"] = pd.to_datetime(tmp["date"]).dt.normalize()
+        tmp["date"] = pd.to_datetime(tmp["date"]).dt.to_period("M").dt.to_timestamp("M")
         r = tmp.set_index("date")["return"].dropna()
         if common_dates:
             r = r.reindex(sorted(common_dates)).dropna()
@@ -563,6 +609,14 @@ def run_strategy_registry(
         diagnostics["walkforward"] = True
     _validate_weights(weights, universe_df=uni_df, universe_config=uni_cfg)
     comparison = comparison_frame(returns, _option_a_returns(prices, asof))
+    if "DSR" in diagnostics:
+        metrics = diagnostics.dropna(subset=["trial_count"]).drop_duplicates("strategy_id")
+        comparison = comparison.merge(metrics[["strategy_id", "trial_count"]], on="strategy_id", how="left")
+        comparison["DSR"] = [
+            deflated_sharpe_approx(row.Sharpe_rf0 / np.sqrt(12), row.n_months, int(row.trial_count))
+            if pd.notna(row.trial_count) else np.nan
+            for row in comparison.itertuples()
+        ]
     registry_used = registry_used_frame(specs)
 
     out = Path(out_dir)
@@ -570,6 +624,7 @@ def run_strategy_registry(
     _write_frame(weights, out / "suggested_weights.csv")
     _write_frame(diagnostics, out / "strategy_diagnostics.csv")
     _write_frame(comparison, out / "strategy_comparison.csv")
+    _write_frame(returns, out / "strategy_returns.csv")
     _write_frame(registry_used, out / "strategy_registry_used.csv")
     with pd.ExcelWriter(out / "strategy_comparison.xlsx") as writer:
         comparison.to_excel(writer, sheet_name="comparison", index=False)

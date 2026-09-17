@@ -300,6 +300,19 @@ def _write_csv(df: pd.DataFrame, path: str | Path) -> Path:
     return out
 
 
+def cmd_walkforward_regime_dual(args: argparse.Namespace) -> int:
+    from .regime_dual import load_and_run
+
+    params = {key: value for key, value in vars(args).items() if value is not None}
+    tables = load_and_run(params, pd.Timestamp(args.asof) if args.asof else None)
+    out = Path(args.out_dir)
+    out.mkdir(parents=True, exist_ok=True)
+    for name, frame in tables.items():
+        _write_csv(frame, out / f"regime_dual_{name}.csv")
+    print(f"wrote regime research tables → {out}")
+    return 0
+
+
 def cmd_walkforward_vol_target(args: argparse.Namespace) -> int:
     prices_path = Path(args.prices)
     universe_path = Path(args.universe)
@@ -489,6 +502,22 @@ def build_parser() -> argparse.ArgumentParser:
     vt.add_argument("--sigma-stars", default=None, help="Comma-separated sigma targets for --grid")
     vt.add_argument("--bootstrap-samples", type=int, default=None)
     vt.set_defaults(func=cmd_walkforward_vol_target)
+
+    rd = sub.add_parser("walkforward-regime-dual", help="Category-sleeve dual-regime research grid")
+    rd.add_argument("--panel-returns-path")
+    rd.add_argument("--categorized-path")
+    rd.add_argument("--coverage-path")
+    rd.add_argument("--out-dir", required=True)
+    rd.add_argument("--name-level", action="store_true", default=False)
+    rd.add_argument("--min-names", type=int, default=100)
+    rd.add_argument("--asof")
+    rd.add_argument("--fit-mode", choices=["expanding", "rolling"], default="expanding")
+    rd.add_argument("--min-history-months", type=int, default=36)
+    rd.add_argument("--min-name-months", type=int, default=12)
+    rd.add_argument("--rolling-window", type=int, default=60)
+    rd.add_argument("--vol-window", type=int, default=6)
+    rd.add_argument("--corr-window", type=int, default=12)
+    rd.set_defaults(func=cmd_walkforward_regime_dual)
 
     rs = sub.add_parser("run-strategies", help="Run enabled strategies from config registry")
     rs.add_argument("--asof", default=None, help="Decision date YYYY-MM-DD")
