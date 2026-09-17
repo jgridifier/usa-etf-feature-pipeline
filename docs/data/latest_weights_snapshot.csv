@@ -1,0 +1,8 @@
+strategy_id,decision_date,eval_date,ticker,weight,basis
+static_option_a,,,VOO,0.7,static research template
+static_option_a,,,QQQM,0.2,static research template
+static_option_a,,,IJR,0.1,static research template
+vol_target_option_a,2026-08-31,2026-09-16,VOO,0.7,historical OOS sample: VT_option_a_L63_sigexpanding_fmax1p0
+vol_target_option_a,2026-08-31,2026-09-16,QQQM,0.2,historical OOS sample: VT_option_a_L63_sigexpanding_fmax1p0
+vol_target_option_a,2026-08-31,2026-09-16,IJR,0.1,historical OOS sample: VT_option_a_L63_sigexpanding_fmax1p0
+vol_target_option_a,2026-08-31,2026-09-16,BIL,0.0,historical OOS sample: VT_option_a_L63_sigexpanding_fmax1p0

@@ -17,7 +17,7 @@ appendix3_deny:
   - UPRO
   - AAXJ
 
-# Off-list semis / leverage proxies — never inject (not on USA pre-approved CSV)
+# Off-list semis / leverage proxies — never inject (not on USA research-universe CSV)
 off_list_hard_deny:
   - SMH
   - SOXX

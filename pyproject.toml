@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "usa-etf-features"
 version = "0.2.0"
-description = "Transparent USA pre-approved ETF feature scorer (research tooling; not investment advice)"
+description = "Transparent USA research-universe ETF feature scorer (research tooling; not investment advice)"
 readme = "README.md"
 requires-python = ">=3.10"
 license = { text = "MIT" }

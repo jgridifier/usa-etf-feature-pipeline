@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>Allocation Alpha — Volatility-Managed Option A</title>
+<style>
+  :root { --fg:#1a1a1a; --muted:#555; --border:#ddd; --bg:#fafafa; --accent:#0b5fff; --ok:#0a7a3e; }
+  * { box-sizing: border-box; }
+  body { font-family: Georgia, "Times New Roman", serif; color: var(--fg); line-height: 1.55; max-width: 42rem; margin: 2rem auto; padding: 0 1.25rem; background: #fff; }
+  h1,h2,h3 { font-family: system-ui, -apple-system, Segoe UI, sans-serif; line-height: 1.25; }
+  h1 { font-size: 1.65rem; margin-bottom: 0.25rem; }
+  h2 { font-size: 1.25rem; margin-top: 2rem; border-bottom: 1px solid var(--border); padding-bottom: 0.3rem; }
+  h3 { font-size: 1.05rem; margin-top: 1.4rem; color: #222; }
+  .meta { color: var(--muted); font-family: system-ui, sans-serif; font-size: 0.9rem; margin-bottom: 1.5rem; }
+  .disclaimer { background: #fff8e6; border: 1px solid #f0d78c; padding: 0.75rem 1rem; border-radius: 6px; font-size: 0.92rem; margin: 1rem 0 1.5rem; }
+  .callout { background: var(--bg); border-left: 4px solid var(--accent); padding: 0.75rem 1rem; margin: 1rem 0; }
+  .ok { border-left-color: var(--ok); }
+  table { border-collapse: collapse; width: 100%; font-size: 0.92rem; margin: 0.75rem 0 1rem; }
+  th, td { border: 1px solid var(--border); padding: 0.4rem 0.55rem; text-align: left; vertical-align: top; }
+  th { background: var(--bg); font-family: system-ui, sans-serif; font-weight: 600; }
+  code, .math { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 0.88em; }
+  .math-block { background: var(--bg); padding: 0.85rem 1rem; border-radius: 6px; overflow-x: auto; margin: 0.75rem 0; font-family: ui-monospace, Menlo, Consolas, monospace; font-size: 0.86rem; white-space: pre-wrap; }
+  ul, ol { padding-left: 1.25rem; }
+  li { margin: 0.35rem 0; }
+  a { color: var(--accent); }
+  .toc { font-family: system-ui, sans-serif; font-size: 0.92rem; background: var(--bg); padding: 0.75rem 1rem; border-radius: 6px; }
+  .toc ol { margin: 0.4rem 0 0; }
+  footer { margin-top: 2.5rem; padding-top: 1rem; border-top: 1px solid var(--border); color: var(--muted); font-size: 0.85rem; font-family: system-ui, sans-serif; }
+</style>
+<!-- lab:start --><link rel="stylesheet" href="../assets/style.css"><!-- lab:end --></head>
+<body><!-- lab:start --><nav aria-label="Main"><a href="../index.html">Home</a> <a href="../methods/index.html">Methods</a> <a href="../books.html">Books</a> <a href="../runs.html">Runs</a></nav><!-- lab:end -->
+
+<h1>Allocation Alpha: Volatility-Managed Option A</h1>
+<p class="meta">Teaching note · 2026-09-16 (ET) · USA experimental ETF research · Companion to <code>allocation_alpha_method_memo.md</code></p>
+
+<div class="disclaimer">
+<strong>Research only — not investment advice.</strong> This document explains a proposed walk-forward test of time-series risk scaling versus static Option A (VOO 70% / QQQM 20% / IJR 10%). It does not recommend buying or selling any security. Confirm tickers against the experimental USA ETF research panel before any trade.
+</div>
+
+<nav class="toc" aria-label="Contents">
+<strong>Contents</strong>
+<ol>
+  <li><a href="#why">Why this paper</a></li>
+  <li><a href="#original">What the original work found</a></li>
+  <li><a href="#math">Core math / intuition</a></li>
+  <li><a href="#ourdata">What we will do on USA ETF / growth-panel data</a></li>
+  <li><a href="#worked">How we will know it worked</a></li>
+  <li><a href="#cite">Full citation + links</a></li>
+</ol>
+</nav>
+
+<h2 id="why">1. Why this paper / blog</h2>
+
+<p>Today’s workstream already tested:</p>
+<ul>
+  <li><strong>Static</strong> Option A and Growth+alpha mixes (G1/G2/G3)</li>
+  <li><strong>XSD rotation</strong> (relative momentum / ScoreSimple gate on a thematic sleeve)</li>
+  <li><strong>Walk-forward constrained MVO</strong> (composite score, James–Stein μ̂, Ledoit–Wolf covariance, P1/P2/P3)</li>
+</ul>
+
+<p>Those change <em>which</em> ETFs get weight, or gate a satellite ON/OFF. They do <strong>not</strong> isolate pure <strong>allocation / timing skill</strong>: varying how much equity risk you take while keeping the same core mix.</p>
+
+<div class="callout">
+<strong>Allocation alpha (our definition):</strong> risk-adjusted or drawdown improvement that comes from <em>weights and timing versus a static policy portfolio</em> (Option A), with selection held fixed. Classic language: Brinson–Hood–Beebower “timing” versus “policy,” measured as active return / IR versus the buy-and-hold core (Grinold &amp; Kahn).
+</div>
+
+<p>We propose one primary method: <strong>volatility-manage Option A</strong> — scale the whole equity sleeve down when recent portfolio volatility is high, park the rest in on-list T-bill ETFs (BIL). That is complementary to WF MVO and XSD rotation, transparent, and paper-backed.</p>
+
+<h2 id="original">2. What the original work found</h2>
+
+<h3>Moreira &amp; Muir (2017), <em>Journal of Finance</em></h3>
+<ul>
+  <li><strong>Setup:</strong> Take standard factors / market portfolios; each period scale exposure by the inverse of recent realized variance (a “volatility-managed” version).</li>
+  <li><strong>Claim:</strong> Taking <em>less</em> risk when volatility is high raises Sharpe ratios and produces large alphas versus unmanaged versions.</li>
+  <li><strong>Economic intuition:</strong> Volatility moves around a lot; expected returns do not move enough to offset it. So cutting risk in high-vol states improves the return-per-unit-risk tradeoff.</li>
+  <li><strong>Important nuance:</strong> The strategy often takes <em>less</em> risk in recessions — contrary to “risk premium rises in bad times” stories. That is a feature of the evidence, and a caution for storytelling.</li>
+  <li><strong>Limitations:</strong> Academic factors / long histories; assumes you can increase exposure in calm markets (leverage or reducing a cash buffer). Transaction costs and implementation constraints matter for ETFs.</li>
+</ul>
+
+<h3>Harvey et al. (2018), <em>Journal of Portfolio Management</em> (robustness family)</h3>
+<ul>
+  <li><strong>Setup:</strong> Target a roughly constant volatility by scaling notional up/down across many assets and simple multi-asset portfolios (e.g. 60/40).</li>
+  <li><strong>Claim:</strong> Sharpe gains from vol targeting concentrate in <strong>risk assets</strong> (equities, credit). Across assets, left-tail outcomes tend to be milder because nasty returns often coincide with high vol (when exposure is already cut).</li>
+  <li><strong>Limitations:</strong> Results vary by asset class; equity vol targeting can partly overlap with time-series momentum via the leverage effect (vol rises after selloffs).</li>
+</ul>
+
+<h3>Attribution language we borrow</h3>
+<ul>
+  <li><strong>Brinson, Hood &amp; Beebower (1986):</strong> Separate policy (strategic weights), timing (over/under vs policy), and selection.</li>
+  <li><strong>Grinold &amp; Kahn (2000):</strong> Active return versus a benchmark; information ratio; skill × breadth. Here breadth is <em>monthly timing decisions</em>, not stock picking.</li>
+</ul>
+
+<h2 id="math">3. Core math / intuition</h2>
+
+<p><strong>Policy (static Option A):</strong></p>
+<div class="math-block">w_VOO = 0.70,  w_QQQM = 0.20,  w_IJR = 0.10
+r^A_day = 0.70·r_VOO + 0.20·r_QQQM + 0.10·r_IJR</div>
+
+<p><strong>Estimate recent vol of that same portfolio</strong> at month-end <em>t</em> (using only data through <em>t</em>):</p>
+<div class="math-block">σ̂_t = √252 · stdev( last L daily returns of r^A )
+Primary L = 63 trading days</div>
+
+<p><strong>Scale factor</strong> (two equivalent research forms):</p>
+<div class="math-block">Moreira–Muir style:   f_t = c / (σ̂_t)²
+   choose c so average f ≈ 1 (documented calibration)
+
+Target-vol style:     f_t = σ* / σ̂_t
+   σ* = expanding historical AnnVol of Option A, or a grid {12%, 15%, 18%}</div>
+
+<p><strong>Clip for implementability (recommended primary):</strong></p>
+<div class="math-block">f_t ← clip(f_t, 0.25, 1.00)   # scale-DOWN only into cash; no borrowed leverage in v1</div>
+
+<p><strong>Weights:</strong></p>
+<div class="math-block">Equity piece:  f_t · (0.70, 0.20, 0.10) in VOO / QQQM / IJR
+Cash piece:    (1 − f_t) in BIL   (fallbacks: SGOV, GBIL, SHV — all on-list)</div>
+
+<p><strong>Intuition in one sentence:</strong> Same three stocks-in-ETF-clothing; when the ride gets violently bumpy, hold less of the bundle and more T-bills; when calm, hold the full Option A.</p>
+
+<div class="callout ok">
+<strong>What we are <em>not</em> doing:</strong> re-optimizing cross-sectional weights with a composite score, rotating XSD with relative momentum, or fitting a black-box ML timer. Those are already covered elsewhere.
+</div>
+
+<h2 id="ourdata">4. What we will do on USA ETF / growth-panel data</h2>
+
+<h3>Assumptions</h3>
+<ul>
+  <li>Universe gate: only tickers in <code>usa_universe_categorized.csv</code>; Appendix 3 denied; XSD remains the only on-list semis ETF if thematics appear in extensions.</li>
+  <li>Primary portfolio: Option A + BIL. Optional robustness: same scaler on static G1.</li>
+  <li>Monthly rebalance; decision at month-end <em>t</em> uses prices/returns ≤ <em>t</em>; performance measured on month <em>t+1</em> only (no same-month leakage).</li>
+  <li>Transaction cost: ~5 bps one-way on turnover (parity with WF MVO memo).</li>
+  <li>Sharpe with rf = 0 for comparison with existing memos.</li>
+  <li>WF stays on the existing <strong>25 growth-panel</strong> building blocks for any named extension; primary needs Option A + cash prices.</li>
+</ul>
+
+<h3>Inputs</h3>
+<ul>
+  <li>Adjusted closes / monthly returns: <code>growth_alpha_adj_close.csv</code>, <code>growth_panel_monthly_returns.csv</code> (extend with BIL if missing).</li>
+  <li>Coverage / thin flags: <code>growth_panel_history_coverage.csv</code> — <strong>QQQM ~5.9y binds</strong> live Option A paths.</li>
+  <li>Benchmarks: static Option A (B0); secondary static G1; optional placebo “always 80% A + 20% BIL.”</li>
+</ul>
+
+<h3>Walk-forward / leakage rules</h3>
+<ul>
+  <li>Vol estimator at <em>t</em> must not peek into <em>t+1</em>.</li>
+  <li>Calibration of <em>c</em> or expanding σ* uses history ending at <em>t</em> or <em>t−1</em> only (document choice).</li>
+  <li>Register every trial <code>(L, σ* or c-rule, f_max, apply-to)</code> for multiple-testing honesty / DSR — same spirit as <code>wf_strategy_registry.csv</code>.</li>
+</ul>
+
+<h3>Nulls</h3>
+<ul>
+  <li><strong>H0:</strong> Vol-scaled Option A does not improve Sharpe_rf0 vs static Option A after costs (NW t on monthly excess ≈ 0; bootstrap Sharpe CIs overlap heavily).</li>
+  <li><strong>Secondary H0:</strong> MaxDD is not meaningfully better once costs and trial multiplicity are acknowledged.</li>
+</ul>
+
+<h3>Thin history</h3>
+<table>
+  <tr><th>Ticker</th><th>Flag</th></tr>
+  <tr><td>QQQM</td><td>~5.9y — binds primary common window (same as other memos). QQQ = research-only longer proxy if Jared allows labeled charts.</td></tr>
+  <tr><td>GTEK / GINN</td><td>Thin; not in primary Option A sleeve.</td></tr>
+  <tr><td>BIL / SGOV / GBIL / SHV</td><td>On-list cash; pull into panel before backtest.</td></tr>
+</table>
+
+<h2 id="worked">5. How we will know it worked</h2>
+
+<p><strong>Success (research bar — not a trade signal):</strong></p>
+<ol>
+  <li>OOS walk-forward equity curve and metrics table vs Option A exist and are reproducible from a CLI in <code>usa-etf-feature-pipeline</code>.</li>
+  <li>Primary config (<em>L</em>=63, scale-down-only, BIL) shows either (a) higher Sharpe_rf0 with NW t meaningfully positive, or (b) clearly better MaxDD / left-tail with only modest Sharpe give-up — <em>Jared chooses which bar binds</em>.</li>
+  <li>Leakage unit tests pass; costs applied; registry lists all robustness grid points.</li>
+  <li>Brinson-style note: active return attributed to months with <em>f</em>&lt;1 vs <em>f</em>=1 (timing contribution visible).</li>
+  <li>Does <strong>not</strong> silently beat the null by reintroducing score-based name picking.</li>
+</ol>
+
+<p><strong>Failure is also informative:</strong> If vol targeting fails OOS (plausible in a short post-2020 window with V-shaped rallies), we document that allocation timing via vol did not add skill vs buy-and-hold Option A — and keep static core as default.</p>
+
+<table>
+  <tr><th>Metric</th><th>Compare to</th></tr>
+  <tr><td>AnnReturn, AnnVol, MaxDD, Sharpe_rf0</td><td>Static Option A; optional G1</td></tr>
+  <tr><td>Newey–West t on monthly excess</td><td>0 (parity with WF memo)</td></tr>
+  <tr><td>Block-bootstrap Sharpe 95% CI</td><td>Overlap vs B0</td></tr>
+  <tr><td>Turnover / year + cost drag</td><td>Disclose</td></tr>
+  <tr><td>% months f &lt; 1; avg f</td><td>Descriptive regime table</td></tr>
+</table>
+
+<h2 id="cite">6. Full citation + links</h2>
+
+<ol>
+  <li>Moreira, Alan, and Tyler Muir. 2017. “Volatility-Managed Portfolios.” <em>The Journal of Finance</em> 72 (4): 1611–1644. <a href="https://doi.org/10.1111/jofi.12513">doi:10.1111/jofi.12513</a> · <a href="https://www.nber.org/papers/w22208">NBER WP 22208</a></li>
+  <li>Harvey, Campbell R., Edward Hoyle, Russell Korgaonkar, Sandy Rattray, Matthew Sargaison, and Otto van Hemert. 2018. “The Impact of Volatility Targeting.” <em>The Journal of Portfolio Management</em> 45 (1): 14–33. <a href="https://doi.org/10.3905/jpm.2018.45.1.014">doi:10.3905/jpm.2018.45.1.014</a> · <a href="https://ssrn.com/abstract=3175538">SSRN</a> · <a href="https://people.duke.edu/~charvey/Research/Published_Papers/P135_The_impact_of.pdf">PDF</a></li>
+  <li>Brinson, Gary P., L. Randolph Hood, and Gilbert L. Beebower. 1986. “Determinants of Portfolio Performance.” <em>Financial Analysts Journal</em> 42 (4): 39–44. <a href="https://doi.org/10.2469/faj.v42.n4.39">doi:10.2469/faj.v42.n4.39</a></li>
+  <li>Grinold, Richard C., and Ronald N. Kahn. 2000. <em>Active Portfolio Management</em>. 2nd ed. McGraw-Hill. (Active return, IR, fundamental law.)</li>
+</ol>
+
+<p><strong>Internal artifacts:</strong> theory memo <code>/workspace/investments/allocation_alpha_method_memo.md</code> · Engineering ticket <code>ENGINEERING_TICKET_allocation_alpha_vol_target.md</code> · prior WF context <code>wf_optimization_memo.md</code>, <code>xsd_rotation_memo.md</code>, <code>growth_alpha_memo.md</code>.</p>
+
+<footer>
+USA experimental ETF Portfolios workstream · Quant research support · 2026-09-16 ET<br/>
+Not personalized investment advice. Research only; not investment advice.
+</footer>
+
+<!-- lab:start --><footer>Research only; not investment advice; experimental panel; no performance guarantees.</footer><!-- lab:end --></body>
+</html>
