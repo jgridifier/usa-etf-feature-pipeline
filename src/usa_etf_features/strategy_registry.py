@@ -399,7 +399,8 @@ def regime_aware_dual_regime(spec: StrategySpec, *, asof: pd.Timestamp | None = 
         raise ValueError(f"unregistered regime trial: {trial_id}")
     last = monthly.loc[monthly.decision_date.eq(monthly.decision_date.max())].copy()
     last = last.rename(columns={"asset": "ticker", "date": "eval_date"})
-    last["asset_type"] = "category_sleeve"
+    if "asset_type" not in last.columns:
+        last["asset_type"] = "category_sleeve"
     weights = _format_weights(last, strategy_id=spec.id, date=last.decision_date.iloc[0])
     diagnostics = tables["diagnostics"].loc[
         lambda x: x.feature_set.eq(spec.default_params.get("feature_set", "vol_corr_spread"))

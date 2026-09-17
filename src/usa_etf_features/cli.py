@@ -508,6 +508,8 @@ def build_parser() -> argparse.ArgumentParser:
     rd.add_argument("--categorized-path")
     rd.add_argument("--coverage-path")
     rd.add_argument("--out-dir", required=True)
+    rd.add_argument("--name-level", action="store_true", default=False)
+    rd.add_argument("--min-names", type=int, default=100)
     rd.add_argument("--asof")
     rd.add_argument("--fit-mode", choices=["expanding", "rolling"], default="expanding")
     rd.add_argument("--min-history-months", type=int, default=36)

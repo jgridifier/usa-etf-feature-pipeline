@@ -100,15 +100,51 @@ def fit_regime(history: pd.DataFrame, decision_date: pd.Timestamp) -> str:
 
 def allocation(history: pd.DataFrame, names: list[str], allocator: str) -> pd.Series:
     if not names:
-        raise ValueError("no eligible sleeves with enough history")
+        raise ValueError("no eligible assets with enough history")
     if allocator == "ew":
         return pd.Series(1 / len(names), index=names)
     # Mean imputation is restricted to estimation history; never fill OOS returns.
     x = history[names].fillna(history[names].mean())
+    # Full ERC is expensive for name-level panels; inverse-vol is the large-N proxy.
+    if len(names) > 40:
+        vols = x.std(ddof=1).replace(0, np.nan).fillna(x.std(ddof=1).median() or 1.0)
+        w = 1.0 / vols.clip(lower=1e-8)
+        return w / w.sum()
     cov = LedoitWolf().fit(x.to_numpy()).covariance_
     # Normalize covariance scale because the shared optimizer has absolute tolerance.
     cov = cov / max(float(np.diag(cov).mean()), 1e-12) + np.eye(len(names)) * 1e-8
     return risk_parity_weights(pd.DataFrame(cov, index=names, columns=names), names, max_weight=1.0)
+
+
+def select_name_universe(
+    panel: pd.DataFrame,
+    categorized: pd.DataFrame,
+    coverage: pd.DataFrame,
+    *,
+    min_names: int = 100,
+    prefer_liquid: bool = True,
+) -> tuple[pd.DataFrame, pd.Series, pd.Series]:
+    """Pick a name-level stress panel; prefer non-thin names, flag thin_lt5y."""
+    cats = categorized[["Ticker", "Category"]].drop_duplicates("Ticker").set_index("Ticker")["Category"]
+    cats.index = cats.index.astype(str).str.upper()
+    cov = coverage.copy()
+    cov["ticker"] = cov["ticker"].astype(str).str.upper()
+    thin = cov.drop_duplicates("ticker").set_index("ticker")["thin_lt5y"]
+    thin = thin.astype(str).str.lower().eq("true")
+    candidates = [t for t in panel.columns.astype(str).str.upper() if t in cats.index]
+    liquid = [t for t in candidates if not bool(thin.get(t, False))]
+    pool = liquid if (prefer_liquid and len(liquid) >= min_names) else candidates
+    if len(pool) < min_names:
+        raise ValueError(f"name_level requires >= {min_names} names with category+returns; got {len(pool)}")
+    ranked = sorted(pool, key=lambda t: (-int(panel[t].notna().sum()), t))
+    # Keep all qualifying names when the caller asks for the full stress panel (>=100).
+    keep = ranked if min_names >= 100 else ranked[:min_names]
+    if len(keep) < min_names:
+        keep = ranked[:min_names]
+    name_panel = panel[keep].copy()
+    name_cats = cats.reindex(keep)
+    name_thin = pd.Series({t: bool(thin.get(t, False)) for t in keep}, name="thin_lt5y")
+    return name_panel, name_cats, name_thin
 
 
 def run_regime_dual(
@@ -116,6 +152,8 @@ def run_regime_dual(
     min_history_months: int = 36, rolling_window: int = 60,
     vol_window: int = 6, corr_window: int = 12, cov_window: int = 36,
     eligibility: dict | None = None, crypto_calm: bool = False,
+    assets: pd.DataFrame | None = None, asset_categories: pd.Series | None = None,
+    thin_flags: pd.Series | None = None, name_level: bool = False,
 ) -> dict[str, pd.DataFrame]:
     """Run the predeclared grid and three nulls on identical decision dates.
 
@@ -140,6 +178,21 @@ def run_regime_dual(
     if crypto_calm:
         eligibility["calm"] += ("Crypto / Digital Assets",)
     features = regime_features(sleeves, vol_window=vol_window, corr_window=corr_window, eligibility=eligibility)
+    book = sleeves if assets is None else assets.sort_index().astype(float)
+    if assets is not None:
+        if asset_categories is None:
+            raise ValueError("asset_categories required when assets are supplied")
+        if not book.index.equals(sleeves.index):
+            # Align name panel onto sleeve month index (calendar month ends).
+            book = book.reindex(sleeves.index)
+        cats = asset_categories.astype(str)
+        cats.index = cats.index.astype(str).str.upper()
+    else:
+        cats = pd.Series({c: c for c in sleeves.columns}, dtype=str)
+    if name_level and assets is None:
+        raise ValueError("name_level=True requires a name-level asset panel")
+    # Name-level is a separate registered experiment mode (same K/feature/allocator grid).
+    trial_count = len(TRIAL_GRID)
     trials = [(f"k{k}_{f}_{a}", f, a, "dual") for k, f, a in TRIAL_GRID]
     trials += [("unconditional_erc", "vol_corr_spread", "erc", "all"),
                ("unconditional_ew", "vol_corr_spread", "ew", "all"),
@@ -155,9 +208,12 @@ def run_regime_dual(
             past = features.loc[:decision].tail(rolling_window).dropna()
         if len(past) < min_history_months or past.index[-1] != decision:
             continue
-        history = sleeves.loc[:decision].tail(cov_window)
+        history = book.loc[:decision].tail(cov_window)
         available = history.columns[history.count().ge(min(12, cov_window)) & history.iloc[-1].notna()].tolist()
-        selected = {s: [c for c in available if c in eligibility[s]] for s in ("calm", "stress")}
+        selected = {
+            s: [n for n in available if n in cats.index and str(cats.loc[n]) in eligibility[s]]
+            for s in ("calm", "stress")
+        }
         if not all(selected.values()):
             continue
         labels = {}
@@ -175,17 +231,26 @@ def run_regime_dual(
                 cache[key] = allocation(history, names, allocator)
             w = cache[key]
             turnover = 0.5 * w.subtract(previous.get(trial_id, pd.Series(dtype=float)), fill_value=0).abs().sum()
-            realized = sleeves.loc[nxt, names]
+            realized = book.loc[nxt, names]
             r = float((w * realized).sum()) if realized.notna().all() else np.nan
             meta = dict(trial_id=trial_id, decision_date=decision, feature_end=decision, date=nxt, regime=regime)
             returns.append(dict(**meta, **{"return": r}, turnover=turnover,
                                 missing_held_returns=int(realized.isna().sum())))
-            weights.extend(dict(**meta, asset=n, weight=float(v)) for n, v in w.items())
+            weights.extend(
+                dict(
+                    **meta,
+                    asset=n,
+                    weight=float(v),
+                    thin_lt5y=bool(thin_flags.get(n, False)) if thin_flags is not None else False,
+                    asset_type=("name" if name_level else "category_sleeve"),
+                )
+                for n, v in w.items()
+            )
             previous[trial_id] = w * (1 + realized) / (1 + r) if np.isfinite(r) and r > -1 else w
     if not returns:
         raise ValueError("no OOS decisions; require more history and both eligible category sets")
     ret = pd.DataFrame(returns)
-    market = sleeves.mean(axis=1).reindex(ret.date.unique())
+    market = book.mean(axis=1).reindex(ret.date.unique())
     stress_dates = market.index[market.le(market.quantile(0.2))]
     ret["ex_post_stress"] = ret.date.isin(stress_dates)
     summary = []
@@ -195,8 +260,8 @@ def run_regime_dual(
         stress_r = sub.loc[sub.ex_post_stress, "return"].dropna()
         sr = sharpe_rf0(r)
         summary.append(dict(trial_id=trial_id, K=k, feature_set=f, allocator=allocator,
-                            fit_mode=fit_mode, policy=policy, trial_count=len(TRIAL_GRID),
-                            DSR=deflated_sharpe_approx(sr / np.sqrt(12), len(r), len(TRIAL_GRID)),
+                            fit_mode=fit_mode, policy=policy, name_level=bool(name_level), trial_count=trial_count,
+                            DSR=deflated_sharpe_approx(sr / np.sqrt(12), len(r), trial_count),
                             Sharpe=sr, AnnReturn=annualized_return(r), MaxDD=max_drawdown(r),
                             n_months=len(r), missing_months=int(sub["return"].isna().sum()),
                             stress_months=len(stress_r), stress_Sharpe=sharpe_rf0(stress_r),
@@ -222,11 +287,10 @@ def run_regime_dual(
 
 def load_and_run(params: dict[str, Any], asof: pd.Timestamp | None = None) -> dict[str, pd.DataFrame]:
     """Read external inputs; snapshot coverage flags are diagnostics only."""
-    if params.get("name_level", False):
-        raise ValueError("name_level is not implemented; this research uses category sleeves")
     def path(key: str, filename: str) -> Path:
         return Path(params.get(key, DEFAULT_DATA_DIR / filename))
     panel = pd.read_csv(path("panel_returns_path", "usa_universe_panel_monthly_returns.csv"), index_col=0, parse_dates=True)
+    panel.columns = panel.columns.astype(str).str.upper()
     # The source uses final trading dates and may end with an incomplete month.
     complete = ((panel.index.to_period("M") < panel.index.max().to_period("M"))
                 | panel.index.is_month_end
@@ -236,11 +300,32 @@ def load_and_run(params: dict[str, Any], asof: pd.Timestamp | None = None) -> di
     if asof is not None:
         panel = panel.loc[:asof]
     categorized = pd.read_csv(path("categorized_path", "usa_universe_categorized.csv"), usecols=["Ticker", "Category"])
+    categorized["Ticker"] = categorized["Ticker"].astype(str).str.upper()
     coverage = pd.read_csv(path("coverage_path", "usa_universe_panel_history_coverage.csv"), usecols=["ticker", "thin_lt5y"])
     sleeves = build_category_sleeves(panel, categorized, int(params.get("min_name_months", 12)))
     keys = ("k", "fit_mode", "min_history_months", "rolling_window", "vol_window", "corr_window", "cov_window", "eligibility", "crypto_calm")
-    result = run_regime_dual(sleeves, **{key: params[key] for key in keys if key in params})
+    kwargs = {key: params[key] for key in keys if key in params}
+    name_level = bool(params.get("name_level", False))
+    if name_level:
+        name_panel, name_cats, name_thin = select_name_universe(
+            panel, categorized, coverage,
+            min_names=int(params.get("min_names", 100)),
+            prefer_liquid=bool(params.get("prefer_liquid", True)),
+        )
+        kwargs.update(assets=name_panel, asset_categories=name_cats, thin_flags=name_thin, name_level=True)
+    result = run_regime_dual(sleeves, **kwargs)
     thin = coverage.thin_lt5y.astype(str).str.lower().eq("true")
-    result["diagnostics"]["thin_history_tickers"] = ",".join(sorted(set(coverage.loc[thin, "ticker"]) & set(panel.columns)))
-    result["diagnostics"]["coverage_note"] = "Snapshot flags only; not used for historical selection"
+    thin_tickers = sorted(set(coverage.loc[thin, "ticker"].astype(str).str.upper()) & set(panel.columns))
+    result["diagnostics"]["thin_history_tickers"] = ",".join(thin_tickers)
+    result["diagnostics"]["name_level"] = name_level
+    if name_level:
+        held_thin = sorted(name_thin.index[name_thin].tolist())
+        result["diagnostics"]["thin_lt5y_held"] = ",".join(held_thin)
+        result["diagnostics"]["n_names"] = int(name_panel.shape[1])
+        result["diagnostics"]["coverage_note"] = "thin_lt5y flags on held names; not used to peek labels"
+        # Attach per-weight thin flags for the latest decision book consumers.
+        w = result["monthly_weights"]
+        result["monthly_weights"] = w.assign(thin_lt5y=w["asset"].map(lambda t: bool(name_thin.get(t, False))))
+    else:
+        result["diagnostics"]["coverage_note"] = "Snapshot flags only; not used for historical selection"
     return result

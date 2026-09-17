@@ -160,3 +160,44 @@ def test_comparison_aligns_calendar_and_trading_month_ends():
     result = comparison_frame(returns, pd.Series([.01, -.02, .03], index=trading))
     assert result.n_months.eq(3).all()
     assert result.Sharpe_rf0.nunique() == 1
+
+
+def test_name_level_stress_panel(sleeves, tmp_path):
+    """Secondary name-level path keeps sleeve regimes and flags thin_lt5y."""
+    # Expand synthetic sleeves into many named ETFs mapped to calm/stress categories.
+    rng = np.random.default_rng(3)
+    n = len(sleeves)
+    tickers = [f"T{i:03d}" for i in range(120)]
+    calm = list(sleeves.columns[:2])
+    stress = list(sleeves.columns[2:])
+    cats = []
+    cols = {}
+    for i, tkr in enumerate(tickers):
+        cat = calm[i % len(calm)] if i < 80 else stress[i % len(stress)]
+        base = sleeves[cat].to_numpy()
+        cols[tkr] = base + rng.normal(0, 0.001, n)
+        cats.append({"Ticker": tkr, "Category": cat})
+    panel = pd.DataFrame(cols, index=sleeves.index)
+    panel.to_csv(tmp_path / "panel.csv")
+    pd.DataFrame(cats).to_csv(tmp_path / "cats.csv", index=False)
+    thin = [False] * 100 + [True] * 20
+    pd.DataFrame({"ticker": tickers, "thin_lt5y": thin}).to_csv(tmp_path / "cov.csv", index=False)
+    tables = rd.load_and_run(
+        dict(
+            panel_returns_path=tmp_path / "panel.csv",
+            categorized_path=tmp_path / "cats.csv",
+            coverage_path=tmp_path / "cov.csv",
+            name_level=True,
+            min_names=100,
+            min_history_months=6,
+            min_name_months=2,
+            vol_window=3,
+            corr_window=4,
+            cov_window=12,
+        )
+    )
+    assert tables["diagnostics"]["name_level"].all()
+    assert int(tables["diagnostics"]["n_names"].iloc[0]) >= 100
+    assert "thin_lt5y" in tables["monthly_weights"].columns
+    assert tables["monthly_weights"]["asset_type"].eq("name").all()
+    assert tables["summary"]["trial_count"].eq(4).all()

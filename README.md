@@ -194,8 +194,11 @@ Sleeves require 12 prior monthly observations per name. Features and covariance
 use only data through the decision; the final incomplete source month is excluded.
 Unknown categories remain in unconditional nulls but require an explicit
 `eligibility` mapping to enter conditional policies. Crypto is excluded unless
-`crypto_calm: true`. Coverage thin flags are snapshot diagnostics only. The optional
-name-level experiment is not implemented (`name_level` must remain false).
+`crypto_calm: true`. Coverage `thin_lt5y` flags are carried on name-level holdings and listed in
+diagnostics. Optional secondary stress: set `name_level: true` (or CLI
+`--name-level`) to allocate on ≥100 liquid names while regimes still come from
+category-sleeve features; prefer non-thin names, and fall back to thin names
+only if needed to reach the minimum count.
 Returns are gross of costs, missing held returns invalidate that month, and the
 static universe retains survivorship bias. Ex-post stress diagnostics use the
 bottom quintile of realized sleeve-market returns, never as model inputs.
