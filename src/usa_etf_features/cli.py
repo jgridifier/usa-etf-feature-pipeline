@@ -390,7 +390,7 @@ def cmd_run_strategies(args: argparse.Namespace) -> int:
 def build_parser() -> argparse.ArgumentParser:
     p = argparse.ArgumentParser(
         prog="usa_etf_features",
-        description="USA pre-approved ETF feature pipeline (research; not investment advice)",
+        description="USA research-universe ETF feature pipeline (research; not investment advice)",
     )
     sub = p.add_subparsers(dest="command", required=True)
 

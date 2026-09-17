@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>Short-term forecasting with optimal transport — teaching note</title>
+<style>
+  :root { --fg:#1a1a1a; --muted:#555; --border:#ddd; --bg:#fafafa; --accent:#0b5fff; --warn:#8a5a00; --ok:#0a7a3e; }
+  * { box-sizing: border-box; }
+  body { font-family: Georgia, "Times New Roman", serif; color: var(--fg); line-height: 1.55; max-width: 42rem; margin: 2rem auto; padding: 0 1.25rem; background: #fff; }
+  h1 { font-size: 1.55rem; line-height: 1.25; margin-bottom: 0.35rem; }
+  h2 { font-size: 1.15rem; margin-top: 2rem; border-bottom: 1px solid var(--border); padding-bottom: 0.25rem; }
+  h3 { font-size: 1.02rem; margin-top: 1.25rem; color: #222; }
+  .meta { color: var(--muted); font-size: 0.95rem; margin-bottom: 1.25rem; }
+  nav { background: var(--bg); border: 1px solid var(--border); padding: 0.75rem 1rem; margin: 1rem 0 1.5rem; font-family: system-ui, sans-serif; font-size: 0.9rem; }
+  nav ol { margin: 0.35rem 0 0 1.1rem; padding: 0; }
+  nav a { color: var(--accent); text-decoration: none; }
+  nav a:hover { text-decoration: underline; }
+  code, .math { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 0.9em; }
+  .eq { background: var(--bg); border: 1px solid var(--border); padding: 0.85rem 1rem; margin: 0.85rem 0; overflow-x: auto; font-family: ui-monospace, Menlo, Consolas, monospace; font-size: 0.88rem; white-space: pre-wrap; }
+  table { border-collapse: collapse; width: 100%; font-size: 0.95rem; margin: 0.75rem 0 1rem; }
+  th, td { border: 1px solid var(--border); padding: 0.4rem 0.55rem; text-align: left; vertical-align: top; }
+  th { background: var(--bg); }
+  .callout { border-left: 4px solid var(--accent); background: #f4f7ff; padding: 0.7rem 0.9rem; margin: 1rem 0; }
+  .callout.warn { border-left-color: #c98100; background: #fff8eb; }
+  .callout.ok { border-left-color: var(--ok); background: #f0faf4; }
+  .ok { border-left-color: var(--ok); background: #f0faf4; }
+  ul { padding-left: 1.2rem; }
+  li { margin: 0.3rem 0; }
+  a { color: var(--accent); }
+  footer { margin: 2.5rem 0 1rem; color: var(--muted); font-size: 0.9rem; border-top: 1px solid var(--border); padding-top: 0.75rem; }
+</style>
+<!-- lab:start --><link rel="stylesheet" href="../assets/style.css"><!-- lab:end --></head>
+<body><!-- lab:start --><nav aria-label="Main"><a href="../index.html">Home</a> <a href="../methods/index.html">Methods</a> <a href="../books.html">Books</a> <a href="../runs.html">Runs</a></nav><!-- lab:end -->
+
+<h1>Short-term forecasting with optimal transport</h1>
+<p class="meta">Teaching note for Jared — research only, not investment advice.<br/>
+Spelta, Pagnottoni &amp; Pecora (2025), <em>Journal of the Royal Statistical Society: Series A</em>.</p>
+
+<nav>
+  <strong>Sections</strong>
+  <ol>
+    <li><a href="#why">Why this paper</a></li>
+    <li><a href="#original">What the original work found</a></li>
+    <li><a href="#math">Core math / intuition</a></li>
+    <li><a href="#our-data">What we would do on USA ETF / panel data</a></li>
+    <li><a href="#how-we-know">How we would know it worked</a></li>
+    <li><a href="#citation">Full citation + links + code</a></li>
+  </ol>
+</nav>
+
+<div class="callout ok">
+  <strong>Bottom line for you:</strong> There <em>is</em> an official implementation — MATLAB research code by the authors
+  (<a href="https://github.com/AlessandroSpike/Nowcasting-with-Optimal-Transport">AlessandroSpike/Nowcasting-with-Optimal-Transport</a>).
+  It is a <strong>macro nowcasting / missing-data</strong> method (US GDP demo), not an ETF allocator.
+  Useful if you want better mixed-frequency macro fills or a GDP nowcast feature; out of scope for allocation-alpha weights unless we explicitly expand.
+</div>
+
+<h2 id="why">1. Why this paper / blog</h2>
+<p>
+Nowcasting is the problem of estimating a <strong>low-frequency target</strong> (e.g. quarterly GDP) while higher-frequency predictors arrive with ragged edges and missing cells.
+Classical Dynamic Factor Models (DFMs) fill those holes inside an EM + Kalman loop; machine-learning imputers (KNN, trees) ignore the joint distribution of whole batches.
+</p>
+<p>
+This paper’s hook is distributional: treat imputation as choosing the missing entries so that <strong>two random batches drawn from the (completed) dataset look like they came from the same probability law</strong>, measured by a <strong>Sinkhorn divergence</strong> (entropic optimal transport).
+That gives a transparent, non-parametric imputer, and optionally a Sinkhorn “polish” step bolted onto EM-DFM.
+</p>
+<p>
+We care about it when: (i) you want a paper-backed way to complete ragged panels, or (ii) you want a US GDP nowcast as a research feature — not when you need portfolio weights vs static Option A.
+</p>
+
+<h2 id="original">2. What the original work found</h2>
+
+<h3>Setup (plain language)</h3>
+<ul>
+  <li><strong>Authors / venue:</strong> Alessandro Spelta, Paolo Pagnottoni, Nicolò Pecora — JRSS Series A, 2025 (DOI <code>10.1093/jrsssa/qnaf036</code>).</li>
+  <li><strong>Problem:</strong> Short-term forecast / nowcast of a low-frequency series by filling missing entries so the completed sample’s distribution is preserved.</li>
+  <li><strong>Two modes:</strong>
+    <ol>
+      <li><strong>Stand-alone non-parametric OT imputer</strong> (Sinkhorn-divergence loss on batches).</li>
+      <li><strong>Parametric hybrid:</strong> Sinkhorn step as an extra stage inside the EM algorithm of a Dynamic Factor Model (state-space / Kalman style).</li>
+    </ol>
+  </li>
+  <li><strong>Evidence:</strong> Monte Carlo designs + empirical US GDP nowcasting; claim of gains vs KNN, random forests / regression trees, and standard EM-DFM, including missing data and modest samples.</li>
+</ul>
+
+<h3>Key claims</h3>
+<ul>
+  <li>Sinkhorn divergence is a practical loss for “batches from the same dataset should match in law.”</li>
+  <li>Non-parametric OT imputation can beat common ML imputers on their simulations.</li>
+  <li>Adding Sinkhorn inside EM-DFM improves GDP nowcasts relative to classical EM-DFM baselines in their study.</li>
+</ul>
+
+<h3>Limitations (read these before trusting a port)</h3>
+<ul>
+  <li><strong>Domain:</strong> Macro mixed-frequency nowcasting, not asset allocation or cross-sectional ETF scoring.</li>
+  <li><strong>Hyperparameters:</strong> Entropic regularization ε, batch size, learning rate / RMSprop, number of Sinkhorn iterations — results can move with these.</li>
+  <li><strong>Compute:</strong> OT on batches is heavier than spline / mean fill; their repo uses MATLAB <code>parfor</code> for speed.</li>
+  <li><strong>Identification:</strong> Matching distributions does not by itself guarantee causal or structural forecasts; it is a geometric imputation prior.</li>
+  <li><strong>External validity:</strong> GDP nowcast wins need not transfer to equity/ETF return panels without a new walk-forward study.</li>
+  <li><strong>Code maturity:</strong> Author MATLAB scripts (0 stars as of our check), research-oriented — not a packaged Python library.</li>
+</ul>
+
+<h2 id="math">3. Core math / intuition</h2>
+
+<h3>Optimal transport in one sentence</h3>
+<p>
+Given two clouds of points (empirical measures μ and ν), OT asks for the cheapest way to move mass from μ to ν under a ground cost (usually squared Euclidean distance).
+The minimal cost is a Wasserstein distance; with entropic regularization it becomes Sinkhorn-computable.
+</p>
+
+<h3>Sinkhorn divergence (debiasing)</h3>
+<p>
+Plain entropic OT between a sample and itself is not zero. The <strong>Sinkhorn divergence</strong> corrects that (Feydy et al.; see also Genevay / Cuturi line of work):
+</p>
+<div class="eq">S_ε(μ, ν) = OT_ε(μ, ν) − ½ OT_ε(μ, μ) − ½ OT_ε(ν, ν)
+
+where OT_ε is entropic optimal transport with regularization ε &gt; 0.</div>
+<p>
+Intuition: if μ and ν are two batches from the same completed dataset, we want <span class="math">S_ε(μ, ν) ≈ 0</span>.
+Missing entries are free variables; we optimize them (gradient steps, often RMSprop in their code) to drive that divergence down.
+</p>
+
+<h3>Non-parametric imputer (sketch)</h3>
+<ol>
+  <li>Start from a ragged matrix X (rows = time, columns = series), with mask M of observed entries.</li>
+  <li>Initialize fills for missing cells (e.g. spline / unconditional mean — their code uses preprocessing + OT refine).</li>
+  <li>Repeatedly draw two mini-batches of completed rows (or windows).</li>
+  <li>Compute Sinkhorn divergence between batch distributions; backprop / gradient-update <em>only the imputed coordinates</em>.</li>
+  <li>Stop when divergence plateaus; read the low-frequency target’s filled value as the nowcast.</li>
+</ol>
+<div class="callout">
+  Observed cells stay pinned (conditional OT imputation). Their <code>OT_imputerCONDITIONAL.m</code> encodes that; <code>OT_imputer.m</code> is a simpler unconditional variant.
+</div>
+
+<h3>Parametric hybrid: Sinkhorn + EM-DFM</h3>
+<p>
+A Dynamic Factor Model says something like:
+</p>
+<div class="eq">x_t = C f_t + e_t
+f_t = A f_{t−1} + u_t</div>
+<p>
+with mixed frequency / missingness handled by EM + Kalman filter/smoother (classic nowcasting stack).
+Their twist: after (or inside) EM updates, run a Sinkhorn imputation polish so the completed panel better matches batch-wise distributions, then continue.
+Repo scripts <code>funzioneNowcast*.m</code> and <code>EMalgorithm*.m</code> implement the DFM/EM/Kalman pieces; Sinkhorn is the add-on loss step.
+</p>
+
+<h3>What “beats KNN / RF / EM-DFM” means here</h3>
+<p>
+On their Monte Carlo and US GDP exercise: lower RMSE (and related scores) for the target nowcast versus those baselines under missingness.
+That is a <strong>forecast accuracy</strong> claim for the low-frequency target — not a Sharpe / allocation-alpha claim.
+</p>
+
+<h2 id="our-data">4. What we would do on USA ETF / growth-panel data</h2>
+
+<div class="callout warn">
+  <strong>Scope flag:</strong> Your Portfolios mandate defaults to approved USA ETF / growth-panel artifacts under <code>/workspace/investments/</code>.
+  This paper’s native habitat is a <em>macro</em> mixed-frequency panel (GDP + monthly indicators).
+  Applying it unchanged to ETF adjusted closes is a different scientific question. Expand scope deliberately if you want GDP nowcasts as features.
+</div>
+
+<h3>Option A — Stay faithful to the paper (macro nowcast feature)</h3>
+<ul>
+  <li><strong>Inputs:</strong> A ragged US macro panel (GDP quarterly + monthly activity/survey series). Not the 25 ETF growth block by itself.</li>
+  <li><strong>Method:</strong> Reproduce non-parametric Sinkhorn imputer and/or Sinkhorn+EM-DFM on that panel.</li>
+  <li><strong>Output:</strong> A GDP nowcast time series (and uncertainty if we add it) that CIO/Quant could later feed as a <em>regime or feature</em> into allocation strategies — separate Engineering ticket.</li>
+  <li><strong>Leakage rules:</strong> At decision month t, optimize fills using information available ≤ t only; evaluate GDP release errors with real-time / vintage discipline if we go serious.</li>
+  <li><strong>Nulls:</strong> No improvement in GDP nowcast RMSE vs EM-DFM and vs a simple AR after costs of complexity.</li>
+</ul>
+
+<h3>Option B — ETF-panel stress test (exploratory, not the paper’s claim)</h3>
+<ul>
+  <li><strong>Inputs:</strong> <code>growth_panel_monthly_returns.csv</code> / adj-close panel with artificial ragged missingness (or true listing start dates as missing).</li>
+  <li><strong>Task:</strong> Impute missing ETF returns/prices with Sinkhorn vs KNN / spline; score reconstruction error and downstream effect on a frozen allocator (e.g. static Option A or vol-target).</li>
+  <li><strong>Assumption:</strong> Rows are exchangeable enough for batch OT — weak for strong trends/regimes; may need rolling windows or returns not levels.</li>
+  <li><strong>Nulls:</strong> OT fill does not reduce OOS allocation metrics vs simple fills; or it overfits ε.</li>
+</ul>
+
+<h3>What we would <em>not</em> do without a new ticket</h3>
+<ul>
+  <li>Treat this as a drop-in replacement for vol-target / M3 optimize / strategy-registry weights.</li>
+  <li>Claim “OT alpha” in the ETF book without walk-forward evidence on <em>your</em> panel.</li>
+</ul>
+
+<h3>Implementation path if you greenlight a test</h3>
+<ol>
+  <li>Start from author MATLAB: <a href="https://github.com/AlessandroSpike/Nowcasting-with-Optimal-Transport">AlessandroSpike/Nowcasting-with-Optimal-Transport</a> (<code>OT_imputer*.m</code>, <code>RealNonParamNEW.m</code>, <code>RealNowcast_ISNEW.m</code>, <code>Simulazioni*.m</code>).</li>
+  <li>For a Python research clone later: Sinkhorn divergence via <a href="https://github.com/PythonOT/POT">PythonOT/POT</a> (<code>ot.sinkhorn</code> / Sinkhorn divergence helpers) or GeomLoss; DFM-EM separately — Engineering ticket, not Quant production code.</li>
+  <li>Teaching HTML (this file) stays the theory deliverable; any build needs an Engineering ticket with CLI, leakage tests, and research disclaimer.</li>
+</ol>
+
+<h2 id="how-we-know">5. How we would know it worked</h2>
+<table>
+  <thead><tr><th>Check</th><th>Pass if…</th></tr></thead>
+  <tbody>
+    <tr><td>Replication sanity</td><td>On a toy complete panel with holes punched in, OT fill RMSE ≤ KNN/spline on held-out cells under the paper’s Monte Carlo-style design.</td></tr>
+    <tr><td>Macro nowcast (Option A)</td><td>US GDP nowcast RMSE / DA improves vs EM-DFM and AR on a locked OOS window; hyperparameters registered for multiple-testing honesty.</td></tr>
+    <tr><td>No leakage</td><td>Unit tests: imputed values at t use data ≤ t; no same-month GDP realization in the feature set.</td></tr>
+    <tr><td>ETF exploratory (Option B)</td><td>Only if scoped: downstream strategy OOS Sharpe/MaxDD vs the same strategy with baseline fills — OT must help the <em>decision metric</em>, not just in-sample divergence.</td></tr>
+    <tr><td>Fail / abort</td><td>Unstable ε, batch divergence not decreasing, or gains vanish under expanding-window WF → park the method.</td></tr>
+  </tbody>
+</table>
+
+<h2 id="citation">6. Full citation + links + code</h2>
+
+<p><strong>Primary paper</strong><br/>
+Spelta, Alessandro, Paolo Pagnottoni, and Nicolò Pecora. 2025.
+“Short-term forecasting with optimal transport.”
+<em>Journal of the Royal Statistical Society Series A: Statistics in Society</em>.
+DOI: <a href="https://doi.org/10.1093/jrsssa/qnaf036">10.1093/jrsssa/qnaf036</a>
+· PDF (publisher): <a href="https://academic.oup.com/jrsssa/advance-article-pdf/doi/10.1093/jrsssa/qnaf036/62886244/qnaf036.pdf">OUP advance PDF</a>
+· Catalog: JRSS-A 189(2):1022–1050 (as indexed by Cattolica / Pavia handles).
+</p>
+
+<p><strong>Author code (official)</strong><br/>
+<a href="https://github.com/AlessandroSpike/Nowcasting-with-Optimal-Transport">https://github.com/AlessandroSpike/Nowcasting-with-Optimal-Transport</a>
+— MATLAB: non-parametric Sinkhorn imputer, EM-DFM hybrids, Monte Carlo scripts, <code>parfor</code> / expanding-window variants.
+</p>
+
+<p><strong>Building-block references (for intuition / Python rebuild)</strong></p>
+<ul>
+  <li>Cuturi, Marco. 2013. “Sinkhorn Distances: Lightspeed Computation of Optimal Transport.” <em>NeurIPS</em>.</li>
+  <li>Feydy, Jean, et al. 2019. “Interpolating between Optimal Transport and MMD using Sinkhorn Divergences.” <em>AISTATS</em>.</li>
+  <li>Flamary, Rémi, et al. 2021. “POT: Python Optimal Transport.” <em>JMLR</em> — <a href="https://github.com/PythonOT/POT">PythonOT/POT</a>.</li>
+  <li>Classic DFM nowcasting background: Banbura &amp; Modugno / stock–Watson factor literature (EM + Kalman on ragged edges) — the parametric host model this paper extends.</li>
+</ul>
+
+<p><strong>Related but different</strong> (do not confuse with this paper): flow-matching forecasting repos; geospatial Sinkhorn evaluation frameworks — different scientific claims.</p>
+
+<footer>
+  Written for the USA experimental ETF Portfolios research stream. Research tooling only — not personalized investment advice .
+  Pair with Engineering only after Jared picks Option A (macro) or Option B (ETF exploratory) above.
+</footer>
+
+<!-- lab:start --><footer>Research only; not investment advice; experimental panel; no performance guarantees.</footer><!-- lab:end --></body>
+</html>

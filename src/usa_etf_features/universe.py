@@ -99,7 +99,7 @@ def assert_eligible(
             )
             raise UniverseGateError(
                 f"Ticker {t} is not eligible ({reason}). "
-                "Only USA pre-approved tickers minus Appendix 3 / off-list may be scored."
+                "Only USA research-universe tickers minus Appendix 3 / off-list may be scored."
             )
 
 

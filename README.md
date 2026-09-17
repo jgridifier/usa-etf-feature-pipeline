@@ -1,6 +1,6 @@
 # usa-etf-feature-pipeline
 
-Transparent, unit-tested feature scorer and **optional thematic rotation sleeve** for **GS USA pre-approved ETFs** (research tooling).
+Transparent, unit-tested feature scorer and **optional thematic rotation sleeve** for **experimental USA ETF research universe** (research tooling).
 
 > **Not investment advice.** Outputs are research artifacts for personal portfolio exploration. No claim of future performance, guaranteed alpha, or personalized recommendations. Research-only.
 
@@ -349,3 +349,27 @@ usa-etf-feature-pipeline/
 ## Disclaimer
 
 This repository is **research infrastructure only**. It does not constitute investment advice, an offer to sell securities, or a recommendation to buy or sell any ETF. Past feature ranks, rotation gates, and backtest-style constructs are not indicative of future results.
+
+## GitHub Pages research lab
+
+The committed site in `docs/` includes Home, Methods, Books, and Runs. Enable it in
+**Settings → Pages → Deploy from branch → `main` → `/docs`** after merging this branch.
+Preview locally with `python -m http.server 8000 --directory docs`.
+
+After a new `run-strategies --asof YYYY-MM-DD` run:
+
+1. Copy the intended CSV artifacts (including strategy comparison / suggested weights when available)
+   into `docs/data/`. Refresh the `vol_target_*.csv` set together after a new vol-target run,
+   and copy its `README_OOS_note.md`. Pages reads this directory, not `data/processed/`.
+2. Scrub brand names and institutional policy claims from imported artifacts and teaching HTML
+   before publication. Keep academic citations and neutral research framing. Universe legal names
+   are neutralized where necessary; every source section is `experimental_research_universe`.
+3. Run `python scripts/build_pages.py`. This regenerates HTML tables and the historical primary-trial
+   weights snapshot from the local CSVs; extra CSVs are also rendered on Runs. The snapshot is
+   explicitly historical, while refreshed strategy weights remain available in the Runs tables.
+4. Run `pytest`, review the site, and commit `docs/` alongside source changes. No GitHub build step
+   is required. CI checks branding and that generated pages match the committed inputs.
+
+All pages describe an experimental panel: research only; not investment advice; no performance
+guarantees. `tests/test_no_brand_tokens.py` enforces the brand scrub across source, tests,
+configuration, raw data, scripts, and the published site with no content allowlist.
