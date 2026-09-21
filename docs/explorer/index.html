@@ -7,7 +7,7 @@
 <link rel="stylesheet" href="../assets/style.css">
 </head>
 <body class="explorer-page">
-<header class="site-header"><div class="site-header-inner"><a class="brand" href="../index.html">USA ETF Lab</a><nav class="site-nav" aria-label="Main"><a href="../index.html">Home</a><a href="../methods/index.html">Methods</a><a href="index.html" class="is-active" aria-current="page">Explorer</a><a href="../books.html">Books</a><a href="../runs.html">Runs</a></nav></div></header>
+<header class="site-header"><div class="site-header-inner"><a class="brand" href="../index.html">USA ETF Lab</a><button type="button" class="nav-toggle" aria-expanded="false" aria-controls="site-nav" aria-label="Open menu"><span class="nav-toggle-bars" aria-hidden="true"></span></button><nav class="site-nav" id="site-nav" aria-label="Main"><a href="../index.html">Home</a><a href="../books.html">Books</a><a href="../runs.html">Runs</a><a href="../explorer/index.html" class="is-active">Explorer</a><a href="../methods/index.html">Methods</a></nav></div></header>
 <main class="page">
 <section class="hero hero-compact"><div class="hero-inner"><span class="badge">Research tooling · Growth-25</span><h1>Time Series Explorer</h1><p class="lede">An experimental USA ETF research panel. Inspect price paths, risk, distributions, and dependence on the observed sample.</p></div></section>
 <section class="band"><div class="band-inner">
@@ -47,4 +47,5 @@
 <footer class="site-footer"><p>Research only; not investment advice; experimental panel; no performance guarantees.</p><p><a href="../methods/ts_explorer_metric_menu.html">Time Series Explorer metric menu</a></p></footer>
 <script src="https://cdn.jsdelivr.net/npm/echarts@5.5.1/dist/echarts.min.js" defer></script>
 <script src="explorer.js" defer></script>
+<script src="../assets/nav.js" defer></script>
 </body></html>

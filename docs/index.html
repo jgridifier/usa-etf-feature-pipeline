@@ -3,34 +3,61 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Experimental USA ETF research panel lab | USA ETF Lab</title>
+<title>Live shortlist · USA ETF research lab | USA ETF Lab</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="assets/style.css">
 
 </head>
 <body>
-<header class="site-header"><div class="site-header-inner"><a class="brand" href="index.html">USA ETF Lab</a><nav class="site-nav" aria-label="Main"><a href="index.html" class="is-active">Home</a><a href="methods/index.html">Methods</a><a href="explorer/index.html">Explorer</a><a href="books.html">Books</a><a href="runs.html">Runs</a></nav></div></header>
+<header class="site-header"><div class="site-header-inner"><a class="brand" href="index.html">USA ETF Lab</a><button type="button" class="nav-toggle" aria-expanded="false" aria-controls="site-nav" aria-label="Open menu"><span class="nav-toggle-bars" aria-hidden="true"></span></button><nav class="site-nav" id="site-nav" aria-label="Main"><a href="index.html" class="is-active">Home</a><a href="books.html">Books</a><a href="runs.html">Runs</a><a href="explorer/index.html">Explorer</a><a href="methods/index.html">Methods</a></nav></div></header>
 <main class="page">
 
 <section class="hero">
   <div class="hero-inner">
-    <span class="badge">Research panel</span>
-    <h1>Experimental USA ETF research lab</h1>
-    <p class="lede">Transparent ETF features, fixed allocation books, and volatility-managed portfolio experiments — static GitHub Pages, no live trading.</p>
+    <span class="badge">Live shortlist</span>
+    <h1>Static core + Book-2 vol-target</h1>
+    <p class="lede">The live research shortlist is <strong>Book 1 static Option A</strong> plus <strong>Book 2 unconditional vol-target</strong>. Archive / failed-null methods are not on this door. Static GitHub Pages — no live trading.</p>
     <div class="cta-row">
-      <a class="btn btn-primary" href="books.html">Explore books</a>
-      <a class="btn btn-secondary" href="methods/index.html">Methods</a>
-      <a class="btn btn-secondary" href="explorer/index.html">Time Series Explorer</a>
+      <a class="btn btn-primary" href="books.html">Open live shortlist</a>
+      <a class="btn btn-secondary" href="runs.html">OOS runs</a>
+      <a class="btn btn-secondary" href="explorer/index.html">Explorer</a>
+    </div>
+  </div>
+</section>
+<section class="band">
+  <div class="band-inner">
+    <div class="section-head">
+      <span class="badge">Front door</span>
+      <h2>What is live right now</h2>
+      <p class="lede">Two sleeves only. Book 3 (XSD) stays optional; Justina / archive nulls stay off the shortlist.</p>
+    </div>
+    <div class="card-grid shortlist-grid">
+      <a class="feature-card shortlist-card" href="books.html">
+        <span class="badge">Book 1 · live</span>
+        <h3>Static core (Option A)</h3>
+        <p>Fixed research weights (e.g. VOO / QQQM / IJR). Benchmark policy baseline for the panel.</p>
+      </a>
+      <a class="feature-card shortlist-card" href="books.html">
+        <span class="badge">Book 2 · live</span>
+        <h3>Vol-target Option A</h3>
+        <p>Unconditional volatility targeting on the same core — default research path for risk, not return alpha.</p>
+      </a>
+      <div class="feature-card shortlist-card muted-card" role="note">
+        <span class="badge badge-quiet">Not live</span>
+        <h3>Archive / failed nulls</h3>
+        <p>Justina round-1 and other FAIL / ARCHIVE methods are research record only — see Methods → Archive.</p>
+        <p class="cta-inline"><a href="methods/index.html#archive">View archive</a></p>
+      </div>
     </div>
   </div>
 </section>
 
-<section class="band">
+<section class="band soft">
   <div class="band-inner">
     <div class="section-head">
-      <span class="badge">OOS scorecard</span>
-      <h2>Book 2 vs static Option A</h2>
-      <p class="lede">Archived real-BIL sample · 68 months · 2021-02-26 → 2026-09-16</p>
+      <span class="badge">Supporting OOS</span>
+      <h2>Book 2 path vs static Option A</h2>
+      <p class="lede">Archived real-BIL sample · 68 months · 2021-02-26 → 2026-09-16. Evidence for the live Book-2 sleeve — not a separate promoted book.</p>
     </div>
     <div class="metric-grid">
       <article class="metric-card">
@@ -57,26 +84,26 @@
     <p class="callout">Moreira &amp; Muir (2017) · mean f = 0.93 · months with f&lt;1: 26%</p>
     <div class="cta-row">
       <a class="btn btn-primary" href="runs.html">Open OOS charts</a>
-      <a class="btn btn-secondary" href="books.html">CIO shortlist</a>
+      <a class="btn btn-secondary" href="books.html">Live shortlist weights</a>
     </div>
   </div>
 </section>
-<section class="band soft">
+<section class="band">
   <div class="band-inner card-grid">
-    <a class="feature-card" href="methods/allocation_alpha_vol_target.html">
-      <span class="badge">Method</span>
-      <h3>Allocation alpha · vol-target</h3>
-      <p>Scale-down Option A with BIL residual. Open teaching note + viz.</p>
-    </a>
     <a class="feature-card" href="books.html">
       <span class="badge">Books</span>
-      <h3>Three-book CIO shortlist</h3>
-      <p>Static A, vol-target A, optional XSD sleeve — weights and comparison.</p>
+      <h3>Shortlist weights &amp; comparison</h3>
+      <p>Live Books 1–2 (and optional Book 3 sleeve) with weights and tables.</p>
     </a>
     <a class="feature-card" href="runs.html">
       <span class="badge">Runs</span>
-      <h3>Out-of-sample archive</h3>
-      <p>Equity curves, drawdowns, f<sub>t</sub> history, and downloadable CSVs.</p>
+      <h3>Out-of-sample charts</h3>
+      <p>Equity, drawdown, f<sub>t</sub>, and downloadable CSVs for the live path.</p>
+    </a>
+    <a class="feature-card" href="explorer/index.html">
+      <span class="badge">Explorer</span>
+      <h3>Time Series Explorer</h3>
+      <p>Growth-panel metrics and charts for research diagnostics.</p>
     </a>
   </div>
 </section>
@@ -87,5 +114,6 @@
 <p class="muted">Design tokens adapted from public institutional UI patterns (Inter / JetBrains Mono stand-ins). Research panel only.</p>
 </footer>
 
+<script src="assets/nav.js" defer></script>
 </body>
 </html>
