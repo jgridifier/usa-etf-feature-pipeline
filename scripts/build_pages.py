@@ -28,8 +28,8 @@ CIO_COPIES = [
 
 NAV = [
     ('index.html', 'Home'),
-    ('books.html', 'Books'),
-    ('runs.html', 'Runs'),
+    ('index.html#/books', 'Books'),
+    ('index.html#/runs', 'Runs'),
     ('explorer/index.html', 'Explorer'),
     ('methods/index.html', 'Methods'),
 ]
@@ -149,13 +149,13 @@ def build_viz() -> None:
             },
         }
     suggested = read_csv('suggested_weights.csv')
-    book3 = [r for r in suggested if r['strategy_id'] == 'score_rotate_xsd']
-    if book3:
+    xsd_sleeve = [r for r in suggested if r['strategy_id'] == 'score_rotate_xsd']
+    if xsd_sleeve:
         books['score_rotate_xsd'] = {
-            'label': 'Book 3 — ScoreSimple XSD sleeve',
-            'asof': book3[0].get('asof') or book3[0].get('date', ''),
-            'rotate_on': book3[0].get('rotate_on', ''),
-            'weights': {r['ticker']: float(r['weight']) for r in book3},
+            'label': 'Optional gated sleeve — XSD',
+            'asof': xsd_sleeve[0].get('asof') or xsd_sleeve[0].get('date', ''),
+            'rotate_on': xsd_sleeve[0].get('rotate_on', ''),
+            'weights': {r['ticker']: float(r['weight']) for r in xsd_sleeve},
         }
     write_json('viz_weights.json', {'books': books})
 
@@ -211,13 +211,13 @@ def build_viz() -> None:
     labels = {
         'static_option_a': 'Book 1 — Static Option A',
         'vol_target_option_a': 'Book 2 — Vol-target Option A',
-        'score_rotate_xsd': 'Book 3 — ScoreSimple XSD',
+        'score_rotate_xsd': 'Optional gated sleeve — XSD',
         'm3_p2_core_rotate': 'M3 P2 (held off)',
     }
     stances = {
         'static_option_a': 'Benchmark policy baseline',
         'vol_target_option_a': 'Default research path — risk path, not return alpha',
-        'score_rotate_xsd': 'Optional thematic sleeve',
+        'score_rotate_xsd': 'Optional gated sleeve',
         'm3_p2_core_rotate': 'Held off the shortlist',
     }
     rows_out = []
@@ -526,7 +526,7 @@ def build_books() -> None:
   <div class="band-inner">
     <div class="section-head">
       <h2>Standing books</h2>
-      <p class="lede">Live composition unchanged: static core + Book-2 vol-target. Optional XSD sleeve is gated and is not Book 3.</p>
+      <p class="lede">Live composition unchanged: static core + Book-2 vol-target. XSD is an optional gated sleeve — not a live book.</p>
     </div>
     <div class="card-grid shortlist-grid" style="grid-template-columns: repeat(2, minmax(0, 1fr));">
       <article class="feature-card shortlist-card">
@@ -581,7 +581,7 @@ def build_books() -> None:
         <div class="chart" data-chart="weights" data-book="score_rotate_xsd" style="min-height:280px"></div>
       </div>
     </div>
-    <p class="lede" style="margin-top:1rem"><code>score_rotate_xsd</code> may appear in runs as a gated thematic sleeve — default <strong>OFF</strong> unless ScoreSimple is ON. Not Book 3.</p>
+    <p class="lede" style="margin-top:1rem"><code>score_rotate_xsd</code> may appear in runs as a gated thematic sleeve — default <strong>OFF</strong> unless ScoreSimple is ON. Optional gated sleeve only.</p>
   </div>
 </section>
 <section class="band soft">
@@ -766,12 +766,16 @@ def main() -> None:
     copy_cio_inputs()
     refresh_weights_snapshot()
     build_viz()
-    build_index()
-    build_books()
-    build_runs()
+    # Pages v2 React SPA owns Home/Books/Runs via HashRouter on docs/index.html.
+    # Do not emit leftover books.html / runs.html (or overwrite SPA index.html).
+    for leftover in ('books.html', 'runs.html'):
+        path = DOCS / leftover
+        if path.exists():
+            path.unlink()
+            print('Removed leftover', leftover)
     build_methods_index()
     restyle_methods_shell()
-    print('Built docs pages + viz JSON under', DOCS)
+    print('Built docs viz JSON + methods under', DOCS)
 
 
 if __name__ == '__main__':

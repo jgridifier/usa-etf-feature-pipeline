@@ -3,7 +3,7 @@
   "rows": [
     {
       "strategy_id": "score_rotate_xsd",
-      "label": "Book 3 \u2014 ScoreSimple XSD",
+      "label": "Optional gated sleeve \u2014 XSD",
       "AnnReturn": 0.15026333568884875,
       "AnnVol": 0.1686857820565902,
       "MaxDD": -0.26268460968996077,
@@ -13,7 +13,7 @@
       "n_months": 68,
       "start_date": "2021-02-26",
       "end_date": "2026-09-16",
-      "stance": "Optional thematic sleeve"
+      "stance": "Optional gated sleeve"
     },
     {
       "strategy_id": "static_option_a",

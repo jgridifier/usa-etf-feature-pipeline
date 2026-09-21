@@ -32,6 +32,9 @@ python3 "$REPO_ROOT/scripts/build_pages.py" || {
   echo "Warning: build_pages.py failed or skipped (may need CIO CSV inputs)."
 }
 
+# SPA owns Books/Runs hash routes — drop any leftover static HTML shells.
+rm -fv "$DOCS_DIR/books.html" "$DOCS_DIR/runs.html"
+
 if $DATA_ONLY; then
   echo "-- data-only flag set; skipping Vite JS build."
   echo "=== Done (data only). Preview: python -m http.server 8000 --directory docs ==="
