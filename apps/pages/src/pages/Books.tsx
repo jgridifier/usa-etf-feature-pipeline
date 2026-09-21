@@ -189,7 +189,7 @@ export default function Books() {
             <p className="text-sm text-body mt-1 mb-6 max-w-2xl">
               Latest as-of bars from monthly weights / suggested_weights. Not a live broker allocation.
             </p>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
               <div className="border border-border bg-surface rounded-xl p-4">
                 <p className="section-eyebrow mb-3">Book 1 — Static core</p>
                 <WeightsChart bookId="static_option_a" />
@@ -198,13 +198,14 @@ export default function Books() {
                 <p className="section-eyebrow mb-3">Book 2 — Vol-target</p>
                 <WeightsChart bookId="vol_target_option_a" />
               </div>
-              <div className="border border-border bg-surface rounded-xl p-4">
-                <p className="section-eyebrow mb-3">Optional sleeve — XSD</p>
-                <WeightsChart bookId="score_rotate_xsd" />
-                <p className="text-2xs text-muted mt-2">
-                  <code>score_rotate_xsd</code> is default <strong>OFF</strong>. Optional gated sleeve only.
-                </p>
-              </div>
+            </div>
+            {/* XSD: demoted — optional gated sleeve, never a standing-book peer */}
+            <div className="mt-4 border border-dashed border-border/70 bg-bg/40 rounded-lg p-3 opacity-70 max-w-md">
+              <p className="section-eyebrow mb-2 text-muted/80">Optional gated sleeve — XSD</p>
+              <WeightsChart bookId="score_rotate_xsd" />
+              <p className="text-2xs text-muted mt-2">
+                <code>score_rotate_xsd</code> is default <strong>OFF</strong>. Not a live book.
+              </p>
             </div>
           </div>
         </div>

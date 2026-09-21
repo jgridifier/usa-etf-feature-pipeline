@@ -280,11 +280,11 @@ export default function Home() {
         </section>
       )}
 
-      {/* ── Lab sections ── */}
-      <section className="py-12">
+      {/* ── Lab sections (soft footer nav, not a second hero grid) ── */}
+      <section className="py-10">
         <div className="mx-auto max-w-6xl px-4 md:px-6">
           <SectionRule label="Lab sections" />
-          <div className="mt-8 grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="mt-6 grid grid-cols-1 md:grid-cols-3 gap-3">
             {[
               {
                 to: '/books',
@@ -306,10 +306,10 @@ export default function Home() {
               },
             ].map(item => (
               <Link key={item.to} to={item.to} className="no-underline block group">
-                <div className="border border-border bg-surface rounded-xl p-5 h-full transition-all group-hover:border-border-bright group-hover:bg-raised">
-                  <p className="section-eyebrow mb-2">{item.eyebrow}</p>
-                  <h3 className="font-display font-bold text-2xl text-ink mb-2 leading-tight">{item.title}</h3>
-                  <p className="text-sm text-body leading-relaxed">{item.desc}</p>
+                <div className="border border-border/60 bg-transparent rounded-lg px-4 py-3.5 h-full transition-colors group-hover:border-border">
+                  <p className="section-eyebrow mb-1 text-muted/70">{item.eyebrow}</p>
+                  <h3 className="font-display font-semibold text-lg text-ink/90 mb-1 leading-tight group-hover:text-ink">{item.title}</h3>
+                  <p className="text-xs text-muted leading-relaxed">{item.desc}</p>
                 </div>
               </Link>
             ))}
