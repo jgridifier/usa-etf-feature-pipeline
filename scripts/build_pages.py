@@ -28,10 +28,10 @@ CIO_COPIES = [
 
 NAV = [
     ('index.html', 'Home'),
-    ('methods/index.html', 'Methods'),
-    ('explorer/index.html', 'Explorer'),
     ('books.html', 'Books'),
     ('runs.html', 'Runs'),
+    ('explorer/index.html', 'Explorer'),
+    ('methods/index.html', 'Methods'),
 ]
 
 
@@ -298,10 +298,15 @@ def nav_html(prefix: str = '', active: str = '') -> str:
         '<header class="site-header">'
         '<div class="site-header-inner">'
         '<a class="brand" href="' + prefix + 'index.html">USA ETF Lab</a>'
-        '<nav class="site-nav" aria-label="Main">' + ''.join(links) + '</nav>'
+        '<button type="button" class="nav-toggle" aria-expanded="false" '
+        'aria-controls="site-nav" aria-label="Open menu">'
+        '<span class="nav-toggle-bars" aria-hidden="true"></span>'
+        '</button>'
+        '<nav class="site-nav" id="site-nav" aria-label="Main">'
+        + ''.join(links)
+        + '</nav>'
         '</div></header>'
     )
-
 
 def table_html(headers, rows, caption: str) -> str:
     return (
@@ -367,6 +372,7 @@ def page_shell(
 <p class="muted">Design tokens adapted from public institutional UI patterns (Inter / JetBrains Mono stand-ins). Research panel only.</p>
 </footer>
 {scripts}
+<script src="{prefix}assets/nav.js" defer></script>
 </body>
 </html>
 '''
@@ -391,16 +397,20 @@ def fmt_num(x: float | None, digits: int = 2) -> str:
 
 
 def build_index() -> None:
-    metrics = json.loads((DATA / 'viz_metrics.json').read_text()) if (DATA / 'viz_metrics.json').exists() else {}
-    cards = ''
+    metrics = (
+        json.loads((DATA / 'viz_metrics.json').read_text())
+        if (DATA / 'viz_metrics.json').exists()
+        else {}
+    )
+    scorecard = ''
     if metrics:
-        cards = f'''
-<section class="band">
+        scorecard = f"""
+<section class="band soft">
   <div class="band-inner">
     <div class="section-head">
-      <span class="badge">OOS scorecard</span>
-      <h2>Book 2 vs static Option A</h2>
-      <p class="lede">Archived real-BIL sample · {escape(str(metrics.get('n_months', '')))} months · {escape(metrics.get('start_date', ''))} → {escape(metrics.get('end_date', ''))}</p>
+      <span class="badge">Supporting OOS</span>
+      <h2>Book 2 path vs static Option A</h2>
+      <p class="lede">Archived real-BIL sample · {escape(str(metrics.get('n_months', '')))} months · {escape(str(metrics.get('start_date', '')))} → {escape(str(metrics.get('end_date', '')))}. Evidence for the live Book-2 sleeve — not a separate promoted book.</p>
     </div>
     <div class="metric-grid">
       <article class="metric-card">
@@ -427,56 +437,88 @@ def build_index() -> None:
     <p class="callout">Moreira &amp; Muir (2017) · mean f = {fmt_num(metrics.get('mean_f'))} · months with f&lt;1: {fmt_pct(metrics.get('pct_months_f_lt_1'), 0)}</p>
     <div class="cta-row">
       <a class="btn btn-primary" href="runs.html">Open OOS charts</a>
-      <a class="btn btn-secondary" href="books.html">CIO shortlist</a>
+      <a class="btn btn-secondary" href="books.html">Live shortlist weights</a>
     </div>
   </div>
-</section>'''
-    content = f'''
+</section>"""
+    content = f"""
 <section class="hero">
   <div class="hero-inner">
-    <span class="badge">Research panel</span>
-    <h1>Experimental USA ETF research lab</h1>
-    <p class="lede">Transparent ETF features, fixed allocation books, and volatility-managed portfolio experiments — static GitHub Pages, no live trading.</p>
+    <span class="badge">Live shortlist</span>
+    <h1>Static core + Book-2 vol-target</h1>
+    <p class="lede">The live research shortlist is <strong>Book 1 static Option A</strong> plus <strong>Book 2 unconditional vol-target</strong>. Archive / failed-null methods are not on this door. Static GitHub Pages — no live trading.</p>
     <div class="cta-row">
-      <a class="btn btn-primary" href="books.html">Explore books</a>
-      <a class="btn btn-secondary" href="methods/index.html">Methods</a>
-      <a class="btn btn-secondary" href="explorer/index.html">Time Series Explorer</a>
+      <a class="btn btn-primary" href="books.html">Open live shortlist</a>
+      <a class="btn btn-secondary" href="runs.html">OOS runs</a>
+      <a class="btn btn-secondary" href="explorer/index.html">Explorer</a>
     </div>
   </div>
 </section>
-{cards}
-<section class="band soft">
+<section class="band">
+  <div class="band-inner">
+    <div class="section-head">
+      <span class="badge">Front door</span>
+      <h2>What is live right now</h2>
+      <p class="lede">Two sleeves only. Book 3 (XSD) stays optional; Justina / archive nulls stay off the shortlist.</p>
+    </div>
+    <div class="card-grid shortlist-grid">
+      <a class="feature-card shortlist-card" href="books.html">
+        <span class="badge">Book 1 · live</span>
+        <h3>Static core (Option A)</h3>
+        <p>Fixed research weights (e.g. VOO / QQQM / IJR). Benchmark policy baseline for the panel.</p>
+      </a>
+      <a class="feature-card shortlist-card" href="books.html">
+        <span class="badge">Book 2 · live</span>
+        <h3>Vol-target Option A</h3>
+        <p>Unconditional volatility targeting on the same core — default research path for risk, not return alpha.</p>
+      </a>
+      <div class="feature-card shortlist-card muted-card" role="note">
+        <span class="badge badge-quiet">Not live</span>
+        <h3>Archive / failed nulls</h3>
+        <p>Justina round-1 and other FAIL / ARCHIVE methods are research record only — see Methods → Archive.</p>
+        <p class="cta-inline"><a href="methods/index.html#archive">View archive</a></p>
+      </div>
+    </div>
+  </div>
+</section>
+{scorecard}
+<section class="band">
   <div class="band-inner card-grid">
-    <a class="feature-card" href="methods/allocation_alpha_vol_target.html">
-      <span class="badge">Method</span>
-      <h3>Allocation alpha · vol-target</h3>
-      <p>Scale-down Option A with BIL residual. Open teaching note + viz.</p>
-    </a>
     <a class="feature-card" href="books.html">
       <span class="badge">Books</span>
-      <h3>Three-book CIO shortlist</h3>
-      <p>Static A, vol-target A, optional XSD sleeve — weights and comparison.</p>
+      <h3>Shortlist weights &amp; comparison</h3>
+      <p>Live Books 1–2 (and optional Book 3 sleeve) with weights and tables.</p>
     </a>
     <a class="feature-card" href="runs.html">
       <span class="badge">Runs</span>
-      <h3>Out-of-sample archive</h3>
-      <p>Equity curves, drawdowns, f<sub>t</sub> history, and downloadable CSVs.</p>
+      <h3>Out-of-sample charts</h3>
+      <p>Equity, drawdown, f<sub>t</sub>, and downloadable CSVs for the live path.</p>
+    </a>
+    <a class="feature-card" href="explorer/index.html">
+      <span class="badge">Explorer</span>
+      <h3>Time Series Explorer</h3>
+      <p>Growth-panel metrics and charts for research diagnostics.</p>
     </a>
   </div>
 </section>
-'''
-    write_page('index.html', page_shell(
-        'Experimental USA ETF research panel lab', content, active='index.html', include_charts=False,
-    ))
-
+"""
+    write_page(
+        'index.html',
+        page_shell(
+            'Live shortlist · USA ETF research lab',
+            content,
+            active='index.html',
+            include_charts=False,
+        ),
+    )
 
 def build_books() -> None:
     content = '''
 <section class="hero hero-compact">
   <div class="hero-inner">
-    <span class="badge">CIO shortlist</span>
+    <span class="badge">Live shortlist</span>
     <h1>Books / strategies</h1>
-    <p class="lede">Three research books. <code>m3_p2</code> is held off. Default recommendation is the research workflow for Book 2 (vol-target), not a live allocation.</p>
+    <p class="lede"><strong>Live shortlist:</strong> Book 1 static core + Book 2 unconditional vol-target. Book 3 (XSD) is optional. <code>m3_p2</code> is held off. Default research path is Book 2 for risk — not a live broker allocation.</p>
   </div>
 </section>
 <section class="band">
@@ -638,12 +680,12 @@ def build_methods_index() -> None:
             f'<li><a href="{name}">{escape(title)}</a></li>' for name, title in methods
         )
         + '</ul>'
-        '<h2>Archive / failed nulls</h2>'
-        '<p class="lede">FAIL / ARCHIVE — research record only; <strong>not live books</strong>. '
+        '<h2 id="archive">Archive / failed nulls</h2>'
+        '<p class="lede archive-lede">FAIL / ARCHIVE — research record only; <strong>not live books</strong>. '
         'Live shortlist remains static core + unconditional Book-2 vol-target.</p>'
-        '<ul class="method-list">'
+        '<ul class="method-list archive-list">'
         + ''.join(
-            f'<li><a href="{name}">{escape(title)}</a></li>' for name, title in archive
+            f'<li><a href="{name}"><span class="badge badge-fail">FAIL</span> {escape(title)}</a></li>' for name, title in archive
         )
         + '</ul></div></section>'
     )
@@ -653,16 +695,16 @@ def build_methods_index() -> None:
 
 
 def restyle_methods_shell() -> None:
-    methods = [
-        'allocation_alpha_vol_target.html',
-        'ot_short_term_forecasting.html',
-    ]
+    methods = sorted(
+        p.name for p in (DOCS / 'methods').glob('*.html') if p.name != 'index.html'
+    )
     for name in methods:
         p = DOCS / 'methods' / name
         if not p.exists():
             continue
         s = p.read_text(encoding='utf-8')
         s = re.sub(r'<!-- lab:start -->.*?<!-- lab:end -->', '', s, flags=re.S)
+        s = re.sub(r'<header class="site-header">.*?</header>', '', s, count=1, flags=re.S)
         # Inject shared stylesheet + fonts link marker
         inject_head = (
             '<!-- lab:start -->'
