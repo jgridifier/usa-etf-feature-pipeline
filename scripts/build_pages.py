@@ -621,6 +621,12 @@ def build_methods_index() -> None:
         ('ot_short_term_forecasting.html', 'Optimal transport: short-term forecasting'),
         ('ts_explorer_metric_menu.html', 'Time Series Explorer: quant metric menu'),
     ]
+    archive = [
+        ('justina_round1_scoreboard.html', 'Methods Archive scoreboard (Justina round-1 + vol-cond #13)'),
+        ('spectral_risk_parity.html', 'Spectral Risk Parity: research archive (did not clear MinVar null)'),
+        ('regime_aware_dual_regime.html', 'Regime-Aware Dual-Regime: research archive (did not clear uncond ERC)'),
+        ('allocation_alpha_vol_cond_factor_corr.html', 'Vol-cond-factor-corr (#13): research archive (did not clear Book-2 VT null)'),
+    ]
     content = (
         '<section class="hero hero-compact"><div class="hero-inner">'
         '<span class="badge">Teaching notes</span><h1>Methods</h1>'
@@ -630,6 +636,14 @@ def build_methods_index() -> None:
         '<section class="band"><div class="band-inner"><ul class="method-list">'
         + ''.join(
             f'<li><a href="{name}">{escape(title)}</a></li>' for name, title in methods
+        )
+        + '</ul>'
+        '<h2>Archive / failed nulls</h2>'
+        '<p class="lede">FAIL / ARCHIVE — research record only; <strong>not live books</strong>. '
+        'Live shortlist remains static core + unconditional Book-2 vol-target.</p>'
+        '<ul class="method-list">'
+        + ''.join(
+            f'<li><a href="{name}">{escape(title)}</a></li>' for name, title in archive
         )
         + '</ul></div></section>'
     )

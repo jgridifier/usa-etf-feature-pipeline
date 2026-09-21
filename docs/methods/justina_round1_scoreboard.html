@@ -3,36 +3,43 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Justina round-1 scoreboard | USA ETF Lab</title>
+<title>Methods Archive scoreboard | USA ETF Lab</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="../assets/style.css">
+<style>
+  .disclaimer { background: #fff8e6; border: 1px solid #f0d78c; padding: 0.75rem 1rem; border-radius: 12px; margin: 1rem 0; font-size: 0.92rem; color: var(--body, #222); }
+  .fail { color: #8a1c1c; font-weight: 600; }
+  .archive { color: var(--muted, #555); }
+  td.num { font-variant-numeric: tabular-nums; font-family: var(--mono, ui-monospace, monospace); font-size: 0.84rem; text-align: left; }
+  .meta { color: var(--muted, #555); font-size: 0.9rem; }
+</style>
 </head>
 <body>
 <header class="site-header"><div class="site-header-inner"><a class="brand" href="../index.html">USA ETF Lab</a><nav class="site-nav" aria-label="Main"><a href="../index.html">Home</a><a href="index.html" class="is-active" aria-current="page">Methods</a><a href="../explorer/index.html">Explorer</a><a href="../books.html">Books</a><a href="../runs.html">Runs</a></nav></div></header>
 <main class="page">
 <section class="band"><div class="band-inner">
-<p><span class="badge">Research archive · not a showcase</span></p>
-<h1>Justina round-1 scoreboard</h1>
-<p class="meta">Spectral Risk Parity + Regime-Aware Dual-Regime · USA ETF experimental panel · 2026-09-17</p>
+<p><span class="badge">Research archive · not a showcase · not live books</span></p>
+<h1>Methods Archive scoreboard</h1>
+<p class="meta">Justina round-1 (Spectral RP + Regime-Aware Dual-Regime) + vol-cond-factor-corr (#13) · USA ETF experimental panel · updated 2026-09-21 (ET)</p>
 
 <div class="disclaimer">
-<strong>Research only — not investment advice.</strong> Negative / null results are documented on purpose. Neither method is promoted to Books or a showcase Pages deep-dive.
+<strong>Research only — not investment advice.</strong> Negative / null results are documented on purpose. These methods are <strong>FAIL / ARCHIVE</strong> — not promoted to Books, not a showcase Pages deep-dive, and not part of the live shortlist.
 </div>
 
 <div class="callout">
-<strong>CIO frame:</strong> Neither Justina method cleared binding nulls on Sharpe or risk path, so round-1 adds no book — shortlist stays static core + vol-target until something does.
+<strong>CIO frame:</strong> Justina round-1 and the Book-2 conditional-correlation upgrade (#13) did not clear binding nulls on Sharpe (and round-1 also failed the risk path). <strong>No book cut.</strong> Live shortlist stays <strong>static core + unconditional Book-2 vol-target</strong> until something clears the same leakage · null · DSR · empirical gate.
 </div>
 
 <h2>Scoreboard</h2>
-<div class="table-scroll" tabindex="0" role="region" aria-label="Justina round-1 scoreboard"><table>
+<div class="table-scroll" tabindex="0" role="region" aria-label="Methods Archive scoreboard"><table>
 <thead>
 <tr>
   <th>Method</th>
   <th>Binding null</th>
   <th>Method Sharpe / MaxDD</th>
   <th>Null Sharpe / MaxDD</th>
-  <th>Stress path</th>
+  <th>Stress / A/B path</th>
   <th>Verdict</th>
   <th>Archive</th>
 </tr>
@@ -56,13 +63,22 @@
   <td class="fail">FAIL — archive</td>
   <td class="archive"><a href="regime_aware_dual_regime.html">method</a> · <a href="../data/regime_dual/">OOS</a></td>
 </tr>
+<tr>
+  <td>Vol-cond-factor-corr (#13)<br/><span class="muted">Book-2 VT × corr/vol gate; min_names=100; 21 sleeves; 12 trials; 5 bps; best trial L21/C12/g0.5 (~70m)</span></td>
+  <td>Unconditional Book-2 VT</td>
+  <td class="num">1.05 / −15.4%<br/><span class="muted">best Sharpe trial; no trial beats Book-2 Sharpe</span></td>
+  <td class="num">Book-2 1.11 / −20.5%<br/><span class="muted">also fails vs static Option A on NW t (all negative)</span></td>
+  <td>All 12 trials NW t vs Book-2 negative (≈ −1.43 to −3.10). MaxDD milder than Book-2 in 12/12 — risk compression only; not allocation alpha vs live Book-2.</td>
+  <td class="fail">FAIL — archive</td>
+  <td class="archive"><a href="allocation_alpha_vol_cond_factor_corr.html">method</a> · <a href="../data/vol_cond_factor_corr/">OOS</a></td>
+</tr>
 </tbody>
 </table></div>
 
 <h2>What cleared the process (not the nulls)</h2>
 <ul>
   <li>Walk-forward leakage gates + unit tests (decision / feature_end ≤ t; labels next month).</li>
-  <li>Predeclared nulls and DSR / trial counts reported (normal-approx DSR).</li>
+  <li>Predeclared nulls and DSR / trial counts reported (normal-approx DSR where applicable).</li>
   <li>Brand-scrub / experimental-panel language only.</li>
 </ul>
 
@@ -70,13 +86,16 @@
 <ul>
   <li><strong>Spectral:</strong> no edge vs LW MinVar on Sharpe <em>or</em> risk path; sleeve cut rejects.</li>
   <li><strong>Regime-Aware:</strong> dual eligibility overlay worse than unconditional ERC on Sharpe, MaxDD, and stress months; higher turnover.</li>
+  <li><strong>Vol-cond-factor-corr (#13):</strong> no Sharpe beat of unconditional Book-2 VT; every NW t vs Book-2 negative. Milder MaxDD alone does not clear the book bar.</li>
 </ul>
 
 <h2>Books implication</h2>
-<p>No new book from Justina round-1. Existing shortlist unchanged: <strong>static core</strong> + <strong>vol-target</strong>. Next Justina / method candidates must clear the same leakage · null · DSR · empirical gate before CoS design-pass or promoted Pages.</p>
+<p>No new book from Justina round-1 or from #13. Existing shortlist unchanged: <strong>static core</strong> + <strong>unconditional Book-2 vol-target</strong>. Next method candidates must clear the same leakage · null · DSR · empirical gate before CoS design-pass or promoted Pages.</p>
+
+<p class="meta">Sources: <code>JUSTINA_ROUND1_SCOREBOARD.md</code>, <code>QUANT_GATE_vol_cond_factor_corr.md</code>, <code>data/processed/vol_cond_factor_corr/vol_cfc_oos_summary.csv</code> (best Sharpe trial <code>VCFC_option_a_vt_L21_C12_g0p5_mkt_vol</code>).</p>
 
 <footer>
-USA ETF Lab · experimental research panel · Justina round-1 scoreboard · not investment advice
+USA ETF Lab · experimental research panel · Methods Archive scoreboard · not investment advice
 </footer>
 </div></section>
 </main>
