@@ -1,0 +1,96 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    color-scheme: dark;
+  }
+
+  html {
+    @apply bg-bg;
+    scroll-behavior: smooth;
+  }
+
+  body {
+    @apply font-sans text-body bg-bg antialiased;
+    font-feature-settings: 'cv11', 'ss01';
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    @apply text-ink;
+    letter-spacing: -0.01em;
+  }
+
+  code, kbd, samp {
+    @apply font-mono text-sm text-muted;
+  }
+
+  strong {
+    @apply text-ink font-semibold;
+  }
+
+  a {
+    @apply text-accent transition-colors;
+  }
+
+  ::selection {
+    background: rgba(79, 126, 248, 0.25);
+    color: #f0f1f5;
+  }
+
+  /* Thin scrollbar */
+  ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  ::-webkit-scrollbar-thumb {
+    @apply bg-border rounded-full;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    @apply bg-border-bright;
+  }
+
+  /* Table region focus ring */
+  [role="region"]:focus-visible {
+    outline: 2px solid rgba(79, 126, 248, 0.5);
+    outline-offset: 2px;
+  }
+}
+
+@layer components {
+  /* ── Ticker / pill ── */
+  .pill {
+    @apply inline-flex items-center gap-1 rounded-full border border-border px-2 py-0.5 text-2xs font-medium uppercase tracking-widest text-muted;
+  }
+
+  /* ── Stat grid ── */
+  .stat-card {
+    @apply rounded-xl border border-border bg-surface p-4 shadow-card;
+  }
+  .stat-label {
+    @apply text-2xs font-medium uppercase tracking-widest text-muted mb-1;
+  }
+  .stat-value {
+    @apply text-2xl font-semibold font-mono text-ink;
+  }
+  .stat-sub {
+    @apply text-xs text-muted mt-1;
+  }
+}
+
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+}
