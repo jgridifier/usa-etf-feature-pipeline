@@ -46,6 +46,7 @@ RESEARCH_DISCLAIMER = "Research-only; not investment advice; no trading or broke
 REGIME_DUAL_ENTRYPOINT = "usa_etf_features.strategy_registry:regime_aware_dual_regime"
 STATIC_ENTRYPOINT = "usa_etf_features.strategy_registry:static_option_a"
 VOL_TARGET_ENTRYPOINT = "usa_etf_features.strategy_registry:vol_target_option_a"
+VOL_CFC_ENTRYPOINT = "usa_etf_features.strategy_registry:vol_cond_factor_corr"
 ROTATE_ENTRYPOINT = "usa_etf_features.strategy_registry:score_rotate_xsd"
 M3_P2_ENTRYPOINT = "usa_etf_features.strategy_registry:m3_p2_core_rotate"
 
@@ -360,6 +361,77 @@ def _vol_target_result(
     return StrategyResult(weights=weights, diagnostics=diag, returns=ret)
 
 
+
+def vol_cond_factor_corr(
+    prices: pd.DataFrame,
+    spec: StrategySpec,
+    *,
+    universe_csv: str | Path,
+    universe_config: dict,
+    asof: pd.Timestamp | None,
+) -> StrategyResult:
+    """Registry adapter for Book-2 conditional factor-correlation gate."""
+    from .vol_cond_factor_corr import VolCondFactorCorrTrial, run_vol_cond_factor_corr_trial
+
+    params = dict(spec.default_params)
+    monthly_csv = params.pop("monthly_csv", None)
+    coverage_csv = params.pop("coverage_csv", None)
+    monthly = None
+    if monthly_csv and Path(monthly_csv).exists():
+        monthly = pd.read_csv(monthly_csv, index_col=0, parse_dates=True).sort_index()
+        monthly.columns = [str(c).upper() for c in monthly.columns]
+    coverage = pd.read_csv(coverage_csv) if coverage_csv and Path(coverage_csv).exists() else None
+    trial = VolCondFactorCorrTrial(
+        trial_id=spec.id,
+        core=str(params.get("core", "option_a")),
+        lookback=int(params.get("lookback", 63)),
+        corr_lookback_months=int(params.get("corr_lookback_months", 12)),
+        f_min=float(params.get("f_min", 0.25)),
+        f_max=float(params.get("f_max", 1.0)),
+        g_min=float(params.get("g_min", 0.5)),
+        z_rule=str(params.get("z_rule", "mkt_vol")),
+        apply_to=str(params.get("apply_to", "option_a_vt")),
+        sigma_star=params.get("sigma_star", "expanding_annvol"),
+        cash_ticker=str(params.get("cash_ticker", "BIL")).upper(),
+        cost_bps_one_way=float(params.get("cost_bps_one_way", 5.0)),
+        include_thin=bool(params.get("include_thin", False)),
+    )
+    px = prices.loc[:asof] if asof is not None else prices
+    monthly_w, returns, _registry = run_vol_cond_factor_corr_trial(
+        px,
+        trial,
+        universe_csv=universe_csv,
+        monthly=monthly,
+        coverage=coverage,
+        universe_config=universe_config,
+    )
+    if monthly_w.empty:
+        raise ValueError(f"{spec.id} produced no vol-cond-factor-corr weights")
+    last = monthly_w.sort_values("date").iloc[-1]
+    w_cols = [c for c in monthly_w.columns if c.startswith("w_")]
+    rows = []
+    cash = trial.cash_ticker.upper()
+    for c in w_cols:
+        ticker = c[2:]
+        rows.append(
+            {
+                "ticker": ticker,
+                "weight": float(last[c]),
+                "role": "cash" if ticker == cash else "core",
+                "thesis_tag": "vol_cfc_cash" if ticker == cash else "vol_cfc_option_a",
+            }
+        )
+    weights = _format_weights(pd.DataFrame(rows), strategy_id=spec.id, date=pd.Timestamp(last["date"]))
+    diag = last.to_frame().T
+    diag["strategy_id"] = spec.id
+    diag["research_disclaimer"] = RESEARCH_DISCLAIMER
+    ret = returns.rename(columns={"r_method": "return"})
+    ret = ret.assign(strategy_id=spec.id, feature_end=lambda x: x["decision_date"])[
+        ["date", "decision_date", "feature_end", "strategy_id", "return", "turnover"]
+    ]
+    return StrategyResult(weights=weights, diagnostics=diag, returns=ret)
+
+
 def spectral_risk_parity(prices, spec, *, universe_csv, asof=None) -> StrategyResult:
     """Run full panel or derive monthly returns from the supplied daily prices."""
     from .spectral_risk_parity import SpectralTrial, read_returns, run_spectral_trial
@@ -441,6 +513,8 @@ def _strategy_current_result(
         return StrategyResult(weights, diag, _static_returns(prices, spec.default_params, asof))
     if spec.entrypoint == VOL_TARGET_ENTRYPOINT:
         return _vol_target_result(prices, spec, universe_csv=universe_csv, universe_config=universe_config, asof=asof)
+    if spec.entrypoint == VOL_CFC_ENTRYPOINT:
+        return vol_cond_factor_corr(prices, spec, universe_csv=universe_csv, universe_config=universe_config, asof=asof)
     if spec.entrypoint == ROTATE_ENTRYPOINT:
         params = spec.default_params
         rotate_eligible = [str(t).upper() for t in params.get("rotate_eligible", ["XSD"])]

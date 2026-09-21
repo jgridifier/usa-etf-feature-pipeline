@@ -1,4 +1,4 @@
-"""CLI: score-universe, build-portfolio, walkforward-ic, walkforward-vol-target."""
+"""CLI: score-universe, build-portfolio, walkforward-ic, walkforward-vol-target, walkforward-vol-cond-factor-corr."""
 
 from __future__ import annotations
 
@@ -28,6 +28,11 @@ from .vol_target import (
     load_vol_target_config,
     make_trials,
     run_vol_target_grid,
+)
+from .vol_cond_factor_corr import (
+    load_vol_cond_factor_corr_config,
+    make_vol_cfc_trials,
+    run_vol_cond_factor_corr_grid,
 )
 from .walkforward import (
     rotation_on_off_next_month_table,
@@ -372,6 +377,92 @@ def cmd_walkforward_vol_target(args: argparse.Namespace) -> int:
     return 0
 
 
+
+def cmd_walkforward_vol_cond_factor_corr(args: argparse.Namespace) -> int:
+    prices_path = Path(args.prices)
+    universe_path = Path(args.universe)
+    out_path = Path(args.out)
+    weights_path = Path(args.weights)
+    registry_path = Path(args.registry)
+    returns_path = Path(args.returns) if args.returns else out_path.with_name("vol_cfc_oos_returns.csv")
+    state_path = Path(args.state) if args.state else out_path.with_name("vol_cfc_state_table.csv")
+
+    cfg_path = Path(args.config) if args.config else _repo_root() / "config" / "vol_cond_factor_corr.yaml"
+    vc_cfg = load_vol_cond_factor_corr_config(cfg_path if cfg_path.exists() else None).get("vol_cond_factor_corr", {})
+    uni_cfg_path = Path(args.universe_config) if args.universe_config else _repo_root() / "config" / "universe.yaml"
+    uni_cfg = load_universe_config(uni_cfg_path if uni_cfg_path.exists() else None)
+
+    prices = load_adj_close_csv(prices_path)
+    monthly = None
+    if args.monthly:
+        monthly = pd.read_csv(args.monthly, index_col=0, parse_dates=True).sort_index()
+        monthly.columns = [str(c).upper() for c in monthly.columns]
+    coverage = None
+    if args.coverage:
+        coverage = pd.read_csv(args.coverage)
+
+    if args.grid:
+        lookbacks = _parse_csv_list(args.lookbacks or ",".join(map(str, vc_cfg.get("lookbacks", [21, 63, 126]))), cast=int)
+        g_mins = _parse_csv_list(args.g_mins or ",".join(map(str, vc_cfg.get("g_min", [0.25, 0.5]))), cast=float)
+        apply_tos = _parse_csv_list(args.apply_to or ",".join(vc_cfg.get("apply_to", ["option_a_vt"])), cast=str)
+        z_rules = _parse_csv_list(args.z_rules or str(vc_cfg.get("z_rule", "mkt_vol")), cast=str)
+        corr_lbs = _parse_csv_list(
+            args.corr_lookbacks or ",".join(map(str, vc_cfg.get("corr_lookback_months", [6, 12]))),
+            cast=int,
+        )
+    else:
+        lookbacks = [int(args.lookback)]
+        g_mins = [float(args.g_min)]
+        apply_tos = [args.apply_to]
+        z_rules = [args.z_rule]
+        corr_lbs = [int(args.corr_lookback)] if args.corr_lookback is not None else None
+
+    trials = make_vol_cfc_trials(
+        lookbacks=lookbacks,
+        g_mins=g_mins,
+        z_rules=z_rules,
+        apply_tos=apply_tos,
+        f_min=float(args.f_min if args.f_min is not None else vc_cfg.get("f_min", 0.25)),
+        f_max=float(args.f_max if args.f_max is not None else vc_cfg.get("f_max", 1.0)),
+        sigma_star=args.sigma_star or vc_cfg.get("sigma_star", "expanding_annvol"),
+        cash_ticker=str(args.cash or vc_cfg.get("cash_ticker", "BIL")).upper(),
+        cost_bps_one_way=float(args.cost_bps if args.cost_bps is not None else vc_cfg.get("cost_bps_one_way", 5)),
+        corr_lookback_months=corr_lbs,
+        include_thin=bool(args.include_thin),
+        min_names=int(args.min_names if args.min_names is not None else vc_cfg.get("min_names", 100)),
+        core=str(args.core),
+    )
+    summary, weights, returns, registry, states = run_vol_cond_factor_corr_grid(
+        prices,
+        trials,
+        universe_csv=universe_path,
+        monthly=monthly,
+        coverage=coverage,
+        universe_config=uni_cfg,
+        bootstrap_samples=int(
+            args.bootstrap_samples
+            if args.bootstrap_samples is not None
+            else vc_cfg.get("bootstrap_samples", 500)
+        ),
+        bootstrap_block_months=int(vc_cfg.get("bootstrap_block_months", 3)),
+    )
+    if summary.empty:
+        print("error: no vol-cond-factor-corr OOS rows produced; check common price history", file=sys.stderr)
+        return 1
+
+    _write_csv(summary, out_path)
+    _write_csv(weights, weights_path)
+    _write_csv(returns, returns_path)
+    _write_csv(registry, registry_path)
+    _write_csv(states, state_path)
+    print(f"wrote vol-cond-factor-corr summary → {out_path}")
+    print(f"wrote monthly weights → {weights_path}")
+    print(f"wrote OOS returns → {returns_path}")
+    print(f"wrote trial registry → {registry_path}")
+    print(f"wrote state table → {state_path}")
+    return 0
+
+
 def cmd_run_strategies(args: argparse.Namespace) -> int:
     prices = load_adj_close_csv(args.prices)
     asof = pd.Timestamp(args.asof) if args.asof else None
@@ -530,6 +621,44 @@ def build_parser() -> argparse.ArgumentParser:
     rs.add_argument("--constraints", default=None)
     rs.add_argument("--weights", default=None, help="Feature weights YAML")
     rs.set_defaults(func=cmd_run_strategies)
+
+
+    vc = sub.add_parser(
+        "walkforward-vol-cond-factor-corr",
+        help="Walk-forward Book-2 vol-target with conditional factor-correlation gate",
+    )
+    vc.add_argument("--prices", required=True, help="Wide adj-close CSV (Date + tickers)")
+    vc.add_argument("--universe", required=True, help="Path to usa_universe_categorized.csv")
+    vc.add_argument("--monthly", default=None, help="Optional monthly returns panel for sleeve corr")
+    vc.add_argument("--coverage", default=None, help="Optional history coverage CSV (thin_lt5y)")
+    vc.add_argument("--core", default="option_a", choices=["option_a", "g1"])
+    vc.add_argument("--lookback", type=int, default=63)
+    vc.add_argument("--corr-lookback", type=int, default=None, help="Monthly corr window (default from lookback)")
+    vc.add_argument("--f-min", type=float, default=None)
+    vc.add_argument("--f-max", type=float, default=1.0)
+    vc.add_argument("--g-min", type=float, default=0.5)
+    vc.add_argument("--z-rule", default="mkt_vol", choices=["mkt_vol", "inv_mkt_vol"])
+    vc.add_argument("--apply-to", default="option_a_vt", choices=["option_a_vt", "category_sleeves"])
+    vc.add_argument("--sigma-star", default="expanding_annvol")
+    vc.add_argument("--cash", default="BIL")
+    vc.add_argument("--cost-bps", type=float, default=5.0)
+    vc.add_argument("--min-names", type=int, default=None)
+    vc.add_argument("--include-thin", action="store_true", default=False)
+    vc.add_argument("--null", default="book2_vol_target", help="Primary null label (informational)")
+    vc.add_argument("--out", required=True, help="vol_cfc_oos_summary.csv")
+    vc.add_argument("--weights", required=True, help="vol_cfc_monthly_weights.csv")
+    vc.add_argument("--registry", required=True, help="vol_cfc_trial_registry.csv")
+    vc.add_argument("--returns", default=None, help="Optional vol_cfc_oos_returns.csv path")
+    vc.add_argument("--state", default=None, help="Optional vol_cfc_state_table.csv path")
+    vc.add_argument("--config", default=None, help="vol_cond_factor_corr YAML config")
+    vc.add_argument("--universe-config", default=None)
+    vc.add_argument("--grid", action="store_true", default=False, help="Run robustness grid")
+    vc.add_argument("--lookbacks", default=None, help="Comma-separated daily lookbacks for --grid")
+    vc.add_argument("--corr-lookbacks", default=None, help="Comma-separated monthly corr lookbacks for --grid")
+    vc.add_argument("--g-mins", default=None, help="Comma-separated g_min values for --grid")
+    vc.add_argument("--z-rules", default=None, help="Comma-separated z rules for --grid")
+    vc.add_argument("--bootstrap-samples", type=int, default=None)
+    vc.set_defaults(func=cmd_walkforward_vol_cond_factor_corr)
 
     sp = sub.add_parser("walkforward-spectral-rp", help="Experimental panel spectral RP and nulls")
     sp.add_argument("--returns", required=True)

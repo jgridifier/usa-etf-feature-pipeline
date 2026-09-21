@@ -12,6 +12,7 @@ Transparent, unit-tested feature scorer and **optional thematic rotation sleeve*
 | **M2** | `--rotate-thematic` (ScoreSimple Mom+vol vs VOO), caps, walk-forward IC |
 | **M3** | `--optimize` / `--walkforward-optimize` research optimizer artifacts |
 | **Allocation alpha** | `walkforward-vol-target` scale-down-only volatility-managed Option A research |
+| **Book-2 upgrade** | `walkforward-vol-cond-factor-corr` conditional factor-correlation gate on Book-2 VT |
 
 ## Install
 
@@ -171,6 +172,38 @@ python -m usa_etf_features.cli walkforward-vol-target \
 This command keeps selection fixed at Option A (VOO 70 / QQQM 20 / IJR 10), estimates realized portfolio volatility at each month-end with data `<= t`, applies the resulting scale factor to month `t+1`, and parks residual weight in eligible cash (`BIL`; fallbacks remain subject to the universe gate). If the growth-panel price file does not include BIL, the engine records `cash_price_source=zero_return_proxy_rf0`, matching the rf=0 research parity convention.
 
 Outputs include `vol_target_oos_summary.csv`, `vol_target_monthly_weights.csv`, `vol_target_oos_returns.csv`, `vol_target_trial_registry.csv`, and `vol_target_regime_table.csv`.
+
+### Walk-forward vol-cond-factor-corr — Book-2 upgrade
+
+Conditional correlation / vol-state gate on top of Book-2 `f_t` (DeMiguel–Martín-Utrera–Uppal JF mapping on ETF category sleeves). Research only; not investment advice.
+
+```bash
+python -m usa_etf_features.cli walkforward-vol-cond-factor-corr \
+  --universe /workspace/investments/usa_universe_categorized.csv \
+  --monthly /workspace/investments/usa_universe_panel_monthly_returns.csv \
+  --prices /workspace/investments/growth_alpha_adj_close.csv \
+  --coverage /workspace/investments/usa_universe_panel_history_coverage.csv \
+  --null book2_vol_target \
+  --cost-bps 5 \
+  --lookback 63 --g-min 0.5 --z-rule mkt_vol \
+  --out data/processed/vol_cond_factor_corr/vol_cfc_oos_summary.csv \
+  --weights data/processed/vol_cond_factor_corr/vol_cfc_monthly_weights.csv \
+  --registry data/processed/vol_cond_factor_corr/vol_cfc_trial_registry.csv
+```
+
+Use `--grid` for the registered robustness sweep (`config/vol_cond_factor_corr.yaml`). Outputs include DSR + trial_count, NW t vs Book-2 VT and static Option A, and a gate state table. Teaching note: `docs/methods/allocation_alpha_vol_cond_factor_corr.html`.
+
+Math appendix (gate form):
+
+\[
+f_t=\mathrm{clip}(\sigma^*/\hat\sigma_t, f_{\min}, f_{\max}),\quad
+g_t\in[g_{\min},1],\quad
+\tilde f_t=f_t\cdot g_t
+\]
+
+Gate binds when high market vol coincides with elevated mean pairwise |corr| of category sleeves (data ≤ t only). Residual weight → BIL. Costs: 5 bps one-way on monthly turnover.
+
+
 
 ### Regime-aware category allocation
 

@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>Allocation Alpha — Vol-Managed + Conditional Factor Correlations</title>
+<style>
+  :root { --fg:#1a1a1a; --muted:#555; --border:#ddd; --bg:#fafafa; --accent:#0b5fff; --ok:#0a7a3e; }
+  * { box-sizing: border-box; }
+  body { font-family: Georgia, "Times New Roman", serif; color: var(--fg); line-height: 1.55; max-width: 42rem; margin: 2rem auto; padding: 0 1.25rem; background: #fff; }
+  h1,h2,h3 { font-family: system-ui, -apple-system, Segoe UI, sans-serif; line-height: 1.25; }
+  h1 { font-size: 1.65rem; margin-bottom: 0.25rem; }
+  h2 { font-size: 1.25rem; margin-top: 2rem; border-bottom: 1px solid var(--border); padding-bottom: 0.3rem; }
+  h3 { font-size: 1.05rem; margin-top: 1.4rem; color: #222; }
+  .meta { color: var(--muted); font-family: system-ui, sans-serif; font-size: 0.9rem; margin-bottom: 1.5rem; }
+  .disclaimer { background: #fff8e6; border: 1px solid #f0d78c; padding: 0.75rem 1rem; border-radius: 6px; font-size: 0.92rem; margin: 1rem 0 1.5rem; }
+  .callout { background: var(--bg); border-left: 4px solid var(--accent); padding: 0.75rem 1rem; margin: 1rem 0; }
+  .ok { border-left-color: var(--ok); }
+  table { border-collapse: collapse; width: 100%; font-size: 0.92rem; margin: 0.75rem 0 1rem; }
+  th, td { border: 1px solid var(--border); padding: 0.4rem 0.55rem; text-align: left; vertical-align: top; }
+  th { background: var(--bg); font-family: system-ui, sans-serif; font-weight: 600; }
+  code, .math { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 0.88em; }
+  .math-block { background: var(--bg); padding: 0.85rem 1rem; border-radius: 6px; overflow-x: auto; margin: 0.75rem 0; font-family: ui-monospace, Menlo, Consolas, monospace; font-size: 0.86rem; white-space: pre-wrap; }
+  ul, ol { padding-left: 1.25rem; }
+  li { margin: 0.35rem 0; }
+  a { color: var(--accent); }
+  .toc { font-family: system-ui, sans-serif; font-size: 0.92rem; background: var(--bg); padding: 0.75rem 1rem; border-radius: 6px; }
+  .toc ol { margin: 0.4rem 0 0; }
+  footer { margin-top: 2.5rem; padding-top: 1rem; border-top: 1px solid var(--border); color: var(--muted); font-size: 0.85rem; font-family: system-ui, sans-serif; }
+</style>
+<!-- lab:start --><link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet"><link rel="stylesheet" href="../assets/style.css"><!-- lab:end --></head>
+<body><!-- lab:start --><header class="site-header"><div class="site-header-inner"><a class="brand" href="../index.html">USA ETF Lab</a><nav class="site-nav" aria-label="Main"><a href="../index.html">Home</a><a href="../methods/index.html" class="is-active">Methods</a><a href="../explorer/index.html">Explorer</a><a href="../books.html">Books</a><a href="../runs.html">Runs</a></nav></div></header><!-- lab:end -->
+
+<h1>Allocation Alpha: Volatility-Managed Portfolios with Conditional Factor Correlations</h1>
+<p class="meta">Teaching note · 2026-09-21 (ET) · USA experimental ETF research · CIO Justina shortlist #5 · Portfolios restart (Book-2 upgrade)</p>
+
+<div class="disclaimer">
+<strong>Research only — not investment advice.</strong> This document explains a proposed walk-forward upgrade to Book-2 volatility targeting using conditional multifactor / factor-correlation gates from DeMiguel, Martín-Utrera &amp; Uppal (JF). It does not recommend buying or selling any security. Confirm tickers against the experimental USA ETF research panel before any trade. <strong>No empirical success is claimed here</strong> — theory + Engineering handoff only.
+</div>
+
+<nav class="toc" aria-label="Contents">
+<strong>Contents</strong>
+<ol>
+  <li><a href="#why">Why this paper / blog</a></li>
+  <li><a href="#original">What the original work found</a></li>
+  <li><a href="#math">Core math / intuition</a></li>
+  <li><a href="#ourdata">What we will do on USA ETF / growth-panel data</a></li>
+  <li><a href="#worked">How we will know it worked</a></li>
+  <li><a href="#cite">Full citation + links</a></li>
+</ol>
+</nav>
+
+<h2 id="why">1. Why this paper / blog</h2>
+
+<p>Portfolios context (as of 2026-09):</p>
+<ul>
+  <li><strong>Justina round-1 archived:</strong> Spectral Risk Parity and Regime-Aware dual-regime failed binding nulls (Sharpe / risk path). Scoreboard: <code>methods/justina_round1_scoreboard.html</code>.</li>
+  <li><strong>Book-2 vol-target Option A is live</strong> (<code>walkforward-vol-target</code>, REAL/BIL artifacts under <code>vol_target_real_bil/</code>) — solid <em>risk</em> story (lower MaxDD vs static A) but weak <em>return</em> edge (NW t ≈ 0 vs static Option A).</li>
+  <li><strong>Deferred in</strong> <code>quant_pick_2.md</code>: shortlist #5 — vol-managed + conditional factor correlations — as the natural Book-2 extension once round-1 closed.</li>
+</ul>
+
+<div class="callout">
+<strong>This restart path:</strong> keep the existing unconditional Moreira–Muir / target-vol sleeve, and add a <em>conditional</em> gate or rescale driven by market volatility and/or conditional factor (category-sleeve) correlations — not a new toy 3-ETF book, and not a third Justina build from scratch.
+</div>
+
+<p>Primary academic anchor is DeMiguel, Martín-Utrera &amp; Uppal (Journal of Finance, JOFI 13395): a multifactor view of volatility management that conditions factor exposures on market volatility and shows that unconditional single-factor vol-managed strategies can fail OOS / net of costs while a <em>conditional multifactor</em> construction survives. That maps directly onto our Book-2 upgrade ask.</p>
+
+<h2 id="original">2. What the original work found</h2>
+
+<h3>DeMiguel, Martín-Utrera &amp; Uppal (2024), <em>Journal of Finance</em> — lead citation</h3>
+<ul>
+  <li><strong>Setup:</strong> Academic equity factors; compare (i) unconditional multifactor mean–variance, (ii) single-factor volatility-managed overlays in the Moreira–Muir spirit, and (iii) a <strong>conditional multifactor</strong> portfolio whose factor weights respond to market volatility (conditional mean / covariance of factor returns).</li>
+  <li><strong>Claims:</strong>
+    <ul>
+      <li>Single-factor vol-managed strategies that look strong in-sample often fail OOS (Cederburg et al.) and/or net of costs (Barroso &amp; Detzel).</li>
+      <li>A conditional multifactor portfolio can outperform its <em>unconditional</em> multifactor counterpart OOS and after costs (authors report ~13% higher OOS Sharpe of net returns in their primary table, difference significant).</li>
+      <li>Factor risk prices generally <em>decrease</em> as market volatility rises — so cutting factor exposure in high-vol states is economically coherent in a multifactor pricing sense.</li>
+    </ul>
+  </li>
+  <li><strong>Result shape:</strong> Gains attributed to conditioning the multifactor mean–variance solution on market vol, not to a static risk-parity or a single scalar leverage clock alone.</li>
+  <li><strong>Limitations:</strong> Academic factors and long histories; estimation of conditional μ / Σ is nontrivial; ETF implementation faces turnover, cash constraints, and thinner category sleeves than published factor libraries. We do <strong>not</strong> claim their OOS Sharpe transfers to our USA ETF panel.</li>
+</ul>
+
+<h3>Moreira &amp; Muir (2017), <em>Journal of Finance</em> — unconditional backbone (already Book 2)</h3>
+<ul>
+  <li><strong>Setup / claim:</strong> Scale factor exposure by inverse recent variance; Sharpe / alpha improvements vs unmanaged versions when expected returns do not offset vol spikes.</li>
+  <li><strong>Our status:</strong> Implemented as Book-2 Option A vol-target (scale-down into BIL). Empirical on our short common window: risk improvement yes; return-edge NW t ≈ 0 — hence this conditional upgrade.</li>
+</ul>
+
+<h3>Harvey et al. (2018), <em>Journal of Portfolio Management</em></h3>
+<ul>
+  <li>Practitioner target-vol: constant-vol scaling across assets; equity risk-assets drive Sharpe gains; left-tail often milder when high-vol states coincide with cut exposure.</li>
+</ul>
+
+<h3>Bailey &amp; López de Prado (2014) — mandatory inference</h3>
+<ul>
+  <li>Deflated Sharpe Ratio (DSR) / trial-count adjustment on every OOS claim once we grid lookbacks, correlation estimators, or gates.</li>
+</ul>
+
+<h2 id="math">3. Core math / intuition</h2>
+
+<p><strong>Unconditional Book-2 (already live) — target-vol form:</strong></p>
+<div class="math-block">σ̂_t = √252 · stdev( last L daily returns of r^A )   # data ≤ t
+f_t  = clip( σ* / σ̂_t , f_min, f_max )             # primary: f_max=1 (scale-down only)
+w_t  = f_t · w^A + (1 − f_t) · e_cash               # cash = BIL</div>
+
+<p><strong>Paper-style conditional multifactor sketch</strong> (research mapping — implementable approximation on ETF category sleeves, not a WRDS factor dump):</p>
+<div class="math-block">Let F_t be a K-vector of category-sleeve (or factor-proxy) excess returns.
+Conditioning variable: z_t = market vol (or 1/σ̂_mkt,t), estimated ≤ t.
+
+Conditional moments (expanding / rolling, data ≤ t only):
+  μ̂_t(z) ,  Σ̂_t(z)
+
+Conditional mean–variance weights (long-only / cash residual in v1):
+  w*_t ∝ Σ̂_t(z)^{-1} μ̂_t(z)
+  then scale or clip to sum ≤ 1; residual → BIL
+
+Alternative (lighter Eng path — CoS-friendly):
+  keep Book-2 f_t from portfolio vol,
+  multiply by a correlation gate g_t ∈ [g_min, 1]:
+    g_t = 1 when mean pairwise |corr| of sleeves is “calm”
+    g_t → g_min when conditional correlations spike with high z_t
+  effective equity scale: f̃_t = f_t · g_t</div>
+
+<p><strong>Intuition in one sentence:</strong> Unconditional vol-target cuts risk when the ride is bumpy; the paper says you also need the <em>multifactor / correlation state</em> — factor risk prices and sleeve co-movement change with market vol — so gate or re-budget exposures conditionally, not with a single scalar alone.</p>
+
+<div class="callout ok">
+<strong>What we are <em>not</em> doing:</strong> rebuilding Spectral RP or Regime-Aware round-1; launching a new 3-ETF toy book; claiming DeMiguel OOS Sharpe on our panel; production trading or WRDS proprietary factors.
+</div>
+
+<h2 id="ourdata">4. What we will do on USA ETF / growth-panel data</h2>
+
+<h3>Assumptions</h3>
+<ul>
+  <li>Universe gate: only tickers in <code>usa_universe_categorized.csv</code>; Appendix 3 denied.</li>
+  <li><strong>Primary path:</strong> Book-2 upgrade — gate/rescale existing vol-target / multifactor <em>category sleeves</em> using conditional correlations (or inverse market vol as z_t per paper), on N≥100 liquid names <em>and/or</em> Category aggregates.</li>
+  <li>Optional robustness: same gate on growth-panel Option A + BIL (parity with live Book-2 artifacts).</li>
+  <li>Monthly rebalance; decision at month-end <em>t</em> uses prices/returns/corr ≤ <em>t</em>; performance on month <em>t+1</em> only (<strong>no same-month leakage</strong>).</li>
+  <li>Costs: <strong>5 bps one-way</strong> on turnover.</li>
+  <li>Sharpe_rf0 (rf=0) for memo parity; NW t and DSR mandatory.</li>
+  <li>Thin-history flags (<code>thin_lt5y</code> and shorter) published with/without thin names.</li>
+</ul>
+
+<h3>Inputs</h3>
+<ul>
+  <li>Universe / categories: <code>/workspace/investments/usa_universe_categorized.csv</code></li>
+  <li>USA panels: <code>usa_universe_panel_monthly_returns.csv</code>, <code>usa_universe_adj_close.csv</code>, coverage CSVs</li>
+  <li>Growth / Option A path (Book-2 parity): <code>growth_alpha_adj_close.csv</code>, <code>growth_panel_monthly_returns.csv</code>, <code>vol_target_real_bil/*</code></li>
+  <li>Existing CLI / module: <code>walkforward-vol-target</code> in <code>jgridifier/usa-etf-feature-pipeline</code></li>
+</ul>
+
+<h3>Walk-forward / leakage rules</h3>
+<ul>
+  <li>σ̂_t, Σ̂_t, μ̂_t, corr gates, and any z_t at month-end <em>t</em> must be invariant to mutating returns after <em>t</em> (unit test).</li>
+  <li>No same-month macro prints or same-month return labels in features.</li>
+  <li>Register every trial <code>(L, z-rule, corr-estimator, g_min, sleeve-set, apply-to)</code> for DSR / trial count — same spirit as <code>wf_strategy_registry.csv</code> / <code>vol_target_trial_registry.csv</code>.</li>
+</ul>
+
+<h3>Nulls</h3>
+<ul>
+  <li><strong>(a)</strong> Unconditional Moreira–Muir / current Book-2 vol-target Option A (primary null — must beat or clearly improve risk-adjusted path after costs + DSR).</li>
+  <li><strong>(b)</strong> Static Option A (VOO 70 / QQQM 20 / IJR 10).</li>
+  <li><strong>(c)</strong> Optional: equal-weight category sleeves (unconditional).</li>
+</ul>
+
+<h3>Thin history</h3>
+<table>
+  <tr><th>Item</th><th>Flag / note</th></tr>
+  <tr><td>QQQM</td><td>~5.9y binds Option A common window (same as Book-2).</td></tr>
+  <tr><td>Name-level N≥100</td><td>Drop / flag <code>thin_lt5y</code>; publish both cuts.</td></tr>
+  <tr><td>Category sleeves</td><td>Require minimum names per Category; flag thin sleeves.</td></tr>
+  <tr><td>Cash</td><td>BIL (fallbacks SGOV, GBIL, SHV) — on-list only.</td></tr>
+</table>
+
+<h2 id="worked">5. How we will know it worked</h2>
+
+<p><strong>Success (research bar — not a trade signal):</strong></p>
+<ol>
+  <li>OOS walk-forward equity curve + metrics vs nulls (a)–(c) exist and are reproducible from a CLI in <code>usa-etf-feature-pipeline</code>.</li>
+  <li>Primary config shows either (a) higher Sharpe_rf0 with NW t meaningfully positive vs Book-2 unconditional vol-target after costs, or (b) clearly better MaxDD / left-tail with only modest Sharpe give-up — <em>Jared / CoS choose which bar binds</em>.</li>
+  <li><strong>DSR + trial count</strong> reported; leakage unit tests green; 5 bps costs applied.</li>
+  <li>Diagnostics: occupancy of high-corr / high-z states; avg next-month active return when gate is binding vs open.</li>
+  <li>Does <strong>not</strong> silently win by reintroducing score-based name picking or peeking same-month labels.</li>
+</ol>
+
+<p><strong>Failure is informative:</strong> If the conditional gate adds nothing vs Book-2 vol-target after DSR, we keep unconditional Option A vol-target as the live Book-2 default and archive this extension with a one-line null result — same honesty as Justina round-1.</p>
+
+<table>
+  <tr><th>Metric</th><th>Compare to</th></tr>
+  <tr><td>AnnReturn, AnnVol, MaxDD, Sharpe_rf0</td><td>Book-2 VT Option A; static Option A; optional EW sleeves</td></tr>
+  <tr><td>Newey–West t on monthly excess</td><td>0 vs each null</td></tr>
+  <tr><td>DSR + trial_count</td><td>Mandatory on every OOS claim</td></tr>
+  <tr><td>Block-bootstrap Sharpe 95% CI</td><td>Overlap vs nulls</td></tr>
+  <tr><td>Turnover / year + cost drag</td><td>Disclose</td></tr>
+  <tr><td>% months gate binding; mean f̃</td><td>Regime / state table</td></tr>
+</table>
+
+<h2 id="cite">6. Full citation + links</h2>
+
+<ol>
+  <li><strong>Lead:</strong> DeMiguel, Victor, Alberto Martín-Utrera, and Raman Uppal. 2024. “A Multifactor Perspective on Volatility-Managed Portfolios.” <em>The Journal of Finance</em> 79 (6): 3859–3891. <a href="https://doi.org/10.1111/jofi.13395">doi:10.1111/jofi.13395</a> (JOFI 13395) · <a href="https://data.mendeley.com/datasets/dmjfztbc4y/3">replication package</a></li>
+  <li>Moreira, Alan, and Tyler Muir. 2017. “Volatility-Managed Portfolios.” <em>The Journal of Finance</em> 72 (4): 1611–1644. <a href="https://doi.org/10.1111/jofi.12513">doi:10.1111/jofi.12513</a></li>
+  <li>Harvey, Campbell R., et al. 2018. “The Impact of Volatility Targeting.” <em>The Journal of Portfolio Management</em> 45 (1): 14–33. <a href="https://doi.org/10.3905/jpm.2018.45.1.014">doi:10.3905/jpm.2018.45.1.014</a></li>
+  <li>Bailey, David H., and Marcos López de Prado. 2014. “The Deflated Sharpe Ratio: Correcting for Selection Bias, Backtest Overfitting, and Non-Normality.” <em>Journal of Portfolio Management</em> 40 (5): 94–107. <a href="https://doi.org/10.3905/jpm.2014.40.5.094">doi:10.3905/jpm.2014.40.5.094</a></li>
+</ol>
+
+<p><strong>Internal artifacts:</strong> Book-2 teaching <code>methods/allocation_alpha_vol_target.html</code> · Book-2 Eng ticket <code>ENGINEERING_TICKET_allocation_alpha_vol_target.md</code> · this Eng ticket <code>justina_shortlist/ENGINEERING_TICKET_vol_cond_factor_corr.md</code> · handoff <code>justina_shortlist/PORTFOLIOS_RESTART_HANDOFF.md</code> · prior picks <code>justina_shortlist/quant_pick_2.md</code> · round-1 scoreboard <code>methods/justina_round1_scoreboard.html</code>.</p>
+
+
+<h2 id="oos">7. OOS artifacts (Engineering stub)</h2>
+<p>Walk-forward outputs land under <code>data/processed/vol_cond_factor_corr/</code>:</p>
+<ul>
+  <li><code>vol_cfc_oos_summary.csv</code> — AnnReturn / AnnVol / MaxDD / Sharpe_rf0, NW t vs Book-2 VT and static A, DSR + trial_count</li>
+  <li><code>vol_cfc_monthly_weights.csv</code> — f, g, f̃, sleeve/name weights, cash</li>
+  <li><code>vol_cfc_oos_returns.csv</code> — method vs nulls (a)–(c)</li>
+  <li><code>vol_cfc_trial_registry.csv</code> — every (L, z-rule, g_min, …) tried</li>
+  <li><code>vol_cfc_state_table.csv</code> — avg next-month active return when gate binding vs open</li>
+</ul>
+<p>CLI: <code>python -m usa_etf_features.cli walkforward-vol-cond-factor-corr</code>. CIO books after results. <strong>No empirical success is claimed on this stub page until OOS tables are reviewed.</strong></p>
+
+<footer>
+USA experimental ETF research workstream · Quant → Engineering restart handoff · 2026-09-21 ET<br/>
+Not personalized investment advice. Confirm tickers against the experimental USA ETF research panel before any trade. No empirical success claimed.
+</footer>
+
+</body>
+</html>
