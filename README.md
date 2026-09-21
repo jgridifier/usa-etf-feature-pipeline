@@ -415,33 +415,109 @@ usa-etf-feature-pipeline/
 
 This repository is **research infrastructure only**. It does not constitute investment advice, an offer to sell securities, or a recommendation to buy or sell any ETF. Past feature ranks, rotation gates, and backtest-style constructs are not indicative of future results.
 
-## GitHub Pages research lab
+## GitHub Pages research lab (v2 — Vite + React)
 
-The committed site in `docs/` includes Home, Methods, Books, and Runs. Enable it in
-**Settings → Pages → Deploy from branch → `main` → `/docs`** after merging this branch.
-Preview locally with `python -m http.server 8000 --directory docs`.
+The site in `docs/` is a **Vite + React + Tailwind** app (source: `apps/pages/`), statically
+exported to `docs/` so GitHub Pages deploys from `docs/` on `main` with no build server.
 
-After a new `run-strategies --asof YYYY-MM-DD` run:
+Enable Pages in **Settings → Pages → Deploy from branch → `main` → `/docs`** after merging.
 
-1. Copy the intended CSV artifacts into `docs/data/` (or rely on `scripts/build_pages.py`, which
-   copies from `/workspace/investments/cio_book_shortlist/` when present: shortlist/strategy
-   comparison, suggested weights, strategy diagnostics, book weight CSVs). Refresh the
-   `vol_target_*.csv` set together after a new vol-target run, and copy its `README_OOS_note.md`.
-   Pages reads this directory, not `data/processed/`.
-2. Scrub brand names and institutional policy claims from imported artifacts and teaching HTML
-   before publication. Keep academic citations and neutral research framing. Universe legal names
-   are neutralized where necessary; every source section is `experimental_research_universe`.
-3. Run `python scripts/build_pages.py`. This (a) copies CIO CSVs when available, (b) builds
-   `docs/data/viz_*.json` snapshots (equity/drawdown from `r_vt`/`r_option_a`, `f_t` + `w_BIL`,
-   weight bars, XSD diagnostics snapshot, comparison table), and (c) regenerates Home/Books/Runs
-   HTML plus shared Methods chrome. Charts load via Apache ECharts CDN + `docs/assets/app.js`.
-4. Run `pytest`, preview with `python -m http.server 8000 --directory docs`, and commit `docs/`
-   alongside source changes. No GitHub build step is required. Branding is gated by
-   `tests/test_no_brand_tokens.py`.
+**Preview locally:**
 
-All pages describe an experimental panel: research only; not investment advice; no performance
-guarantees. `tests/test_no_brand_tokens.py` enforces the brand scrub across source, tests,
-configuration, raw data, scripts, and the published site with no content allowlist.
+```bash
+python3 -m http.server 8000 --directory docs
+# then open http://localhost:8000/
+```
+
+### Rebuild Pages after app or data changes
+
+#### Full rebuild (JS + data)
+
+```bash
+bash scripts/build_pages_v2.sh
+```
+
+This: (1) reruns `scripts/build_pages.py` to refresh `docs/data/viz_*.json` snapshots, (2) cleans
+stale `v2-*` assets from `docs/assets/`, and (3) runs `npm run build` in `apps/pages/`.
+
+#### Data only (after a new `run-strategies` run, no JS changes)
+
+```bash
+bash scripts/build_pages_v2.sh --data-only
+```
+
+Or manually:
+
+```bash
+# 1. Copy CSVs into docs/data/ (or rely on build_pages.py for CIO inputs)
+python3 scripts/build_pages.py
+
+# 2. Rebuild JS
+cd apps/pages && npm run build
+```
+
+#### After editing React source only (no data changes)
+
+```bash
+cd apps/pages
+npm run build
+```
+
+Vite outputs directly to `docs/` (`emptyOutDir: false`). The `docs/data/`, `docs/explorer/`,
+and `docs/methods/` directories are preserved.
+
+### Commit after rebuild
+
+```bash
+git add docs/
+git commit -m "chore: rebuild Pages v2"
+```
+
+### Brand scrub
+
+`tests/test_no_brand_tokens.py` scans `docs/` (and source) for forbidden institutional
+branding tokens. Run before committing rebuilt pages:
+
+```bash
+pytest tests/test_no_brand_tokens.py
+```
+
+### IA
+
+| Route | Surface |
+|-------|---------|
+| `/#/` | Home / live shortlist front door |
+| `/#/books` | Books — static core + Book-2 VT (CIO copy slot) |
+| `/#/runs` | OOS equity / drawdown / f_t charts |
+| `/#/explorer` | Redirects to `docs/explorer/index.html` |
+| `/#/archive` | Methods Archive — Justina fails + #13 (muted, not promoted) |
+
+Archive (`/#/archive`) links to legacy teaching HTML in `docs/methods/` but is never surfaced
+as a primary nav destination — it is visually de-emphasised in the nav.
+
+### App structure
+
+```
+apps/pages/              # Vite React source
+  src/
+    pages/               # Home · Books · Runs · Explorer · Archive
+    components/          # Nav · Layout · EChart · charts/ · ui/
+    hooks/useJsonData.ts # JSON data fetcher
+    lib/utils.ts         # cn · pct · num · dataUrl helpers
+  vite.config.ts         # outDir: ../../docs · emptyOutDir: false
+  tailwind.config.ts     # dark editorial tokens
+scripts/
+  build_pages.py         # data pipeline (viz JSON snapshots)
+  build_pages_v2.sh      # wrapper: data + Vite build
+docs/
+  index.html             # React SPA entry point
+  assets/v2-*.{js,css}  # Vite build output
+  data/                  # CSV + JSON data (not overwritten by build)
+  explorer/              # Static Time Series Explorer
+  methods/               # Static teaching HTML pages (archive)
+```
+
+All pages carry the research-only disclaimer. No GitHub Actions build step needed.
 
 ### Experimental Spectral Risk Parity
 
