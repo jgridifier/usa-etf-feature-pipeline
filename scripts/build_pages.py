@@ -459,23 +459,23 @@ def build_index() -> None:
     <div class="section-head">
       <span class="badge">Front door</span>
       <h2>What is live right now</h2>
-      <p class="lede">Two sleeves only. Book 3 (XSD) stays optional; Justina / archive nulls stay off the shortlist.</p>
+      <p class="lede"><strong>Live shortlist:</strong> two research books only — <strong>Book 1 static core</strong> (VOO / QQQM / IJR) and <strong>Book 2 vol-target</strong> (same core, scale-down into BIL). Justina methods (Spectral RP, Regime-Aware, vol-cond factor corr) failed binding nulls and stay in <strong>Methods → Archive</strong>, not here.</p>
     </div>
     <div class="card-grid shortlist-grid">
       <a class="feature-card shortlist-card" href="books.html">
         <span class="badge">Book 1 · live</span>
-        <h3>Static core (Option A)</h3>
-        <p>Fixed research weights (e.g. VOO / QQQM / IJR). Benchmark policy baseline for the panel.</p>
+        <h3>Static core</h3>
+        <p>Fixed weights VOO 70% / QQQM 20% / IJR 10%. Buy-and-hold reference — clean null for timing / risk overlays.</p>
       </a>
       <a class="feature-card shortlist-card" href="books.html">
         <span class="badge">Book 2 · live</span>
-        <h3>Vol-target Option A</h3>
-        <p>Unconditional volatility targeting on the same core — default research path for risk, not return alpha.</p>
+        <h3>Vol-target</h3>
+        <p>Same Option A core, scale-down into BIL when risk is high. Path/risk book vs Book 1 — not a beat-the-market story.</p>
       </a>
       <div class="feature-card shortlist-card muted-card" role="note">
         <span class="badge badge-quiet">Not live</span>
         <h3>Archive / failed nulls</h3>
-        <p>Justina round-1 and other FAIL / ARCHIVE methods are research record only — see Methods → Archive.</p>
+        <p>Spectral RP, Regime-Aware, and vol-cond factor corr (#13) failed binding nulls — research record only under Methods → Archive.</p>
         <p class="cta-inline"><a href="methods/index.html#archive">View archive</a></p>
       </div>
     </div>
@@ -487,7 +487,7 @@ def build_index() -> None:
     <a class="feature-card" href="books.html">
       <span class="badge">Books</span>
       <h3>Shortlist weights &amp; comparison</h3>
-      <p>Live Books 1–2 (and optional Book 3 sleeve) with weights and tables.</p>
+      <p>Live Books 1–2 with standing-book cards, weights, and comparison. Optional XSD sleeve is not a standing book.</p>
     </a>
     <a class="feature-card" href="runs.html">
       <span class="badge">Runs</span>
@@ -517,20 +517,51 @@ def build_books() -> None:
 <section class="hero hero-compact">
   <div class="hero-inner">
     <span class="badge">Live shortlist</span>
-    <h1>Books / strategies</h1>
-    <p class="lede"><strong>Live shortlist:</strong> Book 1 static core + Book 2 unconditional vol-target. Book 3 (XSD) is optional. <code>m3_p2</code> is held off. Default research path is Book 2 for risk — not a live broker allocation.</p>
+    <h1>Live research shortlist</h1>
+    <p class="lede">Two books for comparison on the experimental USA ETF panel. Everything else that failed the leakage / null / DSR gate is archived under Methods — not promoted here.</p>
+    <p class="callout">Research only — not investment advice. Panel is an arbitrary experimental USA ETF set for methodology work.</p>
   </div>
 </section>
 <section class="band">
   <div class="band-inner">
     <div class="section-head">
+      <h2>Standing books</h2>
+      <p class="lede">Live composition unchanged: static core + Book-2 vol-target. Optional XSD sleeve is gated and is not Book 3.</p>
+    </div>
+    <div class="card-grid shortlist-grid" style="grid-template-columns: repeat(2, minmax(0, 1fr));">
+      <article class="feature-card shortlist-card">
+        <span class="badge">Book 1 · Static core</span>
+        <h3>Buy-and-hold reference</h3>
+        <p><strong>What it is:</strong> Fixed weights <strong>VOO 70% / QQQM 20% / IJR 10%</strong>. No timing, no vol scale. Strategy id <code>static_option_a</code>.</p>
+        <p><strong>Why it&rsquo;s on the shortlist:</strong> Clean null for “did timing or risk management add anything?” Every overlay is judged against this path (and against Book 2 when the claim is risk-managed).</p>
+        <p><strong>What it is not:</strong> Not a Justina method. Not a multifactor optimizer showcase.</p>
+        <p class="metric-sub">OOS snapshot (panel; rf=0 Sharpe): ~14.7% ann. return · ~15.9% vol · MaxDD ~−25.6% · Sharpe ~0.92 · ~68 months (2021-02 → 2026-09). Turnover ≈ 0.</p>
+      </article>
+      <article class="feature-card shortlist-card">
+        <span class="badge">Book 2 · Vol-target</span>
+        <h3>Default research path</h3>
+        <p><strong>What it is:</strong> Same Option A core, scaled by estimated volatility (scale-down only in v1); cash residual in <strong>BIL</strong> when risk is high. Strategy id <code>vol_target_option_a</code>.</p>
+        <p><strong>Why it&rsquo;s on the shortlist:</strong> On this panel it improves the risk path vs Book 1 (higher Sharpe_rf0, milder MaxDD) without a strong return-alpha claim vs static (NW t vs Book 1 ≈ 0). That is a <strong>path/risk</strong> book, not a “beat the market” story.</p>
+        <p><strong>What it is not:</strong> Not the archived conditional factor-corr overlay (#13), which <strong>failed</strong> vs this unconditional Book 2 on Sharpe.</p>
+        <p class="metric-sub">OOS snapshot (panel; rf=0 Sharpe): ~14.7% ann. return · ~13.9% vol · MaxDD ~−20.1% · Sharpe ~1.06 · same window. Modest turnover from scaling.</p>
+      </article>
+    </div>
+    <div class="callout" style="margin-top:1.5rem">
+      <strong>Not on the shortlist:</strong> Spectral risk parity (null: Ledoit–Wolf MinVar), Regime-aware dual-regime (null: Unconditional ERC), Vol-cond factor corr #13 (null: Unconditional Book-2 VT) — all <strong>FAIL — archive</strong>.
+      Full table: <a href="methods/justina_round1_scoreboard.html">Methods → Archive / Justina round-1 scoreboard</a>.
+    </div>
+  </div>
+</section>
+<section class="band soft">
+  <div class="band-inner">
+    <div class="section-head">
       <h2>Comparison</h2>
-      <p class="lede">From <code>strategy_comparison.csv</code> (Books 1–3). Mobile-friendly table.</p>
+      <p class="lede">From <code>strategy_comparison.csv</code> (live Books 1–2; optional XSD sleeve may appear). Mobile-friendly table.</p>
     </div>
     <div id="comparison-table" class="comparison-host" data-viz="comparison"></div>
   </div>
 </section>
-<section class="band soft">
+<section class="band">
   <div class="band-inner">
     <div class="section-head">
       <h2>Current weights</h2>
@@ -538,32 +569,33 @@ def build_books() -> None:
     </div>
     <div class="chart-grid">
       <div class="chart-card">
-        <h3>Book 1 — Static Option A</h3>
+        <h3>Book 1 — Static core</h3>
         <div class="chart" data-chart="weights" data-book="static_option_a" style="min-height:280px"></div>
       </div>
       <div class="chart-card">
-        <h3>Book 2 — Vol-target Option A</h3>
+        <h3>Book 2 — Vol-target</h3>
         <div class="chart" data-chart="weights" data-book="vol_target_option_a" style="min-height:280px"></div>
       </div>
       <div class="chart-card">
-        <h3>Book 3 — XSD sleeve</h3>
+        <h3>Optional sleeve — XSD</h3>
         <div class="chart" data-chart="weights" data-book="score_rotate_xsd" style="min-height:280px"></div>
       </div>
     </div>
+    <p class="lede" style="margin-top:1rem"><code>score_rotate_xsd</code> may appear in runs as a gated thematic sleeve — default <strong>OFF</strong> unless ScoreSimple is ON. Not Book 3.</p>
   </div>
 </section>
-<section class="band">
+<section class="band soft">
   <div class="band-inner">
     <div class="section-head">
       <h2>XSD ON / OFF</h2>
-      <p class="lede">ScoreSimple gate from <code>strategy_diagnostics.csv</code> (<code>on</code> / <code>rotate_on</code>).</p>
+      <p class="lede">ScoreSimple gate from <code>strategy_diagnostics.csv</code> (<code>on</code> / <code>rotate_on</code>). Optional sleeve only.</p>
     </div>
     <div class="chart-card">
       <div class="chart" data-chart="xsd-timeline" style="min-height:200px"></div>
     </div>
   </div>
 </section>
-<section class="band soft">
+<section class="band">
   <div class="band-inner">
     <div class="section-head"><h2>Weight snapshot CSV</h2></div>
 '''
