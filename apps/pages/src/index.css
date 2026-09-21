@@ -19,7 +19,7 @@
 
   h1, h2, h3, h4, h5, h6 {
     @apply text-ink;
-    letter-spacing: -0.01em;
+    letter-spacing: -0.015em;
   }
 
   code, kbd, samp {
@@ -36,25 +36,15 @@
 
   ::selection {
     background: rgba(79, 126, 248, 0.25);
-    color: #f0f1f5;
+    color: #f2f0eb;
   }
 
   /* Thin scrollbar */
-  ::-webkit-scrollbar {
-    width: 6px;
-    height: 6px;
-  }
-  ::-webkit-scrollbar-track {
-    background: transparent;
-  }
-  ::-webkit-scrollbar-thumb {
-    @apply bg-border rounded-full;
-  }
-  ::-webkit-scrollbar-thumb:hover {
-    @apply bg-border-bright;
-  }
+  ::-webkit-scrollbar { width: 5px; height: 5px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { @apply bg-border rounded-full; }
+  ::-webkit-scrollbar-thumb:hover { @apply bg-border-bright; }
 
-  /* Table region focus ring */
   [role="region"]:focus-visible {
     outline: 2px solid rgba(79, 126, 248, 0.5);
     outline-offset: 2px;
@@ -62,7 +52,20 @@
 }
 
 @layer components {
-  /* ── Ticker / pill ── */
+  /* ── Ticker marquee ── */
+  .ticker-wrap {
+    @apply overflow-hidden bg-raised border-b border-border;
+  }
+  .ticker-inner {
+    display: inline-flex;
+    white-space: nowrap;
+    animation: ticker 44s linear infinite;
+  }
+  .ticker-inner:hover {
+    animation-play-state: paused;
+  }
+
+  /* ── Pill / badge ── */
   .pill {
     @apply inline-flex items-center gap-1 rounded-full border border-border px-2 py-0.5 text-2xs font-medium uppercase tracking-widest text-muted;
   }
@@ -80,17 +83,60 @@
   .stat-sub {
     @apply text-xs text-muted mt-1;
   }
+
+  /* ── Section label ── */
+  .section-eyebrow {
+    @apply text-2xs font-medium uppercase tracking-label text-muted mb-1;
+  }
+
+  /* ── Editorial rule / divider ── */
+  .rule-triple {
+    @apply relative flex items-center my-0;
+  }
+  .rule-triple::before,
+  .rule-triple::after {
+    content: '';
+    @apply flex-1 border-t border-border;
+  }
+  .rule-triple > span {
+    @apply px-3 text-border-bright text-xs;
+  }
+
+  /* ── Quote / Most-Sharable block ── */
+  .quote-block {
+    @apply border-l-2 border-accent pl-5 py-2;
+  }
+  .quote-block p {
+    @apply font-serif text-lg italic text-ink leading-snug;
+  }
+  .quote-block cite {
+    @apply text-2xs text-muted not-italic mt-2 block tracking-label uppercase;
+  }
+
+  /* ── Article card (editorial) ── */
+  .article-card {
+    @apply border border-border bg-surface rounded-xl overflow-hidden transition-all hover:border-border-bright;
+  }
+
+  /* ── Masthead rule line ── */
+  .masthead-rule {
+    height: 1px;
+    background: var(--masthead-rule, linear-gradient(90deg, transparent, #3c4050 30%, #3c4050 70%, transparent));
+  }
 }
 
 @layer utilities {
-  .text-balance {
-    text-wrap: balance;
-  }
+  .text-balance { text-wrap: balance; }
+  .font-display { font-family: "Playfair Display", Georgia, serif; }
   .scrollbar-hide {
     -ms-overflow-style: none;
     scrollbar-width: none;
   }
-  .scrollbar-hide::-webkit-scrollbar {
-    display: none;
-  }
+  .scrollbar-hide::-webkit-scrollbar { display: none; }
+}
+
+/* Keyframe defined here for global availability (also in tailwind config) */
+@keyframes ticker {
+  0%   { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
 }

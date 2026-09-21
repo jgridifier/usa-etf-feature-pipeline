@@ -4,9 +4,9 @@ import { Menu, X } from 'lucide-react'
 import { cn } from '../lib/utils'
 
 const PRIMARY_LINKS = [
-  { to: '/', label: 'Home', exact: true },
-  { to: '/books', label: 'Books' },
-  { to: '/runs', label: 'Runs' },
+  { to: '/',         label: 'Home',     exact: true },
+  { to: '/books',    label: 'Books' },
+  { to: '/runs',     label: 'Runs' },
   { to: '/explorer', label: 'Explorer' },
 ]
 
@@ -15,81 +15,76 @@ export default function Nav() {
 
   const linkClass = ({ isActive }: { isActive: boolean }) =>
     cn(
-      'text-sm font-medium transition-colors relative py-0.5',
+      'text-xs font-medium uppercase tracking-label transition-colors py-2 relative',
       isActive
-        ? 'text-ink after:absolute after:bottom-0 after:left-0 after:right-0 after:h-px after:bg-accent'
-        : 'text-body hover:text-ink',
+        ? 'text-ink after:absolute after:bottom-0 after:left-0 after:right-0 after:h-0.5 after:bg-accent'
+        : 'text-muted hover:text-body',
     )
 
   return (
-    <header className="sticky top-0 z-40 border-b border-border bg-bg/90 backdrop-blur-md">
-      <div className="mx-auto flex max-w-6xl items-center justify-between px-4 md:px-6 py-4">
-        {/* Wordmark */}
-        <Link
-          to="/"
-          className="flex items-center gap-2 no-underline group"
-          aria-label="USA ETF Lab home"
-        >
-          <span className="h-5 w-5 rounded-sm bg-accent/90 flex items-center justify-center flex-shrink-0">
-            <svg width="10" height="10" viewBox="0 0 10 10" fill="none" aria-hidden="true">
-              <rect x="1" y="1" width="3.5" height="3.5" rx="0.5" fill="white" opacity="0.9"/>
-              <rect x="5.5" y="1" width="3.5" height="3.5" rx="0.5" fill="white" opacity="0.5"/>
-              <rect x="1" y="5.5" width="3.5" height="3.5" rx="0.5" fill="white" opacity="0.5"/>
-              <rect x="5.5" y="5.5" width="3.5" height="3.5" rx="0.5" fill="white" opacity="0.9"/>
-            </svg>
-          </span>
-          <span className="font-semibold text-ink text-sm tracking-tight group-hover:text-accent transition-colors">
-            USA ETF Lab
-          </span>
-        </Link>
+    <nav className="sticky top-0 z-40 bg-bg/95 backdrop-blur-sm border-b border-border">
+      <div className="mx-auto max-w-6xl px-4 md:px-6">
+        <div className="flex items-center justify-between gap-6 h-10">
 
-        {/* Desktop nav */}
-        <nav className="hidden md:flex items-center gap-7" aria-label="Main">
-          {PRIMARY_LINKS.map(({ to, label, exact }) => (
-            <NavLink key={to} to={to} end={exact} className={linkClass}>
-              {label}
+          {/* Desktop primary links */}
+          <div className="hidden md:flex items-center gap-7">
+            {PRIMARY_LINKS.map(({ to, label, exact }) => (
+              <NavLink key={to} to={to} end={exact} className={linkClass}>
+                {label}
+              </NavLink>
+            ))}
+          </div>
+
+          {/* Archive — visually secondary, right-aligned */}
+          <div className="hidden md:flex items-center">
+            <NavLink
+              to="/archive"
+              className={({ isActive }) =>
+                cn(
+                  'text-2xs font-medium uppercase tracking-label transition-colors px-2.5 py-1 rounded border',
+                  isActive
+                    ? 'text-muted border-border bg-surface'
+                    : 'text-muted/60 border-transparent hover:border-border hover:text-muted',
+                )
+              }
+            >
+              Archive
             </NavLink>
-          ))}
-          {/* Archive — de-emphasised, no primary color */}
-          <NavLink
-            to="/archive"
-            className={({ isActive }) =>
-              cn(
-                'text-xs font-medium transition-colors px-2 py-1 rounded border',
-                isActive
-                  ? 'text-muted border-border bg-surface'
-                  : 'text-muted border-transparent hover:border-border hover:text-body',
-              )
-            }
-          >
-            Archive
-          </NavLink>
-        </nav>
+          </div>
 
-        {/* Mobile toggle */}
-        <button
-          type="button"
-          className="md:hidden p-1 rounded text-body hover:text-ink transition-colors"
-          aria-label={open ? 'Close menu' : 'Open menu'}
-          aria-expanded={open}
-          onClick={() => setOpen(o => !o)}
-        >
-          {open ? <X size={20} /> : <Menu size={20} />}
-        </button>
+          {/* Mobile: site shortname + toggle */}
+          <Link to="/" className="md:hidden text-xs font-semibold text-ink no-underline uppercase tracking-label">
+            ETF Lab
+          </Link>
+          <button
+            type="button"
+            className="md:hidden p-1 text-muted hover:text-ink transition-colors"
+            aria-label={open ? 'Close menu' : 'Open menu'}
+            aria-expanded={open}
+            onClick={() => setOpen(o => !o)}
+          >
+            {open ? <X size={18} /> : <Menu size={18} />}
+          </button>
+        </div>
       </div>
 
       {/* Mobile drawer */}
       {open && (
-        <nav
-          className="md:hidden border-t border-border bg-bg px-4 py-4 flex flex-col gap-5"
-          aria-label="Mobile main"
+        <div
+          className="md:hidden border-t border-border bg-surface px-4 py-4 flex flex-col gap-4"
+          aria-label="Mobile navigation"
         >
           {PRIMARY_LINKS.map(({ to, label, exact }) => (
             <NavLink
               key={to}
               to={to}
               end={exact}
-              className={linkClass}
+              className={({ isActive }) =>
+                cn(
+                  'text-sm font-medium uppercase tracking-label transition-colors py-1',
+                  isActive ? 'text-ink' : 'text-muted hover:text-body',
+                )
+              }
               onClick={() => setOpen(false)}
             >
               {label}
@@ -98,17 +93,17 @@ export default function Nav() {
           <NavLink
             to="/archive"
             className={({ isActive }) =>
-              cn('text-xs text-muted hover:text-body transition-colors', isActive && 'text-body')
+              cn('text-xs text-muted/60 hover:text-muted transition-colors', isActive && 'text-muted')
             }
             onClick={() => setOpen(false)}
           >
-            Archive (not promoted)
+            Archive (research record only)
           </NavLink>
-          <p className="text-2xs text-muted border-t border-border pt-3">
+          <p className="text-2xs text-muted/40 border-t border-border pt-3">
             Research only · not investment advice
           </p>
-        </nav>
+        </div>
       )}
-    </header>
+    </nav>
   )
 }

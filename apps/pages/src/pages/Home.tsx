@@ -1,6 +1,4 @@
 import { Link } from 'react-router-dom'
-import { Badge } from '../components/ui/badge'
-import { LinkButton } from '../components/ui/button'
 import { useJsonData } from '../hooks/useJsonData'
 import { pct, num } from '../lib/utils'
 
@@ -21,64 +19,92 @@ interface MetricsPayload {
   pct_months_f_lt_1: number
 }
 
-interface StatCardProps {
-  label: string
-  value: string
-  sub?: string
-  accent?: boolean
-  dim?: boolean
+function Eyebrow({ children }: { children: React.ReactNode }) {
+  return (
+    <p className="section-eyebrow">{children}</p>
+  )
 }
 
-function StatCard({ label, value, sub, accent, dim }: StatCardProps) {
+function SectionRule({ label }: { label?: string }) {
   return (
-    <div className="stat-card">
-      <div className="stat-label">{label}</div>
-      <div className={`stat-value ${dim ? 'text-down' : accent ? 'text-accent' : 'text-ink'}`}>{value}</div>
-      {sub && <div className="stat-sub">{sub}</div>}
+    <div className="flex items-center gap-3 my-0">
+      <div className="flex-1 h-px bg-border" />
+      {label && (
+        <span className="text-2xs text-muted/50 uppercase tracking-label flex-shrink-0 px-1">
+          {label}
+        </span>
+      )}
+      <div className="flex-1 h-px bg-border" />
     </div>
   )
 }
 
-function ShortlistCard({
+function QuoteBlock({
+  quote,
+  attribution,
+}: {
+  quote: string
+  attribution: string
+}) {
+  return (
+    <div className="quote-block">
+      <p className="font-serif text-base md:text-lg italic text-ink leading-snug">{quote}</p>
+      <cite className="text-2xs text-muted not-italic mt-2 block tracking-label uppercase">{attribution}</cite>
+    </div>
+  )
+}
+
+function BookCard({
   badge,
-  badgeVariant,
+  live,
   title,
-  description,
-  href,
+  descriptor,
+  body,
+  link,
   muted,
-  footerLink,
 }: {
   badge: string
-  badgeVariant: 'live' | 'quiet'
+  live: boolean
   title: string
-  description: string
-  href?: string
+  descriptor: string
+  body: string
+  link?: { label: string; to: string }
   muted?: boolean
-  footerLink?: { label: string; to: string }
 }) {
   const inner = (
-    <div
-      className={`rounded-xl border p-5 h-full transition-all ${
-        muted
-          ? 'border-border bg-surface opacity-50 cursor-default'
-          : 'border-border bg-surface hover:border-border-bright hover:bg-raised cursor-pointer'
-      }`}
+    <article
+      className={`article-card h-full p-5 flex flex-col gap-3 ${muted ? 'opacity-50' : 'cursor-pointer'}`}
     >
-      <Badge variant={badgeVariant} className="mb-3">{badge}</Badge>
-      <h3 className="text-base font-semibold text-ink mb-2">{title}</h3>
-      <p className="text-sm text-body leading-relaxed">{description}</p>
-      {footerLink && (
-        <p className="mt-3 text-xs">
-          <Link to={footerLink.to} className="text-muted hover:text-body">
-            {footerLink.label} →
-          </Link>
+      <div className="flex items-start justify-between gap-2">
+        <span
+          className={`text-2xs font-medium uppercase tracking-label px-2 py-0.5 rounded-full border ${
+            live
+              ? 'border-up/30 text-up bg-up/5'
+              : 'border-border text-muted bg-raised'
+          }`}
+        >
+          {badge}
+        </span>
+      </div>
+      <div>
+        <h3 className="font-display font-bold text-xl text-ink leading-tight mb-0.5">{title}</h3>
+        <p className="text-xs uppercase tracking-label text-muted">{descriptor}</p>
+      </div>
+      <p className="text-sm text-body leading-relaxed flex-1">{body}</p>
+      {link && (
+        <p className="text-2xs text-muted/60 uppercase tracking-label mt-auto">
+          {link.label} →
         </p>
       )}
-    </div>
+    </article>
   )
 
-  if (href && !muted) {
-    return <Link to={href} className="no-underline block h-full">{inner}</Link>
+  if (link && !muted) {
+    return (
+      <Link to={link.to} className="no-underline block h-full">
+        {inner}
+      </Link>
+    )
   }
   return inner
 }
@@ -88,135 +114,202 @@ export default function Home() {
 
   return (
     <div>
-      {/* ── Hero ── */}
-      <section className="relative overflow-hidden border-b border-border">
-        {/* Background grid texture */}
-        <div
-          className="absolute inset-0 opacity-[0.03]"
-          style={{
-            backgroundImage: 'linear-gradient(#4f7ef8 1px, transparent 1px), linear-gradient(90deg, #4f7ef8 1px, transparent 1px)',
-            backgroundSize: '48px 48px',
-          }}
-        />
-        <div className="relative mx-auto max-w-5xl px-4 md:px-6 py-20 md:py-28">
-          <Badge variant="live" className="mb-5">Live shortlist</Badge>
-          <h1 className="text-4xl md:text-6xl font-bold text-ink mb-5 text-balance leading-tight">
-            Static core +<br className="hidden md:block" /> Book-2 vol-target
-          </h1>
-          <p className="text-lg text-body max-w-2xl mb-8 leading-relaxed">
-            The live research shortlist is <strong>Book 1 static Option A</strong> plus{' '}
-            <strong>Book 2 unconditional vol-target</strong>. Archive / failed-null methods are
-            not on this door. Static GitHub Pages — no live trading.
-          </p>
-          <div className="flex flex-wrap gap-3">
-            <LinkButton href="#/books" variant="primary" size="md">Open live shortlist</LinkButton>
-            <LinkButton href="#/runs" variant="secondary" size="md">OOS runs</LinkButton>
-            <LinkButton href="#/explorer" variant="secondary" size="md">Explorer</LinkButton>
+      {/* ── Lead / Hero ── */}
+      <section className="border-b border-border">
+        <div className="mx-auto max-w-6xl px-4 md:px-6 pt-10 pb-12 md:pt-14 md:pb-16">
+
+          {/* CIO copy slot — headline */}
+          <div className="max-w-3xl">
+            <Eyebrow>Live shortlist · front door</Eyebrow>
+            {/* [CIO: rewrite headline below if needed] */}
+            <h2 className="font-display font-black text-4xl md:text-6xl text-ink leading-tight mt-2 mb-5 text-balance">
+              Static core +<br className="hidden sm:block" /> Book&#8209;2 vol&#8209;target
+            </h2>
+            {/* [CIO: rewrite body paragraph below if needed] */}
+            <p className="text-base md:text-lg text-body leading-relaxed max-w-2xl mb-8">
+              The live research shortlist is <strong>Book 1 static Option A</strong> and{' '}
+              <strong>Book 2 unconditional vol-target</strong>. Three archived methods failed
+              binding nulls — they remain research record, not promoted books.
+              Static GitHub Pages — no live trading.
+            </p>
+
+            <div className="flex flex-wrap gap-3">
+              <Link
+                to="/books"
+                className="inline-flex items-center gap-2 bg-accent text-white text-sm font-medium rounded-lg px-5 py-2.5 no-underline hover:bg-accent/90 transition-colors"
+              >
+                Open live shortlist
+              </Link>
+              <Link
+                to="/runs"
+                className="inline-flex items-center gap-2 border border-border text-body text-sm font-medium rounded-lg px-5 py-2.5 no-underline hover:border-border-bright hover:text-ink transition-all"
+              >
+                OOS runs
+              </Link>
+              <Link
+                to="/explorer"
+                className="inline-flex items-center gap-2 border border-border text-body text-sm font-medium rounded-lg px-5 py-2.5 no-underline hover:border-border-bright hover:text-ink transition-all"
+              >
+                Explorer
+              </Link>
+            </div>
           </div>
         </div>
       </section>
 
       {/* ── Live books grid ── */}
-      <section className="py-14 border-b border-border">
-        <div className="mx-auto max-w-5xl px-4 md:px-6">
-          <div className="flex items-center justify-between mb-8">
-            <div>
-              <p className="text-2xs font-medium uppercase tracking-widest text-muted mb-1">Front door</p>
-              <h2 className="text-2xl font-bold text-ink">What is live right now</h2>
-            </div>
-            <Link to="/books" className="text-xs text-muted hover:text-body no-underline">
-              View all →
-            </Link>
+      <section className="py-12 border-b border-border">
+        <div className="mx-auto max-w-6xl px-4 md:px-6">
+          <SectionRule label="What is live right now" />
+          <div className="mt-8 grid grid-cols-1 md:grid-cols-3 gap-4">
+            <BookCard
+              badge="Book 1 · live"
+              live
+              title="Static core"
+              descriptor="Buy-and-hold reference"
+              body="Fixed weights VOO 70% / QQQM 20% / IJR 10%. No timing, no vol scale. Clean null for any overlay or timing claim."
+              link={{ label: 'View shortlist', to: '/books' }}
+            />
+            <BookCard
+              badge="Book 2 · live"
+              live
+              title="Vol-target"
+              descriptor="Default research path"
+              body="Same Option A core, scaled by estimated volatility (scale-down only). Cash residual in BIL when risk is elevated."
+              link={{ label: 'View shortlist', to: '/books' }}
+            />
+            <BookCard
+              badge="Archive · not live"
+              live={false}
+              title="Archived methods"
+              descriptor="FAIL / research record"
+              body="Spectral RP, Regime-Aware, and vol-cond factor corr (#13) failed binding nulls — not promoted to books."
+              muted
+              link={{ label: 'View archive', to: '/archive' }}
+            />
+          </div>
+        </div>
+      </section>
+
+      {/* ── Most Sharable — key findings ── */}
+      <section className="py-12 border-b border-border bg-hero-gradient">
+        <div className="mx-auto max-w-6xl px-4 md:px-6">
+          <div className="flex items-center gap-3 mb-8">
+            <span className="text-accent text-base leading-none">◆</span>
+            <Eyebrow>Most sharable · key findings</Eyebrow>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <ShortlistCard
-              badge="Book 1 · live"
-              badgeVariant="live"
-              title="Static core"
-              description="Fixed weights VOO 70% / QQQM 20% / IJR 10%. Buy-and-hold reference — clean null for timing / risk overlays."
-              href="/books"
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-8">
+            <QuoteBlock
+              quote="Static core + unconditional Book-2 VT. Everything else failed binding nulls — research record only."
+              attribution="Live shortlist rationale"
             />
-            <ShortlistCard
-              badge="Book 2 · live"
-              badgeVariant="live"
-              title="Vol-target"
-              description="Same Option A core, scale-down into BIL when risk is high. Path/risk book vs Book 1 — not a beat-the-market story."
-              href="/books"
+            <QuoteBlock
+              quote="Path/risk improvement, not return alpha. NW t vs static A ≈ 0 on this panel — milder drawdown is the claim."
+              attribution="Book 2 vol-target evidence"
             />
-            <ShortlistCard
-              badge="Not live"
-              badgeVariant="quiet"
-              title="Archive / failed nulls"
-              description="Spectral RP, Regime-Aware, and vol-cond factor corr (#13) failed binding nulls — research record only."
-              muted
-              footerLink={{ label: 'View archive', to: '/archive' }}
+            <QuoteBlock
+              quote="XSD is an optional gated sleeve. It is never a promoted live book. Default is OFF."
+              attribution="Rotation sleeve framing"
+            />
+            <QuoteBlock
+              quote="Justina round-1 and #13 did not clear binding nulls on Sharpe. No book cut. Shortlist unchanged."
+              attribution="CIO frame on archive"
             />
           </div>
         </div>
       </section>
 
       {/* ── OOS metrics strip ── */}
-      <section className="py-14 bg-hero-gradient border-b border-border">
-        <div className="mx-auto max-w-5xl px-4 md:px-6">
-          <div className="mb-8">
-            <p className="text-2xs font-medium uppercase tracking-widest text-muted mb-1">Supporting OOS</p>
-            <h2 className="text-2xl font-bold text-ink mb-2">Book 2 path vs static Option A</h2>
-            <p className="text-body text-sm">
-              {m?.n_months ?? 68}-month OOS ·{' '}
-              {m?.start_date ?? '2021-02-26'} → {m?.end_date ?? '2026-09-16'} · real-BIL sample.
-              Evidence for the live Book-2 sleeve — not a separate promoted book.
-            </p>
-          </div>
+      {m && (
+        <section className="py-12 border-b border-border">
+          <div className="mx-auto max-w-6xl px-4 md:px-6">
+            <SectionRule label="Supporting OOS" />
 
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
-            <StatCard label="Sharpe (vt)" value={num(m?.Sharpe_vt, 2)} sub={`Static A: ${num(m?.Sharpe_a, 2)}`} accent />
-            <StatCard label="Max drawdown (vt)" value={pct(m?.MaxDD_vt)} sub={`Static A: ${pct(m?.MaxDD_a)}`} dim />
-            <StatCard label="Ann. vol (vt)" value={pct(m?.AnnVol_vt)} sub={`Static A: ${pct(m?.AnnVol_a)}`} />
-            <StatCard label="NW t vs A" value={num(m?.NW_t, 2)} sub="Path/risk, not return alpha" />
-          </div>
+            <div className="mt-8 mb-2">
+              <Eyebrow>Book 2 vol-target path vs static Option A</Eyebrow>
+              <p className="text-sm text-body mt-1">
+                {m.n_months}-month OOS · {m.start_date} → {m.end_date} · real-BIL sample.
+                Evidence for the live Book-2 sleeve — not a separate promoted book.
+              </p>
+            </div>
 
-          {m && (
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mt-6 mb-4">
+              <div className="stat-card">
+                <div className="stat-label">Sharpe (vt)</div>
+                <div className="stat-value text-accent">{num(m.Sharpe_vt, 2)}</div>
+                <div className="stat-sub">Static A: {num(m.Sharpe_a, 2)}</div>
+              </div>
+              <div className="stat-card">
+                <div className="stat-label">Max drawdown (vt)</div>
+                <div className="stat-value text-down">{pct(m.MaxDD_vt)}</div>
+                <div className="stat-sub">Static A: {pct(m.MaxDD_a)}</div>
+              </div>
+              <div className="stat-card">
+                <div className="stat-label">Ann. vol (vt)</div>
+                <div className="stat-value">{pct(m.AnnVol_vt)}</div>
+                <div className="stat-sub">Static A: {pct(m.AnnVol_a)}</div>
+              </div>
+              <div className="stat-card">
+                <div className="stat-label">NW t vs A</div>
+                <div className="stat-value">{num(m.NW_t, 2)}</div>
+                <div className="stat-sub">Path / risk, not return alpha</div>
+              </div>
+            </div>
+
             <p className="text-xs text-muted mb-6">
               Moreira &amp; Muir (2017) · mean f = {m.mean_f.toFixed(2)} · months with f&lt;1:{' '}
               {(100 * m.pct_months_f_lt_1).toFixed(0)}%
             </p>
-          )}
 
-          <div className="flex flex-wrap gap-3">
-            <LinkButton href="#/runs" variant="primary" size="sm">Open OOS charts</LinkButton>
-            <LinkButton href="#/books" variant="secondary" size="sm">Live shortlist weights</LinkButton>
+            <div className="flex flex-wrap gap-3">
+              <Link
+                to="/runs"
+                className="inline-flex items-center gap-2 bg-accent text-white text-sm font-medium rounded-lg px-4 py-2 no-underline hover:bg-accent/90 transition-colors"
+              >
+                Open OOS charts
+              </Link>
+              <Link
+                to="/books"
+                className="inline-flex items-center gap-2 border border-border text-body text-sm font-medium rounded-lg px-4 py-2 no-underline hover:border-border-bright hover:text-ink transition-all"
+              >
+                Live shortlist weights
+              </Link>
+            </div>
           </div>
-        </div>
-      </section>
+        </section>
+      )}
 
-      {/* ── IA tiles ── */}
-      <section className="py-14">
-        <div className="mx-auto max-w-5xl px-4 md:px-6">
-          <p className="text-2xs font-medium uppercase tracking-widest text-muted mb-8">Lab sections</p>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      {/* ── Lab sections ── */}
+      <section className="py-12">
+        <div className="mx-auto max-w-6xl px-4 md:px-6">
+          <SectionRule label="Lab sections" />
+          <div className="mt-8 grid grid-cols-1 md:grid-cols-3 gap-4">
             {[
               {
-                to: '/books', badge: 'Books',
-                title: 'Shortlist weights & comparison',
-                desc: 'Live Books 1–2 with standing-book cards, weights, and comparison.',
+                to: '/books',
+                eyebrow: 'Shortlist',
+                title: 'Books',
+                desc: 'Live Books 1–2 with standing-book cards, current weights, and comparison table.',
               },
               {
-                to: '/runs', badge: 'Runs',
-                title: 'Out-of-sample charts',
-                desc: 'Equity, drawdown, scale factor f_t, and downloadable CSVs.',
+                to: '/runs',
+                eyebrow: 'Out-of-sample',
+                title: 'Runs',
+                desc: 'Equity, drawdown, scale factor f_t, and downloadable CSVs for the live path.',
               },
               {
-                to: '/explorer', badge: 'Explorer',
-                title: 'Time Series Explorer',
-                desc: 'Growth-panel metrics and charts for research diagnostics.',
+                to: '/explorer',
+                eyebrow: 'Diagnostics',
+                title: 'Explorer',
+                desc: 'Growth-panel metrics and time-series charts for research diagnostics.',
               },
             ].map(item => (
-              <Link key={item.to} to={item.to} className="no-underline block">
-                <div className="rounded-xl border border-border bg-surface p-5 hover:border-border-bright hover:bg-raised transition-all h-full">
-                  <Badge variant="default" className="mb-3">{item.badge}</Badge>
-                  <h3 className="text-sm font-semibold text-ink mb-2">{item.title}</h3>
-                  <p className="text-xs text-body leading-relaxed">{item.desc}</p>
+              <Link key={item.to} to={item.to} className="no-underline block group">
+                <div className="border border-border bg-surface rounded-xl p-5 h-full transition-all group-hover:border-border-bright group-hover:bg-raised">
+                  <p className="section-eyebrow mb-2">{item.eyebrow}</p>
+                  <h3 className="font-display font-bold text-2xl text-ink mb-2 leading-tight">{item.title}</h3>
+                  <p className="text-sm text-body leading-relaxed">{item.desc}</p>
                 </div>
               </Link>
             ))}
