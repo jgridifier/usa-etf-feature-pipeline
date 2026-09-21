@@ -79,3 +79,25 @@ strategies:
       vol_window: 6
       corr_window: 12
     enabled: true
+
+  - id: vol_cond_factor_corr
+    display_name: Vol-Managed + Conditional Factor Correlations
+    method_citation_id: demiguel_martin_utrera_uppal_2024_jofi_13395
+    method_citation: "DeMiguel, Victor, Alberto Martín-Utrera, and Raman Uppal. 2024. \"A Multifactor Perspective on Volatility-Managed Portfolios.\" Journal of Finance 79(6): 3859-3891. doi:10.1111/jofi.13395 (JOFI 13395). Book-2 upgrade: conditional correlation/vol-state gate on Moreira–Muir / target-vol Option A (Moreira & Muir 2017, doi:10.1111/jofi.12513). Research mapping on ETF category sleeves; not investment advice."
+    entrypoint: usa_etf_features.strategy_registry:vol_cond_factor_corr
+    default_params:
+      core: option_a
+      lookback: 63
+      corr_lookback_months: 12
+      f_min: 0.25
+      f_max: 1.0
+      g_min: 0.5
+      z_rule: mkt_vol
+      apply_to: option_a_vt
+      sigma_star: expanding_annvol
+      cash_ticker: BIL
+      cost_bps_one_way: 5.0
+      include_thin: false
+      monthly_csv: data/raw/usa_universe_panel_monthly_returns.csv
+      coverage_csv: data/raw/usa_universe_panel_history_coverage.csv
+    enabled: true

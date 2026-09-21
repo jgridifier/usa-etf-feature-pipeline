@@ -1,0 +1,18 @@
+vol_cond_factor_corr:
+  lookbacks: [21, 63, 126]
+  f_min: 0.25
+  f_max: 1.0
+  g_min: [0.25, 0.5]
+  z_rule: mkt_vol
+  corr_estimator: rolling_pairwise_abs_mean
+  apply_to: [option_a_vt]
+  cost_bps_one_way: 5
+  min_names: 100
+  corr_lookback_months: [6, 12]
+  include_thin: false
+  cash_ticker: BIL
+  cash_fallbacks: [SGOV, GBIL, SHV]
+  sigma_star: expanding_annvol
+  bootstrap_block_months: 3
+  bootstrap_samples: 500
+  mkt_ticker: VOO
