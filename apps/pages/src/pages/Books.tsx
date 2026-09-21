@@ -60,7 +60,7 @@ export default function Books() {
           <SectionHead
             label="CIO note"
             title="Standing books"
-            sub="Live composition unchanged: static core + Book-2 vol-target. Optional XSD sleeve is gated and is not Book 3."
+            sub="Live composition unchanged: static core + Book-2 VT only. XSD is an optional gated sleeve — not a live book."
           />
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
@@ -180,7 +180,7 @@ export default function Books() {
               <p className="text-2xs font-medium uppercase tracking-widest text-muted mb-3">Optional sleeve — XSD</p>
               <WeightsChart bookId="score_rotate_xsd" />
               <p className="text-2xs text-muted mt-2">
-                <code>score_rotate_xsd</code> is default <strong>OFF</strong>. Not Book 3.
+                <code>score_rotate_xsd</code> is default <strong>OFF</strong>. Optional gated sleeve only.
               </p>
             </div>
           </div>

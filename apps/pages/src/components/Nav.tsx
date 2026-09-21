@@ -4,7 +4,8 @@ import { Menu, X } from 'lucide-react'
 import { cn } from '../lib/utils'
 
 const PRIMARY_LINKS = [
-  { to: '/', label: 'Books', exact: true },
+  { to: '/', label: 'Home', exact: true },
+  { to: '/books', label: 'Books' },
   { to: '/runs', label: 'Runs' },
   { to: '/explorer', label: 'Explorer' },
 ]
