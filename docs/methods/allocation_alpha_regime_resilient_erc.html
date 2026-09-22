@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>Allocation Alpha — Regime-Resilient ERC (LOIM Regime Parity)</title>
+<style>
+  :root { --fg:#1a1a1a; --muted:#555; --border:#ddd; --bg:#fafafa; --accent:#0b5fff; --ok:#0a7a3e; }
+  * { box-sizing: border-box; }
+  body { font-family: Georgia, "Times New Roman", serif; color: var(--fg); line-height: 1.55; max-width: 42rem; margin: 2rem auto; padding: 0 1.25rem; background: #fff; }
+  h1,h2,h3 { font-family: system-ui, -apple-system, Segoe UI, sans-serif; line-height: 1.25; }
+  h1 { font-size: 1.65rem; margin-bottom: 0.25rem; }
+  h2 { font-size: 1.25rem; margin-top: 2rem; border-bottom: 1px solid var(--border); padding-bottom: 0.3rem; }
+  h3 { font-size: 1.05rem; margin-top: 1.4rem; color: #222; }
+  .meta { color: var(--muted); font-family: system-ui, sans-serif; font-size: 0.9rem; margin-bottom: 1.5rem; }
+  .disclaimer { background: #fff8e6; border: 1px solid #f0d78c; padding: 0.75rem 1rem; border-radius: 6px; font-size: 0.92rem; margin: 1rem 0 1.5rem; }
+  .callout { background: var(--bg); border-left: 4px solid var(--accent); padding: 0.75rem 1rem; margin: 1rem 0; }
+  .ok { border-left-color: var(--ok); }
+  table { border-collapse: collapse; width: 100%; font-size: 0.92rem; margin: 0.75rem 0 1rem; }
+  th, td { border: 1px solid var(--border); padding: 0.4rem 0.55rem; text-align: left; vertical-align: top; }
+  th { background: var(--bg); font-family: system-ui, sans-serif; font-weight: 600; }
+  code, .math { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 0.88em; }
+  .math-block { background: var(--bg); padding: 0.85rem 1rem; border-radius: 6px; overflow-x: auto; margin: 0.75rem 0; font-family: ui-monospace, Menlo, Consolas, monospace; font-size: 0.86rem; white-space: pre-wrap; }
+  ul, ol { padding-left: 1.25rem; }
+  li { margin: 0.35rem 0; }
+  a { color: var(--accent); }
+  .toc { font-family: system-ui, sans-serif; font-size: 0.92rem; background: var(--bg); padding: 0.75rem 1rem; border-radius: 6px; }
+  .toc ol { margin: 0.4rem 0 0; }
+  footer { margin-top: 2.5rem; padding-top: 1rem; border-top: 1px solid var(--border); color: var(--muted); font-size: 0.85rem; font-family: system-ui, sans-serif; }
+</style>
+</head>
+<body>
+
+<h1>Allocation Alpha: Regime-Resilient ERC (LOIM Regime Parity)</h1>
+<p class="meta">Teaching note · 2026-09-22 (ET) · USA research-panel ETF · CIO Justina shortlist #3 · Next bet after #4 FT-MED FAIL/ARCHIVE · #6 skewness parked</p>
+
+<div class="disclaimer">
+<strong>Research only — not investment advice.</strong> This document explains a proposed walk-forward test of <em>regime-parity</em> / regime-resilient equal-risk-contribution (ERC) allocation on the experimental USA ETF research panel. It does not recommend buying or selling any security. Confirm tickers against the research panel before any use. <strong>No empirical success is claimed here</strong> — theory + Engineering handoff only. Live books stay <strong>static core + unconditional Book-2 vol-target only</strong>. Research / Quant gate only — this note does not change live books.
+</div>
+
+<nav class="toc" aria-label="Contents">
+<strong>Contents</strong>
+<ol>
+  <li><a href="#why">Why this paper</a></li>
+  <li><a href="#original">What the original work found</a></li>
+  <li><a href="#math">Core math / intuition</a></li>
+  <li><a href="#ourdata">What we will do on the USA ETF panel</a></li>
+  <li><a href="#worked">How we will know it worked</a></li>
+  <li><a href="#cite">Full citation + links</a></li>
+</ol>
+</nav>
+
+<h2 id="why">1. Why this paper / blog</h2>
+
+<p>Portfolios context (as of 2026-09-22 ET):</p>
+<ul>
+  <li><strong>Archived (research FAIL):</strong> Spectral RP · Regime-Aware dual · vol-cond-factor-corr (#13) · <strong>forecast tangency + MED (#4 / FT-MED FAIL/ARCHIVE)</strong>. Scoreboard: <code>methods/justina_round1_scoreboard.html</code>, <code>QUANT_GATE_forecast_tangency_med.md</code>, <code>QUANT_GATE_vol_cond_factor_corr.md</code>.</li>
+  <li><strong>Live books:</strong> <strong>static core + unconditional Book-2 vol-target only</strong> (<code>walkforward-vol-target</code>, <code>vol_target_real_bil/</code>). This ticket does not modify live books.</li>
+  <li><strong>Parked:</strong> Justina shortlist <strong>#6</strong> skewness overlay — not this ticket.</li>
+  <li><strong>This ticket:</strong> Justina CIO shortlist <strong>#3</strong> — <strong>regime-resilient ERC construction</strong>: stress / correlation-breakdown overlays (and LOIM regime-parity risk inputs) that change <em>how ERC weights are built</em>. <strong>Primary null = unconditional ERC.</strong></li>
+</ul>
+
+<div class="callout">
+<strong>CIO clarification — construction, not selection:</strong> This is <em>regime-resilient ERC construction</em>. Stress windows, corr-breakdown / Diversification-Under-Stress diagnostics, and/or LOIM-style regime-conditioned Σ̂ pools alter the inputs (or π-blend of local ERCs) used inside the ERC weight solve. It is <strong>not</strong> a rerun of archived dual-regime <em>selection</em> (Luo/Mulvey-style: classify the <em>current</em> regime → pick assets / hold only that regime’s portfolio) vs unconditional ERC. Every month still emits an ERC-family construction.
+</div>
+
+<p><strong>Distinct from archived work:</strong> not spectral eigenrisk (#1); <strong>not</strong> dual-regime asset selection (#2 FAIL); not Book-2 conditional-corr timing (#13 FAIL); not forecast-tangency MED (#4 FAIL). Live books stay static core + Book-2 VT only.</p>
+
+<h2 id="original">2. What the original work found</h2>
+
+<h3>Ielpo, Muhammetgulyyeva &amp; Royer (2026), <em>Journal of Portfolio Management</em> — lead citation</h3>
+<ul>
+  <li><strong>Title:</strong> “Building a Regime-Resilient ERC Portfolio.”</li>
+  <li><strong>Authors / venue:</strong> Florian Ielpo, Selbi Muhammetgulyyeva, Julien Royer (LOIM / multi-asset research). <em>Journal of Portfolio Management</em> 52 (9): 189–213 (August 2026; online ~June 2026). DOI: <a href="https://doi.org/10.3905/jpm.2026.030">10.3905/jpm.2026.030</a>.</li>
+  <li><strong>Practitioner precursor:</strong> LOIM MARS note, Dec 2023 — “Building a regime-resistant, long-run allocation in multi asset” (same authors / regime-parity construction).</li>
+  <li><strong>Setup (construction):</strong> Connect multi-regime return distributions with classical ERC. For each historical regime pool <em>m</em>, estimate a regime-conditional covariance and solve a local ERC; form the <em>regime-parity</em> portfolio as the probability-weighted sum of those local ERCs (π<sub>m</sub> = steady-state / historical frequencies). That is a change to <em>how</em> long-run ERC weights are built — not “pick today’s regime and hold only that portfolio.”</li>
+  <li><strong>Motivation:</strong> Unconditional moments of a mixture crush regime structure; unconditional ERC can load excessively on hedging assets when rare stress regimes distort Σ. Regime parity restores linear-in-probability blending and claimed better resistance to rare adverse regimes / structural breaks.</li>
+  <li><strong>Authors’ reported shape (paper / MARS — not our panel):</strong> Analytic two-asset Markov example shows unconditional ERC over-reacts to rare stress vs linear regime parity; multi-country equity/govvie/IG applications with expansion–recession dating; gains attributed mostly to regime-specific <em>risks</em> rather than correlation shifts; sensitivity to regime mis-identification (false discovery kills the edge).</li>
+  <li><strong>Limitations for our test:</strong> Multi-asset (few names per geography), not a 100+ USA ETF panel; regime dating quality is the binding dependency. We do <strong>not</strong> claim their outperformance transfers. Our v1: USA panel / category sleeves, monthly WF, 5 bps, DSR + trial_count, primary null = unconditional ERC.</li>
+</ul>
+
+<h3>Maillard, Roncalli &amp; Teiletche (2010) — classical ERC</h3>
+<ul>
+  <li>“The Properties of Equally Weighted Risk Contribution Portfolios.” <em>Journal of Portfolio Management</em> 36 (4): 60–70. Backbone: equalize Euler risk contributions RC<sub>i</sub>(w) = w<sub>i</sub> (Σw)<sub>i</sub> so RC<sub>i</sub> = RC<sub>j</sub> for all i,j. Unconditional ERC is our <strong>primary null</strong>.</li>
+</ul>
+
+<h3>Diversification Under Stress / corr breakdown — construction overlays</h3>
+<ul>
+  <li>CIO shortlist framing (Jun / Aug 2026): stress / correlation-breakdown overlays that change how ERC is <em>built</em> (e.g. mix unconditional Σ̂ with stress-window Σ̂; soft risk-budget caps when avg-|corr| / sync breaks down). These are first-class construction paths alongside LOIM regime-parity — not a discrete regime picker. Register all knobs for DSR.</li>
+</ul>
+
+<h3>Bailey &amp; López de Prado (2014) — mandatory inference</h3>
+<ul>
+  <li>Deflated Sharpe Ratio (DSR) / trial-count adjustment on every OOS Sharpe claim once we grid regime rules, lookbacks, sleeve cuts, or stress overlays.</li>
+</ul>
+
+<h2 id="math">3. Core math / intuition</h2>
+
+<p><strong>Classical ERC</strong> (Maillard–Roncalli–Teiletche): given Σ, find w ≥ 0, 1′w = 1, such that risk contributions are equal:</p>
+<div class="math-block">RC_i(w) = w_i (Σ w)_i ,   σ_p² = w′ Σ w = Σ_i RC_i(w)
+
+ERC:  RC_i(w) = RC_j(w)  ∀ i,j
+  (equiv. minimize Σ_{i,j} (RC_i − RC_j)²  or solve via iterative / QP forms)</div>
+
+<p><strong>Path B — Regime-parity construction (LOIM):</strong> regimes m = 1…M used as <em>historical pools</em> for local Σ̂ (not as a current-regime selector). Steady-state / historical frequencies π<sub>m</sub> (Σ<sub>m</sub> π<sub>m</sub> = 1):</p>
+<div class="math-block">For each regime m (using returns dated in m, ≤ t only):
+  Σ̂_m,t ← cov estimator on regime-m sample
+  w*_m,t ← ERC(Σ̂_m,t)     # long-only; residual → BIL if needed
+
+Regime-parity portfolio:
+  w*_t = Σ_m  π̂_m,t · w*_m,t
+
+If regimes are uninformative (Σ̂_m identical), w*_t ≡ unconditional ERC.
+π̂_m,t from historical frequencies or Markov steady-state estimated ≤ t.</div>
+
+<p><strong>Path A — Stress / corr-breakdown overlays (change ERC inputs):</strong></p>
+<div class="math-block">Diagnostics (≤ t): stress-window Σ̂_stress, avg pairwise |corr|, sync / corr-breakdown score
+
+Σ̂_resilient,t = (1 − λ) Σ̂_uncond,t + λ Σ̂_stress,t     # registered λ
+w*_t ← ERC(Σ̂_resilient,t)                             # still ERC — only Σ changed
+
+# Optional soft budget / cash residual when corr-breakdown elevates (registered)</div>
+
+<p><strong>Intuition in one sentence:</strong> Keep the ERC <em>solver</em>; make the risk inputs regime-resilient (stress-mixed Σ̂ and/or π-blend of local ERCs) — do <em>not</em> switch to a current-regime selected portfolio.</p>
+
+<div class="callout ok">
+<strong>What we are <em>not</em> doing:</strong> dual-regime <em>selection</em> (Luo/Mulvey-style classify current regime → allocate); reopening Spectral RP / Regime-Aware dual / vol-cond-factor-corr / FT-MED; modifying live books (static core + Book-2 VT stay as-is); claiming LOIM OOS numbers on our panel; Forma; production trading or WRDS dumps; building #6 skewness on this ticket.
+</div>
+
+<h2 id="ourdata">4. What we will do on the USA ETF panel</h2>
+
+<h3>Assumptions</h3>
+<ul>
+  <li>Universe gate: only tickers in <code>usa_universe_categorized.csv</code>; Appendix 3 denied.</li>
+  <li><strong>Primary:</strong> N≥100 liquid names <strong>and/or</strong> Category sleeves from the same file (CIO multi-name path).</li>
+  <li>Walk-forward <strong>monthly</strong>; weights for month <em>t+1</em> use data ≤ <em>t</em> only (<strong>no same-month leakage</strong>).</li>
+  <li><strong>Construction (required framing):</strong> stress / corr-breakdown overlays and/or LOIM regime-parity that change ERC <em>inputs</em> or blend local ERC solutions. <strong>Forbidden:</strong> current-regime classifier → select assets / hold only that regime’s portfolio (archived dual-regime selection).</li>
+  <li><strong>Path A knobs:</strong> stress-window length, mix λ on Σ̂_stress, corr-breakdown thresholds — all registered.</li>
+  <li><strong>Path B knobs (pools only):</strong> NBER lag / rolling vol split / similar as <em>historical pools</em> for local Σ̂_m + π̂ blend — not a live regime switch. Document publication lag; min obs per pool → fallback to unconditional ERC.</li>
+  <li>Cov: sample or <strong>Ledoit–Wolf</strong> ≤ t.</li>
+  <li>Costs: <strong>5 bps one-way</strong> on monthly turnover.</li>
+  <li>Sharpe_rf0 (rf=0); NW t and <strong>DSR + trial_count</strong> mandatory.</li>
+  <li>Thin-history flags (<code>thin_lt5y</code>+); publish with/without thin names / thin sleeves.</li>
+  <li>Cash: on-list BIL (fallbacks SGOV, GBIL, SHV).</li>
+  <li><strong>Live books:</strong> static core + unconditional Book-2 VT only — unchanged by this research ticket.</li>
+</ul>
+
+<h3>Inputs</h3>
+<ul>
+  <li>Universe / categories: <code>/workspace/investments/usa_universe_categorized.csv</code></li>
+  <li>USA panels: <code>usa_universe_panel_monthly_returns.csv</code>, <code>usa_universe_adj_close.csv</code>, coverage CSVs</li>
+  <li>Optional Book-2 timing null path: <code>vol_target_real_bil/*</code></li>
+  <li>Repo: <code>jgridifier/usa-etf-feature-pipeline</code></li>
+</ul>
+
+<h3>Walk-forward / leakage rules</h3>
+<ul>
+  <li>At month-end <em>t</em>: stress/corr diagnostics, regime-<em>pool</em> labels (if Path B), Σ̂ inputs, π̂_m, and ERC weights must be invariant to mutating returns after <em>t</em> (unit test). External labels: info ≤ t only (document lag) — construction inputs, not a current-regime selector.</li>
+  <li>No same-month return labels inside stress/corr features.</li>
+  <li>Register every trial <code>(construction=stress_corr|loim_parity, λ, stress_window, regime_pool_rule, M, cov, min_obs, sleeve-set, N-cut)</code> for DSR / trial count.</li>
+</ul>
+
+<h3>Nulls (required)</h3>
+<ul>
+  <li><strong>(a) Unconditional ERC</strong> on the same name set / same category sleeves — <strong>PRIMARY</strong> CIO null (single Σ̂; no stress/corr overlay; no regime-parity blend).</li>
+  <li><strong>(b) Equal-weight</strong> on the same panel / sleeves.</li>
+  <li><strong>(c) Ledoit–Wolf MinVar</strong> — global minimum-variance with LW Σ on the same panel.</li>
+  <li><strong>(d) Optional:</strong> unconditional Book-2 vol-target Option A as a <em>timing</em> null / attribution.</li>
+</ul>
+
+<h3>Thin history</h3>
+<table>
+  <tr><th>Item</th><th>Flag / note</th></tr>
+  <tr><td>Name-level N≥100</td><td>Drop / flag <code>thin_lt5y</code>; publish both cuts.</td></tr>
+  <tr><td>Category sleeves</td><td>Min names per Category; flag thin sleeves.</td></tr>
+  <tr><td>Stress / regime-pool sample</td><td>Min obs per pool; fallback to unconditional ERC when thin.</td></tr>
+  <tr><td>Cash</td><td>BIL (fallbacks SGOV, GBIL, SHV) — on-list only.</td></tr>
+</table>
+
+<h2 id="worked">5. How we will know it worked</h2>
+
+<p><strong>Success (research bar — not a trade signal):</strong></p>
+<ol>
+  <li>OOS walk-forward equity curve + metrics vs nulls (a)–(c) [and optional (d)] exist and are reproducible from a CLI in <code>usa-etf-feature-pipeline</code>.</li>
+  <li><strong>Primary:</strong> higher Sharpe_rf0 <strong>and</strong> a better risk path (MaxDD and/or AnnVol) vs <strong>unconditional ERC</strong> after 5 bps costs, with NW t meaningfully supportive on the active return vs ERC — <em>or</em> CoS-agreed MaxDD / left-tail win with only modest Sharpe give-up vs ERC. EW and LW MinVar remain binding diagnostics.</li>
+  <li><strong>DSR + trial_count</strong> reported on every OOS Sharpe claim; leakage unit tests green.</li>
+  <li>Diagnostics: construction tag (stress_corr vs loim_parity), λ / |corr| / sync, π̂_m (if Path B), pool sizes, ‖w*_t − w_ERC_uncond‖, turnover, % cash.</li>
+  <li>Does <strong>not</strong> silently win via current-regime selection, peeking labels, dropping stress months from OOS, or fishing knobs after seeing outcomes.</li>
+</ol>
+
+<p><strong>Failure is informative:</strong> If resilient-ERC construction fails vs unconditional ERC (and EW / LW MinVar) after DSR, archive with a one-line null result (parity with Justina round-1 / #13 / #4). Live books stay <strong>static core + unconditional Book-2 VT only</strong>. #6 skewness stays parked.</p>
+
+<table>
+  <tr><th>Metric</th><th>Compare to</th></tr>
+  <tr><td>AnnReturn, AnnVol, MaxDD, Sharpe_rf0</td><td><strong>Uncond ERC (primary)</strong>; EW; LW MinVar; optional Book-2 VT</td></tr>
+  <tr><td>Newey–West t on monthly excess</td><td>0 vs each null (esp. vs uncond ERC)</td></tr>
+  <tr><td>DSR + trial_count</td><td>Mandatory on every OOS claim</td></tr>
+  <tr><td>Block-bootstrap Sharpe 95% CI</td><td>Overlap vs nulls</td></tr>
+  <tr><td>Turnover / year + cost drag</td><td>Disclose (5 bps one-way)</td></tr>
+  <tr><td>‖w − w_ERC‖; λ / |corr|; π̂_m; pool min-obs fallbacks</td><td>Descriptive construction diagnostics</td></tr>
+</table>
+
+<h2 id="cite">6. Full citation + links</h2>
+
+<ol>
+  <li><strong>Lead:</strong> Ielpo, Florian, Selbi Muhammetgulyyeva, and Julien Royer. 2026. “Building a Regime-Resilient ERC Portfolio.” <em>Journal of Portfolio Management</em> 52 (9): 189–213 (August 2026). <a href="https://doi.org/10.3905/jpm.2026.030">doi:10.3905/jpm.2026.030</a> · <a href="https://www.pm-research.com/content/iijpormgmt/52/9/189">pm-research.com</a></li>
+  <li><strong>Practitioner precursor (same construction):</strong> Ielpo, Florian, Julien Royer, and Selbi Muhammetgulyyeva. 2023. “Building a regime-resistant, long-run allocation in multi asset.” Lombard Odier Investment Managers (LOIM) MARS / Investment Viewpoints, 7 December 2023. <a href="https://am.lombardodier.com/contents/news/investment-viewpoints/2023/december/1148-MAC-mars-long-run.html">am.lombardodier.com</a></li>
+  <li><strong>Classical ERC:</strong> Maillard, Sébastien, Thierry Roncalli, and Jérôme Teiletche. 2010. “The Properties of Equally Weighted Risk Contribution Portfolios.” <em>Journal of Portfolio Management</em> 36 (4): 60–70.</li>
+  <li>Ledoit, Olivier, and Michael Wolf. 2003. “Improved Estimation of the Covariance Matrix of Stock Returns…” <em>Journal of Empirical Finance</em> 10 (5): 603–621. (LW / MinVar null backbone.)</li>
+  <li>Bailey, David H., and Marcos López de Prado. 2014. “The Deflated Sharpe Ratio…” <em>Journal of Portfolio Management</em> 40 (5): 94–107. <a href="https://doi.org/10.3905/jpm.2014.40.5.094">doi:10.3905/jpm.2014.40.5.094</a></li>
+  <li><strong>Optional related:</strong> Diversification Under Stress / corr-breakdown literature as cited in Justina Jun 2026 newsletter alternate — use only as registered overlay / diagnostic, not a substitute lead citation.</li>
+</ol>
+
+<p><strong>Internal artifacts:</strong> Eng ticket <code>justina_shortlist/ENGINEERING_TICKET_regime_resilient_erc.md</code> · handoff <code>justina_shortlist/NEXT_METHOD_HANDOFF.md</code> · CIO shortlist <code>justina_shortlist/cio_top10_methods.md</code> (#3) · archived scoreboard <code>methods/justina_round1_scoreboard.html</code> · FAIL gates Spectral / Regime / <code>QUANT_GATE_vol_cond_factor_corr.md</code> / <code>QUANT_GATE_forecast_tangency_med.md</code> (#4).</p>
+
+<footer>
+USA Research-Panel ETF Portfolios workstream · Quant → Engineering · Justina shortlist #3 · 2026-09-22 ET<br/>
+Not personalized investment advice. Confirm policy list before trading. No empirical success claimed. Live books: static core + Book-2 VT only.
+</footer>
+
+</body>
+</html>

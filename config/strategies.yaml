@@ -122,3 +122,29 @@ strategies:
       monthly_csv: data/raw/usa_universe_panel_monthly_returns.csv
       coverage_csv: data/raw/usa_universe_panel_history_coverage.csv
     enabled: false
+
+  - id: regime_resilient_erc
+    display_name: Regime-Resilient ERC (Archive/Methods stub — Quant gate pending)
+    method_citation_id: ielpo_muhammetgulyyeva_royer_2026_jpm_52_9_regime_resilient_erc
+    method_citation: "Ielpo, Florian, Selbi Muhammetgulyyeva, and Julien Royer. 2026. 'Building a Regime-Resilient ERC Portfolio.' Journal of Portfolio Management 52(9):189-213. doi:10.3905/jpm.2026.030. Precursor: LOIM MARS, Dec 2023 (same authors). Classical ERC: Maillard, Roncalli & Teiletche (2010), JPM 36(4):60-70. Nulls: unconditional ERC (PRIMARY), EW, LW MinVar. DSR + trial_count mandatory (Bailey & Lopez de Prado 2014). Construction overlays only (stress/corr + LOIM regime-parity π-blend) — NOT dual-regime asset selection (archived #2). NO book cut until Quant gate PASS."
+    entrypoint: usa_etf_features.strategy_registry:regime_resilient_erc
+    default_params:
+      construction: stress_corr_overlay
+      stress_window_months: 12
+      mix_lambda: 0.25
+      corr_breakdown_gate: false
+      regime_pool_rule: rolling_vol_split
+      n_regimes: 2
+      pi_rule: historical_freq
+      min_obs_per_pool: 24
+      cov_estimator: ledoit_wolf
+      long_only: true
+      cost_bps_one_way: 5.0
+      cash_ticker: BIL
+      min_names: 100
+      apply_to: name_level
+      include_thin: false
+      min_history_months: 36
+      monthly_csv: data/raw/usa_universe_panel_monthly_returns.csv
+      coverage_csv: data/raw/usa_universe_panel_history_coverage.csv
+    enabled: false

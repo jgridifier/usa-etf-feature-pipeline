@@ -39,6 +39,11 @@ from .forecast_tangency_med import (
     make_ft_med_trials,
     run_forecast_tangency_med_grid,
 )
+from .regime_resilient_erc import (
+    load_regime_resilient_erc_config,
+    make_rr_erc_trials,
+    run_regime_resilient_erc_grid,
+)
 from .walkforward import (
     rotation_on_off_next_month_table,
     walkforward_ic_table,
@@ -633,6 +638,170 @@ def cmd_walkforward_forecast_tangency_med(args: argparse.Namespace) -> int:
     return 0
 
 
+def cmd_walkforward_regime_resilient_erc(args: argparse.Namespace) -> int:
+    """Walk-forward regime-resilient ERC (LOIM regime-parity + stress/corr overlays).
+
+    Construction overlays only — NOT dual-regime asset selection (archived #2).
+    Primary null: unconditional ERC. Additional nulls: EW, LW MinVar.
+    Registry enabled:false until Quant gate PASS.
+
+    Research tooling only; not investment advice.
+    Lead citation: Ielpo, Muhammetgulyyeva & Royer (2026), JPM 52(9):189-213.
+    doi:10.3905/jpm.2026.030
+    """
+    import pandas as pd
+
+    universe_path = Path(args.universe)
+    monthly_path = Path(args.monthly)
+    out_path = Path(args.out)
+    weights_path = Path(args.weights)
+    registry_path = Path(args.registry)
+    returns_path = Path(args.returns) if args.returns else out_path.with_name("rr_erc_oos_returns.csv")
+    diag_path = Path(args.diag_out) if getattr(args, "diag_out", None) else out_path.with_name("rr_erc_construction_diag.csv")
+
+    cfg_path = (
+        Path(args.config) if getattr(args, "config", None)
+        else _repo_root() / "config" / "regime_resilient_erc.yaml"
+    )
+    rr_cfg = load_regime_resilient_erc_config(
+        cfg_path if cfg_path.exists() else None
+    ).get("regime_resilient_erc", {})
+
+    uni_cfg_path = (
+        Path(args.universe_config) if getattr(args, "universe_config", None)
+        else _repo_root() / "config" / "universe.yaml"
+    )
+    uni_cfg = load_universe_config(uni_cfg_path if uni_cfg_path.exists() else None)
+
+    monthly = pd.read_csv(monthly_path, index_col=0, parse_dates=True).sort_index()
+    monthly.columns = [str(c).upper() for c in monthly.columns]
+
+    constructions = _parse_csv_list(
+        getattr(args, "constructions", None)
+        or ",".join(rr_cfg.get("construction", ["stress_corr_overlay"])),
+        cast=str,
+    )
+    stress_windows = _parse_csv_list(
+        getattr(args, "stress_windows", None)
+        or ",".join(map(str, rr_cfg.get("stress_window_months", [12]))),
+        cast=int,
+    )
+    mix_lambdas = _parse_csv_list(
+        getattr(args, "mix_lambdas", None)
+        or ",".join(map(str, rr_cfg.get("mix_lambda", [0.25]))),
+        cast=float,
+    )
+    corr_gates_raw = _parse_csv_list(
+        getattr(args, "corr_breakdown_gates", None) or "false",
+        cast=str,
+    )
+    corr_gates = [v.lower() not in ("false", "0", "no") for v in corr_gates_raw]
+
+    regime_pool_rules = _parse_csv_list(
+        getattr(args, "regime_pool_rules", None)
+        or ",".join(rr_cfg.get("regime_pool_rule", ["rolling_vol_split"])),
+        cast=str,
+    )
+    pi_rules = _parse_csv_list(
+        getattr(args, "pi_rules", None)
+        or ",".join(rr_cfg.get("pi_rule", ["historical_freq"])),
+        cast=str,
+    )
+    cov_estimators = _parse_csv_list(
+        getattr(args, "cov_estimators", None)
+        or ",".join(rr_cfg.get("cov_estimator", ["ledoit_wolf"])),
+        cast=str,
+    )
+    min_obs_per_pools = _parse_csv_list(
+        getattr(args, "min_obs_per_pools", None)
+        or ",".join(map(str, rr_cfg.get("min_obs_per_pool", [24]))),
+        cast=int,
+    )
+    apply_tos = _parse_csv_list(
+        getattr(args, "apply_to", None)
+        or ",".join(rr_cfg.get("apply_to", ["name_level"])),
+        cast=str,
+    )
+
+    cost_bps = float(
+        getattr(args, "cost_bps", None) or rr_cfg.get("cost_bps_one_way", 5)
+    )
+    cash_ticker = str(
+        getattr(args, "cash", None) or rr_cfg.get("cash_ticker", "BIL")
+    ).upper()
+    min_names = int(
+        getattr(args, "min_names", None) or rr_cfg.get("min_names", 100)
+    )
+    include_thin = bool(getattr(args, "include_thin", False))
+    min_history_months = int(
+        getattr(args, "min_history_months", None) or rr_cfg.get("min_history_months", 36)
+    )
+
+    trials = make_rr_erc_trials(
+        constructions=constructions,
+        stress_window_months=stress_windows,
+        mix_lambdas=mix_lambdas,
+        corr_breakdown_gates=corr_gates,
+        regime_pool_rules=regime_pool_rules,
+        pi_rules=pi_rules,
+        cov_estimators=cov_estimators,
+        min_obs_per_pools=min_obs_per_pools,
+        apply_tos=apply_tos,
+        cost_bps_one_way=cost_bps,
+        cash_ticker=cash_ticker,
+        min_names=min_names,
+        include_thin=include_thin,
+        min_history_months=min_history_months,
+    )
+
+    if not trials:
+        print("error: no trials configured", file=sys.stderr)
+        return 1
+
+    coverage = None
+    if getattr(args, "coverage", None) and Path(args.coverage).exists():
+        coverage = pd.read_csv(args.coverage)
+
+    summary, monthly_weights, oos_returns, construction_diag, registry = run_regime_resilient_erc_grid(
+        monthly,
+        trials,
+        universe_csv=universe_path,
+        coverage=coverage,
+        universe_config=uni_cfg,
+        bootstrap_samples=int(
+            getattr(args, "bootstrap_samples", None)
+            or rr_cfg.get("bootstrap_samples", 500)
+        ),
+    )
+
+    if summary.empty:
+        print(
+            "error: no regime-resilient ERC OOS rows produced; check common price history and min_names",
+            file=sys.stderr,
+        )
+        return 1
+
+    _write_csv(summary, out_path)
+    _write_csv(monthly_weights, weights_path)
+    _write_csv(oos_returns, returns_path)
+    _write_csv(registry, registry_path)
+    _write_csv(construction_diag, diag_path)
+
+    print(f"wrote RR-ERC summary              → {out_path}")
+    print(f"wrote monthly weights              → {weights_path}")
+    print(f"wrote OOS returns                  → {returns_path}")
+    print(f"wrote trial registry               → {registry_path}")
+    print(f"wrote construction diagnostics     → {diag_path}")
+    print(f"trials run: {len(trials)}")
+    print(
+        "nulls computed: unconditional ERC (null_a, PRIMARY), "
+        "EW (null_b), LW MinVar (null_c)"
+    )
+    print("construction: stress/corr overlays and/or LOIM regime-parity blend")
+    print("NOT dual-regime asset selection (archived #2 — forbidden pattern).")
+    return 0
+
+
 def build_parser() -> argparse.ArgumentParser:
     p = argparse.ArgumentParser(
         prog="usa_etf_features",
@@ -828,6 +997,53 @@ def build_parser() -> argparse.ArgumentParser:
     ftm.add_argument("--universe-config", default=None, dest="universe_config")
     ftm.add_argument("--bootstrap-samples", type=int, default=500, dest="bootstrap_samples")
     ftm.set_defaults(func=cmd_walkforward_forecast_tangency_med)
+
+    rr = sub.add_parser(
+        "walkforward-regime-resilient-erc",
+        help=(
+            "Walk-forward regime-resilient ERC (LOIM regime-parity + stress/corr overlays). "
+            "Construction only — NOT dual-regime selection. "
+            "Primary null: unconditional ERC. Registry enabled:false until Quant gate PASS. "
+            "Research only; not investment advice."
+        ),
+    )
+    rr.add_argument("--universe", required=True, help="Path to usa_universe_categorized.csv")
+    rr.add_argument("--monthly", required=True, help="Monthly returns panel CSV (Date × tickers)")
+    rr.add_argument("--coverage", default=None, help="Optional history coverage CSV (thin_lt5y flags)")
+    rr.add_argument("--out", required=True, help="rr_erc_oos_summary.csv")
+    rr.add_argument("--weights", required=True, help="rr_erc_monthly_weights.csv")
+    rr.add_argument("--registry", required=True, help="rr_erc_trial_registry.csv")
+    rr.add_argument("--returns", default=None, help="Optional rr_erc_oos_returns.csv path")
+    rr.add_argument("--diag-out", default=None, dest="diag_out", help="Optional rr_erc_construction_diag.csv path")
+    rr.add_argument(
+        "--constructions", default=None,
+        help="Comma-separated construction paths: stress_corr_overlay,loim_regime_parity",
+    )
+    rr.add_argument("--stress-windows", default=None, dest="stress_windows",
+                    help="Comma-separated stress_window_months values, e.g. 12,24")
+    rr.add_argument("--mix-lambdas", default=None, dest="mix_lambdas",
+                    help="Comma-separated mix_lambda values (Path A), e.g. 0.25,0.5")
+    rr.add_argument("--corr-breakdown-gates", default=None, dest="corr_breakdown_gates",
+                    help="Comma-separated corr_breakdown_gate values: false,true")
+    rr.add_argument("--regime-pool-rules", default=None, dest="regime_pool_rules",
+                    help="Comma-separated regime pool rules: rolling_vol_split,nber_lag")
+    rr.add_argument("--pi-rules", default=None, dest="pi_rules",
+                    help="Comma-separated pi_rule values: historical_freq,markov_steady")
+    rr.add_argument("--cov-estimators", default=None, dest="cov_estimators",
+                    help="Comma-separated cov estimators: ledoit_wolf,sample")
+    rr.add_argument("--min-obs-per-pools", default=None, dest="min_obs_per_pools",
+                    help="Comma-separated min_obs_per_pool values, e.g. 24,36")
+    rr.add_argument("--apply-to", default=None, dest="apply_to",
+                    help="Comma-separated apply_to: name_level,category_sleeves")
+    rr.add_argument("--cost-bps", type=float, default=5.0, dest="cost_bps")
+    rr.add_argument("--cash", default="BIL")
+    rr.add_argument("--min-names", type=int, default=100, dest="min_names")
+    rr.add_argument("--min-history-months", type=int, default=36, dest="min_history_months")
+    rr.add_argument("--include-thin", action="store_true", default=False, dest="include_thin")
+    rr.add_argument("--config", default=None, help="regime_resilient_erc YAML config path")
+    rr.add_argument("--universe-config", default=None, dest="universe_config")
+    rr.add_argument("--bootstrap-samples", type=int, default=500, dest="bootstrap_samples")
+    rr.set_defaults(func=cmd_walkforward_regime_resilient_erc)
 
     sp = sub.add_parser("walkforward-spectral-rp", help="Experimental panel spectral RP and nulls")
     sp.add_argument("--returns", required=True)

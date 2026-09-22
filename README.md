@@ -14,6 +14,7 @@ Transparent, unit-tested feature scorer and **optional thematic rotation sleeve*
 | **Allocation alpha** | `walkforward-vol-target` scale-down-only volatility-managed Option A research |
 | **Book-2 upgrade** | `walkforward-vol-cond-factor-corr` conditional factor-correlation gate on Book-2 VT |
 | **Shortlist #4 (gate pending)** | `walkforward-forecast-tangency-med` — forecast EF coefficients → MED portfolio (Alexander & Scherer 2023); Archive/Methods stub until Quant gate PASS |
+| **Shortlist #3** | `walkforward-regime-resilient-erc` — regime-resilient ERC construction (stress/corr overlays + LOIM regime-parity π-blend); Archive/Methods stub until Quant gate PASS |
 
 ## Install
 
@@ -454,6 +455,57 @@ DSR + trial\_count mandatory (Bailey & López de Prado 2014). **No book cut unti
 
 Teaching HTML: `/workspace/investments/methods/allocation_alpha_forecast_tangency_med.html` (workspace-only; not committed)
 Deep Pages stub: `docs/methods/allocation_alpha_forecast_tangency_med.html`
+
+### Walk-forward regime-resilient ERC — Justina shortlist #3
+
+Regime-resilient ERC construction (LOIM regime-parity + stress/corr-breakdown overlays).
+**Construction only — NOT dual-regime asset selection (archived #2).**
+Primary null: unconditional ERC. Registry `enabled:false` until Quant gate PASS.
+Research only; not investment advice.
+
+Lead citation: Ielpo, Muhammetgulyyeva & Royer (2026), *Journal of Portfolio Management* 52(9):189–213.
+[doi:10.3905/jpm.2026.030](https://doi.org/10.3905/jpm.2026.030)
+
+```bash
+python -m usa_etf_features.cli walkforward-regime-resilient-erc \
+  --universe /workspace/investments/usa_universe_categorized.csv \
+  --monthly /workspace/investments/usa_universe_panel_monthly_returns.csv \
+  --coverage /workspace/investments/usa_universe_panel_history_coverage.csv \
+  --constructions stress_corr_overlay,loim_regime_parity \
+  --stress-windows 12,24 \
+  --mix-lambdas 0.25,0.5 \
+  --regime-pool-rules rolling_vol_split,nber_lag \
+  --pi-rules historical_freq \
+  --apply-to name_level,category_sleeves \
+  --cost-bps 5 \
+  --out data/processed/rr_erc_oos_summary.csv \
+  --weights data/processed/rr_erc_monthly_weights.csv \
+  --registry data/processed/rr_erc_trial_registry.csv \
+  --returns data/processed/rr_erc_oos_returns.csv \
+  --diag-out data/processed/rr_erc_construction_diag.csv
+```
+
+**Math appendix — construction paths (not selection):**
+
+*Path A — Stress / corr-breakdown overlay:*
+
+\[
+\hat\Sigma_{\text{resilient},t} = (1-\lambda)\hat\Sigma_{\text{uncond},t} + \lambda\hat\Sigma_{\text{stress},t},
+\qquad \mathbf{w}^*_t = \mathrm{ERC}(\hat\Sigma_{\text{resilient},t})
+\]
+
+*Path B — LOIM regime-parity construction (NOT current-regime selection):*
+
+\[
+\mathbf{w}^*_t = \sum_{m}\hat\pi_{m,t}\cdot\mathrm{ERC}(\hat\Sigma_{m,t}),
+\qquad \hat\pi_{m,t} = \text{historical frequency or Markov steady-state } (\le t)
+\]
+
+Required nulls: **(a) Unconditional ERC (PRIMARY)**, **(b) EW**, **(c) LW MinVar**; optional (d) Book-2 VT.
+DSR + trial\_count mandatory. No book cut until Quant gate PASS.
+
+Teaching HTML: `docs/methods/allocation_alpha_regime_resilient_erc.html`
+Deep Pages stub: `docs/methods/regime_resilient_erc_stub.html`
 
 ## Disclaimer
 
