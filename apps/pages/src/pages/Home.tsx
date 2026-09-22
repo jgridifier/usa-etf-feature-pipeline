@@ -1,4 +1,3 @@
-import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useJsonData } from '../hooks/useJsonData'
 import { pct, num } from '../lib/utils'
@@ -38,52 +37,63 @@ function SectionRule({ label }: { label?: string }) {
   )
 }
 
-/** CIO verdict band — 3-beat plain-language summary, above the fold */
+/** CIO verdict band — 3-beat plain-language summary, above the fold.
+ *  Mobile: each beat stacks as a compact row so all three clear the first screen.
+ */
 function CioVerdictBand() {
   return (
-    <div className="border border-border/80 rounded-xl bg-surface overflow-hidden mb-8">
-      <div className="px-4 py-2.5 border-b border-border flex items-center gap-2">
+    <div className="border border-border/80 rounded-xl bg-surface overflow-hidden mb-5">
+      <div className="px-3 py-2 border-b border-border flex items-center gap-2">
         <span className="text-accent text-xs leading-none">◆</span>
         <span className="text-2xs font-medium uppercase tracking-label text-muted">CIO verdict · plain language</span>
       </div>
       <div className="grid grid-cols-1 md:grid-cols-3 divide-y md:divide-y-0 md:divide-x divide-border">
         {/* Beat 1: HOLD */}
-        <div className="px-5 py-4">
-          <p className="text-2xs font-semibold uppercase tracking-label text-up mb-1.5">HOLD</p>
-          <p className="text-sm text-ink leading-snug font-medium mb-1">Static core + Book-2 vol-target</p>
-          <p className="text-2xs text-body leading-relaxed">
-            Book 1 (fixed VOO/QQQM/IJR) and Book 2 (same core, volatility-scaled) are the live
-            shortlist. Hold both.
-          </p>
+        <div className="flex md:block items-start gap-3 px-3 py-3 md:px-5 md:py-4">
+          <p className="text-2xs font-semibold uppercase tracking-label text-up whitespace-nowrap md:mb-1.5">HOLD</p>
+          <div>
+            <p className="text-sm text-ink leading-snug font-medium md:mb-1">Static core + Book-2 vol-target</p>
+            <p className="hidden md:block text-2xs text-body leading-relaxed">
+              Book 1 (fixed VOO/QQQM/IJR) and Book 2 (same core, volatility-scaled) are the live
+              shortlist. Hold both.
+            </p>
+          </div>
         </div>
         {/* Beat 2: DO NOT PROMOTE */}
-        <div className="px-5 py-4">
-          <p className="text-2xs font-semibold uppercase tracking-label text-down mb-1.5">DO NOT PROMOTE</p>
-          <p className="text-sm text-ink leading-snug font-medium mb-1">Archive failures + XSD sleeve</p>
-          <p className="text-2xs text-body leading-relaxed">
-            Spectral RP, Regime-Aware, and #13 failed binding-null gates — archived only.
-            XSD is a gated sleeve, default <strong>OFF</strong>, never a live book.
-          </p>
+        <div className="flex md:block items-start gap-3 px-3 py-3 md:px-5 md:py-4">
+          <p className="text-2xs font-semibold uppercase tracking-label text-down whitespace-nowrap md:mb-1.5">DO NOT PROMOTE</p>
+          <div>
+            <p className="text-sm text-ink leading-snug font-medium md:mb-1">Archive failures + XSD sleeve</p>
+            <p className="hidden md:block text-2xs text-body leading-relaxed">
+              Spectral RP, Regime-Aware, and #13 failed binding-null gates — archived only.
+              XSD is a gated sleeve, default <strong>OFF</strong>, never a live book.
+            </p>
+          </div>
         </div>
         {/* Beat 3: SHIFT meaning */}
-        <div className="px-5 py-4">
-          <p className="text-2xs font-semibold uppercase tracking-label text-accent mb-1.5">SHIFT MEANING</p>
-          <p className="text-sm text-ink leading-snug font-medium mb-1">Book-2 = risk path, not return alpha</p>
-          <p className="text-2xs text-body leading-relaxed">
-            Book-2 and Book-1 earn roughly the same annual return (~14.7%). The shift is
-            milder drawdown (−20% vs −26%) and higher Sharpe — not outperformance.
-          </p>
+        <div className="flex md:block items-start gap-3 px-3 py-3 md:px-5 md:py-4">
+          <p className="text-2xs font-semibold uppercase tracking-label text-accent whitespace-nowrap md:mb-1.5">SHIFT MEANING</p>
+          <div>
+            <p className="text-sm text-ink leading-snug font-medium md:mb-1">Book-2 = risk path, not return alpha</p>
+            <p className="hidden md:block text-2xs text-body leading-relaxed">
+              Book-2 and Book-1 earn roughly the same annual return (~14.7%). The shift is
+              milder drawdown (−20% vs −26%) and higher Sharpe — not outperformance.
+            </p>
+          </div>
         </div>
       </div>
     </div>
   )
 }
 
-/** HTML/CSS delta strip: Book-2 vs Book-1 key metrics */
+/** HTML/CSS delta strip: Book-2 vs Book-1 key metrics.
+ *  Proportion blocks are h-4 for visual weight; MaxDD delta uses absolute pp.
+ */
 function DeltaStrip({ m }: { m: MetricsPayload }) {
   const sharpeDelta = m.Sharpe_vt - m.Sharpe_a
-  const ddDelta = m.MaxDD_a - m.MaxDD_vt       // positive = vt is milder
-  const volDelta = m.AnnVol_a - m.AnnVol_vt    // positive = vt is lower vol
+  // Use absolute percentage points: |MaxDD_a| − |MaxDD_vt| is positive when VT is milder
+  const ddPp = (Math.abs(m.MaxDD_a) - Math.abs(m.MaxDD_vt)) * 100
+  const volDelta = m.AnnVol_a - m.AnnVol_vt
 
   const metrics = [
     {
@@ -99,8 +109,10 @@ function DeltaStrip({ m }: { m: MetricsPayload }) {
       label: 'Max drawdown',
       vt: pct(m.MaxDD_vt),
       base: pct(m.MaxDD_a),
-      delta: `+${pct(ddDelta)} milder`,
+      // Positive magnitude pp — "5.5pp milder" is unambiguous
+      delta: `+${ddPp.toFixed(1)}pp milder`,
       deltaGood: true,
+      // Bars: shorter = better for drawdown (less exposure)
       barPct: Math.min(100, (Math.abs(m.MaxDD_vt) / 0.4) * 100),
       basePct: Math.min(100, (Math.abs(m.MaxDD_a) / 0.4) * 100),
     },
@@ -118,15 +130,15 @@ function DeltaStrip({ m }: { m: MetricsPayload }) {
       vt: num(m.NW_t, 2),
       base: '—',
       delta: '≈ 0 expected',
-      deltaGood: null,
-      barPct: null,
-      basePct: null,
-      note: 'Near zero = return parity; claim is risk path only',
+      deltaGood: null as boolean | null,
+      barPct: null as number | null,
+      basePct: null as number | null,
+      note: 'Return parity — claim is risk path only',
     },
   ]
 
   return (
-    <div className="border border-border rounded-xl bg-surface overflow-hidden mb-8">
+    <div className="border border-border rounded-xl bg-surface overflow-hidden mb-6">
       <div className="px-4 py-2.5 border-b border-border flex items-center gap-2">
         <span className="text-2xs font-medium uppercase tracking-label text-muted">
           Book-2 vs Book-1 delta · {m.n_months}mo OOS · {m.start_date} → {m.end_date}
@@ -137,23 +149,23 @@ function DeltaStrip({ m }: { m: MetricsPayload }) {
           <div key={metric.label} className="px-4 py-4">
             <p className="text-2xs text-muted uppercase tracking-label mb-2">{metric.label}</p>
 
-            {/* HTML/CSS proportion bar */}
+            {/* Proportion bars: h-4 for visible weight (risk-path proportion mosaic) */}
             {metric.barPct != null && (
-              <div className="mb-2 space-y-1">
+              <div className="mb-3 space-y-1.5">
                 <div className="flex items-center gap-1.5">
                   <div className="text-3xs text-muted/70 w-10 shrink-0">Book-2</div>
-                  <div className="flex-1 h-2 bg-raised rounded-full overflow-hidden">
+                  <div className="flex-1 h-4 bg-raised rounded overflow-hidden">
                     <div
-                      className="h-full bg-accent rounded-full transition-all"
+                      className="h-full bg-accent rounded transition-all"
                       style={{ width: `${metric.barPct}%` }}
                     />
                   </div>
                 </div>
                 <div className="flex items-center gap-1.5">
                   <div className="text-3xs text-muted/70 w-10 shrink-0">Book-1</div>
-                  <div className="flex-1 h-2 bg-raised rounded-full overflow-hidden">
+                  <div className="flex-1 h-4 bg-raised rounded overflow-hidden">
                     <div
-                      className="h-full bg-border-bright rounded-full transition-all"
+                      className="h-full bg-border-bright rounded transition-all"
                       style={{ width: `${metric.basePct}%` }}
                     />
                   </div>
@@ -243,7 +255,11 @@ function BookCard({
   return inner
 }
 
-/** Two-layer progressive disclosure: overview is always visible; expand reveals deeper detail */
+/**
+ * Progressive disclosure using native <details>/<summary>.
+ * Uses no React state — keyboard, click, and automated harnesses all work natively.
+ * aria-expanded is not needed: <details>/<summary> has its own ARIA semantics.
+ */
 function DisclosureSection({
   summary,
   children,
@@ -253,24 +269,20 @@ function DisclosureSection({
   children: React.ReactNode
   defaultOpen?: boolean
 }) {
-  const [open, setOpen] = useState(defaultOpen)
   return (
-    <div className="border border-border rounded-xl overflow-hidden">
-      <button
-        type="button"
-        onClick={() => setOpen(o => !o)}
-        className="w-full flex items-center justify-between px-4 py-3 bg-surface hover:bg-raised transition-colors text-left gap-2"
-        aria-expanded={open}
-      >
+    <details
+      open={defaultOpen}
+      className="group border border-border rounded-xl overflow-hidden"
+    >
+      <summary className="list-none w-full flex items-center justify-between px-4 py-3 bg-surface hover:bg-raised transition-colors cursor-pointer gap-2 select-none [&::-webkit-details-marker]:hidden">
         <span className="text-sm font-medium text-ink">{summary}</span>
-        <span className="text-muted text-xs flex-shrink-0">{open ? '▲ collapse' : '▼ expand'}</span>
-      </button>
-      {open && (
-        <div className="border-t border-border bg-bg">
-          {children}
-        </div>
-      )}
-    </div>
+        <span className="text-muted text-xs flex-shrink-0 group-open:hidden">▼ expand</span>
+        <span className="text-muted text-xs flex-shrink-0 hidden group-open:inline">▲ collapse</span>
+      </summary>
+      <div className="border-t border-border bg-bg">
+        {children}
+      </div>
+    </details>
   )
 }
 
@@ -281,24 +293,22 @@ export default function Home() {
     <div>
       {/* ── Lead / Hero ── */}
       <section className="border-b border-border">
-        <div className="mx-auto max-w-6xl px-4 md:px-6 pt-10 pb-12 md:pt-14 md:pb-16">
+        <div className="mx-auto max-w-6xl px-4 md:px-6 pt-8 pb-10 md:pt-12 md:pb-14">
 
           <div className="max-w-3xl">
             <Eyebrow>Live shortlist · front door</Eyebrow>
-            <h2 className="font-display font-black text-4xl md:text-6xl text-ink leading-tight mt-2 mb-5 text-balance">
+            <h2 className="font-display font-black text-3xl md:text-6xl text-ink leading-tight mt-1.5 mb-4 text-balance">
               Static core +<br className="hidden sm:block" /> Book&#8209;2 vol&#8209;target
             </h2>
-            <p className="text-base md:text-lg text-body leading-relaxed max-w-2xl mb-6">
-              The live research shortlist is <strong>Book 1 static Option A</strong> and{' '}
-              <strong>Book 2 unconditional vol-target</strong>. Three archived methods failed
-              binding nulls — they remain research record, not promoted books.
-              Static GitHub Pages — no live trading.
+            <p className="text-sm md:text-base text-body leading-relaxed max-w-2xl mb-5">
+              Two live books on the experimental USA ETF panel. Three archived methods failed
+              binding nulls — research record only. Static GitHub Pages — no live trading.
             </p>
 
-            {/* CIO verdict band — above the fold */}
+            {/* CIO verdict band — 3 beats above the fold; compact rows on mobile */}
             <CioVerdictBand />
 
-            {/* Book-2 vs Book-1 delta strip — HTML/CSS art, above fold */}
+            {/* Book-2 vs Book-1 delta strip — HTML/CSS proportion mosaic */}
             {m && <DeltaStrip m={m} />}
 
             <div className="flex flex-wrap gap-3">
@@ -361,7 +371,7 @@ export default function Home() {
             <Eyebrow>Most sharable · key findings</Eyebrow>
           </div>
 
-          {/* Layer 1: overview quotes — corrected label↔body pairs */}
+          {/* Layer 1: overview quotes */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-8 mb-8">
             <div className="quote-block">
               <p className="font-serif text-base md:text-lg italic text-ink leading-snug">
