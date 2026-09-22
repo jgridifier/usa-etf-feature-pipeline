@@ -13,6 +13,7 @@ Transparent, unit-tested feature scorer and **optional thematic rotation sleeve*
 | **M3** | `--optimize` / `--walkforward-optimize` research optimizer artifacts |
 | **Allocation alpha** | `walkforward-vol-target` scale-down-only volatility-managed Option A research |
 | **Book-2 upgrade** | `walkforward-vol-cond-factor-corr` conditional factor-correlation gate on Book-2 VT |
+| **Shortlist #4 (gate pending)** | `walkforward-forecast-tangency-med` — forecast EF coefficients → MED portfolio (Alexander & Scherer 2023); Archive/Methods stub until Quant gate PASS |
 
 ## Install
 
@@ -410,6 +411,49 @@ usa-etf-feature-pipeline/
 | `data/raw/usa_universe_categorized.csv` | Approved universe (committed) |
 | `data/raw/growth_alpha_adj_close_sample.csv` | Slim sample for CI / demos |
 | Full adj closes | Often at `/workspace/investments/growth_alpha_adj_close.csv` (not always committed) |
+
+### Allocation alpha: Forecast Tangency + MED (Justina shortlist #4 — gate pending)
+
+Walk-forward algorithm (Alexander & Scherer 2023, *Engineering Proceedings* 39(1):34):
+
+**Step 1 — EF coefficients** at month-end *t* (data ≤ *t* only, Ledoit–Wolf Σ̂):
+
+\[
+A = \mathbf{1}'\Sigma^{-1}\mathbf{1},\quad
+B = \hat\mu'\Sigma^{-1}\mathbf{1},\quad
+C = \hat\mu'\Sigma^{-1}\hat\mu
+\]
+\[
+r_\text{MVP} = B/A,\quad \sigma_\text{MVP} = 1/\sqrt{A},\quad u = (AC-B^2)/A
+\]
+
+EF shape: \(\sigma^2(r) = \sigma_\text{MVP}^2 + (r-r_\text{MVP})^2/u\).
+
+**Step 2 — VARX(1) forecast** of \((r_\text{MVP},\sigma_\text{MVP},u)\) using EF-coef history ≤ *t* (no peeking):
+
+\[
+\hat r_\text{TP} = \frac{\hat r_\text{MVP}^2 + \hat u\,\hat\sigma_\text{MVP}^2}{\hat r_\text{MVP}}\quad(\text{rf}=0),\qquad
+\hat\sigma_\text{TP} = \sigma(\hat r_\text{TP})
+\]
+
+**Step 3 — MED solve** on the *current* frontier:
+
+\[
+r^* = \operatorname*{argmin}_{r}\sqrt{(\hat r_\text{TP}-r)^2+(\hat\sigma_\text{TP}-\sigma_\text{cur}(r))^2}
+\]
+
+\[
+\mathbf{w}^*_t = \operatorname*{argmin}_{\mathbf{w}}\;\mathbf{w}'\hat\Sigma_t\mathbf{w}
+\quad\text{s.t.}\quad \mathbf{w}'\hat\mu_t=r^*,\;\mathbf{1}'\mathbf{w}\le1,\;\mathbf{w}\ge0
+\]
+
+Residual → BIL. Costs: 5 bps one-way. v1: long-only, leverage\_cap = 1.0. rf = 0 (Sharpe\_rf0).
+
+Required nulls (CIO gate): **(a)** EW, **(b)** LW MinVar, **(c)** ERC; also (d) LW MVO, (e) optional Book-2 VT.
+DSR + trial\_count mandatory (Bailey & López de Prado 2014). **No book cut until Quant gate PASS.**
+
+Teaching HTML: `/workspace/investments/methods/allocation_alpha_forecast_tangency_med.html` (workspace-only; not committed)
+Deep Pages stub: `docs/methods/allocation_alpha_forecast_tangency_med.html`
 
 ## Disclaimer
 
