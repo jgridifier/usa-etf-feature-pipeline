@@ -328,72 +328,78 @@ def _lw_minvar(cov: np.ndarray, n: int) -> np.ndarray:
 
 
 def _erc(cov: np.ndarray, n: int) -> np.ndarray:
-    """Equal-risk-contribution portfolio (long-only) via SLSQP.
+    """Equal-risk-contribution portfolio (long-only) via log-barrier.
 
-    Objective: minimize Σ_i Σ_j (RC_i − RC_j)²
-    where RC_i = w_i (Σw)_i / (w'Σw) = marginal risk contribution.
+    Uses the Maillard-Roncalli-Teïletche (2010) log-barrier equivalence:
+      ERC = argmin 1/2 w'Σw − (1/N) Σ log(w_i)  s.t. w > 0
+    then renormalize to sum = 1.
+
+    This formulation has an analytical gradient and is O(N) per step via
+    L-BFGS-B, making it feasible even for N=300+.
     """
     w0 = np.ones(n) / n
+    # Diagonal scaling to improve conditioning
+    d = np.sqrt(np.diag(cov)) + 1e-8
+    scale = d / np.mean(d)
 
     def _obj(w: np.ndarray) -> float:
-        port_var = float(w @ cov @ w)
-        if port_var < 1e-16:
-            return 0.0
-        mrc = (cov @ w) / port_var       # marginal risk contributions
-        rc = w * mrc                      # total risk contributions
-        # sum of squared pairwise differences (equivalent to ||rc - mean||^2 * n)
-        diff = rc[:, None] - rc[None, :]
-        return float(0.5 * np.sum(diff ** 2))
+        val = 0.5 * float(w @ cov @ w)
+        if np.any(w <= 0):
+            return 1e20
+        val -= float(np.sum(np.log(w))) / n
+        return val
 
     def _grad(w: np.ndarray) -> np.ndarray:
-        port_var = float(w @ cov @ w)
-        if port_var < 1e-16:
-            return np.zeros(n)
-        Sw = cov @ w
-        mrc = Sw / port_var
-        rc = w * mrc
-        rc_mean = np.mean(rc)
-        # d(obj)/dw_k via chain rule — approximate with finite differences for simplicity
-        # (SLSQP can handle numerical gradients via 2-point FD internally)
-        return np.zeros(n)   # let SLSQP estimate gradient numerically
+        return (cov @ w) - 1.0 / (n * w)
 
     result = optimize.minimize(
         fun=_obj,
+        jac=_grad,
         x0=w0,
-        method="SLSQP",
-        bounds=optimize.Bounds(0.0, 1.0),
-        constraints={"type": "eq", "fun": lambda w: np.sum(w) - 1.0},
-        options={"ftol": 1e-12, "maxiter": 2000},
+        method="L-BFGS-B",
+        bounds=[(1e-10, None)] * n,
+        options={"ftol": 1e-14, "gtol": 1e-8, "maxiter": 2000},
     )
-    if result.success or result.fun < _obj(w0):
-        w = np.clip(result.x, 0.0, None)
-        s = w.sum()
-        return w / s if s > 1e-12 else w0
-    return w0
+    w = np.clip(result.x, 0.0, None)
+    s = w.sum()
+    return w / s if s > 1e-12 else w0
 
 
 def _lw_mvo_tangency(mu: np.ndarray, cov: np.ndarray, n: int) -> np.ndarray:
-    """Long-only Ledoit-Wolf MVO tangency portfolio (rf=0 Sharpe max)."""
-    # Maximize w'μ / √(w'Σw) ≡ minimize -w'μ s.t. w'Σw ≤ 1, w≥0, sum≤1
-    # Equivalent: maximize SR = w'μ / sqrt(w'Σw) via SLSQP
+    """Long-only LW MVO tangency portfolio (rf=0 Sharpe max) via SLSQP.
+
+    Maximize w'μ / √(w'Σw) on the simplex (sum=1, w≥0).
+    Analytical gradient via quotient rule enables fast convergence.
+    """
+    # Warm-start: equal-weight if mu are all positive, else minvar
     w0 = np.ones(n) / n
 
     def _neg_sharpe(w: np.ndarray) -> float:
         port_var = float(w @ cov @ w)
         port_ret = float(w @ mu)
-        if port_var < 1e-16 or port_ret < 0:
+        if port_var < 1e-16 or not np.isfinite(port_var):
             return 0.0
         return -port_ret / np.sqrt(port_var)
 
+    def _neg_sharpe_grad(w: np.ndarray) -> np.ndarray:
+        port_var = float(w @ cov @ w)
+        port_ret = float(w @ mu)
+        if port_var < 1e-16 or not np.isfinite(port_var):
+            return np.zeros(n)
+        sigma = np.sqrt(port_var)
+        # d(-SR)/dw = -mu/sigma + (port_ret / sigma^3) * Σw
+        return -mu / sigma + (port_ret / (sigma ** 3)) * (cov @ w)
+
     result = optimize.minimize(
         fun=_neg_sharpe,
+        jac=_neg_sharpe_grad,
         x0=w0,
         method="SLSQP",
         bounds=optimize.Bounds(0.0, 1.0),
         constraints={"type": "eq", "fun": lambda w: np.sum(w) - 1.0},
         options={"ftol": 1e-12, "maxiter": 2000},
     )
-    if result.success:
+    if result.success or result.fun < _neg_sharpe(w0):
         w = np.clip(result.x, 0.0, None)
         s = w.sum()
         return w / s if s > 1e-12 else w0
@@ -636,6 +642,9 @@ def run_forecast_tangency_med_trial(
         # ----------------------------------------------------------------
         # 1. Filter eligible names (data ≤ d only — no leakage)
         # ----------------------------------------------------------------
+        # sleeve_ticker_map: sleeve_name → list[ticker] for eval_date return calc
+        sleeve_ticker_map: dict[str, list[str]] = {}
+
         if trial.apply_to == "category_sleeves":
             try:
                 panel, _sleeve_meta = _sleeve_returns_at(
@@ -650,6 +659,25 @@ def run_forecast_tangency_med_trial(
             except ValueError:
                 continue
             panel = panel.loc[:d]
+            # Build sleeve→tickers map from the category mapping (same filter as above)
+            uni_tmp = uni_df.copy()
+            uni_tmp["Ticker"] = uni_tmp["Ticker"].astype(str).str.upper()
+            if "Category" in uni_tmp.columns:
+                cat_map_tmp = uni_tmp.set_index("Ticker")["Category"].astype(str)
+                _excl = set(_DEFAULT_EXCLUDE_CATEGORIES)
+                n_obs_through = monthly.loc[:d].notna().sum(axis=0)
+                for cat in panel.columns:
+                    members = [
+                        t for t in monthly.columns
+                        if (t in cat_map_tmp.index
+                            and str(cat_map_tmp.loc[t]) == cat
+                            and t in all_tickers_eligible
+                            and (trial.include_thin or t not in thin_set)
+                            and n_obs_through.get(t, 0) >= trial.min_history_months
+                            and cat not in _excl)
+                    ]
+                    if members:
+                        sleeve_ticker_map[cat] = members
         else:
             eligible_names = [
                 t for t in monthly.columns
@@ -824,26 +852,38 @@ def run_forecast_tangency_med_trial(
         if eval_date not in monthly.index:
             continue
 
-        def _port_ret(w: pd.Series, eval_d: pd.Timestamp) -> float:
+        eval_row = monthly.loc[eval_date]
+
+        def _asset_ret(ticker: str) -> float:
+            """Return for a single ticker (or sleeve name) at eval_date."""
+            if ticker == cash:
+                return float(eval_row.get(cash, 0.0)) if cash in eval_row.index else 0.0
+            # category_sleeves: look up constituent tickers via sleeve_ticker_map
+            if ticker in sleeve_ticker_map:
+                members = sleeve_ticker_map[ticker]
+                vals = [eval_row.get(m, float("nan")) for m in members if m in eval_row.index]
+                valid = [v for v in vals if not np.isnan(v)]
+                return float(np.mean(valid)) if valid else float("nan")
+            # name_level: direct ticker lookup
+            rv = eval_row.get(ticker, float("nan"))
+            return float(rv) if not np.isnan(rv) else float("nan")
+
+        def _port_ret(w: pd.Series) -> float:
             r = 0.0
-            tot_w = 0.0
             for t, wt in w.items():
                 if abs(wt) < 1e-12:
                     continue
-                if t not in monthly.columns:
-                    continue
-                rv = monthly.loc[eval_d, t]
-                if pd.isna(rv):
+                rv = _asset_ret(t)
+                if not np.isfinite(rv):
                     continue
                 r += wt * rv
-                tot_w += wt
             return float(r)
 
-        r_m = _port_ret(w_method, eval_date) - cost_method
-        r_a = _port_ret(w_null_a, eval_date) - cost_a
-        r_b = _port_ret(w_null_b, eval_date) - cost_b
-        r_c = _port_ret(w_null_c, eval_date) - cost_c
-        r_d = _port_ret(w_null_d, eval_date) - cost_d
+        r_m = _port_ret(w_method) - cost_method
+        r_a = _port_ret(w_null_a) - cost_a
+        r_b = _port_ret(w_null_b) - cost_b
+        r_c = _port_ret(w_null_c) - cost_c
+        r_d = _port_ret(w_null_d) - cost_d
 
         # ----------------------------------------------------------------
         # Record weight row
@@ -923,7 +963,7 @@ def _summarize(
     nw_vs_c = newey_west_tstat((oos["r_method"] - oos["r_null_c"]).dropna())
     nw_vs_d = newey_west_tstat((oos["r_method"] - oos["r_null_d"]).dropna())
 
-    lo, hi = block_bootstrap_sharpe_ci(r_m, n_samples=bootstrap_samples, block_months=bootstrap_block_months)
+    lo, hi = block_bootstrap_sharpe_ci(r_m, block_months=bootstrap_block_months, n_boot=bootstrap_samples)
 
     to_yr = float(oos["turnover"].dropna().mean() * MONTHS_PER_YEAR) if "turnover" in oos.columns else float("nan")
     mean_dist = float(oos["distance"].dropna().mean()) if "distance" in oos.columns else float("nan")
