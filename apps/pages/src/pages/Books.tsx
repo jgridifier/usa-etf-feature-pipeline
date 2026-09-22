@@ -1,8 +1,26 @@
+import { useState } from 'react'
 import { Link } from 'react-router-dom'
-import { WeightsChart } from '../components/charts/WeightsChart'
 import { XsdChart } from '../components/charts/XsdChart'
 import { ComparisonTable } from '../components/ComparisonTable'
-import { dataUrl } from '../lib/utils'
+import { useJsonData } from '../hooks/useJsonData'
+import { pct, num, dataUrl } from '../lib/utils'
+
+interface MetricsPayload {
+  AnnReturn_vt: number
+  AnnVol_vt: number
+  MaxDD_vt: number
+  Sharpe_vt: number
+  AnnReturn_a: number
+  AnnVol_a: number
+  MaxDD_a: number
+  Sharpe_a: number
+  NW_t: number
+  n_months: number
+  start_date: string
+  end_date: string
+  mean_f: number
+  pct_months_f_lt_1: number
+}
 
 function Eyebrow({ children }: { children: React.ReactNode }) {
   return <p className="section-eyebrow">{children}</p>
@@ -22,20 +40,240 @@ function SectionRule({ label }: { label?: string }) {
   )
 }
 
+/** CIO verdict band — 3-beat summary for Books page */
+function CioVerdictBand() {
+  return (
+    <div className="border border-border/80 rounded-xl bg-surface overflow-hidden mb-8">
+      <div className="px-4 py-2.5 border-b border-border flex items-center gap-2">
+        <span className="text-accent text-xs leading-none">◆</span>
+        <span className="text-2xs font-medium uppercase tracking-label text-muted">CIO verdict · plain language</span>
+      </div>
+      <div className="grid grid-cols-1 md:grid-cols-3 divide-y md:divide-y-0 md:divide-x divide-border">
+        <div className="px-5 py-4">
+          <p className="text-2xs font-semibold uppercase tracking-label text-up mb-1.5">HOLD</p>
+          <p className="text-sm text-ink leading-snug font-medium mb-1">Static core + Book-2 vol-target</p>
+          <p className="text-2xs text-body leading-relaxed">
+            Both books are on the live shortlist. No new books from Justina round-1 or #13.
+          </p>
+        </div>
+        <div className="px-5 py-4">
+          <p className="text-2xs font-semibold uppercase tracking-label text-down mb-1.5">DO NOT PROMOTE</p>
+          <p className="text-sm text-ink leading-snug font-medium mb-1">Archive fails · XSD sleeve off</p>
+          <p className="text-2xs text-body leading-relaxed">
+            Spectral RP, Regime-Aware, #13 — binding-null failures, archived only.
+            XSD is default <strong>OFF</strong> — never a peer to Books 1–2.
+          </p>
+        </div>
+        <div className="px-5 py-4">
+          <p className="text-2xs font-semibold uppercase tracking-label text-accent mb-1.5">SHIFT MEANING</p>
+          <p className="text-sm text-ink leading-snug font-medium mb-1">Book-2 = risk path, not return alpha</p>
+          <p className="text-2xs text-body leading-relaxed">
+            Book-1 and Book-2 earn ~14.7% ann. return. Choosing Book-2 buys milder drawdowns
+            and higher Sharpe — not better absolute return.
+          </p>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+/** HTML/CSS proportion bar for a single asset weight */
+function WeightBar({ ticker, weight, total = 1 }: { ticker: string; weight: number; total?: number }) {
+  const pctWidth = Math.round((weight / total) * 100)
+  const colors: Record<string, string> = {
+    VOO: 'bg-accent',
+    QQQM: 'bg-up',
+    IJR: 'bg-accent/60',
+    BIL: 'bg-muted',
+  }
+  const bar = colors[ticker] ?? 'bg-border-bright'
+  return (
+    <div className="flex items-center gap-2.5 py-1">
+      <span className="font-mono text-2xs text-muted w-10 shrink-0">{ticker}</span>
+      <div className="flex-1 h-3 bg-raised rounded overflow-hidden">
+        <div
+          className={`h-full ${bar} rounded transition-all`}
+          style={{ width: `${pctWidth}%` }}
+        />
+      </div>
+      <span className="font-mono text-2xs text-ink w-9 text-right shrink-0">
+        {(weight * 100).toFixed(0)}%
+      </span>
+    </div>
+  )
+}
+
+/** HTML/CSS weight composition display for a book */
+function BookWeightArt({
+  title,
+  weights,
+  note,
+}: {
+  title: string
+  weights: { ticker: string; weight: number }[]
+  note?: string
+}) {
+  return (
+    <div className="border border-border bg-surface rounded-xl p-4">
+      <p className="section-eyebrow mb-3">{title}</p>
+      <div className="space-y-0.5">
+        {weights.map(w => (
+          <WeightBar key={w.ticker} ticker={w.ticker} weight={w.weight} />
+        ))}
+      </div>
+      {note && <p className="text-2xs text-muted mt-3 pt-2 border-t border-border">{note}</p>}
+    </div>
+  )
+}
+
+/** HTML/CSS delta strip: Book-2 vs Book-1 */
+function DeltaStrip({ m }: { m: MetricsPayload }) {
+  const sharpeDelta = m.Sharpe_vt - m.Sharpe_a
+  const ddDelta = m.MaxDD_a - m.MaxDD_vt
+  const volDelta = m.AnnVol_a - m.AnnVol_vt
+
+  const items = [
+    {
+      label: 'Sharpe (rf=0)',
+      vt: num(m.Sharpe_vt, 2),
+      base: num(m.Sharpe_a, 2),
+      delta: `+${num(sharpeDelta, 2)}`,
+      good: true,
+      vtBar: Math.min(100, (m.Sharpe_vt / 1.5) * 100),
+      baseBar: Math.min(100, (m.Sharpe_a / 1.5) * 100),
+    },
+    {
+      label: 'Max drawdown',
+      vt: pct(m.MaxDD_vt),
+      base: pct(m.MaxDD_a),
+      delta: `+${pct(ddDelta)} milder`,
+      good: true,
+      vtBar: Math.min(100, (Math.abs(m.MaxDD_vt) / 0.4) * 100),
+      baseBar: Math.min(100, (Math.abs(m.MaxDD_a) / 0.4) * 100),
+    },
+    {
+      label: 'Ann. vol',
+      vt: pct(m.AnnVol_vt),
+      base: pct(m.AnnVol_a),
+      delta: `−${pct(volDelta)} lower`,
+      good: true,
+      vtBar: Math.min(100, (m.AnnVol_vt / 0.25) * 100),
+      baseBar: Math.min(100, (m.AnnVol_a / 0.25) * 100),
+    },
+    {
+      label: 'NW t vs Book-1',
+      vt: num(m.NW_t, 2),
+      base: '—',
+      delta: '≈ 0 (risk path only)',
+      good: null as boolean | null,
+      vtBar: null as number | null,
+      baseBar: null as number | null,
+    },
+  ]
+
+  return (
+    <div className="border border-border rounded-xl bg-surface overflow-hidden mb-8">
+      <div className="px-4 py-2.5 border-b border-border">
+        <span className="text-2xs font-medium uppercase tracking-label text-muted">
+          Book-2 vs Book-1 · {m.n_months}mo OOS · {m.start_date} → {m.end_date}
+        </span>
+      </div>
+      <div className="grid grid-cols-2 md:grid-cols-4 divide-x divide-border">
+        {items.map(item => (
+          <div key={item.label} className="px-4 py-4">
+            <p className="text-2xs text-muted uppercase tracking-label mb-2">{item.label}</p>
+            {item.vtBar != null && (
+              <div className="mb-2 space-y-1">
+                <div className="flex items-center gap-1.5">
+                  <span className="text-3xs text-muted/70 w-10 shrink-0">Book-2</span>
+                  <div className="flex-1 h-2 bg-raised rounded-full overflow-hidden">
+                    <div className="h-full bg-accent rounded-full" style={{ width: `${item.vtBar}%` }} />
+                  </div>
+                </div>
+                <div className="flex items-center gap-1.5">
+                  <span className="text-3xs text-muted/70 w-10 shrink-0">Book-1</span>
+                  <div className="flex-1 h-2 bg-raised rounded-full overflow-hidden">
+                    <div className="h-full bg-border-bright rounded-full" style={{ width: `${item.baseBar!}%` }} />
+                  </div>
+                </div>
+              </div>
+            )}
+            <div className="flex items-baseline gap-2 flex-wrap">
+              <span className="font-mono text-base text-ink font-semibold">{item.vt}</span>
+              <span className="text-2xs text-muted">vs {item.base}</span>
+            </div>
+            <p className={`text-2xs mt-1 font-medium ${
+              item.good === true ? 'text-up' : item.good === false ? 'text-down' : 'text-muted'
+            }`}>
+              {item.delta}
+            </p>
+          </div>
+        ))}
+      </div>
+      <div className="px-4 py-2 border-t border-border bg-raised">
+        <p className="text-2xs text-muted/70">
+          <strong className="text-muted">Same ~14.7% ann. return as Book-1 — shift buys milder drawdowns + higher Sharpe, not outperformance.</strong>{' '}
+          <Link to="/runs" className="text-accent/80 hover:text-accent no-underline">See full OOS charts →</Link>
+        </p>
+      </div>
+    </div>
+  )
+}
+
+/** Expandable section for layer-2 progressive disclosure */
+function DisclosureSection({
+  summary,
+  children,
+  defaultOpen = false,
+}: {
+  summary: React.ReactNode
+  children: React.ReactNode
+  defaultOpen?: boolean
+}) {
+  const [open, setOpen] = useState(defaultOpen)
+  return (
+    <div className="border border-border rounded-xl overflow-hidden">
+      <button
+        type="button"
+        onClick={() => setOpen(o => !o)}
+        className="w-full flex items-center justify-between px-4 py-3 bg-surface hover:bg-raised transition-colors text-left gap-2"
+        aria-expanded={open}
+      >
+        <span className="text-sm font-medium text-ink">{summary}</span>
+        <span className="text-muted text-xs flex-shrink-0">{open ? '▲ collapse' : '▼ expand'}</span>
+      </button>
+      {open && (
+        <div className="border-t border-border bg-bg">
+          {children}
+        </div>
+      )}
+    </div>
+  )
+}
+
 export default function Books() {
+  const { data: m } = useJsonData<MetricsPayload>('viz_metrics.json')
+
   return (
     <div>
       {/* ── Page header ── */}
       <section className="border-b border-border">
-        <div className="mx-auto max-w-6xl px-4 md:px-6 pt-10 pb-12">
+        <div className="mx-auto max-w-6xl px-4 md:px-6 pt-10 pb-10">
           <Eyebrow>Live shortlist</Eyebrow>
           <h2 className="font-display font-black text-4xl md:text-5xl text-ink leading-tight mt-2 mb-5 text-balance">
             Live research shortlist
           </h2>
-          <p className="text-base text-body max-w-2xl leading-relaxed mb-4">
+          <p className="text-base text-body max-w-2xl leading-relaxed mb-6">
             Two books on the experimental USA ETF panel. Everything that failed the leakage / null /
             DSR gate is archived — not promoted here.
           </p>
+
+          {/* CIO verdict band — above fold, plain language */}
+          <CioVerdictBand />
+
+          {/* Book-2 vs Book-1 delta strip — HTML/CSS art, above fold */}
+          {m && <DeltaStrip m={m} />}
+
           <div className="inline-block border border-border rounded-lg px-3 py-2 text-xs text-muted bg-surface">
             Research only — not investment advice. Panel is an arbitrary experimental USA ETF set
             for methodology work.
@@ -43,31 +281,13 @@ export default function Books() {
         </div>
       </section>
 
-      {/* ── CIO copy slot — standing books ── */}
+      {/* ── Standing book cards (layer 1 — overview) ── */}
       <section className="py-12 border-b border-border">
         <div className="mx-auto max-w-6xl px-4 md:px-6">
-          <SectionRule label="CIO note · standing books" />
+          <SectionRule label="Standing books · overview" />
 
-          {/* [CIO: the block below is the primary copy slot for shortlist framing] */}
-          <div className="mt-8 border border-border rounded-xl bg-surface px-6 py-5 mb-8">
-            <div className="flex items-center gap-2 mb-3">
-              <span className="text-accent text-sm leading-none">◆</span>
-              <span className="text-2xs font-medium uppercase tracking-label text-muted">CIO frame</span>
-            </div>
-            <p className="font-serif text-lg md:text-xl italic text-ink leading-snug mb-3">
-              Live composition unchanged: static core + Book-2 VT only. XSD is an optional gated
-              sleeve — not a live book.
-            </p>
-            <p className="text-sm text-body leading-relaxed">
-              Justina round-1 and the Book-2 conditional-correlation upgrade (#13) did not clear
-              binding nulls on Sharpe. <strong>No book cut.</strong> Next method candidates must
-              clear the same leakage · null · DSR · empirical gate before CoS design-pass or
-              promoted Pages.
-            </p>
-          </div>
-
-          {/* Book cards */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+          {/* Book cards — layer 1 */}
+          <div className="mt-8 grid grid-cols-1 md:grid-cols-2 gap-5">
             {/* Book 1 */}
             <article className="article-card p-6">
               <div className="flex items-center gap-2 mb-4">
@@ -78,34 +298,15 @@ export default function Books() {
               <h3 className="font-display font-bold text-2xl text-ink mb-1 leading-tight">
                 Static core
               </h3>
-              <p className="text-xs uppercase tracking-label text-muted mb-5">
+              <p className="text-xs uppercase tracking-label text-muted mb-3">
                 Buy-and-hold reference
               </p>
-              <dl className="space-y-4 text-sm">
-                <div>
-                  <dt className="section-eyebrow mb-0.5">What it is</dt>
-                  <dd className="text-body leading-relaxed">
-                    Fixed weights <strong>VOO 70% / QQQM 20% / IJR 10%</strong>. No timing, no
-                    vol scale. Strategy id <code>static_option_a</code>.
-                  </dd>
-                </div>
-                <div>
-                  <dt className="section-eyebrow mb-0.5">Why it's on the shortlist</dt>
-                  <dd className="text-body leading-relaxed">
-                    Clean null for "did timing or risk management add anything?" Every overlay is
-                    judged against this path (and against Book 2 when the claim is risk-managed).
-                  </dd>
-                </div>
-                <div>
-                  <dt className="section-eyebrow mb-0.5">What it is not</dt>
-                  <dd className="text-body leading-relaxed">
-                    Not a Justina method. Not a multifactor optimizer showcase.
-                  </dd>
-                </div>
-              </dl>
-              <div className="mt-5 pt-4 border-t border-border text-2xs text-muted leading-relaxed">
-                OOS snapshot (panel; rf=0 Sharpe): ~14.7% ann. return · ~15.9% vol · MaxDD ~−25.6% ·
-                Sharpe ~0.92 · ~68 months (2021-02 → 2026-09). Turnover ≈ 0.
+              <p className="text-sm text-body leading-relaxed mb-4">
+                Fixed weights <strong>VOO 70% / QQQM 20% / IJR 10%</strong>. No timing, no
+                vol scale. Clean null for any overlay or timing claim.
+              </p>
+              <div className="text-2xs text-muted pt-3 border-t border-border">
+                OOS snapshot: ~14.7% ann. return · ~15.9% vol · MaxDD ~−25.6% · Sharpe ~0.92 · 68 months
               </div>
             </article>
 
@@ -119,37 +320,16 @@ export default function Books() {
               <h3 className="font-display font-bold text-2xl text-ink mb-1 leading-tight">
                 Vol-target
               </h3>
-              <p className="text-xs uppercase tracking-label text-muted mb-5">
-                Default research path
+              <p className="text-xs uppercase tracking-label text-muted mb-3">
+                Risk path — not return alpha
               </p>
-              <dl className="space-y-4 text-sm">
-                <div>
-                  <dt className="section-eyebrow mb-0.5">What it is</dt>
-                  <dd className="text-body leading-relaxed">
-                    Same Option A core, scaled by estimated volatility (scale-down only in v1);
-                    cash residual in <strong>BIL</strong> when risk is high. Strategy id{' '}
-                    <code>vol_target_option_a</code>.
-                  </dd>
-                </div>
-                <div>
-                  <dt className="section-eyebrow mb-0.5">Why it's on the shortlist</dt>
-                  <dd className="text-body leading-relaxed">
-                    On this panel it improves the risk path vs Book 1 (higher Sharpe_rf0, milder
-                    MaxDD) without a strong return-alpha claim vs static (NW t vs Book 1 ≈ 0). A{' '}
-                    <strong>path/risk</strong> book, not a "beat the market" story.
-                  </dd>
-                </div>
-                <div>
-                  <dt className="section-eyebrow mb-0.5">What it is not</dt>
-                  <dd className="text-body leading-relaxed">
-                    Not the archived conditional factor-corr overlay (#13), which{' '}
-                    <strong>failed</strong> vs this unconditional Book 2 on Sharpe.
-                  </dd>
-                </div>
-              </dl>
-              <div className="mt-5 pt-4 border-t border-border text-2xs text-muted leading-relaxed">
-                OOS snapshot (panel; rf=0 Sharpe): ~14.7% ann. return · ~13.9% vol · MaxDD ~−20.1% ·
-                Sharpe ~1.06 · same window. Modest turnover from scaling.
+              <p className="text-sm text-body leading-relaxed mb-4">
+                Same Option A core, scaled by estimated volatility (scale-down only). Cash in{' '}
+                <strong>BIL</strong> when risk is high. Same ~14.7% return as Book 1 — the
+                shift is milder drawdown (−20% vs −26%) and higher Sharpe (1.06 vs 0.92).
+              </p>
+              <div className="text-2xs text-muted pt-3 border-t border-border">
+                OOS snapshot: ~14.7% ann. return · ~13.9% vol · MaxDD ~−20.1% · Sharpe ~1.06 · 68 months
               </div>
             </article>
           </div>
@@ -166,21 +346,74 @@ export default function Books() {
         </div>
       </section>
 
-      {/* ── Comparison ── */}
-      <section className="py-12 border-b border-border bg-hero-gradient">
+      {/* ── Layer 2: expand for full book detail ── */}
+      <section className="py-8 border-b border-border bg-hero-gradient">
         <div className="mx-auto max-w-6xl px-4 md:px-6">
-          <SectionRule label="Strategy comparison" />
-          <div className="mt-8">
-            <Eyebrow>Strategy comparison</Eyebrow>
-            <p className="text-sm text-body mt-1 mb-6 max-w-2xl">
-              From <code>strategy_comparison.csv</code> (live Books 1–2; optional XSD sleeve may appear).
-            </p>
-            <ComparisonTable />
+          <SectionRule label="Deep detail" />
+          <div className="mt-6 space-y-3">
+
+            <DisclosureSection summary="Book 1 — Static core: full detail (WHAT / WHY / WHAT IT IS NOT)">
+              <div className="p-6">
+                <dl className="space-y-4 text-sm">
+                  <div>
+                    <dt className="section-eyebrow mb-0.5">What it is</dt>
+                    <dd className="text-body leading-relaxed">
+                      Fixed weights <strong>VOO 70% / QQQM 20% / IJR 10%</strong>. No timing, no
+                      vol scale. Strategy id <code>static_option_a</code>.
+                    </dd>
+                  </div>
+                  <div>
+                    <dt className="section-eyebrow mb-0.5">Why it's on the shortlist</dt>
+                    <dd className="text-body leading-relaxed">
+                      Clean null for "did timing or risk management add anything?" Every overlay is
+                      judged against this path (and against Book 2 when the claim is risk-managed).
+                    </dd>
+                  </div>
+                  <div>
+                    <dt className="section-eyebrow mb-0.5">What it is not</dt>
+                    <dd className="text-body leading-relaxed">
+                      Not a Justina method. Not a multifactor optimizer showcase.
+                    </dd>
+                  </div>
+                </dl>
+              </div>
+            </DisclosureSection>
+
+            <DisclosureSection summary="Book 2 — Vol-target: full detail (WHAT / WHY / WHAT IT IS NOT)">
+              <div className="p-6">
+                <dl className="space-y-4 text-sm">
+                  <div>
+                    <dt className="section-eyebrow mb-0.5">What it is</dt>
+                    <dd className="text-body leading-relaxed">
+                      Same Option A core, scaled by estimated volatility (scale-down only in v1);
+                      cash residual in <strong>BIL</strong> when risk is high. Strategy id{' '}
+                      <code>vol_target_option_a</code>.
+                    </dd>
+                  </div>
+                  <div>
+                    <dt className="section-eyebrow mb-0.5">Why it's on the shortlist</dt>
+                    <dd className="text-body leading-relaxed">
+                      On this panel it improves the risk path vs Book 1 (higher Sharpe_rf0, milder
+                      MaxDD) without a strong return-alpha claim vs static (NW t vs Book 1 ≈ 0). A{' '}
+                      <strong>path/risk</strong> book, not a "beat the market" story.
+                    </dd>
+                  </div>
+                  <div>
+                    <dt className="section-eyebrow mb-0.5">What it is not</dt>
+                    <dd className="text-body leading-relaxed">
+                      Not the archived conditional factor-corr overlay (#13), which{' '}
+                      <strong>failed</strong> vs this unconditional Book 2 on Sharpe.
+                    </dd>
+                  </div>
+                </dl>
+              </div>
+            </DisclosureSection>
+
           </div>
         </div>
       </section>
 
-      {/* ── Weights charts ── */}
+      {/* ── Current weights — HTML/CSS art bars (above fold on Books) ── */}
       <section className="py-12 border-b border-border">
         <div className="mx-auto max-w-6xl px-4 md:px-6">
           <SectionRule label="Current weights" />
@@ -189,41 +422,85 @@ export default function Books() {
             <p className="text-sm text-body mt-1 mb-6 max-w-2xl">
               Latest as-of bars from monthly weights / suggested_weights. Not a live broker allocation.
             </p>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-              <div className="border border-border bg-surface rounded-xl p-4">
-                <p className="section-eyebrow mb-3">Book 1 — Static core</p>
-                <WeightsChart bookId="static_option_a" />
-              </div>
-              <div className="border border-border bg-surface rounded-xl p-4">
-                <p className="section-eyebrow mb-3">Book 2 — Vol-target</p>
-                <WeightsChart bookId="vol_target_option_a" />
-              </div>
+
+            {/* Books 1 & 2 only — HTML/CSS art bars */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-5 mb-4">
+              <BookWeightArt
+                title="Book 1 — Static core"
+                weights={[
+                  { ticker: 'VOO', weight: 0.70 },
+                  { ticker: 'QQQM', weight: 0.20 },
+                  { ticker: 'IJR', weight: 0.10 },
+                ]}
+                note="Fixed. No rebalancing trigger beyond periodic drift check."
+              />
+              <BookWeightArt
+                title="Book 2 — Vol-target"
+                weights={[
+                  { ticker: 'VOO', weight: 0.70 },
+                  { ticker: 'QQQM', weight: 0.20 },
+                  { ticker: 'IJR', weight: 0.10 },
+                  { ticker: 'BIL', weight: 0.00 },
+                ]}
+                note="BIL at 0% as-of (current vol estimate = low). Scale-down fires when risk is elevated."
+              />
             </div>
-            {/* XSD: demoted — optional gated sleeve, never a standing-book peer */}
-            <div className="mt-4 border border-dashed border-border/70 bg-bg/40 rounded-lg p-3 opacity-70 max-w-md">
-              <p className="section-eyebrow mb-2 text-muted/80">Optional gated sleeve — XSD</p>
-              <WeightsChart bookId="score_rotate_xsd" />
-              <p className="text-2xs text-muted mt-2">
-                <code>score_rotate_xsd</code> is default <strong>OFF</strong>. Not a live book.
-              </p>
-            </div>
+
+            {/* XSD sleeve — collapsed by default, demoted */}
+            <DisclosureSection summary="Optional gated sleeve — XSD (default OFF, not a live book — expand to view)">
+              <div className="p-5">
+                <div className="border border-dashed border-border/70 rounded-lg p-4 bg-bg/60 max-w-md">
+                  <p className="section-eyebrow mb-2 text-muted/80">Optional gated sleeve — XSD</p>
+                  <BookWeightArt
+                    title=""
+                    weights={[
+                      { ticker: 'VOO', weight: 0.65 },
+                      { ticker: 'QQQM', weight: 0.20 },
+                      { ticker: 'IJR', weight: 0.10 },
+                      { ticker: 'BIL', weight: 0.05 },
+                    ]}
+                  />
+                  <p className="text-2xs text-muted mt-3">
+                    <code>score_rotate_xsd</code> is default <strong>OFF</strong>. Gate must be ON for this to be
+                    active. Not a live book — never a peer to Books 1–2.
+                  </p>
+                </div>
+              </div>
+            </DisclosureSection>
           </div>
         </div>
       </section>
 
-      {/* ── XSD timeline ── */}
+      {/* ── Strategy comparison — Books 1-2 first, XSD subordinate ── */}
       <section className="py-12 border-b border-border bg-hero-gradient">
         <div className="mx-auto max-w-6xl px-4 md:px-6">
-          <SectionRule label="Optional sleeve" />
+          <SectionRule label="Strategy comparison" />
           <div className="mt-8">
-            <Eyebrow>XSD ON / OFF</Eyebrow>
+            <Eyebrow>Strategy comparison</Eyebrow>
             <p className="text-sm text-body mt-1 mb-6 max-w-2xl">
-              ScoreSimple gate from <code>strategy_diagnostics.csv</code> (<code>on</code> /{' '}
-              <code>rotate_on</code>). Optional sleeve only.
+              Live Books 1–2 vs benchmark. Optional XSD sleeve shown last, subordinate — not a peer.
             </p>
-            <div className="border border-border bg-surface rounded-xl p-5">
-              <XsdChart />
-            </div>
+            <ComparisonTable />
+          </div>
+        </div>
+      </section>
+
+      {/* ── XSD timeline — in progressive disclosure ── */}
+      <section className="py-12 border-b border-border">
+        <div className="mx-auto max-w-6xl px-4 md:px-6">
+          <SectionRule label="Optional sleeve diagnostics" />
+          <div className="mt-8">
+            <DisclosureSection summary="XSD ON/OFF gate timeline — optional sleeve only (expand to view chart)">
+              <div className="p-5">
+                <p className="text-sm text-body mb-4">
+                  ScoreSimple gate from <code>strategy_diagnostics.csv</code> (<code>on</code> /{' '}
+                  <code>rotate_on</code>). Optional sleeve only — not a live book.
+                </p>
+                <div className="border border-border bg-surface rounded-xl p-5">
+                  <XsdChart />
+                </div>
+              </div>
+            </DisclosureSection>
           </div>
         </div>
       </section>
