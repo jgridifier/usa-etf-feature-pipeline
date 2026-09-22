@@ -4,7 +4,7 @@
 
 @layer base {
   :root {
-    color-scheme: dark;
+    color-scheme: light;
   }
 
   html {
@@ -13,12 +13,13 @@
   }
 
   body {
-    @apply font-sans text-body bg-bg antialiased;
-    font-feature-settings: 'cv11', 'ss01';
+    /* Newsreader serif as primary reading voice on cream paper */
+    @apply font-serif text-body bg-bg antialiased;
+    font-feature-settings: 'kern', 'liga', 'onum';
   }
 
   h1, h2, h3, h4, h5, h6 {
-    @apply text-ink;
+    @apply text-ink font-display;
     letter-spacing: -0.015em;
   }
 
@@ -35,18 +36,18 @@
   }
 
   ::selection {
-    background: rgba(79, 126, 248, 0.25);
-    color: #f2f0eb;
+    background: rgba(28, 45, 107, 0.18);
+    color: #1a1410;
   }
 
-  /* Thin scrollbar */
+  /* Thin scrollbar — warm ink on paper */
   ::-webkit-scrollbar { width: 5px; height: 5px; }
   ::-webkit-scrollbar-track { background: transparent; }
   ::-webkit-scrollbar-thumb { @apply bg-border rounded-full; }
   ::-webkit-scrollbar-thumb:hover { @apply bg-border-bright; }
 
   [role="region"]:focus-visible {
-    outline: 2px solid rgba(79, 126, 248, 0.5);
+    outline: 2px solid rgba(28, 45, 107, 0.4);
     outline-offset: 2px;
   }
 }
@@ -54,12 +55,12 @@
 @layer components {
   /* ── Ticker marquee ── */
   .ticker-wrap {
-    @apply overflow-hidden bg-raised border-b border-border;
+    @apply overflow-hidden bg-ink border-b border-ink;
   }
   .ticker-inner {
     display: inline-flex;
     white-space: nowrap;
-    animation: ticker 44s linear infinite;
+    animation: ticker 52s linear infinite;
   }
   .ticker-inner:hover {
     animation-play-state: paused;
@@ -72,21 +73,21 @@
 
   /* ── Stat grid ── */
   .stat-card {
-    @apply rounded-xl border border-border bg-surface p-4 shadow-card;
+    @apply rounded border border-border bg-surface p-4 shadow-card;
   }
   .stat-label {
-    @apply text-2xs font-medium uppercase tracking-widest text-muted mb-1;
+    @apply text-2xs font-medium uppercase tracking-widest text-muted mb-1 font-sans;
   }
   .stat-value {
     @apply text-2xl font-semibold font-mono text-ink;
   }
   .stat-sub {
-    @apply text-xs text-muted mt-1;
+    @apply text-xs text-muted mt-1 font-sans;
   }
 
   /* ── Section label ── */
   .section-eyebrow {
-    @apply text-2xs font-medium uppercase tracking-label text-muted mb-1;
+    @apply text-2xs font-medium uppercase tracking-label text-muted mb-1 font-sans;
   }
 
   /* ── Editorial rule / divider ── */
@@ -104,24 +105,51 @@
 
   /* ── Quote / Most-Sharable block ── */
   .quote-block {
-    @apply border-l-2 border-accent pl-5 py-2;
+    @apply border-l-2 border-ink/30 pl-5 py-2;
   }
   .quote-block p {
     @apply font-serif text-lg italic text-ink leading-snug;
   }
   .quote-block cite {
-    @apply text-2xs text-muted not-italic mt-2 block tracking-label uppercase;
+    @apply text-2xs text-muted not-italic mt-2 block tracking-label uppercase font-sans;
   }
 
-  /* ── Article card (editorial) ── */
+  /* ── Article card (editorial stream) ── */
   .article-card {
-    @apply border border-border bg-surface rounded-xl overflow-hidden transition-all hover:border-border-bright;
+    @apply border border-border bg-surface overflow-hidden transition-all hover:border-border-bright;
   }
 
   /* ── Masthead rule line ── */
   .masthead-rule {
     height: 1px;
-    background: var(--masthead-rule, linear-gradient(90deg, transparent, #3c4050 30%, #3c4050 70%, transparent));
+    background: var(--masthead-rule, linear-gradient(90deg, transparent, #c4b89d 30%, #c4b89d 70%, transparent));
+  }
+
+  /* ── Broadsheet thick rule ── */
+  .broadsheet-rule {
+    @apply h-[3px] bg-ink;
+  }
+
+  /* ── Risk-path DD band art ── */
+  .dd-band {
+    position: relative;
+    overflow: hidden;
+  }
+  .dd-band-fill {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: currentColor;
+    opacity: 0.15;
+  }
+  .dd-band-fill-strong {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: currentColor;
+    opacity: 0.25;
   }
 }
 
@@ -135,7 +163,7 @@
   .scrollbar-hide::-webkit-scrollbar { display: none; }
 }
 
-/* Keyframe defined here for global availability (also in tailwind config) */
+/* Keyframe defined here for global availability */
 @keyframes ticker {
   0%   { transform: translateX(0); }
   100% { transform: translateX(-50%); }
