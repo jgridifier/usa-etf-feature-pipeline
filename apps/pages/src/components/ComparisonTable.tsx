@@ -131,8 +131,11 @@ export function ComparisonTable() {
           role="region"
           aria-label="Optional gated sleeve — not a live book"
         >
-          <div className="px-4 py-2 bg-raised border-b border-border/60">
-            <span className="text-2xs text-muted/70 uppercase tracking-label">Optional gated sleeve (default OFF) — not a peer to Books 1–2</span>
+          <div className="px-4 py-2.5 bg-raised border-b border-border/60 space-y-0.5">
+            <span className="text-2xs text-muted/70 uppercase tracking-label block">Optional gated sleeve (default OFF) — not a peer to Books 1–2</span>
+            <span className="text-2xs text-down/70 block">
+              ⚠ Higher AnnReturn or NW t here is <strong>not a promote signal</strong> — sleeve default is OFF and XSD is never a Book-3 candidate.
+            </span>
           </div>
           <table className="w-full text-xs whitespace-nowrap">
             <thead>
