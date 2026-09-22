@@ -1,0 +1,55 @@
+# Regime-Resilient ERC Portfolio Construction (LOIM Regime Parity)
+# Walk-forward config — research tooling only; not investment advice.
+# Registry enabled:false until Quant gate PASS.
+#
+# Lead citation: Ielpo, Muhammetgulyyeva & Royer (2026), JPM 52(9):189-213.
+#   doi:10.3905/jpm.2026.030
+# Classical ERC: Maillard, Roncalli & Teiletche (2010), JPM 36(4):60-70.
+# DSR: Bailey & Lopez de Prado (2014), JPM 40(5):94-107.
+#
+# Construction (not selection): stress/corr overlays and/or LOIM
+# regime-parity π-blend of local ERCs alter ERC *inputs* — not a
+# current-regime selector (archived dual-regime pattern is forbidden).
+
+regime_resilient_erc:
+  # Which construction paths to run
+  construction:
+    - stress_corr_overlay   # Path A: Σ_resilient = (1-λ)Σ_uncond + λΣ_stress
+    - loim_regime_parity    # Path B: w* = Σ_m π̂_m · ERC(Σ̂_m)
+
+  # Path A — stress / corr-breakdown overlay knobs
+  stress_window_months: [12, 24]
+  mix_lambda: [0.25, 0.5]          # λ weight on Σ̂_stress
+  corr_breakdown_gate: [false]     # true: soft cash residual when avg|corr| elevated
+
+  # Path B — LOIM regime-parity construction knobs
+  # regime_pool_rule: historical pool labels only — NOT a current-regime selector
+  regime_pool_rule:
+    - rolling_vol_split   # high/low-vol split using expanding-window median
+    - nber_lag            # NBER BCDC dates with documented publication lag
+  n_regimes: [2]
+  pi_rule:
+    - historical_freq     # π̂_m = empirical frequency ≤ t
+    - markov_steady       # π̂_m from Markov steady-state ≤ t
+  min_obs_per_pool: [24, 36]       # fallback to unconditional ERC if pool < min_obs
+
+  # Shared estimation
+  cov_estimator: [ledoit_wolf]
+
+  # Universe / cost constraints (same as ticket hard rules)
+  long_only: true
+  cost_bps_one_way: 5
+  min_names: 100
+  apply_to:
+    - name_level
+    - category_sleeves
+  include_thin: false
+  min_history_months: 36
+  cash_ticker: BIL               # fallbacks: SGOV, GBIL, SHV
+
+  # Registry gate — do NOT enable until Quant gate PASS
+  enabled: false
+
+  # Bootstrap for block-bootstrap Sharpe CI
+  bootstrap_samples: 500
+  bootstrap_block_months: 3

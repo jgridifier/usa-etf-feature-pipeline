@@ -50,6 +50,7 @@ VOL_CFC_ENTRYPOINT = "usa_etf_features.strategy_registry:vol_cond_factor_corr"
 ROTATE_ENTRYPOINT = "usa_etf_features.strategy_registry:score_rotate_xsd"
 M3_P2_ENTRYPOINT = "usa_etf_features.strategy_registry:m3_p2_core_rotate"
 FT_MED_ENTRYPOINT = "usa_etf_features.strategy_registry:forecast_tangency_med"
+RR_ERC_ENTRYPOINT = "usa_etf_features.strategy_registry:regime_resilient_erc"
 
 
 @dataclass(frozen=True)
@@ -519,6 +520,99 @@ def forecast_tangency_med(
     return StrategyResult(weights=weights, diagnostics=diag, returns=ret)
 
 
+def regime_resilient_erc(
+    prices: pd.DataFrame,
+    spec: StrategySpec,
+    *,
+    universe_csv: str | Path,
+    universe_config: dict,
+    asof: pd.Timestamp | None,
+) -> StrategyResult:
+    """Registry adapter for Regime-Resilient ERC (Archive/Methods stub; Quant gate pending).
+
+    Construction overlays (stress/corr + LOIM regime-parity) — NOT dual-regime selection.
+    Primary null: unconditional ERC. Registry enabled:false until Quant gate PASS.
+    """
+    from .regime_resilient_erc import (
+        RegimeResilientERCTrial,
+        run_regime_resilient_erc_trial,
+        RESEARCH_DISCLAIMER as RR_DISCLAIMER,
+    )
+
+    params = dict(spec.default_params)
+    monthly_csv = params.pop("monthly_csv", None)
+    coverage_csv = params.pop("coverage_csv", None)
+
+    monthly = None
+    if monthly_csv and Path(monthly_csv).exists():
+        monthly = pd.read_csv(monthly_csv, index_col=0, parse_dates=True).sort_index()
+        monthly.columns = [str(c).upper() for c in monthly.columns]
+    if monthly is None:
+        raise ValueError(
+            f"{spec.id}: monthly_csv not found at {monthly_csv!r}; "
+            "run walkforward-regime-resilient-erc CLI directly with --monthly"
+        )
+
+    coverage = pd.read_csv(coverage_csv) if coverage_csv and Path(coverage_csv).exists() else None
+
+    if asof is not None:
+        monthly = monthly.loc[:asof]
+
+    trial = RegimeResilientERCTrial(
+        trial_id=spec.id,
+        construction=str(params.get("construction", "stress_corr_overlay")),
+        stress_window_months=int(params.get("stress_window_months", 12)),
+        mix_lambda=float(params.get("mix_lambda", 0.25)),
+        corr_breakdown_gate=bool(params.get("corr_breakdown_gate", False)),
+        corr_breakdown_threshold=float(params.get("corr_breakdown_threshold", 0.60)),
+        regime_pool_rule=str(params.get("regime_pool_rule", "rolling_vol_split")),
+        n_regimes=int(params.get("n_regimes", 2)),
+        pi_rule=str(params.get("pi_rule", "historical_freq")),
+        min_obs_per_pool=int(params.get("min_obs_per_pool", 24)),
+        cov_estimator=str(params.get("cov_estimator", "ledoit_wolf")),
+        long_only=bool(params.get("long_only", True)),
+        cost_bps_one_way=float(params.get("cost_bps_one_way", 5.0)),
+        cash_ticker=str(params.get("cash_ticker", "BIL")).upper(),
+        min_names=int(params.get("min_names", 100)),
+        apply_to=str(params.get("apply_to", "name_level")),
+        include_thin=bool(params.get("include_thin", False)),
+        min_history_months=int(params.get("min_history_months", 36)),
+    )
+
+    monthly_w, returns, _diag, _reg = run_regime_resilient_erc_trial(
+        monthly,
+        trial,
+        universe_csv=universe_csv,
+        coverage=coverage,
+        universe_config=universe_config,
+    )
+
+    if monthly_w.empty:
+        raise ValueError(f"{spec.id} produced no regime-resilient ERC weights")
+
+    last = monthly_w.sort_values("date").iloc[-1]
+    w_cols = [c for c in monthly_w.columns if c.startswith("w_")]
+    rows = []
+    cash = trial.cash_ticker.upper()
+    for c in w_cols:
+        ticker = c[2:]
+        rows.append({
+            "ticker": ticker,
+            "weight": float(last[c]),
+            "role": "cash" if ticker == cash else "core",
+            "thesis_tag": "rr_erc_cash" if ticker == cash else "rr_erc",
+        })
+    weights = _format_weights(pd.DataFrame(rows), strategy_id=spec.id, date=pd.Timestamp(last["date"]))
+    diag = last.to_frame().T
+    diag["strategy_id"] = spec.id
+    diag["research_disclaimer"] = RR_DISCLAIMER
+    ret = returns.rename(columns={"r_method": "return"})
+    ret = ret.assign(strategy_id=spec.id, feature_end=lambda x: x["decision_date"])[
+        ["date", "decision_date", "feature_end", "strategy_id", "return", "turnover"]
+    ]
+    return StrategyResult(weights=weights, diagnostics=diag, returns=ret)
+
+
 def spectral_risk_parity(prices, spec, *, universe_csv, asof=None) -> StrategyResult:
     """Run full panel or derive monthly returns from the supplied daily prices."""
     from .spectral_risk_parity import SpectralTrial, read_returns, run_spectral_trial
@@ -593,6 +687,8 @@ def _strategy_current_result(
         return spectral_risk_parity(prices, spec, universe_csv=universe_csv, asof=asof)
     if spec.entrypoint == FT_MED_ENTRYPOINT:
         return forecast_tangency_med(prices, spec, universe_csv=universe_csv, universe_config=universe_config, asof=asof)
+    if spec.entrypoint == RR_ERC_ENTRYPOINT:
+        return regime_resilient_erc(prices, spec, universe_csv=universe_csv, universe_config=universe_config, asof=asof)
     if spec.entrypoint == REGIME_DUAL_ENTRYPOINT:
         return regime_aware_dual_regime(spec, asof=asof)
     decision_date = _asof_date(prices, asof)

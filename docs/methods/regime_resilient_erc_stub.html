@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>Regime-Resilient ERC — Archive / Methods Stub (Quant gate pending)</title>
+<style>
+  :root { --fg:#1a1a1a; --muted:#555; --border:#ddd; --bg:#fafafa; --accent:#0b5fff; --warn:#b85c00; --ok:#0a7a3e; }
+  * { box-sizing: border-box; }
+  body { font-family: Georgia, "Times New Roman", serif; color: var(--fg); line-height: 1.55; max-width: 42rem; margin: 2rem auto; padding: 0 1.25rem; background: #fff; }
+  h1,h2,h3 { font-family: system-ui, -apple-system, Segoe UI, sans-serif; line-height: 1.25; }
+  h1 { font-size: 1.6rem; margin-bottom: 0.25rem; }
+  h2 { font-size: 1.2rem; margin-top: 2rem; border-bottom: 1px solid var(--border); padding-bottom: 0.3rem; }
+  .meta { color: var(--muted); font-family: system-ui, sans-serif; font-size: 0.9rem; margin-bottom: 1.5rem; }
+  .disclaimer { background: #fff8e6; border: 1px solid #f0d78c; padding: 0.75rem 1rem; border-radius: 6px; font-size: 0.92rem; margin: 1rem 0 1.5rem; }
+  .stub-notice { background: #fff0e6; border: 2px solid var(--warn); padding: 0.75rem 1rem; border-radius: 6px; font-size: 0.95rem; margin: 1rem 0 1.5rem; }
+  .callout { background: var(--bg); border-left: 4px solid var(--accent); padding: 0.75rem 1rem; margin: 1rem 0; }
+  .ok { border-left-color: var(--ok); }
+  .forbidden { border-left-color: #c00; background: #fff0f0; }
+  table { border-collapse: collapse; width: 100%; font-size: 0.92rem; margin: 0.75rem 0 1rem; }
+  th, td { border: 1px solid var(--border); padding: 0.4rem 0.55rem; text-align: left; vertical-align: top; }
+  th { background: var(--bg); font-family: system-ui, sans-serif; font-weight: 600; }
+  code { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 0.88em; background: #f5f5f5; padding: 0.1em 0.3em; border-radius: 3px; }
+  pre { background: var(--bg); padding: 0.85rem 1rem; border-radius: 6px; overflow-x: auto; font-family: ui-monospace, Menlo, Consolas, monospace; font-size: 0.85rem; white-space: pre-wrap; }
+  ul, ol { padding-left: 1.25rem; }
+  li { margin: 0.35rem 0; }
+  a { color: var(--accent); }
+  footer { margin-top: 2.5rem; padding-top: 1rem; border-top: 1px solid var(--border); color: var(--muted); font-size: 0.85rem; font-family: system-ui, sans-serif; }
+</style>
+</head>
+<body>
+
+<h1>Regime-Resilient ERC — Deep Pages Stub</h1>
+<p class="meta">
+  Archive / Methods stub · 2026-09-22 (ET) · Justina shortlist #3 ·
+  Quant gate pending · CIO: static core + Book-2 VT only until gate PASS
+</p>
+
+<div class="stub-notice">
+  <strong>Archive / Methods stub — Quant gate PENDING.</strong>
+  This page is a research stub filed under Archive / Methods.
+  OOS tables will be populated after the walk-forward run completes and the
+  Quant gate review is done. <strong>No empirical success is claimed here.</strong>
+  Live books stay <strong>static core + unconditional Book-2 vol-target only</strong>.
+  Registry entry <code>regime_resilient_erc</code> remains <code>enabled:false</code>
+  until Quant gate PASS. Do not promote to Deep Pages main until gate PASS.
+</div>
+
+<div class="disclaimer">
+  <strong>Research only — not investment advice.</strong>
+  This page documents a proposed walk-forward test of regime-resilient ERC
+  construction on the experimental USA ETF research panel. It does not
+  recommend buying or selling any security. No empirical success is claimed.
+  Live books: <strong>static core + unconditional Book-2 vol-target only</strong>.
+</div>
+
+<h2>Method identity (CIO clarification)</h2>
+
+<div class="callout">
+  <strong>This IS:</strong> Regime-resilient ERC <em>construction</em> —
+  stress/corr-breakdown overlays and/or LOIM regime-parity risk inputs that
+  change how ERC weights are built (Path A: blended Σ̂; Path B: π-weighted
+  blend of local ERCs). Every month still emits an ERC-family construction.
+  Primary null = <strong>unconditional ERC</strong>.
+</div>
+
+<div class="callout forbidden">
+  <strong>This is NOT:</strong> dual-regime asset <em>selection</em>
+  (archived #2: Luo/Mulvey-style classify current regime → hold only that
+  regime's portfolio / selected assets). That pattern is archived and
+  out of scope. This is not a rerun of Spectral RP, Regime-Aware dual,
+  vol-cond-factor-corr, or FT-MED.
+</div>
+
+<h2>Status</h2>
+
+<table>
+  <tr><th>Item</th><th>Status</th></tr>
+  <tr><td>Eng ticket</td><td>Implemented — <code>walkforward-regime-resilient-erc</code> CLI</td></tr>
+  <tr><td>Walk-forward run</td><td>Pending (run CLI against production data)</td></tr>
+  <tr><td>Leakage unit tests</td><td>Implemented — see <code>tests/test_regime_resilient_erc.py</code></td></tr>
+  <tr><td>OOS summary table</td><td>Pending (post walk-forward run)</td></tr>
+  <tr><td>Quant gate review</td><td>Pending</td></tr>
+  <tr><td>Registry <code>enabled</code></td><td><code>false</code> — locked until Quant gate PASS</td></tr>
+  <tr><td>Live books</td><td>Static core + Book-2 VT only — unchanged</td></tr>
+</table>
+
+<h2>Method summary</h2>
+
+<p>
+  <strong>Justina CIO shortlist #3.</strong> Walk-forward regime-resilient ERC
+  construction following Ielpo, Muhammetgulyyeva &amp; Royer (2026).
+  Two construction paths (registered separately, swept via grid):
+</p>
+
+<h3>Path A — Stress / corr-breakdown overlay</h3>
+<pre>Diagnostics (≤ t): Σ̂_stress (high-vol/left-tail window), avg pairwise |corr|, sync score
+
+Σ̂_resilient,t = (1 − λ) Σ̂_uncond,t + λ Σ̂_stress,t   (registered λ)
+w*_t = ERC(Σ̂_resilient,t)   ← still ERC; only Σ changed</pre>
+
+<h3>Path B — LOIM regime-parity construction</h3>
+<pre>Historical regime pools m (≤ t; NBER-lag or rolling-vol-split):
+  Σ̂_m,t ← cov estimator on regime-m sample (≤ t)
+  w*_m,t ← ERC(Σ̂_m,t)
+  π̂_m,t ← historical freq or Markov steady-state ≤ t
+
+w*_t = Σ_m π̂_m,t · w*_m,t   ← π-blend of local ERCs (NOT current-regime selector)</pre>
+
+<div class="callout ok">
+  <strong>Leakage guarantee:</strong> at month-end t, all construction inputs
+  (stress diagnostics, regime-pool labels, Σ̂_m, π̂_m, ERC solutions) are
+  invariant to returns after t. External NBER labels used with documented
+  publication lag — only announced recession periods are used as pool inputs.
+</div>
+
+<h2>Nulls (required)</h2>
+
+<table>
+  <tr><th>Null</th><th>Role</th></tr>
+  <tr><td><strong>Unconditional ERC</strong> (same names / sleeves; single Σ̂; no overlay)</td><td><strong>PRIMARY CIO null</strong></td></tr>
+  <tr><td>Equal-weight</td><td>Allocation null</td></tr>
+  <tr><td>LW MinVar</td><td>Risk null</td></tr>
+  <tr><td>Optional: Book-2 vol-target</td><td>Timing null / attribution</td></tr>
+</table>
+
+<h2>Config knobs (all registered for DSR)</h2>
+
+<table>
+  <tr><th>Knob</th><th>Values</th><th>Path</th></tr>
+  <tr><td><code>construction</code></td><td>stress_corr_overlay, loim_regime_parity</td><td>both</td></tr>
+  <tr><td><code>stress_window_months</code></td><td>12, 24</td><td>A</td></tr>
+  <tr><td><code>mix_lambda</code></td><td>0.25, 0.50</td><td>A</td></tr>
+  <tr><td><code>corr_breakdown_gate</code></td><td>off, on</td><td>A</td></tr>
+  <tr><td><code>regime_pool_rule</code></td><td>rolling_vol_split, nber_lag</td><td>B</td></tr>
+  <tr><td><code>pi_rule</code></td><td>historical_freq, markov_steady</td><td>B</td></tr>
+  <tr><td><code>min_obs_per_pool</code></td><td>24, 36</td><td>B</td></tr>
+  <tr><td><code>cov_estimator</code></td><td>ledoit_wolf</td><td>both</td></tr>
+  <tr><td><code>apply_to</code></td><td>name_level (N≥100), category_sleeves</td><td>both</td></tr>
+</table>
+
+<h2>CLI</h2>
+
+<pre>python -m usa_etf_features.cli walkforward-regime-resilient-erc \
+  --universe /workspace/investments/usa_universe_categorized.csv \
+  --monthly /workspace/investments/usa_universe_panel_monthly_returns.csv \
+  --coverage /workspace/investments/usa_universe_panel_history_coverage.csv \
+  --constructions stress_corr_overlay,loim_regime_parity \
+  --stress-windows 12,24 \
+  --mix-lambdas 0.25,0.5 \
+  --regime-pool-rules rolling_vol_split,nber_lag \
+  --pi-rules historical_freq \
+  --apply-to name_level,category_sleeves \
+  --cost-bps 5 \
+  --out data/processed/rr_erc_oos_summary.csv \
+  --weights data/processed/rr_erc_monthly_weights.csv \
+  --registry data/processed/rr_erc_trial_registry.csv \
+  --returns data/processed/rr_erc_oos_returns.csv \
+  --diag-out data/processed/rr_erc_construction_diag.csv</pre>
+
+<h2>OOS tables</h2>
+
+<p><em>Pending walk-forward run and Quant gate review. Will be populated here after gate.</em></p>
+
+<table>
+  <tr><th>Metric</th><th>Method</th><th>Uncond ERC (primary null)</th><th>EW</th><th>LW MinVar</th></tr>
+  <tr><td>AnnReturn</td><td>–</td><td>–</td><td>–</td><td>–</td></tr>
+  <tr><td>AnnVol</td><td>–</td><td>–</td><td>–</td><td>–</td></tr>
+  <tr><td>MaxDD</td><td>–</td><td>–</td><td>–</td><td>–</td></tr>
+  <tr><td>Sharpe_rf0</td><td>–</td><td>–</td><td>–</td><td>–</td></tr>
+  <tr><td>DSR</td><td>–</td><td>–</td><td>–</td><td>–</td></tr>
+  <tr><td>NW t vs uncond ERC</td><td>–</td><td>0 (null)</td><td>–</td><td>–</td></tr>
+  <tr><td>trial_count</td><td>–</td><td>–</td><td>–</td><td>–</td></tr>
+</table>
+
+<h2>Teaching note</h2>
+
+<p>
+  Full theory in
+  <a href="allocation_alpha_regime_resilient_erc.html">allocation_alpha_regime_resilient_erc.html</a>.
+  Lead citation: Ielpo, Muhammetgulyyeva &amp; Royer (2026), <em>Journal of Portfolio Management</em>
+  52(9):189–213. <a href="https://doi.org/10.3905/jpm.2026.030">doi:10.3905/jpm.2026.030</a>.
+</p>
+
+<h2>Citations</h2>
+
+<ol>
+  <li><strong>Lead:</strong> Ielpo, Florian, Selbi Muhammetgulyyeva, and Julien Royer. 2026.
+    "Building a Regime-Resilient ERC Portfolio." <em>Journal of Portfolio Management</em>
+    52(9):189–213. <a href="https://doi.org/10.3905/jpm.2026.030">doi:10.3905/jpm.2026.030</a>.</li>
+  <li><strong>Precursor:</strong> Ielpo, Florian, Julien Royer, and Selbi Muhammetgulyyeva. 2023.
+    "Building a regime-resistant, long-run allocation in multi asset."
+    LOIM MARS / Investment Viewpoints, 7 December 2023.
+    <a href="https://am.lombardodier.com/contents/news/investment-viewpoints/2023/december/1148-MAC-mars-long-run.html">am.lombardodier.com</a></li>
+  <li><strong>Classical ERC:</strong> Maillard, Sébastien, Thierry Roncalli, and Jérôme Teiletche. 2010.
+    "The Properties of Equally Weighted Risk Contribution Portfolios."
+    <em>Journal of Portfolio Management</em> 36(4):60–70.</li>
+  <li><strong>DSR:</strong> Bailey, David H., and Marcos López de Prado. 2014.
+    "The Deflated Sharpe Ratio." <em>Journal of Portfolio Management</em> 40(5):94–107.
+    <a href="https://doi.org/10.3905/jpm.2014.40.5.094">doi:10.3905/jpm.2014.40.5.094</a></li>
+  <li><strong>LW Cov:</strong> Ledoit, Olivier, and Michael Wolf. 2004.
+    "A Well-Conditioned Estimator for Large-Dimensional Covariance Matrices."
+    <em>Journal of Multivariate Analysis</em> 88(2):365–411.</li>
+</ol>
+
+<footer>
+  USA Research-Panel ETF Portfolios workstream · Justina shortlist #3 · Archive/Methods stub · 2026-09-22 ET<br/>
+  Not investment advice. No empirical success claimed. Live books: static core + Book-2 VT only.
+  Registry <code>enabled:false</code> until Quant gate PASS.
+</footer>
+
+</body>
+</html>
