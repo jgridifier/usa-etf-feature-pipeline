@@ -34,6 +34,11 @@ from .vol_cond_factor_corr import (
     make_vol_cfc_trials,
     run_vol_cond_factor_corr_grid,
 )
+from .forecast_tangency_med import (
+    load_forecast_tangency_med_config,
+    make_ft_med_trials,
+    run_forecast_tangency_med_grid,
+)
 from .walkforward import (
     rotation_on_off_next_month_table,
     walkforward_ic_table,
@@ -491,6 +496,143 @@ def cmd_run_strategies(args: argparse.Namespace) -> int:
     return 0
 
 
+def cmd_walkforward_forecast_tangency_med(args: argparse.Namespace) -> int:
+    """Walk-forward forecast-tangency + MED portfolio (Alexander & Scherer 2023)."""
+    import pandas as pd
+
+    universe_path = Path(args.universe)
+    monthly_path = Path(args.monthly)
+    out_path = Path(args.out)
+    weights_path = Path(args.weights)
+    registry_path = Path(args.registry)
+    returns_path = (
+        Path(args.returns) if args.returns else out_path.with_name("ft_med_oos_returns.csv")
+    )
+    coef_path = (
+        Path(args.coef_out) if getattr(args, "coef_out", None)
+        else out_path.with_name("ft_med_coef_forecast.csv")
+    )
+
+    cfg_path = (
+        Path(args.config)
+        if getattr(args, "config", None)
+        else _repo_root() / "config" / "forecast_tangency_med.yaml"
+    )
+    ft_cfg = load_forecast_tangency_med_config(
+        cfg_path if cfg_path.exists() else None
+    ).get("forecast_tangency_med", {})
+
+    uni_cfg_path = (
+        Path(args.universe_config)
+        if getattr(args, "universe_config", None)
+        else _repo_root() / "config" / "universe.yaml"
+    )
+    uni_cfg = load_universe_config(uni_cfg_path if uni_cfg_path.exists() else None)
+
+    monthly = pd.read_csv(monthly_path, index_col=0, parse_dates=True).sort_index()
+    monthly.columns = [str(c).upper() for c in monthly.columns]
+
+    nulls_requested = set(
+        _parse_csv_list(getattr(args, "nulls", None) or "ew,lw_minvar,erc", cast=str)
+    )
+
+    ef_lookbacks = _parse_csv_list(
+        getattr(args, "ef_lookbacks", None)
+        or ",".join(map(str, ft_cfg.get("ef_lookbacks", [21]))),
+        cast=int,
+    )
+    forecast_lookbacks = _parse_csv_list(
+        getattr(args, "forecast_lookbacks", None)
+        or ",".join(map(str, ft_cfg.get("forecast_lookbacks", [60]))),
+        cast=int,
+    )
+    mu_estimators = _parse_csv_list(
+        getattr(args, "mu_estimators", None)
+        or ",".join(ft_cfg.get("mu_estimator", ["sample"])),
+        cast=str,
+    )
+    apply_tos = _parse_csv_list(
+        getattr(args, "apply_to", None)
+        or ",".join(ft_cfg.get("apply_to", ["name_level"])),
+        cast=str,
+    )
+
+    trials = make_ft_med_trials(
+        ef_lookbacks=ef_lookbacks,
+        forecast_lookbacks=forecast_lookbacks,
+        mu_estimators=mu_estimators,
+        apply_tos=apply_tos,
+        cost_bps_one_way=float(
+            getattr(args, "cost_bps", None)
+            or ft_cfg.get("cost_bps_one_way", 5)
+        ),
+        cash_ticker=str(
+            getattr(args, "cash", None) or ft_cfg.get("cash_ticker", "BIL")
+        ).upper(),
+        min_names=int(
+            getattr(args, "min_names", None) or ft_cfg.get("min_names", 100)
+        ),
+        include_thin=bool(getattr(args, "include_thin", False)),
+        min_history_months=int(
+            getattr(args, "min_history_months", None) or ft_cfg.get("min_history_months", 24)
+        ),
+    )
+
+    if not trials:
+        print("error: no trials configured", file=sys.stderr)
+        return 1
+
+    coverage = None
+    if getattr(args, "coverage", None) and Path(args.coverage).exists():
+        coverage = pd.read_csv(args.coverage)
+
+    summary, monthly_weights, oos_returns, registry = run_forecast_tangency_med_grid(
+        monthly,
+        trials,
+        universe_csv=universe_path,
+        coverage=coverage,
+        universe_config=uni_cfg,
+        bootstrap_samples=int(
+            getattr(args, "bootstrap_samples", None)
+            or ft_cfg.get("bootstrap_samples", 500)
+        ),
+    )
+
+    if summary.empty:
+        print(
+            "error: no FT-MED OOS rows produced; check common price history and min_names",
+            file=sys.stderr,
+        )
+        return 1
+
+    _write_csv(summary, out_path)
+    _write_csv(monthly_weights, weights_path)
+    _write_csv(oos_returns, returns_path)
+    _write_csv(registry, registry_path)
+
+    # Extract coef / forecast columns for separate output
+    coef_cols = [
+        "date", "decision_date", "trial_id",
+        "coef_r_mvp", "coef_sigma_mvp", "coef_u",
+        "fc_r_mvp", "fc_sigma_mvp", "fc_u",
+        "rhat_tp", "sigmahat_tp", "r_star", "distance",
+    ]
+    if not oos_returns.empty:
+        avail = [c for c in coef_cols if c in oos_returns.columns]
+        _write_csv(oos_returns[avail], coef_path)
+
+    print(f"wrote FT-MED summary       → {out_path}")
+    print(f"wrote monthly weights       → {weights_path}")
+    print(f"wrote OOS returns           → {returns_path}")
+    print(f"wrote trial registry        → {registry_path}")
+    print(f"wrote coef/forecast table   → {coef_path}")
+    print(
+        f"nulls computed: EW (null_a), LW MinVar (null_b), ERC (null_c), LW MVO (null_d)"
+    )
+    print(f"nulls requested: {sorted(nulls_requested)}")
+    return 0
+
+
 def build_parser() -> argparse.ArgumentParser:
     p = argparse.ArgumentParser(
         prog="usa_etf_features",
@@ -659,6 +801,33 @@ def build_parser() -> argparse.ArgumentParser:
     vc.add_argument("--z-rules", default=None, help="Comma-separated z rules for --grid")
     vc.add_argument("--bootstrap-samples", type=int, default=None)
     vc.set_defaults(func=cmd_walkforward_vol_cond_factor_corr)
+
+    ftm = sub.add_parser(
+        "walkforward-forecast-tangency-med",
+        help="Walk-forward forecast-tangency + MED portfolio (Alexander & Scherer 2023)",
+    )
+    ftm.add_argument("--universe", required=True, help="Path to usa_universe_categorized.csv")
+    ftm.add_argument("--monthly", required=True, help="Monthly returns panel CSV (Date × tickers)")
+    ftm.add_argument("--coverage", default=None, help="Optional history coverage CSV (thin_lt5y flags)")
+    ftm.add_argument("--nulls", default="ew,lw_minvar,erc", help="Comma-separated nulls (informational; all four always computed)")
+    ftm.add_argument("--cost-bps", type=float, default=5.0, dest="cost_bps")
+    ftm.add_argument("--cash", default="BIL")
+    ftm.add_argument("--min-names", type=int, default=100, dest="min_names")
+    ftm.add_argument("--min-history-months", type=int, default=24, dest="min_history_months")
+    ftm.add_argument("--include-thin", action="store_true", default=False, dest="include_thin")
+    ftm.add_argument("--ef-lookbacks", default=None, dest="ef_lookbacks", help="Comma-separated EF lookbacks in months, e.g. 21,63")
+    ftm.add_argument("--forecast-lookbacks", default=None, dest="forecast_lookbacks", help="Comma-separated VARX lookbacks in months, e.g. 60")
+    ftm.add_argument("--mu-estimators", default=None, dest="mu_estimators", help="Comma-separated mu estimators: sample,james_stein")
+    ftm.add_argument("--apply-to", default=None, dest="apply_to", help="Comma-separated apply_to: name_level,category_sleeves")
+    ftm.add_argument("--out", required=True, help="ft_med_oos_summary.csv")
+    ftm.add_argument("--weights", required=True, help="ft_med_monthly_weights.csv")
+    ftm.add_argument("--registry", required=True, help="ft_med_trial_registry.csv")
+    ftm.add_argument("--returns", default=None, help="Optional ft_med_oos_returns.csv path")
+    ftm.add_argument("--coef-out", default=None, dest="coef_out", help="Optional ft_med_coef_forecast.csv path")
+    ftm.add_argument("--config", default=None, help="forecast_tangency_med YAML config path")
+    ftm.add_argument("--universe-config", default=None, dest="universe_config")
+    ftm.add_argument("--bootstrap-samples", type=int, default=500, dest="bootstrap_samples")
+    ftm.set_defaults(func=cmd_walkforward_forecast_tangency_med)
 
     sp = sub.add_parser("walkforward-spectral-rp", help="Experimental panel spectral RP and nulls")
     sp.add_argument("--returns", required=True)

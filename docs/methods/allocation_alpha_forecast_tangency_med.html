@@ -1,0 +1,196 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Forecast Tangency + MED — Archive/Methods Stub | USA ETF Lab</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/style.css">
+<style>
+  .disclaimer { background: #fff8e6; border: 1px solid #f0d78c; padding: 0.75rem 1rem; border-radius: 12px; margin: 1rem 0; font-size: 0.92rem; color: var(--body, #222); }
+  .pending { background: #eef4ff; border: 1px solid #b3cdfb; padding: 0.75rem 1rem; border-radius: 12px; margin: 1rem 0; font-size: 0.92rem; }
+  .math-block { background: #f5f5f5; border-left: 3px solid #ccc; padding: 0.85rem 1rem; border-radius: 4px; overflow-x: auto; margin: 0.75rem 0; font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 0.86rem; white-space: pre-wrap; }
+  td.num { font-variant-numeric: tabular-nums; font-family: var(--mono, ui-monospace, monospace); font-size: 0.84rem; }
+  .meta { color: var(--muted, #555); font-size: 0.9rem; }
+  .badge-pending { display: inline-block; background: #fef3c7; border: 1px solid #f0d78c; border-radius: 6px; padding: 0.2rem 0.6rem; font-size: 0.82rem; font-weight: 600; }
+</style>
+<!-- lab:start --><link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet"><link rel="stylesheet" href="../assets/style.css"><!-- lab:end --></head>
+<body><!-- lab:start --><header class="site-header"><div class="site-header-inner"><a class="brand" href="../index.html">USA ETF Lab</a><button type="button" class="nav-toggle" aria-expanded="false" aria-controls="site-nav" aria-label="Open menu"><span class="nav-toggle-bars" aria-hidden="true"></span></button><nav class="site-nav" id="site-nav" aria-label="Main"><a href="../index.html">Home</a><a href="../index.html#/books">Books</a><a href="../index.html#/runs">Runs</a><a href="../explorer/index.html">Explorer</a><a href="../methods/index.html" class="is-active">Methods</a></nav></div></header><!-- lab:end -->
+
+<main class="page">
+<section class="band"><div class="band-inner">
+
+<p><span class="badge-pending">Archive / Methods stub · Quant gate pending · not live books</span></p>
+<h1>Forecast Tangency + Minimum Euclidean Distance Portfolio</h1>
+<p class="meta">Justina CIO shortlist #4 · USA ETF experimental panel · Engineering stub 2026-09-22 (ET) · next method after Pages judge loops</p>
+
+<div class="disclaimer">
+<strong>Research only — not investment advice.</strong> This stub wires the Quant teaching note
+(<code>allocation_alpha_forecast_tangency_med.html</code>) and documents the OOS acceptance criteria
+for the Forecast Tangency + MED method. <strong>No empirical OOS tables are shown here —
+this page stays under Archive/Methods until Quant gate PASS.</strong>
+Live books remain <strong>static core + unconditional Book-2 vol-target</strong> until the gate clears.
+Do not cut books on merge of tooling alone.
+</div>
+
+<div class="pending">
+<strong>Status:</strong> Engineering implementation complete (PR open, Quant gate pending).
+OOS tables and promoted deep-dive will be added here after Quant gate PASS on nulls + DSR.
+See <a href="justina_round1_scoreboard.html">Methods Archive scoreboard</a> for prior round results.
+</div>
+
+<h2>Method overview</h2>
+<p>
+  <strong>Lead citation:</strong> Alexander, Nolan, and William Scherer. 2023.
+  "Forecasting Tangency Portfolios and Investing in the Minimum Euclidean Distance Portfolio
+  to Maximize Out-of-Sample Sharpe Ratios."
+  <em>Engineering Proceedings</em> 39(1):34.
+  <a href="https://doi.org/10.3390/engproc2023039034">doi:10.3390/engproc2023039034</a> ·
+  <a href="https://arxiv.org/abs/2604.03948">arXiv:2604.03948</a> ·
+  <a href="https://github.com/nolanalexander/efficient-frontier-coefficients">code (original)</a>
+</p>
+<p>
+  The algorithm decomposes the Markowitz efficient frontier into three interpretable scalars
+  (<code>r_MVP</code>, <code>σ_MVP</code>, <code>u</code>), forecasts them via an online VARX(1),
+  maps the forecast to a forecasted tangency point (<code>r̂_TP</code>, <code>σ̂_TP</code>), then
+  invests in the portfolio on the <em>current</em> frontier that minimizes Euclidean distance to
+  that point. The geometric robustness step avoids plugging noisy μ̂, Σ̂ directly into classical
+  tangency each period.
+</p>
+
+<h2>Core math</h2>
+<p><strong>EF coefficients</strong> (Merton 1972 / Alexander–Scherer reparameterization):</p>
+<div class="math-block">A = 1'Σ⁻¹1 ,  B = μ'Σ⁻¹1 ,  C = μ'Σ⁻¹μ
+
+r_MVP = B/A ,  σ_MVP = 1/√A ,  u = (AC − B²)/A
+
+σ²(r) = σ_MVP² + (r − r_MVP)²/u    ← frontier shape</div>
+
+<p><strong>Forecasted tangency</strong> (paper Eq. 6, rf = 0 for Sharpe_rf0 parity):</p>
+<div class="math-block">r̂_TP = (r̂_MVP² + û·σ̂_MVP²) / r̂_MVP    [rf = 0]
+σ̂_TP = σ(r̂_TP)   using forecasted frontier shape
+
+Forecast (r̂_MVP, σ̂_MVP, û) via online VARX(1) on EF-coef history ≤ t.</div>
+
+<p><strong>MED solve on current frontier:</strong></p>
+<div class="math-block">r* = argmin_r  √[ (r̂_TP − r)² + (σ̂_TP − σ_current(r))² ]
+
+w*_t = argmin_w  w'Σ̂_t w  s.t.  w'μ̂_t = r* ,  1'w ≤ 1,  w ≥ 0
+Residual (1 − Σwᵢ) → BIL (Appendix 3 approved cash)</div>
+
+<h2>Walk-forward rules (no same-month leakage)</h2>
+<ul>
+  <li>At month-end <em>t</em>: all of μ̂_t, Σ̂_t, EF coefs, VARX forecast, MED solve, and w*_t
+      use data <strong>≤ t only</strong>.</li>
+  <li>Weights hold through month <em>t+1</em>; returns evaluated at <em>t+1</em>.</li>
+  <li>Leakage unit test: mutating returns after <em>t</em> leaves EF coefs, forecast, MED r*, and weights unchanged.</li>
+  <li>Universe: N ≥ 100 liquid names and/or category sleeves. Thin-history flags (<code>thin_lt5y</code>) applied.</li>
+  <li>Costs: <strong>5 bps one-way</strong> on monthly turnover.</li>
+  <li><strong>v1: long-only, leverage_cap = 1.0.</strong> No shorting; no 1.5× leverage until an explicit registered trial.</li>
+</ul>
+
+<h2>Required nulls (CIO gate)</h2>
+<div class="table-scroll" tabindex="0" role="region" aria-label="Required nulls"><table>
+<thead>
+<tr>
+  <th>ID</th><th>Null</th><th>Role</th>
+</tr>
+</thead>
+<tbody>
+<tr><td>(a)</td><td>Equal-weight (same names / sleeves)</td><td><strong>Primary</strong> CIO allocation null — required for gate</td></tr>
+<tr><td>(b)</td><td>Ledoit–Wolf MinVar</td><td><strong>Primary</strong> risk null — required for gate</td></tr>
+<tr><td>(c)</td><td>ERC (equal risk contribution)</td><td><strong>Primary</strong> risk-budget null — required for gate</td></tr>
+<tr><td>(d)</td><td>Ledoit–Wolf MVO / M3 baseline tangency</td><td>Estimation null — diagnostic</td></tr>
+<tr><td>(e)</td><td>Unconditional Book-2 vol-target (optional)</td><td>Timing null — diagnostic</td></tr>
+</tbody>
+</table></div>
+
+<h2>OOS output columns (pending gate)</h2>
+<div class="table-scroll" tabindex="0" role="region" aria-label="OOS output columns"><table>
+<thead>
+<tr>
+  <th>Artifact</th><th>Contents</th>
+</tr>
+</thead>
+<tbody>
+<tr><td><code>ft_med_oos_summary.csv</code></td><td>AnnReturn, AnnVol, MaxDD, Sharpe_rf0, NW t vs each null, bootstrap CI, turnover/yr, mean distance, % cash, <strong>DSR, trial_count</strong></td></tr>
+<tr><td><code>ft_med_monthly_weights.csv</code></td><td>date, trial_id, name/sleeve weights, cash, r*, distance</td></tr>
+<tr><td><code>ft_med_oos_returns.csv</code></td><td>date, trial_id, r_method, r_null_a (EW), r_null_b (MinVar), r_null_c (ERC), r_null_d (MVO), r_active_vs_a</td></tr>
+<tr><td><code>ft_med_trial_registry.csv</code></td><td>Every (L_EF, L_forecast, μ, Σ, sleeve-set, …) tried; citation; DSR denominator</td></tr>
+<tr><td><code>ft_med_coef_forecast.csv</code></td><td>date, trial_id, r_MVP, σ_MVP, u, forecasts, r̂_TP, σ̂_TP, r*, distance</td></tr>
+</tbody>
+</table></div>
+
+<h2>CLI reference</h2>
+<div class="math-block">python -m usa_etf_features.cli walkforward-forecast-tangency-med \
+  --universe /workspace/investments/usa_universe_categorized.csv \
+  --monthly  /workspace/investments/usa_universe_panel_monthly_returns.csv \
+  --nulls ew,lw_minvar,erc,lw_mvo \
+  --cost-bps 5 \
+  --out data/processed/ft_med_oos_summary.csv \
+  --weights data/processed/ft_med_monthly_weights.csv \
+  --registry data/processed/ft_med_trial_registry.csv</div>
+
+<h2>Acceptance criteria (Quant gate)</h2>
+<ol>
+  <li>OOS walk-forward equity curve + metrics vs nulls (a)–(c) exist, are reproducible from CLI, and cover N ≥ 100 name-level and/or category sleeves.</li>
+  <li>Primary config shows higher Sharpe_rf0 with NW t meaningfully positive vs <strong>EW</strong>, <strong>LW MinVar</strong>, and <strong>ERC</strong> after 5 bps — <em>or</em> a CoS-agreed MaxDD/left-tail win with only modest Sharpe give-up.</li>
+  <li><strong>DSR + trial_count</strong> reported on every OOS Sharpe claim; leakage unit tests green.</li>
+  <li>Diagnostics: time series of (r_MVP, σ_MVP, u), forecast errors, Euclidean distance, turnover, % cash.</li>
+  <li>Does <strong>not</strong> silently win by shorting, 1.5× leverage, or same-month peeking.</li>
+</ol>
+<p><strong>Failure is informative:</strong> If MED forecast-tangency fails vs EW / LW MinVar / ERC after DSR, archive with a one-line null result (parity with Justina round-1 / #13). No book cut.</p>
+
+<h2>Distinguished from archived work</h2>
+<ul>
+  <li><strong>Not</strong> Spectral RP (eigenrisk), Regime-Aware dual (k=2 HMM), or vol-cond-factor-corr (#13 / shortlist #5 Book-2 upgrade) — all archived FAIL in <a href="justina_round1_scoreboard.html">scoreboard</a>.</li>
+  <li>This is a <em>cross-sectional allocation</em> path: forecast where the tangency <em>point</em> will be, then pick a robust nearby portfolio on today's frontier. Scales to N ≥ 100 ETFs and/or category sleeves.</li>
+</ul>
+
+<h2>Books implication</h2>
+<p>
+  <strong>No book cut on tooling merge alone.</strong>
+  Live shortlist remains <strong>static core + unconditional Book-2 vol-target</strong> until Quant gate clears
+  nulls / DSR. This page stays under Archive/Methods until gate PASS.
+</p>
+
+<h2>Citations</h2>
+<ol>
+  <li><strong>Lead:</strong> Alexander, Nolan, and William Scherer. 2023.
+      "Forecasting Tangency Portfolios and Investing in the Minimum Euclidean Distance Portfolio
+      to Maximize Out-of-Sample Sharpe Ratios."
+      <em>Engineering Proceedings</em> 39(1):34.
+      <a href="https://doi.org/10.3390/engproc2023039034">doi:10.3390/engproc2023039034</a> ·
+      <a href="https://arxiv.org/abs/2604.03948">arXiv:2604.03948</a></li>
+  <li>Merton, Robert C. 1972. "An Analytic Derivation of the Efficient Portfolio Frontier."
+      <em>Journal of Financial and Quantitative Analysis</em> 7(4):1851–1872.
+      <a href="https://doi.org/10.2307/2329621">doi:10.2307/2329621</a></li>
+  <li>Ledoit, Olivier, and Michael Wolf. 2003. "Improved Estimation of the Covariance Matrix of
+      Stock Returns with an Application to Portfolio Selection."
+      <em>Journal of Empirical Finance</em> 10(5):603–621.</li>
+  <li>Bailey, David H., and Marcos López de Prado. 2014. "The Deflated Sharpe Ratio."
+      <em>Journal of Portfolio Management</em> 40(5):94–107.
+      <a href="https://doi.org/10.3905/jpm.2014.40.5.094">doi:10.3905/jpm.2014.40.5.094</a></li>
+  <li>Alexander, Nolan, William Scherer, and Matthew Burkett. 2021.
+      "Extending the Markowitz Model with Dimensionality Reduction: Forecasting Efficient Frontiers."
+      <em>2021 SIEDS.</em>
+      <a href="https://doi.org/10.1109/SIEDS52238.2021.9482563">doi:10.1109/SIEDS52238.2021.9482563</a></li>
+</ol>
+
+<p class="meta">
+  Teaching note: <code>allocation_alpha_forecast_tangency_med.html</code> (Quant) ·
+  Handoff: <code>NEXT_METHOD_HANDOFF.md</code> ·
+  Ticket: <code>ENGINEERING_TICKET_forecast_tangency_med.md</code> ·
+  Scoreboard: <a href="justina_round1_scoreboard.html">justina_round1_scoreboard.html</a>
+</p>
+
+<footer>
+USA ETF Lab · experimental research panel · Archive/Methods stub · not investment advice · Quant gate pending
+</footer>
+</div></section>
+</main>
+<footer class="site-footer"><p>Research only; not investment advice; experimental panel; no performance guarantees.</p></footer>
+<script src="../assets/nav.js" defer></script>
+<!-- lab:start --><footer class="site-footer"><p>Research only; not investment advice; experimental panel; no performance guarantees.</p></footer><!-- lab:end --></body>
+</html>

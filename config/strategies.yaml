@@ -101,3 +101,24 @@ strategies:
       monthly_csv: data/raw/usa_universe_panel_monthly_returns.csv
       coverage_csv: data/raw/usa_universe_panel_history_coverage.csv
     enabled: true
+  - id: forecast_tangency_med
+    display_name: Forecast Tangency + MED (Archive/Methods stub — Quant gate pending)
+    method_citation_id: alexander_scherer_2023_ft_med_engproc
+    method_citation: "Alexander, Nolan, and William Scherer. 2023. 'Forecasting Tangency Portfolios and Investing in the Minimum Euclidean Distance Portfolio to Maximize Out-of-Sample Sharpe Ratios.' Engineering Proceedings 39(1):34. doi:10.3390/engproc2023039034. arXiv:2604.03948. Nulls: EW + LW MinVar + ERC (CIO gate, required) + LW MVO (diagnostic). DSR + trial_count mandatory (Bailey & Lopez de Prado 2014). v1: long-only, leverage_cap=1.0, 5 bps one-way, rf=0 Sharpe_rf0. NO book cut until Quant gate PASS."
+    entrypoint: usa_etf_features.strategy_registry:forecast_tangency_med
+    default_params:
+      ef_lookback_months: 21
+      forecast_lookback_months: 60
+      mu_estimator: sample
+      cov_estimator: ledoit_wolf
+      long_only: true
+      leverage_cap: 1.0
+      cost_bps_one_way: 5.0
+      cash_ticker: BIL
+      min_names: 100
+      apply_to: name_level
+      include_thin: false
+      min_history_months: 24
+      monthly_csv: data/raw/usa_universe_panel_monthly_returns.csv
+      coverage_csv: data/raw/usa_universe_panel_history_coverage.csv
+    enabled: false
