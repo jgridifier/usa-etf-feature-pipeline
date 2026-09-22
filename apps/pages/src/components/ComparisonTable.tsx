@@ -8,7 +8,7 @@ interface CompRow {
   AnnVol: number
   MaxDD: number
   Sharpe_rf0: number
-  NW_t_vs_option_a: number
+  NW_t_vs_option_a: number | null
   turnover_per_year: number
   n_months: number
   start_date: string
@@ -19,6 +19,42 @@ interface CompRow {
 interface CompPayload {
   rows: CompRow[]
   source?: string
+}
+
+/** Order: live books first (static_option_a, vol_target_option_a), then optional sleeve last */
+function sortRows(rows: CompRow[]): { live: CompRow[]; sleeve: CompRow[] } {
+  const BOOK_ORDER = ['static_option_a', 'vol_target_option_a']
+  const live: CompRow[] = []
+  const sleeve: CompRow[] = []
+
+  for (const id of BOOK_ORDER) {
+    const row = rows.find(r => r.strategy_id === id)
+    if (row) live.push(row)
+  }
+  for (const row of rows) {
+    if (!BOOK_ORDER.includes(row.strategy_id)) sleeve.push(row)
+  }
+  return { live, sleeve }
+}
+
+function TableRow({ row, dim = false }: { row: CompRow; dim?: boolean }) {
+  return (
+    <tr className={`border-b border-border last:border-0 transition-colors ${dim ? 'opacity-50 hover:opacity-70' : 'hover:bg-raised'}`}>
+      <td className="px-4 py-3">
+        <span className={`font-medium ${dim ? 'text-muted' : 'text-ink'}`}>{row.label ?? row.strategy_id}</span>
+        {row.stance && (
+          <span className={`ml-2 text-2xs ${dim ? 'text-muted/40' : 'text-muted/60'}`}>({row.stance})</span>
+        )}
+      </td>
+      <td className="px-4 py-3 text-right font-mono text-ink">{pct(row.AnnReturn)}</td>
+      <td className="px-4 py-3 text-right font-mono text-body">{pct(row.AnnVol)}</td>
+      <td className="px-4 py-3 text-right font-mono text-down">{pct(row.MaxDD)}</td>
+      <td className="px-4 py-3 text-right font-mono text-ink">{num(row.Sharpe_rf0)}</td>
+      <td className="px-4 py-3 text-right font-mono text-body">{num(row.NW_t_vs_option_a)}</td>
+      <td className="px-4 py-3 text-right font-mono text-muted">{pct(row.turnover_per_year)}</td>
+      <td className="px-4 py-3 text-right font-mono text-muted">{row.n_months}</td>
+    </tr>
+  )
 }
 
 export function ComparisonTable() {
@@ -39,49 +75,84 @@ export function ComparisonTable() {
     )
   }
 
-  const rows = data.rows ?? []
+  const { live, sleeve } = sortRows(data.rows ?? [])
+
+  const headers = [
+    { key: 'Strategy', align: 'left' },
+    { key: 'Ann. Return', align: 'right' },
+    { key: 'Ann. Vol', align: 'right' },
+    { key: 'Max DD', align: 'right' },
+    { key: 'Sharpe rf0', align: 'right' },
+    { key: 'NW t vs A', align: 'right' },
+    { key: 'TO/yr', align: 'right' },
+    { key: 'Mo.', align: 'right' },
+  ]
 
   return (
-    <div
-      className="overflow-x-auto rounded-xl border border-border"
-      tabIndex={0}
-      role="region"
-      aria-label="Strategy comparison"
-    >
-      <table className="w-full text-xs whitespace-nowrap">
-        <thead>
-          <tr className="border-b border-border bg-raised text-left">
-            <th className="px-4 py-3 font-medium text-muted uppercase tracking-wider text-2xs">Strategy</th>
-            <th className="px-4 py-3 font-medium text-muted uppercase tracking-wider text-2xs text-right">Ann. Return</th>
-            <th className="px-4 py-3 font-medium text-muted uppercase tracking-wider text-2xs text-right">Ann. Vol</th>
-            <th className="px-4 py-3 font-medium text-muted uppercase tracking-wider text-2xs text-right">Max DD</th>
-            <th className="px-4 py-3 font-medium text-muted uppercase tracking-wider text-2xs text-right">Sharpe rf0</th>
-            <th className="px-4 py-3 font-medium text-muted uppercase tracking-wider text-2xs text-right">NW t vs A</th>
-            <th className="px-4 py-3 font-medium text-muted uppercase tracking-wider text-2xs text-right">TO/yr</th>
-            <th className="px-4 py-3 font-medium text-muted uppercase tracking-wider text-2xs text-right">Mo.</th>
-          </tr>
-        </thead>
-        <tbody>
-          {rows.map(row => (
-            <tr key={row.strategy_id} className="border-b border-border last:border-0 hover:bg-raised transition-colors">
-              <td className="px-4 py-3">
-                <span className="font-medium text-ink">{row.label ?? row.strategy_id}</span>
-                {row.stance && <span className="ml-2 text-muted/60 text-2xs">({row.stance})</span>}
-              </td>
-              <td className="px-4 py-3 text-right font-mono text-ink">{pct(row.AnnReturn)}</td>
-              <td className="px-4 py-3 text-right font-mono text-body">{pct(row.AnnVol)}</td>
-              <td className="px-4 py-3 text-right font-mono text-down">{pct(row.MaxDD)}</td>
-              <td className="px-4 py-3 text-right font-mono text-ink">{num(row.Sharpe_rf0)}</td>
-              <td className="px-4 py-3 text-right font-mono text-body">{num(row.NW_t_vs_option_a)}</td>
-              <td className="px-4 py-3 text-right font-mono text-muted">{pct(row.turnover_per_year)}</td>
-              <td className="px-4 py-3 text-right font-mono text-muted">{row.n_months}</td>
+    <div>
+      {/* Live books table */}
+      <div
+        className="overflow-x-auto rounded-xl border border-border mb-3"
+        tabIndex={0}
+        role="region"
+        aria-label="Strategy comparison — live books"
+      >
+        <table className="w-full text-xs whitespace-nowrap">
+          <thead>
+            <tr className="border-b border-border bg-raised text-left">
+              {headers.map(h => (
+                <th
+                  key={h.key}
+                  className={`px-4 py-3 font-medium text-muted uppercase tracking-wider text-2xs ${h.align === 'right' ? 'text-right' : ''}`}
+                >
+                  {h.key}
+                </th>
+              ))}
             </tr>
-          ))}
-        </tbody>
-      </table>
-      {data.source && (
-        <div className="px-4 py-2 text-2xs text-muted bg-raised border-t border-border">
-          Source: <code>{data.source}</code>
+          </thead>
+          <tbody>
+            {live.map(row => (
+              <TableRow key={row.strategy_id} row={row} />
+            ))}
+          </tbody>
+        </table>
+        {data.source && (
+          <div className="px-4 py-2 text-2xs text-muted bg-raised border-t border-border">
+            Source: <code>{data.source}</code> · Live books only
+          </div>
+        )}
+      </div>
+
+      {/* XSD sleeve — separate, clearly subordinate */}
+      {sleeve.length > 0 && (
+        <div
+          className="overflow-x-auto rounded-xl border border-dashed border-border/60 opacity-60"
+          tabIndex={0}
+          role="region"
+          aria-label="Optional gated sleeve — not a live book"
+        >
+          <div className="px-4 py-2 bg-raised border-b border-border/60">
+            <span className="text-2xs text-muted/70 uppercase tracking-label">Optional gated sleeve (default OFF) — not a peer to Books 1–2</span>
+          </div>
+          <table className="w-full text-xs whitespace-nowrap">
+            <thead>
+              <tr className="border-b border-border/60 bg-raised/50 text-left">
+                {headers.map(h => (
+                  <th
+                    key={h.key}
+                    className={`px-4 py-3 font-medium text-muted/60 uppercase tracking-wider text-2xs ${h.align === 'right' ? 'text-right' : ''}`}
+                  >
+                    {h.key}
+                  </th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {sleeve.map(row => (
+                <TableRow key={row.strategy_id} row={row} dim />
+              ))}
+            </tbody>
+          </table>
         </div>
       )}
     </div>
