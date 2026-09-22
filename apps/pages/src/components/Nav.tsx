@@ -5,9 +5,10 @@ import { cn } from '../lib/utils'
 
 // Primary live-shortlist nav — Explorer is demoted to secondary (research sandbox)
 const PRIMARY_LINKS = [
-  { to: '/',      label: 'Home',  exact: true },
-  { to: '/books', label: 'Books' },
-  { to: '/runs',  label: 'Runs' },
+  { to: '/',         label: 'Home',     exact: true },
+  { to: '/books',    label: 'Books' },
+  { to: '/runs',     label: 'Runs' },
+  { to: '/universe', label: 'Universe' },
 ]
 
 export default function Nav() {

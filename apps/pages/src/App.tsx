@@ -5,6 +5,7 @@ import Books from './pages/Books'
 import Runs from './pages/Runs'
 import Explorer from './pages/Explorer'
 import Archive from './pages/Archive'
+import Universe from './pages/Universe'
 
 export default function App() {
   return (
@@ -14,6 +15,7 @@ export default function App() {
           <Route path="/" element={<Home />} />
           <Route path="/books" element={<Books />} />
           <Route path="/runs" element={<Runs />} />
+          <Route path="/universe" element={<Universe />} />
           <Route path="/explorer" element={<Explorer />} />
           <Route path="/archive" element={<Archive />} />
         </Routes>
