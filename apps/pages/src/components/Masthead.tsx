@@ -1,62 +1,61 @@
 import { Link } from 'react-router-dom'
 
 export default function Masthead() {
+  const today = new Date()
+  const dateStr = today.toLocaleDateString('en-US', {
+    weekday: 'long',
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric',
+  })
+
   return (
-    <div className="border-b border-border bg-bg">
-      {/* Thick editorial rule — 3px broadsheet-weight top bar */}
-      <div className="h-[3px] bg-ink/80" />
+    <header className="bg-bg border-b border-border">
+      {/* ── Broadsheet thick top rule — ink black ── */}
+      <div className="h-[4px] bg-ink" />
 
-      <div className="mx-auto max-w-6xl px-4 md:px-6 py-4 md:py-5">
-        <div className="flex items-center justify-between gap-4">
-          {/* Wordmark — larger, more editorial */}
-          <Link
-            to="/"
-            className="no-underline group flex-shrink-0"
-            aria-label="USA ETF Lab home"
-          >
-            <div className="flex items-center gap-3.5">
-              <div className="flex-shrink-0 h-9 w-9 rounded border border-border-bright bg-surface flex items-center justify-center shadow-card">
-                <svg width="18" height="18" viewBox="0 0 14 14" fill="none" aria-hidden="true">
-                  <rect x="1.5" y="1.5" width="4.5" height="4.5" rx="0.75" fill="#4f7ef8" opacity="0.9"/>
-                  <rect x="8"   y="1.5" width="4.5" height="4.5" rx="0.75" fill="#4f7ef8" opacity="0.4"/>
-                  <rect x="1.5" y="8"   width="4.5" height="4.5" rx="0.75" fill="#4f7ef8" opacity="0.4"/>
-                  <rect x="8"   y="8"   width="4.5" height="4.5" rx="0.75" fill="#4f7ef8" opacity="0.9"/>
-                </svg>
-              </div>
-              <div>
-                <p className="text-3xs font-medium uppercase tracking-masthead text-muted/70 leading-none mb-0.5">
-                  Research Lab · USA Equities
-                </p>
-                <h1 className="font-display font-black text-2xl md:text-4xl text-ink leading-none tracking-tight group-hover:text-accent transition-colors">
-                  USA ETF LAB
-                </h1>
-              </div>
-            </div>
-          </Link>
-
-          {/* Right meta — edition/date energy */}
-          <div className="hidden md:flex flex-col items-end gap-1 text-right flex-shrink-0">
-            <p className="text-2xs text-muted/80 uppercase tracking-label font-medium">
-              Research edition
-            </p>
-            <p className="text-2xs text-muted/50">
-              Static GitHub Pages · Not investment advice
-            </p>
-            <p className="text-2xs text-muted/40 font-mono">
-              OOS window · 2021-02 → 2026-09
-            </p>
-          </div>
-        </div>
-
-        {/* Thick horizontal rule with centred label — broadsheet divider */}
-        <div className="mt-4 flex items-center gap-3">
-          <div className="flex-1 h-px bg-border-bright/60" />
-          <span className="text-2xs text-muted/50 uppercase tracking-label flex-shrink-0 px-1 font-medium">
-            Experimental panel · research only
-          </span>
-          <div className="flex-1 h-px bg-border-bright/60" />
+      {/* ── Date / edition strip ── */}
+      <div className="border-b border-border/60">
+        <div className="mx-auto max-w-6xl px-4 md:px-6 py-1.5 flex items-center justify-between gap-4">
+          <p className="text-2xs font-sans font-medium uppercase tracking-label text-muted">
+            {dateStr}
+          </p>
+          <p className="text-2xs font-sans text-muted/60 uppercase tracking-label">
+            OOS window · 2021-02 → 2026-09
+          </p>
+          <p className="hidden md:block text-2xs font-sans text-muted/50 uppercase tracking-label">
+            Static GitHub Pages · Research only
+          </p>
         </div>
       </div>
-    </div>
+
+      {/* ── Centered wordmark — broadsheet scale ── */}
+      <div className="mx-auto max-w-6xl px-4 md:px-6 py-6 md:py-8 text-center">
+        <Link
+          to="/"
+          className="no-underline inline-block group"
+          aria-label="USA ETF Lab — research home"
+        >
+          <p className="font-sans text-2xs uppercase tracking-[0.35em] text-muted mb-2 font-medium">
+            Experimental Research Panel · USA Equities
+          </p>
+          <h1
+            className="font-display font-black text-ink leading-none tracking-tight group-hover:opacity-80 transition-opacity"
+            style={{ fontSize: 'clamp(2.8rem, 7vw, 4.5rem)', letterSpacing: '-0.02em' }}
+          >
+            USA ETF LAB
+          </h1>
+          <p className="font-sans text-2xs uppercase tracking-[0.3em] text-muted mt-2 font-medium">
+            Research Edition · Not Investment Advice
+          </p>
+        </Link>
+      </div>
+
+      {/* ── Thick horizontal masthead rule ── */}
+      <div className="mx-auto max-w-6xl px-4 md:px-6 pb-4">
+        <div className="h-[2px] bg-ink" />
+        <div className="mt-[3px] h-px bg-border" />
+      </div>
+    </header>
   )
 }

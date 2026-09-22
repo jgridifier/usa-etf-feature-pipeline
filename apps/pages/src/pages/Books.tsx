@@ -28,13 +28,13 @@ function Eyebrow({ children }: { children: React.ReactNode }) {
 function SectionRule({ label }: { label?: string }) {
   return (
     <div className="flex items-center gap-3 my-0">
-      <div className="flex-1 h-px bg-border" />
+      <div className="flex-1 h-[2px] bg-ink/20" />
       {label && (
-        <span className="text-2xs text-muted/50 uppercase tracking-label flex-shrink-0 px-1">
+        <span className="font-sans text-2xs text-muted/60 uppercase tracking-label flex-shrink-0 px-2 font-medium">
           {label}
         </span>
       )}
-      <div className="flex-1 h-px bg-border" />
+      <div className="flex-1 h-[2px] bg-ink/20" />
     </div>
   )
 }
@@ -42,36 +42,36 @@ function SectionRule({ label }: { label?: string }) {
 /** CIO verdict band — 3-beat summary for Books page */
 function CioVerdictBand() {
   return (
-    <div className="border border-border/80 rounded-xl bg-surface overflow-hidden mb-5">
-      <div className="px-3 py-2 border-b border-border flex items-center gap-2">
-        <span className="text-accent text-xs leading-none">◆</span>
-        <span className="text-2xs font-medium uppercase tracking-label text-muted">CIO verdict · plain language</span>
+    <div className="border border-border bg-surface overflow-hidden mb-5">
+      <div className="px-3 py-2 border-b border-border flex items-center gap-2 bg-ink">
+        <span className="font-sans text-2xs font-bold uppercase tracking-label text-bg/80">CIO Verdict</span>
+        <span className="font-sans text-2xs text-bg/40 uppercase tracking-label">Plain language</span>
       </div>
       <div className="grid grid-cols-1 md:grid-cols-3 divide-y md:divide-y-0 md:divide-x divide-border">
         <div className="flex md:block items-start gap-3 px-3 py-3 md:px-5 md:py-4">
-          <p className="text-2xs font-semibold uppercase tracking-label text-up whitespace-nowrap md:mb-1.5">HOLD</p>
+          <p className="font-sans text-2xs font-bold uppercase tracking-label text-up whitespace-nowrap md:mb-1.5">HOLD</p>
           <div>
-            <p className="text-sm text-ink leading-snug font-medium md:mb-1">Static core + Book-2 vol-target</p>
-            <p className="hidden md:block text-2xs text-body leading-relaxed">
+            <p className="font-serif text-sm text-ink leading-snug font-medium md:mb-1">Static core + Book-2 vol-target</p>
+            <p className="hidden md:block font-sans text-2xs text-body leading-relaxed">
               Both books are on the live shortlist. No new books from Justina round-1 or #13.
             </p>
           </div>
         </div>
         <div className="flex md:block items-start gap-3 px-3 py-3 md:px-5 md:py-4">
-          <p className="text-2xs font-semibold uppercase tracking-label text-down whitespace-nowrap md:mb-1.5">DO NOT PROMOTE</p>
+          <p className="font-sans text-2xs font-bold uppercase tracking-label text-down whitespace-nowrap md:mb-1.5">DO NOT PROMOTE</p>
           <div>
-            <p className="text-sm text-ink leading-snug font-medium md:mb-1">Archive fails · XSD sleeve off</p>
-            <p className="hidden md:block text-2xs text-body leading-relaxed">
+            <p className="font-serif text-sm text-ink leading-snug font-medium md:mb-1">Archive fails · XSD sleeve off</p>
+            <p className="hidden md:block font-sans text-2xs text-body leading-relaxed">
               Spectral RP, Regime-Aware, #13 — binding-null failures, archived only.
               XSD is default <strong>OFF</strong> — never a peer to Books 1–2.
             </p>
           </div>
         </div>
         <div className="flex md:block items-start gap-3 px-3 py-3 md:px-5 md:py-4">
-          <p className="text-2xs font-semibold uppercase tracking-label text-accent whitespace-nowrap md:mb-1.5">SHIFT MEANING</p>
+          <p className="font-sans text-2xs font-bold uppercase tracking-label text-accent whitespace-nowrap md:mb-1.5">SHIFT MEANING</p>
           <div>
-            <p className="text-sm text-ink leading-snug font-medium md:mb-1">Book-2 = risk path, not return alpha</p>
-            <p className="hidden md:block text-2xs text-body leading-relaxed">
+            <p className="font-serif text-sm text-ink leading-snug font-medium md:mb-1">Book-2 = risk path, not return alpha</p>
+            <p className="hidden md:block font-sans text-2xs text-body leading-relaxed">
               Book-1 and Book-2 earn ~14.7% ann. return. Choosing Book-2 buys milder drawdowns
               and higher Sharpe — not better absolute return.
             </p>
@@ -82,26 +82,28 @@ function CioVerdictBand() {
   )
 }
 
-/** HTML/CSS weight proportion bar for a single asset */
+/** Typographic weight block — ticker as bold letterpress element */
 function WeightBar({ ticker, weight }: { ticker: string; weight: number }) {
   const pctWidth = Math.round(weight * 100)
-  const colors: Record<string, string> = {
-    VOO: 'bg-accent',
-    QQQM: 'bg-up',
-    IJR: 'bg-accent/60',
-    BIL: 'bg-muted',
-  }
-  const bar = colors[ticker] ?? 'bg-border-bright'
   return (
-    <div className="flex items-center gap-2.5 py-1">
-      <span className="font-mono text-2xs text-muted w-10 shrink-0">{ticker}</span>
-      <div className="flex-1 h-4 bg-raised rounded overflow-hidden">
+    <div className="flex items-center gap-3 py-1.5 border-b border-border/40 last:border-0">
+      <span
+        className="font-display font-black text-ink leading-none w-14 shrink-0"
+        style={{ fontSize: pctWidth >= 50 ? '1.1rem' : pctWidth >= 15 ? '0.9rem' : '0.75rem', opacity: pctWidth < 10 ? 0.5 : 1 }}
+      >
+        {ticker}
+      </span>
+      <div className="flex-1 relative h-5 bg-raised border border-border overflow-hidden">
         <div
-          className={`h-full ${bar} rounded transition-all`}
+          className="absolute top-0 left-0 h-full bg-ink/10"
           style={{ width: `${pctWidth}%` }}
         />
+        <div
+          className="absolute top-0 h-full border-r-2 border-ink/40"
+          style={{ left: `${pctWidth}%` }}
+        />
       </div>
-      <span className="font-mono text-2xs text-ink w-9 text-right shrink-0">
+      <span className="font-mono text-xs font-bold text-ink w-9 text-right shrink-0">
         {pctWidth}%
       </span>
     </div>
@@ -119,107 +121,77 @@ function BookWeightArt({
   note?: React.ReactNode
 }) {
   return (
-    <div className="border border-border bg-surface rounded-xl p-4">
+    <div className="border border-border bg-surface p-4">
       {title && <p className="section-eyebrow mb-3">{title}</p>}
-      <div className="space-y-0.5">
+      <div className="space-y-0">
         {weights.map(w => (
           <WeightBar key={w.ticker} ticker={w.ticker} weight={w.weight} />
         ))}
       </div>
-      {note && <div className="text-2xs text-muted mt-3 pt-2 border-t border-border">{note}</div>}
+      {note && <div className="font-sans text-2xs text-muted mt-3 pt-2 border-t border-border">{note}</div>}
     </div>
   )
 }
 
-/** HTML/CSS delta strip: Book-2 vs Book-1 — MaxDD delta uses absolute pp */
+/** CSS risk-path MaxDD visual for Books — paired drawdown bands */
 function DeltaStrip({ m }: { m: MetricsPayload }) {
-  const sharpeDelta = m.Sharpe_vt - m.Sharpe_a
   const ddPp = (Math.abs(m.MaxDD_a) - Math.abs(m.MaxDD_vt)) * 100
-  const volDelta = m.AnnVol_a - m.AnnVol_vt
-
-  const items = [
-    {
-      label: 'Sharpe (rf=0)',
-      vt: num(m.Sharpe_vt, 2),
-      base: num(m.Sharpe_a, 2),
-      delta: `+${num(sharpeDelta, 2)}`,
-      good: true,
-      vtBar: Math.min(100, (m.Sharpe_vt / 1.5) * 100),
-      baseBar: Math.min(100, (m.Sharpe_a / 1.5) * 100),
-    },
-    {
-      label: 'Max drawdown',
-      vt: pct(m.MaxDD_vt),
-      base: pct(m.MaxDD_a),
-      delta: `+${ddPp.toFixed(1)}pp milder`,
-      good: true,
-      vtBar: Math.min(100, (Math.abs(m.MaxDD_vt) / 0.4) * 100),
-      baseBar: Math.min(100, (Math.abs(m.MaxDD_a) / 0.4) * 100),
-    },
-    {
-      label: 'Ann. vol',
-      vt: pct(m.AnnVol_vt),
-      base: pct(m.AnnVol_a),
-      delta: `−${pct(volDelta)} lower`,
-      good: true,
-      vtBar: Math.min(100, (m.AnnVol_vt / 0.25) * 100),
-      baseBar: Math.min(100, (m.AnnVol_a / 0.25) * 100),
-    },
-    {
-      label: 'NW t vs Book-1',
-      vt: num(m.NW_t, 2),
-      base: '—',
-      delta: '≈ 0 (risk path only)',
-      good: null as boolean | null,
-      vtBar: null as number | null,
-      baseBar: null as number | null,
-    },
-  ]
+  const rangeMax = 35
+  const vtPct   = Math.min(100, (Math.abs(m.MaxDD_vt) / rangeMax) * 100)
+  const statPct = Math.min(100, (Math.abs(m.MaxDD_a) / rangeMax) * 100)
 
   return (
-    <div className="border border-border rounded-xl bg-surface overflow-hidden mb-6">
-      <div className="px-4 py-2.5 border-b border-border">
-        <span className="text-2xs font-medium uppercase tracking-label text-muted">
-          Book-2 vs Book-1 · {m.n_months}mo OOS · {m.start_date} → {m.end_date}
+    <div className="border border-border bg-surface overflow-hidden mb-6">
+      <div className="px-4 py-3 border-b border-border bg-raised flex items-center justify-between gap-2">
+        <p className="font-serif text-sm md:text-base text-ink leading-snug">
+          <strong>SHIFT MEANING</strong> — same ~{pct(m.AnnReturn_vt)} return ·{' '}
+          <span className="text-up font-semibold">+{ddPp.toFixed(1)}pp milder</span> peak drawdown ·
+          NW t ≈ {num(m.NW_t, 2)} (return parity)
+        </p>
+        <span className="font-sans text-2xs text-muted flex-shrink-0">
+          {m.n_months}mo · {m.start_date} → {m.end_date}
         </span>
       </div>
-      <div className="grid grid-cols-2 md:grid-cols-4 divide-x divide-border">
-        {items.map(item => (
-          <div key={item.label} className="px-4 py-4">
-            <p className="text-2xs text-muted uppercase tracking-label mb-2">{item.label}</p>
-            {item.vtBar != null && (
-              <div className="mb-3 space-y-1.5">
-                <div className="flex items-center gap-1.5">
-                  <span className="text-3xs text-muted/70 w-10 shrink-0">Book-2</span>
-                  <div className="flex-1 h-4 bg-raised rounded overflow-hidden">
-                    <div className="h-full bg-accent rounded" style={{ width: `${item.vtBar}%` }} />
-                  </div>
-                </div>
-                <div className="flex items-center gap-1.5">
-                  <span className="text-3xs text-muted/70 w-10 shrink-0">Book-1</span>
-                  <div className="flex-1 h-4 bg-raised rounded overflow-hidden">
-                    <div className="h-full bg-border-bright rounded" style={{ width: `${item.baseBar!}%` }} />
-                  </div>
-                </div>
-              </div>
-            )}
-            <div className="flex items-baseline gap-2 flex-wrap">
-              <span className="font-mono text-base text-ink font-semibold">{item.vt}</span>
-              <span className="text-2xs text-muted">vs {item.base}</span>
-            </div>
-            <p className={`text-2xs mt-1 font-medium ${
-              item.good === true ? 'text-up' : item.good === false ? 'text-down' : 'text-muted'
-            }`}>
-              {item.delta}
-            </p>
+      <div className="p-4 space-y-3">
+        {/* Book 2 — vol-target */}
+        <div>
+          <div className="flex items-center justify-between mb-1">
+            <span className="font-sans text-2xs font-medium text-muted uppercase tracking-label">Book 2 vol-target</span>
+            <span className="font-mono text-xs font-bold text-ink">{pct(m.MaxDD_vt)}</span>
           </div>
-        ))}
-      </div>
-      <div className="px-4 py-2 border-t border-border bg-raised">
-        <p className="text-2xs text-muted/70">
-          <strong className="text-muted">Same ~14.7% ann. return as Book-1 — shift buys milder drawdowns + higher Sharpe, not outperformance.</strong>{' '}
-          <Link to="/runs" className="text-accent/80 hover:text-accent no-underline">See full OOS charts →</Link>
-        </p>
+          <div className="relative h-8 bg-raised border border-border overflow-hidden">
+            <div className="absolute top-0 left-0 right-0 h-px bg-border-bright/40" />
+            <div
+              className="absolute top-0 left-0 h-full"
+              style={{ width: `${vtPct}%`, background: 'rgba(139,26,26,0.10)', borderRight: '3px solid rgba(139,26,26,0.45)' }}
+            />
+            <div className="absolute inset-0 flex items-center px-2">
+              <span className="font-sans text-2xs text-down/60 font-medium">MaxDD {pct(m.MaxDD_vt)} · Sharpe {num(m.Sharpe_vt, 2)}</span>
+            </div>
+          </div>
+        </div>
+        {/* Book 1 — static */}
+        <div>
+          <div className="flex items-center justify-between mb-1">
+            <span className="font-sans text-2xs font-medium text-muted uppercase tracking-label">Book 1 static</span>
+            <span className="font-mono text-xs font-bold text-ink">{pct(m.MaxDD_a)}</span>
+          </div>
+          <div className="relative h-8 bg-raised border border-border overflow-hidden">
+            <div className="absolute top-0 left-0 right-0 h-px bg-border-bright/40" />
+            <div
+              className="absolute top-0 left-0 h-full"
+              style={{ width: `${statPct}%`, background: 'rgba(139,26,26,0.22)', borderRight: '3px solid rgba(139,26,26,0.65)' }}
+            />
+            <div className="absolute inset-0 flex items-center px-2">
+              <span className="font-sans text-2xs text-down/70 font-medium">MaxDD {pct(m.MaxDD_a)} · Sharpe {num(m.Sharpe_a, 2)}</span>
+            </div>
+          </div>
+        </div>
+        <div className="pt-1 border-t border-border/60">
+          <Link to="/runs" className="font-sans text-2xs text-accent/70 hover:text-accent no-underline">
+            See full OOS equity + drawdown charts →
+          </Link>
+        </div>
       </div>
     </div>
   )
@@ -241,12 +213,12 @@ function DisclosureSection({
   return (
     <details
       open={defaultOpen}
-      className="group border border-border rounded-xl overflow-hidden"
+      className="group border border-border overflow-hidden"
     >
       <summary className="list-none w-full flex items-center justify-between px-4 py-3 bg-surface hover:bg-raised transition-colors cursor-pointer gap-2 select-none [&::-webkit-details-marker]:hidden">
-        <span className="text-sm font-medium text-ink">{summary}</span>
-        <span className="text-muted text-xs flex-shrink-0 group-open:hidden">▼ expand</span>
-        <span className="text-muted text-xs flex-shrink-0 hidden group-open:inline">▲ collapse</span>
+        <span className="font-sans text-sm font-medium text-ink">{summary}</span>
+        <span className="font-sans text-muted text-xs flex-shrink-0 group-open:hidden">▼ expand</span>
+        <span className="font-sans text-muted text-xs flex-shrink-0 hidden group-open:inline">▲ collapse</span>
       </summary>
       <div className="border-t border-border bg-bg">
         {children}

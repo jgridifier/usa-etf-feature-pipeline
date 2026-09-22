@@ -15,15 +15,15 @@ export default function Nav() {
 
   const linkClass = ({ isActive }: { isActive: boolean }) =>
     cn(
-      'text-xs font-medium uppercase tracking-label transition-colors py-2 relative',
+      'font-sans text-xs font-medium uppercase tracking-label transition-colors py-2 relative',
       isActive
-        ? 'text-ink after:absolute after:bottom-0 after:left-0 after:right-0 after:h-0.5 after:bg-accent'
+        ? 'text-ink after:absolute after:bottom-0 after:left-0 after:right-0 after:h-0.5 after:bg-ink'
         : 'text-muted hover:text-body',
     )
 
   const secondaryClass = ({ isActive }: { isActive: boolean }) =>
     cn(
-      'text-2xs font-medium uppercase tracking-label transition-colors px-2.5 py-1 rounded border',
+      'font-sans text-2xs font-medium uppercase tracking-label transition-colors px-2.5 py-1 rounded border',
       isActive
         ? 'text-muted border-border bg-surface'
         : 'text-muted/60 border-transparent hover:border-border hover:text-muted',
