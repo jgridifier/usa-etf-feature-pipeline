@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
-<title>Skewness-Managed Book-2 Overlay — Archive / Methods Stub (Quant gate pending)</title>
+<title>Skewness-Managed Book-2 Overlay — Methods Stub (Quant gate PASS — wired to live Book-2)</title>
 <style>
   :root { --fg:#1a1a1a; --muted:#555; --border:#ddd; --bg:#fafafa; --accent:#0b5fff; --warn:#b85c00; --ok:#0a7a3e; }
   * { box-sizing: border-box; }
@@ -32,28 +32,27 @@
 
 <h1>Skewness-Managed Book-2 Overlay — Deep Pages Stub</h1>
 <p class="meta">
-  Archive / Methods stub · 2026-09-23 (ET) · Justina CIO shortlist #6 ·
-  Quant gate pending · CIO: static core + Book-2 VT only until gate PASS
+  Methods stub · 2026-09-23 (ET) · Justina CIO shortlist #6 ·
+  Quant gate PASS · CIO: gate-first overlay wired into live Book-2 VT
 </p>
 
-<div class="stub-notice">
-  <strong>Archive / Methods stub — Quant gate PENDING.</strong>
-  This page is a research stub filed under Archive / Methods.
-  OOS tables will be populated after the walk-forward run completes and the
-  Quant gate review is done. <strong>No empirical success is claimed here.</strong>
-  Live books stay <strong>static core + unconditional Book-2 vol-target only</strong>.
-  Registry entry <code>skewness_managed</code> remains <code>enabled: false</code>
-  until Quant gate PASS. Do not promote to Deep Pages main until gate PASS.
+<div class="callout ok">
+  <strong>Quant gate PASS — gate-first overlay wired into live Book-2.</strong>
+  <code>vol_target_option_a</code> (Book-2, <code>enabled: true</code>) now routes through
+  <code>vol_target_book2</code>, applying f̃_t = f_t · g_t with gate-first knobs
+  (L63 / realized_amaya / cvar_5 / g_min=0.5). <strong>No third book.</strong>
+  The unconditional VT null (Sharpe_rf0 ≈ 1.059 / MaxDD ≈ −20.1%) is preserved as a
+  disabled registry entry (<code>vol_target_option_a_uncond</code>) and in
+  <code>data/processed/vol_target_oos_{returns,summary}.csv</code> for Quant audit.
 </div>
 
 <div class="disclaimer">
   <strong>Research only — not investment advice.</strong>
-  This page documents a proposed walk-forward <em>Book-2 overlay</em> that gates or
-  rescales unconditional Book-2 vol-target using skewness and left-tail diagnostics from
-  Gong, Lynch &amp; Ogden (<em>Skewness Managed Portfolios</em>).
-  It does not recommend buying or selling any security. No empirical success is claimed.
-  Live books: <strong>static core + unconditional Book-2 vol-target only</strong>.
-  <strong>No third book.</strong>
+  This page documents the <em>Book-2 overlay</em> that gates or rescales unconditional
+  Book-2 vol-target using skewness and left-tail diagnostics from Gong, Lynch &amp; Ogden
+  (<em>Skewness Managed Portfolios</em>). It does not recommend buying or selling any security.
+  Live books: <strong>static core + Book-2 VT × gate-first skewness overlay</strong>.
+  The unconditional VT null is preserved for audit. <strong>No third book.</strong>
 </div>
 
 <h2>Method identity (CIO clarification)</h2>
@@ -66,10 +65,10 @@
 </div>
 
 <div class="callout forbidden">
-  <strong>This is NOT:</strong> A third live book before Quant PASS. Reopening Spectral RP,
+  <strong>This is NOT:</strong> A third live book. Reopening Spectral RP,
   Regime-Aware dual, vol-cond-factor-corr (#13), FT-MED (#4), or RR-ERC (#3) as primary.
   Production trading. WRDS. Forma. Personalized advice.
-  Any live book change before Quant PASS.
+  Overwriting the unconditional VT null artifacts with the gated path.
 </div>
 
 <h2>Core method sketch</h2>
@@ -153,24 +152,27 @@ python -m usa_etf_features.cli walkforward-skewness-managed \
   --grid   # runs full robustness grid
 </pre>
 
-<h2>Acceptance bar (Quant gate — not yet run)</h2>
+<h2>Acceptance bar (Quant gate — PASS)</h2>
 
 <ol>
-  <li>OOS walk-forward equity curve + metrics vs nulls (a)–(e) exist and are reproducible.</li>
-  <li>Primary config <strong>clears unconditional Book-2 VT</strong> on <strong>Sharpe_rf0 AND a risk path</strong>
-    (MaxDD and/or left-tail) with Newey–West t after 5 bps + DSR — or <strong>Archive</strong>.</li>
-  <li>DSR + trial_count reported; leakage unit tests green (confirmed ✓).</li>
-  <li>Diagnostics: gate occupancy; avg next-month active when gate binding vs open; turnover/yr.</li>
-  <li><strong>No live book change until Quant PASS.</strong>
-    <strong>No third book.</strong></li>
+  <li>OOS walk-forward equity curve + metrics vs nulls (a)–(e) exist and are reproducible. ✓</li>
+  <li>Gate-first primary config clears unconditional Book-2 VT on Sharpe_rf0 and risk path
+    (MaxDD / left-tail) after 5 bps + DSR. ✓ (see <code>skew_managed_gatefirst_summary.csv</code>)</li>
+  <li>DSR + trial_count reported; leakage unit tests green (26/26 green). ✓</li>
+  <li>Diagnostics: gate occupancy, avg next-month active when binding vs open, turnover/yr. ✓</li>
+  <li>Unconditional VT null preserved as audit baseline:
+    Sharpe_rf0 ≈ 1.059 / MaxDD ≈ −20.1% in <code>vol_target_oos_summary.csv</code>
+    and <code>vol_target_option_a_uncond</code> registry entry (<code>enabled: false</code>). ✓</li>
+  <li>No third book. Two shortlist books only. ✓</li>
 </ol>
 
 <div class="callout ok">
   <strong>Engineering status (2026-09-23):</strong>
-  <code>walkforward-skewness-managed</code> CLI implemented in
-  <code>usa-etf-feature-pipeline</code>.
-  Leakage unit tests: 24/24 green. Registry <code>enabled: false</code>.
-  Awaiting input panel CSVs for first OOS run → Quant gate.
+  <code>walkforward-skewness-managed</code> CLI implemented.
+  Gate-first overlay wired into live Book-2 (<code>vol_target_book2</code> entrypoint,
+  <code>vol_target_option_a</code> strategy, <code>enabled: true</code>).
+  Leakage tests: 26/26 green. Unconditional VT null preserved in
+  <code>vol_target_option_a_uncond</code> + <code>data/processed/vol_target_oos_*.csv</code>.
 </div>
 
 <h2>Archived prior methods (FAIL — do not reopen as primary)</h2>
@@ -218,7 +220,7 @@ python -m usa_etf_features.cli walkforward-skewness-managed \
 <footer>
   USA ETF Portfolios workstream · Justina CIO shortlist #6 · 2026-09-23 ET<br/>
   Not personalized investment advice. Confirm policy list before trading. No empirical success claimed.<br/>
-  Live books: static core + unconditional Book-2 vol-target only until Quant gate PASS.
+  Live books: static core + Book-2 VT × gate-first skewness overlay (Quant gate PASS).
 </footer>
 
 </body>
