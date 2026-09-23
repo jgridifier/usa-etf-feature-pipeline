@@ -12,18 +12,37 @@ strategies:
         IJR: 0.10
     enabled: true
   - id: vol_target_option_a
-    display_name: Vol Target Option A
-    method_citation_id: moreira_muir_2017_vol_managed
-    method_citation: "Moreira, Alan, and Tyler Muir. 2017. \"Volatility-Managed Portfolios.\" Journal of Finance 72(4): 1611-1644. doi:10.1111/jofi.12513. Implementation constraint: f_max=1 scale-down only, with residual weight in BIL and 5 bps one-way turnover costs."
-    entrypoint: usa_etf_features.strategy_registry:vol_target_option_a
+    display_name: "Vol Target Option A (Book-2 — VT × skewness gate)"
+    method_citation_id: moreira_muir_2017_vol_managed_gong_lynch_ogden_2025
+    method_citation: >-
+      Moreira, Alan, and Tyler Muir. 2017. "Volatility-Managed Portfolios."
+      Journal of Finance 72(4): 1611-1644. doi:10.1111/jofi.12513.
+      Skewness/left-tail gate overlay (Justina #6): Gong, Rui, John Lynch,
+      and Richard Ogden. 'Skewness Managed Portfolios.' Working paper (Jan 2025
+      / Jul 2026). https://richardeogden.github.io/Skewness_Managed_Portfolios.pdf
+      Gate: f̃_t = f_t · g_t; residual → BIL. Gate-first knobs locked:
+      lookback=63, skew_estimator=realized_amaya, left_tail_rule=cvar_5,
+      g_min=0.5. Skew measurement: Amaya et al. 2015 JFE 118:135-167.
+    entrypoint: usa_etf_features.strategy_registry:vol_target_book2
     default_params:
       core: option_a
       lookback: 63
       f_min: 0.25
       f_max: 1.0
+      g_min: 0.5
       sigma_star: expanding_annvol
+      skew_estimator: realized_amaya
+      left_tail_rule: cvar_5
+      skew_lookback_months: 21
+      apply_to: option_a_vt
       cash_ticker: BIL
       cost_bps_one_way: 5.0
+      min_names: 100
+      include_thin: false
+      cov_lookback_months: 36
+      max_null_names_cov: 50
+      monthly_csv: data/raw/usa_universe_panel_monthly_returns.csv
+      coverage_csv: data/raw/usa_universe_panel_history_coverage.csv
     enabled: true
   - id: score_rotate_xsd
     display_name: ScoreSimple XSD Rotate
@@ -119,40 +138,6 @@ strategies:
       apply_to: name_level
       include_thin: false
       min_history_months: 24
-      monthly_csv: data/raw/usa_universe_panel_monthly_returns.csv
-      coverage_csv: data/raw/usa_universe_panel_history_coverage.csv
-    enabled: false
-
-  - id: skewness_managed_book2
-    display_name: "Book-2 Skewness Overlay (Research path — Quant gate pending)"
-    method_citation_id: gong_lynch_ogden_2025_skewness_managed
-    method_citation: >-
-      Gong, Rui, John Lynch, and Richard Ogden. 'Skewness Managed Portfolios.'
-      Working paper (Jan 2025 / Jul 2026). https://richardeogden.github.io/Skewness_Managed_Portfolios.pdf
-      Book-2 vol-target backbone: Moreira & Muir 2017, doi:10.1111/jofi.12513.
-      Skew measurement: Amaya et al. 2015 JFE 118:135-167 (realized).
-      Inference: Bailey & Lopez de Prado 2014 DSR.
-      Book-2 risk-path overlay only — NOT a third book. Gate-first knobs locked:
-      L63 / realized_amaya / cvar_5 / g_min=0.5 per QUANT_GATE_skewness_managed.md §3.1.
-      enabled:false until Quant gate PASS. No live promotion until then.
-    entrypoint: usa_etf_features.strategy_registry:skewness_managed_book2
-    default_params:
-      core: option_a
-      lookback: 63
-      f_min: 0.25
-      f_max: 1.0
-      g_min: 0.5
-      sigma_star: expanding_annvol
-      skew_estimator: realized_amaya
-      left_tail_rule: cvar_5
-      skew_lookback_months: 21
-      apply_to: option_a_vt
-      cash_ticker: BIL
-      cost_bps_one_way: 5.0
-      min_names: 100
-      include_thin: false
-      cov_lookback_months: 36
-      max_null_names_cov: 50
       monthly_csv: data/raw/usa_universe_panel_monthly_returns.csv
       coverage_csv: data/raw/usa_universe_panel_history_coverage.csv
     enabled: false

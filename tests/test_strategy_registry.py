@@ -198,14 +198,16 @@ def test_registry_vol_target_and_rotate_walkforward_dates_do_not_leak(tmp_path):
 
 
 # ---------------------------------------------------------------------------
-# Justina #6 — skewness_managed_book2: gate-first knobs and enforcer tests
+# Justina #6 — vol_target_book2 (live Book-2 = VT × gate-first skew overlay)
 # ---------------------------------------------------------------------------
 
-def test_strategies_yaml_skew_overlay_gate_first_knobs():
-    """Live config/strategies.yaml must have skewness_managed_book2 with gate-first knobs only.
+def test_strategies_yaml_book2_uses_gate_first_knobs():
+    """Live config/strategies.yaml must have vol_target_option_a with gate-first skew knobs.
 
-    Gate-first spec (QUANT_GATE_skewness_managed.md §3.1):
+    vol_target_option_a is the live Book-2. Since CIO chose option (B), its entrypoint
+    is vol_target_book2 and params must contain locked gate-first knobs:
       lookback=63, skew_estimator=realized_amaya, left_tail_rule=cvar_5, g_min=0.5
+    No separate skewness_managed_book2 entry must exist.
     """
     from pathlib import Path
     import yaml
@@ -214,35 +216,41 @@ def test_strategies_yaml_skew_overlay_gate_first_knobs():
         raw = yaml.safe_load(f)
     entries = {s["id"]: s for s in raw.get("strategies", [])}
 
-    assert "skewness_managed_book2" in entries, "skewness_managed_book2 not found in strategies.yaml"
+    # No separate disabled overlay entry — #6 is wired into vol_target_option_a
+    assert "skewness_managed_book2" not in entries, (
+        "skewness_managed_book2 must not be a separate registry entry — "
+        "overlay is wired into vol_target_option_a"
+    )
 
-    entry = entries["skewness_managed_book2"]
+    assert "vol_target_option_a" in entries, "vol_target_option_a (Book-2) not found in strategies.yaml"
+    entry = entries["vol_target_option_a"]
     params = entry.get("default_params", {})
 
-    # Gate-first knobs — none of these may deviate
-    assert int(params["lookback"]) == 63, f"lookback must be 63; got {params['lookback']}"
+    # Book-2 must be live (enabled)
+    assert entry.get("enabled") is True, "vol_target_option_a (Book-2) must be enabled:true"
+
+    # Entrypoint must be the overlay adapter, not the plain vol-target
+    assert entry.get("entrypoint") == "usa_etf_features.strategy_registry:vol_target_book2", (
+        f"vol_target_option_a entrypoint must be vol_target_book2; got {entry.get('entrypoint')!r}"
+    )
+
+    # Gate-first knobs locked — none may deviate
+    assert int(params["lookback"]) == 63, f"lookback must be 63 (gate-first); got {params['lookback']}"
     assert str(params["skew_estimator"]) == "realized_amaya", (
         f"skew_estimator must be realized_amaya; got {params['skew_estimator']!r}"
     )
     assert str(params["left_tail_rule"]) == "cvar_5", (
         f"left_tail_rule must be cvar_5; got {params['left_tail_rule']!r}"
     )
-    assert abs(float(params["g_min"]) - 0.5) < 1e-9, f"g_min must be 0.5; got {params['g_min']}"
-
-    # Must stay disabled until Quant gate PASS
-    assert entry.get("enabled") is False, "skewness_managed_book2 must have enabled:false until Quant gate PASS"
-
-    # Entrypoint must be the correct overlay adapter
-    assert entry.get("entrypoint") == "usa_etf_features.strategy_registry:skewness_managed_book2"
+    assert abs(float(params["g_min"]) - 0.5) < 1e-9, f"g_min must be 0.5 (gate-first); got {params['g_min']}"
 
 
-def test_skew_managed_enforcer_rejects_non_gatefirst_lookback(tmp_path):
-    """skewness_managed_book2 registry adapter must raise if lookback != 63."""
-    import yaml
+def test_vol_target_book2_enforcer_rejects_non_gatefirst_lookback(tmp_path):
+    """vol_target_book2 adapter must raise ValueError if lookback != 63."""
     import numpy as np
     import pandas as pd
 
-    from usa_etf_features.strategy_registry import StrategySpec, skewness_managed_book2
+    from usa_etf_features.strategy_registry import StrategySpec, vol_target_book2
 
     uni_path = tmp_path / "universe.csv"
     pd.DataFrame({
@@ -263,25 +271,24 @@ def test_skew_managed_enforcer_rejects_non_gatefirst_lookback(tmp_path):
         display_name="test",
         method_citation_id="test",
         method_citation="test",
-        entrypoint="usa_etf_features.strategy_registry:skewness_managed_book2",
+        entrypoint="usa_etf_features.strategy_registry:vol_target_book2",
         default_params={
-            "lookback": 21,  # WRONG — must be 63
+            "lookback": 21,  # WRONG — gate-first requires 63
             "skew_estimator": "realized_amaya",
             "left_tail_rule": "cvar_5",
             "g_min": 0.5,
         },
-        enabled=False,
     )
     with pytest.raises(ValueError, match="lookback must be 63"):
-        skewness_managed_book2(px, bad_spec, universe_csv=uni_path, universe_config={}, asof=None)
+        vol_target_book2(px, bad_spec, universe_csv=uni_path, universe_config={}, asof=None)
 
 
-def test_skew_managed_enforcer_rejects_non_gatefirst_g_min(tmp_path):
-    """skewness_managed_book2 registry adapter must raise if g_min != 0.5."""
+def test_vol_target_book2_enforcer_rejects_non_gatefirst_g_min(tmp_path):
+    """vol_target_book2 adapter must raise ValueError if g_min != 0.5."""
     import numpy as np
     import pandas as pd
 
-    from usa_etf_features.strategy_registry import StrategySpec, skewness_managed_book2
+    from usa_etf_features.strategy_registry import StrategySpec, vol_target_book2
 
     uni_path = tmp_path / "universe.csv"
     pd.DataFrame({
@@ -302,14 +309,13 @@ def test_skew_managed_enforcer_rejects_non_gatefirst_g_min(tmp_path):
         display_name="test",
         method_citation_id="test",
         method_citation="test",
-        entrypoint="usa_etf_features.strategy_registry:skewness_managed_book2",
+        entrypoint="usa_etf_features.strategy_registry:vol_target_book2",
         default_params={
             "lookback": 63,
             "skew_estimator": "realized_amaya",
             "left_tail_rule": "cvar_5",
-            "g_min": 0.25,  # WRONG — must be 0.5
+            "g_min": 0.25,  # WRONG — gate-first requires 0.5
         },
-        enabled=False,
     )
     with pytest.raises(ValueError, match="g_min must be 0.5"):
-        skewness_managed_book2(px, bad_spec, universe_csv=uni_path, universe_config={}, asof=None)
+        vol_target_book2(px, bad_spec, universe_csv=uni_path, universe_config={}, asof=None)

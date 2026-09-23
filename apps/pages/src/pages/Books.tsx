@@ -300,9 +300,9 @@ export default function Books() {
                 Risk path — not return alpha
               </p>
               <p className="text-sm text-body leading-relaxed mb-4">
-                Same Option A core, scaled by estimated volatility (scale-down only). Cash in{' '}
-                <strong>BIL</strong> when risk is high. Same ~14.7% return as Book 1 — the
-                shift is milder drawdown (−20% vs −26%) and higher Sharpe (1.06 vs 0.92).
+                Same Option A core, scaled by estimated volatility (scale-down only) with skewness/left-tail
+                gate applied (Gong–Lynch–Ogden 2025). Cash in <strong>BIL</strong> when risk or skew is
+                adverse. Same ~14.7% return as Book 1 — the shift is milder drawdown and higher Sharpe.
               </p>
               <div className="text-2xs text-muted pt-3 border-t border-border">
                 OOS snapshot: ~14.7% ann. return · ~13.9% vol · MaxDD ~−20.1% · Sharpe ~1.06 · 68 months
@@ -318,8 +318,7 @@ export default function Books() {
             <Link to="/archive" className="text-muted hover:text-body underline underline-offset-2 decoration-border">
               Archive / Justina round-1 scoreboard
             </Link>.{' '}
-            Justina #6 skewness overlay is a <strong>Book-2 risk-path overlay</strong> (gate pending,{' '}
-            <code>enabled:false</code>) — not a third book.
+            Justina #6 skewness gate is wired into the live <strong>Book-2 path</strong> — not a third book.
           </div>
         </div>
       </section>
@@ -384,16 +383,15 @@ export default function Books() {
                     </dd>
                   </div>
                   <div>
-                    <dt className="section-eyebrow mb-0.5">Justina #6 — Book-2 skewness overlay (research path, gate pending)</dt>
+                    <dt className="section-eyebrow mb-0.5">Justina #6 — skewness/left-tail gate applied (Quant gate PASS)</dt>
                     <dd className="text-body leading-relaxed">
-                      Gong–Lynch–Ogden (2025) skewness/left-tail gate is wired as a{' '}
-                      <strong>Book-2 risk-path overlay</strong>, not a third book.
-                      Effective equity scale f̃_t = f_t · g_t; residual → BIL as today.
-                      Gate-first knobs locked: L63 / realized_amaya / cvar_5 / g_min=0.5.
-                      Strategy id <code>skewness_managed_book2</code> — <code>enabled:false</code>{' '}
-                      until Quant gate PASS. Claim: milder MaxDD / higher Sharpe_rf0 vs
-                      unconditional Book 2; no return-edge over Book 2 expected.{' '}
-                      <strong>No new shortlist card.</strong>
+                      Gong–Lynch–Ogden (2025) skewness/left-tail gate is wired directly into the live
+                      Book-2 path — <strong>not a third book</strong>. Effective equity scale{' '}
+                      f̃_t = f_t · g_t; residual → BIL. Gate-first knobs:{' '}
+                      L63 / realized_amaya / cvar_5 / g_min=0.5. Strategy id{' '}
+                      <code>vol_target_option_a</code> (entrypoint: <code>vol_target_book2</code>).
+                      Claim: milder MaxDD / higher Sharpe_rf0 vs unconditional Book 2; no return-edge
+                      expected. <strong>No new shortlist card.</strong>
                     </dd>
                   </div>
                 </dl>

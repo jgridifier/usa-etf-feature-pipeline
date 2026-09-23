@@ -51,7 +51,7 @@ ROTATE_ENTRYPOINT = "usa_etf_features.strategy_registry:score_rotate_xsd"
 M3_P2_ENTRYPOINT = "usa_etf_features.strategy_registry:m3_p2_core_rotate"
 FT_MED_ENTRYPOINT = "usa_etf_features.strategy_registry:forecast_tangency_med"
 RR_ERC_ENTRYPOINT = "usa_etf_features.strategy_registry:regime_resilient_erc"
-SKEW_MANAGED_ENTRYPOINT = "usa_etf_features.strategy_registry:skewness_managed_book2"
+VOL_TARGET_BOOK2_ENTRYPOINT = "usa_etf_features.strategy_registry:vol_target_book2"
 
 # Gate-first knobs locked for Justina #6 Book-2 overlay (QUANT_GATE_skewness_managed.md §3.1)
 _SKEW_GATE_FIRST_LOOKBACK = 63
@@ -620,7 +620,7 @@ def regime_resilient_erc(
     return StrategyResult(weights=weights, diagnostics=diag, returns=ret)
 
 
-def skewness_managed_book2(
+def vol_target_book2(
     prices: pd.DataFrame,
     spec: StrategySpec,
     *,
@@ -628,11 +628,12 @@ def skewness_managed_book2(
     universe_config: dict,
     asof: pd.Timestamp | None,
 ) -> StrategyResult:
-    """Registry adapter for Justina #6 — skewness/left-tail overlay on Book-2 VT.
+    """Live Book-2: unconditional VT × gate-first skewness overlay (Justina #6).
 
-    Wires f̃_t = f_t · g_t onto the existing Book-2 vol-target path; residual → BIL.
-    Config is locked to gate-first knobs only (L63 / realized_amaya / cvar_5 / g_min=0.5).
-    enabled:false until Quant gate PASS. NOT a third book — Book-2 risk-path overlay only.
+    f̃_t = f_t · g_t; residual → BIL. Gate-first knobs hard-locked:
+    lookback=63, skew_estimator=realized_amaya, left_tail_rule=cvar_5, g_min=0.5.
+    Enforces knobs at call time — raises ValueError on any non-gate-first config.
+    NOT a third book. Book-2 is the live enabled shortlist path with overlay applied.
     """
     from .skewness_managed import SkewnessManagedTrial, run_skewness_managed_trial
 
@@ -646,19 +647,19 @@ def skewness_managed_book2(
 
     if lookback != _SKEW_GATE_FIRST_LOOKBACK:
         raise ValueError(
-            f"skewness_managed_book2: lookback must be {_SKEW_GATE_FIRST_LOOKBACK} (gate-first); got {lookback}"
+            f"vol_target_book2: lookback must be {_SKEW_GATE_FIRST_LOOKBACK} (gate-first); got {lookback}"
         )
     if skew_estimator != _SKEW_GATE_FIRST_ESTIMATOR:
         raise ValueError(
-            f"skewness_managed_book2: skew_estimator must be {_SKEW_GATE_FIRST_ESTIMATOR!r} (gate-first); got {skew_estimator!r}"
+            f"vol_target_book2: skew_estimator must be {_SKEW_GATE_FIRST_ESTIMATOR!r} (gate-first); got {skew_estimator!r}"
         )
     if left_tail_rule != _SKEW_GATE_FIRST_LEFT_TAIL:
         raise ValueError(
-            f"skewness_managed_book2: left_tail_rule must be {_SKEW_GATE_FIRST_LEFT_TAIL!r} (gate-first); got {left_tail_rule!r}"
+            f"vol_target_book2: left_tail_rule must be {_SKEW_GATE_FIRST_LEFT_TAIL!r} (gate-first); got {left_tail_rule!r}"
         )
     if abs(g_min - _SKEW_GATE_FIRST_G_MIN) > 1e-9:
         raise ValueError(
-            f"skewness_managed_book2: g_min must be {_SKEW_GATE_FIRST_G_MIN} (gate-first); got {g_min}"
+            f"vol_target_book2: g_min must be {_SKEW_GATE_FIRST_G_MIN} (gate-first); got {g_min}"
         )
 
     monthly_csv = params.pop("monthly_csv", None)
@@ -700,7 +701,7 @@ def skewness_managed_book2(
         universe_config=universe_config,
     )
     if monthly_w.empty:
-        raise ValueError(f"{spec.id} produced no skewness-managed weights")
+        raise ValueError(f"{spec.id} produced no vol_target_book2 (skewness-managed) weights")
 
     last = monthly_w.sort_values("date").iloc[-1]
     w_cols = [c for c in monthly_w.columns if c.startswith("w_")]
@@ -803,8 +804,8 @@ def _strategy_current_result(
         return forecast_tangency_med(prices, spec, universe_csv=universe_csv, universe_config=universe_config, asof=asof)
     if spec.entrypoint == RR_ERC_ENTRYPOINT:
         return regime_resilient_erc(prices, spec, universe_csv=universe_csv, universe_config=universe_config, asof=asof)
-    if spec.entrypoint == SKEW_MANAGED_ENTRYPOINT:
-        return skewness_managed_book2(prices, spec, universe_csv=universe_csv, universe_config=universe_config, asof=asof)
+    if spec.entrypoint == VOL_TARGET_BOOK2_ENTRYPOINT:
+        return vol_target_book2(prices, spec, universe_csv=universe_csv, universe_config=universe_config, asof=asof)
     if spec.entrypoint == REGIME_DUAL_ENTRYPOINT:
         return regime_aware_dual_regime(spec, asof=asof)
     decision_date = _asof_date(prices, asof)

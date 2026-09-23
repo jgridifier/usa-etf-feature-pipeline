@@ -354,8 +354,8 @@ export default function Home() {
               label="Book 2 · live"
               status="HOLD"
               statusColor="up"
-              headline="Vol-target"
-              lede="Same Option A core, scaled by estimated volatility (scale-down only). Cash residual in BIL when risk is elevated. Same ~14.7% return as Book 1 — the shift is milder drawdowns (+5.4pp) and higher Sharpe. Path/risk, not return alpha."
+              headline="Vol-target + skewness gate"
+              lede="Same Option A core, vol-scaled with skewness/left-tail gate applied (Gong–Lynch–Ogden 2025, Justina #6). f̃_t = f_t · g_t; cash residual in BIL. Same ~14.7% return as Book 1 — the shift is milder drawdowns and higher Sharpe. Risk path, not return alpha."
               link={{ label: 'See Book 2 path vs Book 1', to: '/books' }}
             />
           </div>

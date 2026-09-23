@@ -524,6 +524,7 @@ def test_gate_first_trial_knobs():
 
     Verifies that make_skew_managed_trials with gate-first parameters produces a trial
     with exactly L63 / realized_amaya / cvar_5 / g_min=0.5 — no L21 or g_min=0.25.
+    These constants are used by vol_target_book2 (live Book-2 path).
     """
     from usa_etf_features.strategy_registry import (
         _SKEW_GATE_FIRST_LOOKBACK,
