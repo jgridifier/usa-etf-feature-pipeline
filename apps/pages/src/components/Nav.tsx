@@ -24,7 +24,7 @@ export default function Nav() {
 
   const secondaryClass = ({ isActive }: { isActive: boolean }) =>
     cn(
-      'font-sans text-2xs font-medium uppercase tracking-label transition-colors px-2.5 py-1 rounded border',
+      'font-sans text-2xs font-medium uppercase tracking-label transition-colors px-2.5 py-1 border',
       isActive
         ? 'text-muted border-border bg-surface'
         : 'text-muted/50 border-transparent hover:border-border hover:text-muted',

@@ -11,14 +11,14 @@ interface FtPayload {
 
 function ChartSkeleton({ height = 220 }: { height?: number }) {
   return (
-    <div className="rounded-lg border border-border bg-surface animate-pulse flex items-center justify-center text-muted text-xs" style={{ height }}>
+    <div className="border border-border bg-surface animate-pulse flex items-center justify-center text-muted text-xs" style={{ height }}>
       Loading…
     </div>
   )
 }
 function ChartError({ msg, height = 220 }: { msg: string; height?: number }) {
   return (
-    <div className="rounded-lg border border-border bg-surface flex items-center justify-center text-muted text-xs" style={{ height }}>
+    <div className="border border-border bg-surface flex items-center justify-center text-muted text-xs" style={{ height }}>
       {msg}
     </div>
   )

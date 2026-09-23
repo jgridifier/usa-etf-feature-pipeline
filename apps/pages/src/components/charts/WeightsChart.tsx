@@ -15,14 +15,14 @@ interface WeightsPayload {
 
 function ChartSkeleton() {
   return (
-    <div className="rounded-lg border border-border bg-surface animate-pulse flex items-center justify-center text-muted text-xs" style={{ height: 200 }}>
+    <div className="border border-border bg-surface animate-pulse flex items-center justify-center text-muted text-xs" style={{ height: 200 }}>
       Loading…
     </div>
   )
 }
 function ChartError({ msg }: { msg: string }) {
   return (
-    <div className="rounded-lg border border-border bg-surface flex items-center justify-center text-muted text-xs" style={{ height: 200 }}>
+    <div className="border border-border bg-surface flex items-center justify-center text-muted text-xs" style={{ height: 200 }}>
       {msg}
     </div>
   )

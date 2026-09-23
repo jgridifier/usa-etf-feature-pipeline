@@ -393,6 +393,92 @@ export default function Home() {
         </div>
       </section>
 
+      {/* ── Methods-under-test strip — allocation methods run on the panel ── */}
+      <section className="py-10 border-b border-border">
+        <div className="mx-auto max-w-6xl px-4 md:px-6">
+          <ThickRule label="Allocation methods under test" />
+          <p className="font-sans text-xs text-muted mt-3 mb-5 max-w-2xl leading-relaxed">
+            Methods scored on the USA ETF experimental panel via walk-forward OOS.
+            Binding-null gates on Sharpe; DSR/trial counts pre-declared. All three below
+            failed — documented as the rigour record, not a product shelf.
+          </p>
+
+          <div className="divide-y divide-border border border-border bg-surface">
+            {/* Row header */}
+            <div className="hidden md:grid grid-cols-[minmax(0,2fr)_minmax(0,1.5fr)_minmax(0,1.5fr)_minmax(0,1fr)_auto] gap-x-4 px-4 py-2 bg-raised">
+              <span className="font-sans text-2xs font-medium uppercase tracking-label text-muted">Method</span>
+              <span className="font-sans text-2xs font-medium uppercase tracking-label text-muted">Binding null</span>
+              <span className="font-sans text-2xs font-medium uppercase tracking-label text-muted">Sharpe / MaxDD</span>
+              <span className="font-sans text-2xs font-medium uppercase tracking-label text-muted">Verdict</span>
+              <span className="font-sans text-2xs font-medium uppercase tracking-label text-muted"></span>
+            </div>
+
+            {[
+              {
+                method: 'Spectral Risk Parity',
+                note: 'ADIA Lab mapping · N≥100 · 65m OOS',
+                null: 'Ledoit–Wolf MinVar',
+                sharpe: '1.06 / −8.4%',
+                href: './methods/spectral_risk_parity.html',
+              },
+              {
+                method: 'Regime-Aware Dual-Regime',
+                note: 'Luo & Mulvey mapping · 262m · gross',
+                null: 'Unconditional ERC',
+                sharpe: '0.51 / −38.6%',
+                href: './methods/regime_aware_dual_regime.html',
+              },
+              {
+                method: 'Vol-cond-factor-corr (#13)',
+                note: 'Book-2 VT × corr/vol gate · 12 trials',
+                null: 'Unconditional Book-2 VT',
+                sharpe: '1.05 / −15.4%',
+                href: './methods/allocation_alpha_vol_cond_factor_corr.html',
+              },
+            ].map(row => (
+              <div
+                key={row.method}
+                className="grid grid-cols-1 md:grid-cols-[minmax(0,2fr)_minmax(0,1.5fr)_minmax(0,1.5fr)_minmax(0,1fr)_auto] gap-x-4 gap-y-1 px-4 py-3 hover:bg-raised/60 transition-colors"
+              >
+                <div>
+                  <span className="font-sans text-xs font-medium text-ink">{row.method}</span>
+                  <span className="block font-sans text-2xs text-muted/70 mt-0.5">{row.note}</span>
+                </div>
+                <div className="flex items-start md:items-center">
+                  <span className="font-sans text-xs text-body md:text-xs">{row.null}</span>
+                </div>
+                <div className="flex items-start md:items-center">
+                  <span className="font-mono text-xs text-body">{row.sharpe}</span>
+                </div>
+                <div className="flex items-start md:items-center">
+                  <span className="font-sans text-2xs font-semibold text-down uppercase tracking-label">FAIL — archive</span>
+                </div>
+                <div className="flex items-start md:items-center gap-2">
+                  <a
+                    href={row.href}
+                    className="font-sans text-2xs text-muted hover:text-body underline underline-offset-2 decoration-border whitespace-nowrap"
+                  >
+                    method page →
+                  </a>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          <div className="mt-4 flex flex-wrap items-center gap-4">
+            <Link
+              to="/archive"
+              className="font-sans inline-flex items-center gap-2 border border-border text-body text-xs font-medium px-4 py-2 no-underline hover:border-border-bright hover:text-ink transition-all"
+            >
+              Full scoreboard → Methods / Archive
+            </Link>
+            <span className="font-sans text-2xs text-muted">
+              Justina round-1 + vol-cond #13 · updated 2026-09-21
+            </span>
+          </div>
+        </div>
+      </section>
+
       {/* ── Key findings — 2 shortlist findings only, compact Archive link ── */}
       <section className="py-10 border-b border-border bg-hero-gradient">
         <div className="mx-auto max-w-6xl px-4 md:px-6">

@@ -22,7 +22,7 @@ interface EquityPayload {
 function ChartSkeleton({ height = 300 }: { height?: number }) {
   return (
     <div
-      className="rounded-lg border border-border bg-surface animate-pulse flex items-center justify-center text-muted text-xs"
+      className="border border-border bg-surface animate-pulse flex items-center justify-center text-muted text-xs"
       style={{ height }}
     >
       Loading chart…
@@ -33,7 +33,7 @@ function ChartSkeleton({ height = 300 }: { height?: number }) {
 function ChartError({ msg, height = 300 }: { msg: string; height?: number }) {
   return (
     <div
-      className="rounded-lg border border-border bg-surface flex items-center justify-center text-muted text-xs"
+      className="border border-border bg-surface flex items-center justify-center text-muted text-xs"
       style={{ height }}
     >
       {msg}
