@@ -695,6 +695,7 @@ def build_runs() -> None:
 def build_methods_index() -> None:
     methods = [
         ('allocation_alpha_vol_target.html', 'Allocation alpha: volatility-managed Option A'),
+        ('skewness_managed_stub.html', 'Skewness-Managed Book-2 Overlay (Justina #6 · gate-first PASS)'),
         ('ot_short_term_forecasting.html', 'Optimal transport: short-term forecasting'),
         ('ts_explorer_metric_menu.html', 'Time Series Explorer: quant metric menu'),
     ]

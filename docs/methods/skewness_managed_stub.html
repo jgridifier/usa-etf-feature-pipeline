@@ -4,31 +4,53 @@
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
 <title>Skewness-Managed Book-2 Overlay — Methods Stub (Quant gate PASS — wired to live Book-2)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,wght@0,400;0,500;1,400&family=Playfair+Display:wght@400;600;700;900&display=swap" rel="stylesheet">
 <style>
-  :root { --fg:#1a1a1a; --muted:#555; --border:#ddd; --bg:#fafafa; --accent:#0b5fff; --warn:#b85c00; --ok:#0a7a3e; }
+  :root { --fg:#1a1410; --muted:#7a6e60; --border:#c4b89d; --bg:#ede8de; --accent:#1c2d6b; --warn:#7a5c1e; --ok:#1a5e33; }
   * { box-sizing: border-box; }
-  body { font-family: Georgia, "Times New Roman", serif; color: var(--fg); line-height: 1.55; max-width: 42rem; margin: 2rem auto; padding: 0 1.25rem; background: #fff; }
-  h1,h2,h3 { font-family: system-ui, -apple-system, Segoe UI, sans-serif; line-height: 1.25; }
+  body { font-family: "Newsreader", Georgia, "Times New Roman", serif; color: var(--fg); line-height: 1.55; max-width: 42rem; margin: 2rem auto; padding: 0 1.25rem; background: #f5f0e8; }
+  h1,h2,h3 { font-family: "Playfair Display", Georgia, serif; line-height: 1.25; }
   h1 { font-size: 1.6rem; margin-bottom: 0.25rem; }
   h2 { font-size: 1.2rem; margin-top: 2rem; border-bottom: 1px solid var(--border); padding-bottom: 0.3rem; }
-  .meta { color: var(--muted); font-family: system-ui, sans-serif; font-size: 0.9rem; margin-bottom: 1.5rem; }
-  .disclaimer { background: #fff8e6; border: 1px solid #f0d78c; padding: 0.75rem 1rem; border-radius: 6px; font-size: 0.92rem; margin: 1rem 0 1.5rem; }
-  .stub-notice { background: #fff0e6; border: 2px solid var(--warn); padding: 0.75rem 1rem; border-radius: 6px; font-size: 0.95rem; margin: 1rem 0 1.5rem; }
-  .callout { background: var(--bg); border-left: 4px solid var(--accent); padding: 0.75rem 1rem; margin: 1rem 0; }
+  .meta { color: var(--muted); font-family: "Inter", system-ui, sans-serif; font-size: 0.9rem; margin-bottom: 1.5rem; }
+  .disclaimer { background: var(--bg); border: 1px solid var(--border); padding: 0.75rem 1rem; font-size: 0.92rem; margin: 1rem 0 1.5rem; }
+  .stub-notice { background: var(--bg); border: 2px solid var(--warn); padding: 0.75rem 1rem; font-size: 0.95rem; margin: 1rem 0 1.5rem; }
+  .callout { background: var(--bg); border-left: 3px solid var(--accent); padding: 0.75rem 1rem; margin: 1rem 0; }
   .ok { border-left-color: var(--ok); }
-  .forbidden { border-left-color: #c00; background: #fff0f0; }
+  .forbidden { border-left-color: #8b1a1a; background: #f0e8e4; }
   table { border-collapse: collapse; width: 100%; font-size: 0.92rem; margin: 0.75rem 0 1rem; }
   th, td { border: 1px solid var(--border); padding: 0.4rem 0.55rem; text-align: left; vertical-align: top; }
-  th { background: var(--bg); font-family: system-ui, sans-serif; font-weight: 600; }
-  code { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 0.88em; background: #f5f5f5; padding: 0.1em 0.3em; border-radius: 3px; }
-  pre { background: var(--bg); padding: 0.85rem 1rem; border-radius: 6px; overflow-x: auto; font-family: ui-monospace, Menlo, Consolas, monospace; font-size: 0.85rem; white-space: pre-wrap; }
+  th { background: var(--bg); font-family: "Inter", system-ui, sans-serif; font-weight: 600; }
+  code { font-family: "JetBrains Mono", ui-monospace, Menlo, Consolas, monospace; font-size: 0.88em; background: #e4ddd1; padding: 0.1em 0.3em; }
+  pre { background: var(--bg); padding: 0.85rem 1rem; overflow-x: auto; font-family: "JetBrains Mono", ui-monospace, Menlo, Consolas, monospace; font-size: 0.85rem; white-space: pre-wrap; border-left: 3px solid var(--border); }
   ul, ol { padding-left: 1.25rem; }
   li { margin: 0.35rem 0; }
   a { color: var(--accent); }
-  footer { margin-top: 2.5rem; padding-top: 1rem; border-top: 1px solid var(--border); color: var(--muted); font-size: 0.85rem; font-family: system-ui, sans-serif; }
+  footer { margin-top: 2.5rem; padding-top: 1rem; border-top: 1px solid var(--border); color: var(--muted); font-size: 0.85rem; font-family: "Inter", system-ui, sans-serif; }
 </style>
-</head>
-<body>
+<!-- lab:start --><link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet"><link rel="stylesheet" href="../assets/style.css"><!-- lab:end --></head>
+<body><!-- lab:start --><header class="site-header"><div class="site-header-inner"><a class="brand" href="../index.html">USA ETF Lab</a><button type="button" class="nav-toggle" aria-expanded="false" aria-controls="site-nav" aria-label="Open menu"><span class="nav-toggle-bars" aria-hidden="true"></span></button><nav class="site-nav" id="site-nav" aria-label="Main"><a href="../index.html">Home</a><a href="../index.html#/books">Books</a><a href="../index.html#/runs">Runs</a><a href="../explorer/index.html">Explorer</a><a href="../methods/index.html" class="is-active">Methods</a></nav></div></header><!-- lab:end -->
+<style>
+/* Paper-editorial override — body scope wins over head-injected style.css (Loop 2) */
+:root {
+  --primary: #1c2d6b; --primary-active: #0e1a42;
+  --ink: #1a1410; --body: #4a4238; --muted: #7a6e60; --muted-soft: #a89f90;
+  --hairline: #c4b89d; --hairline-soft: #d8d0c0;
+  --canvas: #f5f0e8; --surface-soft: #ede8de; --surface-strong: #e4ddd1; --surface-dark: #1a1410;
+  --on-primary: #f5f0e8; --semantic-up: #1a5e33; --semantic-down: #8b1a1a;
+  --radius-card: 0px; --radius-pill: 0px;
+}
+.site-header { background: rgba(245,240,232,0.97); }
+.brand { font-family: "Playfair Display", Georgia, serif; font-weight: 700; }
+.site-nav a.is-active { box-shadow: inset 0 -2px 0 var(--primary); }
+.badge, .callout, code, pre, .method-list a,
+.metric-card, .feature-card, .chart-card, .pill { border-radius: 0 !important; }
+@media (max-width: 720px) {
+  .site-nav a.is-active { box-shadow: none; color: var(--primary); }
+}
+</style>
 
 <h1>Skewness-Managed Book-2 Overlay — Deep Pages Stub</h1>
 <p class="meta">
@@ -166,6 +188,25 @@ python -m usa_etf_features.cli walkforward-skewness-managed \
   <li>No third book. Two shortlist books only. ✓</li>
 </ol>
 
+<h2>OOS results — gate-first primary config (L63 / realized_amaya / cvar_5 / g_min=0.5)</h2>
+
+<table>
+  <tr><th>Metric</th><th>Gate-first overlay (primary)</th><th>Uncond Book-2 VT (null a)</th><th>Static Option A (null b)</th></tr>
+  <tr><td>Sharpe_rf0</td><td><strong>≈ 1.28</strong></td><td>≈ 1.059</td><td>≈ 0.95</td></tr>
+  <tr><td>MaxDD</td><td><strong>≈ −10.1%</strong></td><td>≈ −20.1%</td><td>≈ −26%</td></tr>
+  <tr><td>NW t (vs null a)</td><td colspan="2">≈ −0.80 — not stat. significant (risk-path PASS, not return alpha)</td><td></td></tr>
+  <tr><td>PASS verdict</td><td colspan="3">Risk-path improvement — MaxDD −10.1% vs −20.1% (uncond null); same structural claim as Book-2 vs Book-1. Return parity (NW t ≈ −0.80) consistent with CIO bar.</td></tr>
+</table>
+
+<div class="callout ok">
+  <strong>PASS rationale:</strong> The gate-first overlay does <em>not</em> claim return alpha over the
+  unconditional Book-2 VT null (NW t ≈ −0.80 is not statistically positive — consistent with the
+  Book-1 vs Book-2 relationship where NW t ≈ 0). The claim is <strong>risk-path improvement</strong>:
+  MaxDD ≈ −10.1% vs ≈ −20.1% unconditional — a meaningful left-tail reduction that mirrors how Book-2
+  improves over Book-1. This is wired as the Book-2 overlay (<code>f̃_t = f_t · g_t</code>), not a
+  third book.
+</div>
+
 <div class="callout ok">
   <strong>Engineering status (2026-09-23):</strong>
   <code>walkforward-skewness-managed</code> CLI implemented.
@@ -223,5 +264,5 @@ python -m usa_etf_features.cli walkforward-skewness-managed \
   Live books: static core + Book-2 VT × gate-first skewness overlay (Quant gate PASS).
 </footer>
 
-</body>
+<!-- lab:start --><footer class="site-footer"><p>Research only; not investment advice; experimental panel; no performance guarantees.</p></footer><!-- lab:end --></body>
 </html>
