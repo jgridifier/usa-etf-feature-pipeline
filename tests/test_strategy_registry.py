@@ -201,6 +201,46 @@ def test_registry_vol_target_and_rotate_walkforward_dates_do_not_leak(tmp_path):
 # Justina #6 — vol_target_book2 (live Book-2 = VT × gate-first skew overlay)
 # ---------------------------------------------------------------------------
 
+def test_strategies_yaml_uncond_null_entry_preserved():
+    """Live config/strategies.yaml must contain the unconditional VT null audit entry.
+
+    vol_target_option_a_uncond must exist, be disabled, use the plain vol_target entrypoint,
+    and carry L63/f_min=0.25/f_max=1.0 — so the primary null (Sharpe ≈ 1.059 / MaxDD ≈ −20.1%)
+    remains reproducible for Quant audit without being a live shortlist book.
+    """
+    from pathlib import Path
+    import yaml
+    cfg_path = Path(__file__).resolve().parents[1] / "config" / "strategies.yaml"
+    with open(cfg_path, encoding="utf-8") as f:
+        raw = yaml.safe_load(f)
+    entries = {s["id"]: s for s in raw.get("strategies", [])}
+
+    assert "vol_target_option_a_uncond" in entries, (
+        "vol_target_option_a_uncond (Quant audit null) not found in strategies.yaml"
+    )
+    null_entry = entries["vol_target_option_a_uncond"]
+
+    # Must be disabled — it is the audit null, NOT a live shortlist book
+    assert null_entry.get("enabled") is False, (
+        "vol_target_option_a_uncond must have enabled:false — it is the audit null, not a live book"
+    )
+
+    # Must use the plain (unconditional) vol-target entrypoint, not the overlay
+    assert null_entry.get("entrypoint") == "usa_etf_features.strategy_registry:vol_target_option_a", (
+        "uncond null must use vol_target_option_a entrypoint (unconditional VT, no skew gate)"
+    )
+
+    # Params must match the unconditional VT (no skew knobs)
+    params = null_entry.get("default_params", {})
+    assert int(params.get("lookback", 0)) == 63
+    assert "skew_estimator" not in params, (
+        "uncond null must NOT have skew_estimator param — it is the unconditional baseline"
+    )
+    assert "g_min" not in params, (
+        "uncond null must NOT have g_min param — it is the unconditional baseline"
+    )
+
+
 def test_strategies_yaml_book2_uses_gate_first_knobs():
     """Live config/strategies.yaml must have vol_target_option_a with gate-first skew knobs.
 

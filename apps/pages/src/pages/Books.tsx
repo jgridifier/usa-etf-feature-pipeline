@@ -390,8 +390,14 @@ export default function Books() {
                       f̃_t = f_t · g_t; residual → BIL. Gate-first knobs:{' '}
                       L63 / realized_amaya / cvar_5 / g_min=0.5. Strategy id{' '}
                       <code>vol_target_option_a</code> (entrypoint: <code>vol_target_book2</code>).
-                      Claim: milder MaxDD / higher Sharpe_rf0 vs unconditional Book 2; no return-edge
-                      expected. <strong>No new shortlist card.</strong>
+                    </dd>
+                    <dd className="text-body leading-relaxed mt-2">
+                      <strong>Claim vs unconditional Book-2 VT null</strong> (Sharpe_rf0 ≈ 1.059 /{' '}
+                      MaxDD ≈ −20.1% / 68 months — archived in{' '}
+                      <code>vol_target_oos_summary.csv</code> and registry entry{' '}
+                      <code>vol_target_option_a_uncond</code>):{' '}
+                      milder MaxDD / higher Sharpe_rf0; no return-edge expected.{' '}
+                      <strong>No new shortlist card. Two books only.</strong>
                     </dd>
                   </div>
                 </dl>
