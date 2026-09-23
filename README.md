@@ -15,6 +15,7 @@ Transparent, unit-tested feature scorer and **optional thematic rotation sleeve*
 | **Book-2 upgrade** | `walkforward-vol-cond-factor-corr` conditional factor-correlation gate on Book-2 VT |
 | **Shortlist #4 (gate pending)** | `walkforward-forecast-tangency-med` — forecast EF coefficients → MED portfolio (Alexander & Scherer 2023); Archive/Methods stub until Quant gate PASS |
 | **Shortlist #3** | `walkforward-regime-resilient-erc` — regime-resilient ERC construction (stress/corr overlays + LOIM regime-parity π-blend); Archive/Methods stub until Quant gate PASS |
+| **Shortlist #6 (gate pending)** | `walkforward-skewness-managed` — Book-2 overlay: skewness / left-tail gate on unconditional Book-2 VT (Gong–Lynch–Ogden); primary null = Book-2 VT; registry `enabled:false`; Archive/Methods stub until Quant gate PASS |
 
 ## Install
 
@@ -506,6 +507,53 @@ DSR + trial\_count mandatory. No book cut until Quant gate PASS.
 
 Teaching HTML: `docs/methods/allocation_alpha_regime_resilient_erc.html`
 Deep Pages stub: `docs/methods/regime_resilient_erc_stub.html`
+
+### Allocation alpha: Skewness-Managed Book-2 Overlay (Justina shortlist #6 — gate pending)
+
+Walk-forward **Book-2 vol-target overlay** that gates / rescales unconditional Book-2 VT
+using skewness / left-tail diagnostics (Gong, Lynch &amp; Ogden 2025/2026).
+**Primary null = unconditional Book-2 VT**. Not a third book. Registry `enabled:false`.
+
+```bash
+python -m usa_etf_features.cli walkforward-skewness-managed \
+  --prices /workspace/investments/usa_universe_adj_close.csv \
+  --universe /workspace/investments/usa_universe_categorized.csv \
+  --monthly /workspace/investments/usa_universe_panel_monthly_returns.csv \
+  --coverage /workspace/investments/usa_universe_panel_history_coverage.csv \
+  --null book2_vol_target \
+  --cost-bps 5 \
+  --out data/processed/skew_managed_oos_summary.csv \
+  --weights data/processed/skew_managed_monthly_weights.csv \
+  --registry data/processed/skew_managed_trial_registry.csv \
+  --returns data/processed/skew_managed_oos_returns.csv \
+  --state-out data/processed/skew_managed_state_table.csv \
+  --grid   # runs full robustness grid (lookbacks × g_mins × skew-estimators × left-tail-rules)
+```
+
+**Math appendix (see teaching HTML for full derivation):**
+
+*Book-2 vol-target backbone (Moreira &amp; Muir 2017):*
+```
+σ̂_t = √252 · stdev(last L daily returns)   # data ≤ t only
+f_t  = clip(σ* / σ̂_t, f_min, f_max)        # scale-down only; f_max=1
+```
+
+*Skewness / left-tail gate (Gong–Lynch–Ogden mapping):*
+```
+rs_t  = realized skewness (Amaya): √N · Σr³ / RV^(3/2)   # daily within month ≤ t
+ℓ_t   = left-tail score ≤ t (CVaR_5 | adverse_rs | pct_lt_neg_k_sigma)
+g_t   = g_min  if ℓ_t > expanding-median(ℓ)   # gate binds: left-tail adverse
+      = 1      otherwise                        # gate open: tail is calm
+f̃_t  = f_t · g_t                              # effective equity scale
+w̃_t  = f̃_t · w^A + (1 − f̃_t) · e_cash       # residual → BIL
+```
+
+Required nulls: **(a) unconditional Book-2 VT (PRIMARY)**, **(b) static Option A**,
+**(c) EW**, **(d) LW MinVar**, **(e) ERC**.
+DSR + trial\_count mandatory. No book cut until Quant gate PASS.
+
+Teaching HTML: `docs/methods/allocation_alpha_skewness_managed.html`
+Deep Pages stub: `docs/methods/skewness_managed_stub.html`
 
 ## Disclaimer
 

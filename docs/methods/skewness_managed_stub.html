@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>Skewness-Managed Book-2 Overlay — Archive / Methods Stub (Quant gate pending)</title>
+<style>
+  :root { --fg:#1a1a1a; --muted:#555; --border:#ddd; --bg:#fafafa; --accent:#0b5fff; --warn:#b85c00; --ok:#0a7a3e; }
+  * { box-sizing: border-box; }
+  body { font-family: Georgia, "Times New Roman", serif; color: var(--fg); line-height: 1.55; max-width: 42rem; margin: 2rem auto; padding: 0 1.25rem; background: #fff; }
+  h1,h2,h3 { font-family: system-ui, -apple-system, Segoe UI, sans-serif; line-height: 1.25; }
+  h1 { font-size: 1.6rem; margin-bottom: 0.25rem; }
+  h2 { font-size: 1.2rem; margin-top: 2rem; border-bottom: 1px solid var(--border); padding-bottom: 0.3rem; }
+  .meta { color: var(--muted); font-family: system-ui, sans-serif; font-size: 0.9rem; margin-bottom: 1.5rem; }
+  .disclaimer { background: #fff8e6; border: 1px solid #f0d78c; padding: 0.75rem 1rem; border-radius: 6px; font-size: 0.92rem; margin: 1rem 0 1.5rem; }
+  .stub-notice { background: #fff0e6; border: 2px solid var(--warn); padding: 0.75rem 1rem; border-radius: 6px; font-size: 0.95rem; margin: 1rem 0 1.5rem; }
+  .callout { background: var(--bg); border-left: 4px solid var(--accent); padding: 0.75rem 1rem; margin: 1rem 0; }
+  .ok { border-left-color: var(--ok); }
+  .forbidden { border-left-color: #c00; background: #fff0f0; }
+  table { border-collapse: collapse; width: 100%; font-size: 0.92rem; margin: 0.75rem 0 1rem; }
+  th, td { border: 1px solid var(--border); padding: 0.4rem 0.55rem; text-align: left; vertical-align: top; }
+  th { background: var(--bg); font-family: system-ui, sans-serif; font-weight: 600; }
+  code { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 0.88em; background: #f5f5f5; padding: 0.1em 0.3em; border-radius: 3px; }
+  pre { background: var(--bg); padding: 0.85rem 1rem; border-radius: 6px; overflow-x: auto; font-family: ui-monospace, Menlo, Consolas, monospace; font-size: 0.85rem; white-space: pre-wrap; }
+  ul, ol { padding-left: 1.25rem; }
+  li { margin: 0.35rem 0; }
+  a { color: var(--accent); }
+  footer { margin-top: 2.5rem; padding-top: 1rem; border-top: 1px solid var(--border); color: var(--muted); font-size: 0.85rem; font-family: system-ui, sans-serif; }
+</style>
+</head>
+<body>
+
+<h1>Skewness-Managed Book-2 Overlay — Deep Pages Stub</h1>
+<p class="meta">
+  Archive / Methods stub · 2026-09-23 (ET) · Justina CIO shortlist #6 ·
+  Quant gate pending · CIO: static core + Book-2 VT only until gate PASS
+</p>
+
+<div class="stub-notice">
+  <strong>Archive / Methods stub — Quant gate PENDING.</strong>
+  This page is a research stub filed under Archive / Methods.
+  OOS tables will be populated after the walk-forward run completes and the
+  Quant gate review is done. <strong>No empirical success is claimed here.</strong>
+  Live books stay <strong>static core + unconditional Book-2 vol-target only</strong>.
+  Registry entry <code>skewness_managed</code> remains <code>enabled: false</code>
+  until Quant gate PASS. Do not promote to Deep Pages main until gate PASS.
+</div>
+
+<div class="disclaimer">
+  <strong>Research only — not investment advice.</strong>
+  This page documents a proposed walk-forward <em>Book-2 overlay</em> that gates or
+  rescales unconditional Book-2 vol-target using skewness and left-tail diagnostics from
+  Gong, Lynch &amp; Ogden (<em>Skewness Managed Portfolios</em>).
+  It does not recommend buying or selling any security. No empirical success is claimed.
+  Live books: <strong>static core + unconditional Book-2 vol-target only</strong>.
+  <strong>No third book.</strong>
+</div>
+
+<h2>Method identity (CIO clarification)</h2>
+
+<div class="callout">
+  <strong>This IS:</strong> A <em>Book-2 overlay</em> — gate/rescale unconditional Book-2
+  vol-target (and/or category-sleeve weights) using skewness / left-tail diagnostics.
+  Not a standalone third book. Not an asset-selection strategy. Not dual-regime selection.
+  Not a factor-model rebuild. <strong>Primary null = unconditional Book-2 VT.</strong>
+</div>
+
+<div class="callout forbidden">
+  <strong>This is NOT:</strong> A third live book before Quant PASS. Reopening Spectral RP,
+  Regime-Aware dual, vol-cond-factor-corr (#13), FT-MED (#4), or RR-ERC (#3) as primary.
+  Production trading. WRDS. Forma. Personalized advice.
+  Any live book change before Quant PASS.
+</div>
+
+<h2>Core method sketch</h2>
+
+<p><strong>Book-2 vol-target backbone (already live — Moreira &amp; Muir 2017):</strong></p>
+<pre>
+σ̂_t  = √252 · stdev( last L daily returns of r^A )   # data ≤ t only
+f_t  = clip( σ* / σ̂_t , f_min, f_max )             # f_max = 1 (scale-down only)
+w_t  = f_t · w^A + (1 − f_t) · e_cash               # cash = BIL
+</pre>
+
+<p><strong>Skewness / left-tail overlay (this method — Gong–Lynch–Ogden mapping):</strong></p>
+<pre>
+At t, compute skew / left-tail diagnostics using data ≤ t only:
+  rs_t  = realized skewness (Amaya-style: √N · Σr³ / RV^(3/2))
+        OR expected skewness (BMV-lite: expanding OLS on lagged rs_t)
+  ℓ_t   = left-tail score (choice of):
+          cvar_5              — rolling CVaR at 5% level on monthly portfolio returns
+          adverse_rs          — max(0, −rs_t)
+          pct_lt_neg_k_sigma  — % months with r &lt; −k·σ_monthly
+
+Gate g_t ∈ [g_min, 1]:
+  bind (g → g_min)  when ℓ_t &gt; expanding median of historical ℓ
+  open (g → 1)      when ℓ_t ≤ expanding median (calm / favorable tail)
+
+Effective equity scale:
+  f̃_t = f_t · g_t
+  w̃_t = f̃_t · w^A + (1 − f̃_t) · e_cash   # residual → BIL
+</pre>
+
+<h2>Nulls (required by CIO gate set)</h2>
+
+<table>
+  <tr><th>ID</th><th>Null</th><th>Role</th></tr>
+  <tr><td><strong>(a)</strong></td><td>Unconditional Moreira–Muir Book-2 VT (Option A)</td><td><strong>PRIMARY</strong> — must clear Sharpe AND MaxDD/left-tail after costs + DSR</td></tr>
+  <tr><td>(b)</td><td>Static core (Option A; fully invested)</td><td>Buy-and-hold book context</td></tr>
+  <tr><td>(c)</td><td>Equal-weight (name-level panel)</td><td>CIO gate set</td></tr>
+  <tr><td>(d)</td><td>LW MinVar</td><td>CIO gate set</td></tr>
+  <tr><td>(e)</td><td>ERC</td><td>CIO gate set</td></tr>
+</table>
+
+<h2>Registered knobs (config <code>skewness_managed.yaml</code>)</h2>
+
+<pre>
+skewness_managed:
+  lookbacks: [21, 63, 126]          # daily vol lookback (same as Book-2)
+  f_min: 0.25
+  f_max: 1.0
+  g_min: [0.25, 0.5]               # gate floor
+  skew_estimator: [realized_amaya, expected_bmv_lite]
+  left_tail_rule: [cvar_5, adverse_rs, pct_lt_neg_k_sigma]
+  apply_to: [option_a_vt]          # option_a_vt | category_sleeves
+  cost_bps_one_way: 5
+  min_names: 100
+  enabled: false                   # MUST remain false until Quant PASS
+</pre>
+
+<h2>Expected outputs (pending OOS run)</h2>
+
+<table>
+  <tr><th>Artifact</th><th>Contents</th></tr>
+  <tr><td><code>skew_managed_oos_summary.csv</code></td><td>AnnReturn, AnnVol, MaxDD, Sharpe_rf0 vs all nulls; NW t; left-tail metrics; turnover/yr; mean f̃; % gate binding; DSR; trial_count</td></tr>
+  <tr><td><code>skew_managed_monthly_weights.csv</code></td><td>date, trial_id, f, g, f̃, weights, cash</td></tr>
+  <tr><td><code>skew_managed_oos_returns.csv</code></td><td>date, trial_id, r_method, r_null_a (Book-2), r_null_b–e, r_active_vs_a, …</td></tr>
+  <tr><td><code>skew_managed_trial_registry.csv</code></td><td>All (L, skew-estimator, left-tail-rule, g_min, …) tried; enabled: false</td></tr>
+  <tr><td><code>skew_managed_state_table.csv</code></td><td>Avg next-month active return when gate binding vs open</td></tr>
+</table>
+
+<h2>CLI (implemented)</h2>
+
+<pre>
+python -m usa_etf_features.cli walkforward-skewness-managed \
+  --prices /workspace/investments/usa_universe_adj_close.csv \
+  --universe /workspace/investments/usa_universe_categorized.csv \
+  --monthly /workspace/investments/usa_universe_panel_monthly_returns.csv \
+  --null book2_vol_target \
+  --cost-bps 5 \
+  --out data/processed/skew_managed_oos_summary.csv \
+  --weights data/processed/skew_managed_monthly_weights.csv \
+  --registry data/processed/skew_managed_trial_registry.csv \
+  --grid   # runs full robustness grid
+</pre>
+
+<h2>Acceptance bar (Quant gate — not yet run)</h2>
+
+<ol>
+  <li>OOS walk-forward equity curve + metrics vs nulls (a)–(e) exist and are reproducible.</li>
+  <li>Primary config <strong>clears unconditional Book-2 VT</strong> on <strong>Sharpe_rf0 AND a risk path</strong>
+    (MaxDD and/or left-tail) with Newey–West t after 5 bps + DSR — or <strong>Archive</strong>.</li>
+  <li>DSR + trial_count reported; leakage unit tests green (confirmed ✓).</li>
+  <li>Diagnostics: gate occupancy; avg next-month active when gate binding vs open; turnover/yr.</li>
+  <li><strong>No live book change until Quant PASS.</strong>
+    <strong>No third book.</strong></li>
+</ol>
+
+<div class="callout ok">
+  <strong>Engineering status (2026-09-23):</strong>
+  <code>walkforward-skewness-managed</code> CLI implemented in
+  <code>usa-etf-feature-pipeline</code>.
+  Leakage unit tests: 24/24 green. Registry <code>enabled: false</code>.
+  Awaiting input panel CSVs for first OOS run → Quant gate.
+</div>
+
+<h2>Archived prior methods (FAIL — do not reopen as primary)</h2>
+
+<ul>
+  <li><strong>#3 Regime-Resilient ERC / LOIM</strong> — FAIL / ARCHIVE (<code>QUANT_GATE_regime_resilient_erc.md</code>, PR #26). Both paths lose LW MinVar on Sharpe.</li>
+  <li><strong>#4 FT-MED</strong> — FAIL / ARCHIVE (<code>QUANT_GATE_forecast_tangency_med.md</code>, PR #24).</li>
+  <li><strong>#5 / #13 Vol-cond-factor-corr</strong> — ARCHIVE (<code>vol_cond_factor_corr/</code>). Conditional corr gate shows no significant active return vs Book-2 VT after DSR.</li>
+  <li>Spectral RP, Regime-Aware dual — archived early.</li>
+</ul>
+
+<p>Scoreboard: <a href="justina_round1_scoreboard.html">justina_round1_scoreboard.html</a>.</p>
+
+<h2>Citations</h2>
+
+<ol>
+  <li><strong>Lead:</strong> Gong, Rui, John Lynch, and Richard Ogden. "Skewness Managed Portfolios."
+    Working paper (author PDF Jan 2025; Justina Quant Newsletter Jul 2026).
+    <a href="https://richardeogden.github.io/Skewness_Managed_Portfolios.pdf">PDF</a>.</li>
+  <li>Amaya, Diego, Peter Christoffersen, Kris Jacobs, and Aurelio Vasquez. 2015.
+    "Does Realized Skewness Predict the Cross-Section of Equity Returns?"
+    <em>Journal of Financial Economics</em> 118:135–167.</li>
+  <li>Boyer, Brian, Todd Mitton, and Keith Vorkink. 2010.
+    "Expected Idiosyncratic Skewness."
+    <em>Review of Financial Studies</em> 23(1):169–202.</li>
+  <li>Moreira, Alan, and Tyler Muir. 2017. "Volatility-Managed Portfolios."
+    <em>Journal of Finance</em> 72(4):1611–1644.
+    <a href="https://doi.org/10.1111/jofi.12513">doi:10.1111/jofi.12513</a></li>
+  <li>Bessembinder, Hendrik. 2018. "Do Stocks Outperform Treasury Bills?"
+    <em>Journal of Financial Economics</em> 129:440–457.</li>
+  <li>Bailey, David H., and Marcos López de Prado. 2014.
+    "The Deflated Sharpe Ratio."
+    <em>Journal of Portfolio Management</em> 40(5):94–107.</li>
+</ol>
+
+<p><strong>Internal artifacts:</strong>
+  Teaching HTML: <code>investments/methods/allocation_alpha_skewness_managed.html</code> ·
+  Eng ticket: <code>justina_shortlist/ENGINEERING_TICKET_skewness_managed.md</code> ·
+  Handoff: <code>justina_shortlist/NEXT_METHOD_HANDOFF.md</code> ·
+  #3 archive: <code>QUANT_GATE_regime_resilient_erc.md</code> ·
+  Scoreboard: <code>methods/justina_round1_scoreboard.html</code> ·
+  CIO shortlist: <code>justina_shortlist/cio_top10_methods.md</code> (#6).
+</p>
+
+<footer>
+  USA ETF Portfolios workstream · Justina CIO shortlist #6 · 2026-09-23 ET<br/>
+  Not personalized investment advice. Confirm policy list before trading. No empirical success claimed.<br/>
+  Live books: static core + unconditional Book-2 vol-target only until Quant gate PASS.
+</footer>
+
+</body>
+</html>

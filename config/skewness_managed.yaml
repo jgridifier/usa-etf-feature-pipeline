@@ -1,0 +1,47 @@
+# Skewness-Managed Book-2 Overlay — Justina CIO shortlist #6
+# Walk-forward config: Book-2 vol-target with skewness / left-tail gate
+#
+# Registry enabled: false — do NOT promote to live books until Quant gate PASS.
+# Primary null: unconditional Book-2 VT (Option A).
+# Success bar: clear Book-2 VT on Sharpe_rf0 AND MaxDD/left-tail after 5 bps + DSR.
+# No live book change until PASS. No third book.
+#
+# Lead citation: Gong, Lynch & Ogden, "Skewness Managed Portfolios" (Jan 2025 / Jul 2026).
+#   https://richardeogden.github.io/Skewness_Managed_Portfolios.pdf
+# Backbone: Moreira & Muir 2017, doi:10.1111/jofi.12513
+# Skew measurement: Amaya et al. 2015 (realized), Boyer–Mitton–Vorkink 2010 (expected)
+# Inference: Bailey & López de Prado 2014 (DSR/trial_count)
+#
+# Research tooling only. Not investment advice.
+
+skewness_managed:
+  # Vol-target knobs (same as Book-2)
+  lookbacks: [21, 63, 126]
+  f_min: 0.25
+  f_max: 1.0
+  sigma_star: expanding_annvol
+  cash_ticker: BIL
+  cash_fallbacks: [SGOV, GBIL, SHV]
+
+  # Skewness / left-tail gate knobs
+  g_min: [0.25, 0.5]                   # floor on gate g_t
+  skew_estimator: [realized_amaya, expected_bmv_lite]
+  left_tail_rule: [cvar_5, adverse_rs, pct_lt_neg_k_sigma]
+  k_sigma: 1.0                         # threshold for pct_lt_neg_k_sigma
+  skew_lookback_months: [21, 63]       # monthly window for CVaR / tail score
+
+  # Application target
+  apply_to: [option_a_vt]              # option_a_vt | category_sleeves
+
+  # Universe / coverage
+  cost_bps_one_way: 5
+  min_names: 100
+  include_thin: false
+  cov_lookback_months: 36              # covariance window for LW MinVar / ERC nulls
+
+  # Inference
+  bootstrap_samples: 500
+  bootstrap_block_months: 3
+
+  # Registry gate — MUST remain false until Quant PASS
+  enabled: false
