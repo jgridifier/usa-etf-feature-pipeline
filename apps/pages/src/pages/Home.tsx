@@ -37,9 +37,7 @@ function ThickRule({ label }: { label?: string }) {
   )
 }
 
-/** CIO verdict band — 3-beat plain-language summary, above the fold.
- *  Mobile: compact rows so all three beats clear the first screen.
- */
+/** CIO verdict band — 3-beat plain-language summary, above the fold. */
 function CioVerdictBand() {
   return (
     <div className="border border-border bg-surface overflow-hidden mb-5">
@@ -86,9 +84,7 @@ function CioVerdictBand() {
   )
 }
 
-/** Typographic weight mosaic — VOO/QQQM/IJR/BIL as bold letterpress blocks.
- *  Each ticker gets a column proportional to its weight in the composition.
- */
+/** Typographic weight mosaic — VOO/QQQM/IJR/BIL as bold letterpress blocks. */
 function WeightMosaic() {
   const blocks: Array<{ ticker: string; weight: string; pct: number; sub: string; book: string }> = [
     { ticker: 'VOO',  weight: '70%', pct: 70, sub: 'US large cap',       book: 'B1 + B2' },
@@ -111,7 +107,6 @@ function WeightMosaic() {
             className="flex flex-col justify-between p-2 md:p-3 overflow-hidden relative bg-bg"
             style={{ flexBasis: `${b.pct}%`, minWidth: b.pct < 15 ? '3.5rem' : undefined }}
           >
-            {/* Large typographic ticker block */}
             <span
               className="font-display font-black text-ink leading-none select-none"
               style={{
@@ -127,7 +122,6 @@ function WeightMosaic() {
               <div className="font-sans text-2xs text-muted mt-0.5 leading-tight hidden md:block">{b.sub}</div>
               <div className="font-sans text-3xs text-muted/60 mt-0.5 leading-tight">{b.book}</div>
             </div>
-            {/* Proportional fill bar at bottom */}
             <div
               className="absolute bottom-0 left-0 right-0 h-[3px] bg-ink"
               style={{ opacity: b.pct >= 50 ? 0.7 : b.pct >= 15 ? 0.4 : 0.2 }}
@@ -139,13 +133,9 @@ function WeightMosaic() {
   )
 }
 
-/** CSS risk-path / MaxDD visual — paired drawdown band art.
- *  Two horizontal swimlanes show depth of MaxDD as filled bands.
- *  No canvas, no ECharts — pure HTML/CSS composition.
- */
+/** CSS risk-path / MaxDD visual — paired drawdown band art. */
 function MaxDdVisual({ m }: { m: MetricsPayload }) {
   const ddPp = (Math.abs(m.MaxDD_a) - Math.abs(m.MaxDD_vt)) * 100
-  // Normalise to 0-100% within a visual range of 0-40% drawdown depth
   const rangeMax = 40
   const vtPct  = Math.min(100, (Math.abs(m.MaxDD_vt) / rangeMax) * 100)
   const statPct = Math.min(100, (Math.abs(m.MaxDD_a) / rangeMax) * 100)
@@ -162,16 +152,13 @@ function MaxDdVisual({ m }: { m: MetricsPayload }) {
       </div>
 
       <div className="p-4 space-y-3">
-        {/* Book 2 — vol-target (milder) */}
         <div>
           <div className="flex items-center justify-between mb-1">
             <span className="font-sans text-2xs font-medium text-muted uppercase tracking-label">Book 2 vol-target</span>
             <span className="font-mono text-xs font-bold text-ink">{pct(m.MaxDD_vt)}</span>
           </div>
           <div className="relative h-8 bg-raised border border-border overflow-hidden">
-            {/* Baseline rule */}
             <div className="absolute top-0 left-0 right-0 h-px bg-border" />
-            {/* DD depth fill — width = depth proportion, bottom-anchored */}
             <div
               className="absolute top-0 left-0 h-full"
               style={{
@@ -180,7 +167,6 @@ function MaxDdVisual({ m }: { m: MetricsPayload }) {
                 borderRight: '2px solid rgba(139,26,26,0.5)',
               }}
             />
-            {/* Depth label inside band */}
             <div className="absolute inset-0 flex items-center px-2">
               <span className="font-sans text-2xs text-down/70 font-medium">
                 MaxDD {pct(m.MaxDD_vt)} ← milder peak loss
@@ -189,7 +175,6 @@ function MaxDdVisual({ m }: { m: MetricsPayload }) {
           </div>
         </div>
 
-        {/* Book 1 — static (deeper) */}
         <div>
           <div className="flex items-center justify-between mb-1">
             <span className="font-sans text-2xs font-medium text-muted uppercase tracking-label">Book 1 static</span>
@@ -252,7 +237,7 @@ function DisclosureSection({
   )
 }
 
-/** Editorial article-stream card — below-fold live shortlist section. */
+/** Editorial article-stream card — live shortlist only (Books 1 and 2). */
 function ArticleCard({
   label,
   status,
@@ -260,7 +245,6 @@ function ArticleCard({
   headline,
   lede,
   link,
-  muted = false,
 }: {
   label: string
   status: string
@@ -268,7 +252,6 @@ function ArticleCard({
   headline: string
   lede: string
   link?: { label: string; to: string }
-  muted?: boolean
 }) {
   const statusClasses = {
     up: 'text-up border-up/30 bg-up/5',
@@ -277,7 +260,7 @@ function ArticleCard({
   }
 
   const inner = (
-    <article className={`border-b border-border py-5 px-0 ${muted ? 'opacity-50' : ''}`}>
+    <article className="border-b border-border py-5 px-0">
       <div className="flex items-start gap-4">
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-3 mb-2">
@@ -289,7 +272,7 @@ function ArticleCard({
           <h3 className="font-display font-bold text-xl md:text-2xl text-ink leading-tight mb-2">{headline}</h3>
           <p className="font-serif text-sm text-body leading-relaxed">{lede}</p>
         </div>
-        {link && !muted && (
+        {link && (
           <div className="flex-shrink-0 hidden md:block">
             <span className="font-sans text-2xs text-muted/60 uppercase tracking-label">{link.label} →</span>
           </div>
@@ -298,7 +281,7 @@ function ArticleCard({
     </article>
   )
 
-  if (link && !muted) {
+  if (link) {
     return (
       <Link to={link.to} className="no-underline block hover:bg-surface/50 transition-colors -mx-4 px-4">
         {inner}
@@ -333,7 +316,7 @@ export default function Home() {
             {/* Typographic weight mosaic — VOO/QQQM/IJR/BIL composition */}
             <WeightMosaic />
 
-            {/* CSS MaxDD risk-path visual — replaces h-4 proportion tracks */}
+            {/* CSS MaxDD risk-path visual */}
             {m && <MaxDdVisual m={m} />}
 
             <div className="flex flex-wrap gap-3">
@@ -354,7 +337,7 @@ export default function Home() {
         </div>
       </section>
 
-      {/* ── Editorial article stream — live shortlist ── */}
+      {/* ── Editorial article stream — live shortlist: exactly 2 books ── */}
       <section className="py-10 border-b border-border">
         <div className="mx-auto max-w-6xl px-4 md:px-6">
           <ThickRule label="Live shortlist" />
@@ -375,20 +358,42 @@ export default function Home() {
               lede="Same Option A core, scaled by estimated volatility (scale-down only). Cash residual in BIL when risk is elevated. Same ~14.7% return as Book 1 — the shift is milder drawdowns (+5.4pp) and higher Sharpe. Path/risk, not return alpha."
               link={{ label: 'See Book 2 path vs Book 1', to: '/books' }}
             />
-            <ArticleCard
-              label="Archive · not live"
-              status="DO NOT PROMOTE"
-              statusColor="down"
-              headline="Archived methods"
-              lede="Spectral RP, Regime-Aware, and vol-cond factor corr (#13) failed binding nulls on Sharpe. Not promoted to books. Research record only."
-              link={{ label: 'View archive scoreboard', to: '/archive' }}
-              muted
-            />
           </div>
         </div>
       </section>
 
-      {/* ── Most Sharable — key findings ── */}
+      {/* ── Methods · Archive — clearly separate from live shortlist ── */}
+      <section className="py-10 border-b border-border bg-raised/40">
+        <div className="mx-auto max-w-6xl px-4 md:px-6">
+          <ThickRule label="Methods · Archive — research record" />
+          <div className="mt-6 border border-down/20 bg-down/5 px-5 py-4">
+            <div className="flex items-start gap-4">
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-3 mb-2">
+                  <span className="font-sans text-2xs font-medium uppercase tracking-label px-2 py-0.5 border text-down border-down/30 bg-down/5">
+                    FAIL — archive
+                  </span>
+                  <span className="font-sans text-2xs text-muted uppercase tracking-label">Not a live book · not promoted</span>
+                </div>
+                <h3 className="font-display font-bold text-xl text-ink leading-tight mb-2">Wide-panel FAILs — rigor signal</h3>
+                <p className="font-serif text-sm text-body leading-relaxed mb-3">
+                  Spectral RP, Regime-Aware Dual-Regime, and vol-cond-factor-corr (#13) failed binding
+                  nulls on Sharpe. Documented on purpose — these failures are the trust signal, not a
+                  parallel product shelf. Research record only.
+                </p>
+                <Link
+                  to="/archive"
+                  className="font-sans text-2xs text-muted hover:text-body underline underline-offset-2 decoration-border no-underline hover:no-underline"
+                >
+                  View Methods / Archive scoreboard →
+                </Link>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ── Key findings — 2 shortlist findings only, compact Archive link ── */}
       <section className="py-10 border-b border-border bg-hero-gradient">
         <div className="mx-auto max-w-6xl px-4 md:px-6">
           <ThickRule label="Key findings" />
@@ -412,24 +417,21 @@ export default function Home() {
                 <Link to="/runs" className="text-accent/70 hover:text-accent no-underline">see OOS charts →</Link>
               </cite>
             </div>
-            <div className="quote-block">
-              <p className="font-serif text-base md:text-lg italic text-ink leading-snug">
-                "Justina round-1 and #13 did not clear binding nulls on Sharpe. No book cut. Shortlist unchanged."
-              </p>
-              <cite className="text-2xs text-muted not-italic mt-2 block tracking-label uppercase font-sans">
-                CIO verdict on archive ·{' '}
-                <Link to="/archive" className="text-accent/70 hover:text-accent no-underline">see scoreboard →</Link>
-              </cite>
-            </div>
-            <div className="quote-block">
-              <p className="font-serif text-base md:text-lg italic text-ink leading-snug">
-                "XSD is an optional gated sleeve — never a promoted live book. Default is OFF. Do not compare it as a peer to Books 1–2."
-              </p>
-              <cite className="text-2xs text-muted not-italic mt-2 block tracking-label uppercase font-sans">
-                Rotation sleeve framing ·{' '}
-                <Link to="/books" className="text-accent/70 hover:text-accent no-underline">see sleeve detail →</Link>
-              </cite>
-            </div>
+          </div>
+
+          {/* Compact Archive scoreboard link */}
+          <div className="mt-6 pt-6 border-t border-border/60">
+            <p className="font-sans text-2xs text-muted uppercase tracking-label mb-2">Methods / Archive</p>
+            <p className="font-sans text-xs text-body mb-3">
+              Justina round-1 (Spectral RP, Regime-Aware) and #13 (vol-cond-factor-corr) — all failed
+              binding-null gates. Wide-panel failures documented as the rigor record.
+            </p>
+            <Link
+              to="/archive"
+              className="font-sans inline-flex items-center gap-2 border border-border text-body text-xs font-medium px-4 py-2 no-underline hover:border-border-bright hover:text-ink transition-all"
+            >
+              Archive scoreboard →
+            </Link>
           </div>
 
           {/* Progressive disclosure — supporting OOS metrics */}
@@ -488,29 +490,35 @@ export default function Home() {
         </div>
       </section>
 
-      {/* ── Lab sections footer nav ── */}
+      {/* ── Lab sections footer nav — 4 sections per CIO IA ── */}
       <section className="py-10">
         <div className="mx-auto max-w-6xl px-4 md:px-6">
           <ThickRule label="Lab sections" />
-          <div className="mt-6 grid grid-cols-1 md:grid-cols-3 gap-3">
+          <div className="mt-6 grid grid-cols-1 md:grid-cols-4 gap-3">
             {[
               {
                 to: '/books',
                 eyebrow: 'Shortlist',
                 title: 'Books',
-                desc: 'Live Books 1–2 with standing-book cards, current weights, and comparison table.',
-              },
-              {
-                to: '/runs',
-                eyebrow: 'Out-of-sample',
-                title: 'Runs',
-                desc: 'Equity, drawdown, scale factor f_t, and downloadable CSVs for the live path.',
+                desc: 'Live Books 1–2 — static core and vol-target. Current weights and comparison table.',
               },
               {
                 to: '/archive',
-                eyebrow: 'Research record',
+                eyebrow: 'Methods · Archive',
                 title: 'Archive',
-                desc: 'Justina round-1 and #13 — failed methods documented as binding-null reference.',
+                desc: 'Failed wide-panel runs — Justina round-1, #13. Binding-null reference, not a book shelf.',
+              },
+              {
+                to: '/explorer',
+                eyebrow: 'Explorer (sandbox)',
+                title: 'Explorer',
+                desc: 'Research sandbox — time-series explorer, not a live shortlist peer.',
+              },
+              {
+                to: '/universe',
+                eyebrow: 'Universe',
+                title: 'Universe',
+                desc: 'Issuer universe — USA ETF panel constituents and coverage chips.',
               },
             ].map(item => (
               <Link key={item.to} to={item.to} className="no-underline block group">
