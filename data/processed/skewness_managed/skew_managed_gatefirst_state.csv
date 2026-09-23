@@ -1,0 +1,3 @@
+trial_id,state,avg_next_month_active_vs_book2,hit_rate_active_positive,n_months
+SM_option_a_vt_L63_SL21_g0p5_realizedamaya_cvar5,gate_binding,-0.0029543037401801924,0.4444444444444444,27
+SM_option_a_vt_L63_SL21_g0p5_realizedamaya_cvar5,gate_open,-6.0975609756097615e-06,0.0,41
