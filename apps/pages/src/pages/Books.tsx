@@ -317,7 +317,9 @@ export default function Books() {
             <strong className="text-down">FAIL — archive</strong>. Full table:{' '}
             <Link to="/archive" className="text-muted hover:text-body underline underline-offset-2 decoration-border">
               Archive / Justina round-1 scoreboard
-            </Link>.
+            </Link>.{' '}
+            Justina #6 skewness overlay is a <strong>Book-2 risk-path overlay</strong> (gate pending,{' '}
+            <code>enabled:false</code>) — not a third book.
           </div>
         </div>
       </section>
@@ -379,6 +381,19 @@ export default function Books() {
                     <dd className="text-body leading-relaxed">
                       Not the archived conditional factor-corr overlay (#13), which{' '}
                       <strong>failed</strong> vs this unconditional Book 2 on Sharpe.
+                    </dd>
+                  </div>
+                  <div>
+                    <dt className="section-eyebrow mb-0.5">Justina #6 — Book-2 skewness overlay (research path, gate pending)</dt>
+                    <dd className="text-body leading-relaxed">
+                      Gong–Lynch–Ogden (2025) skewness/left-tail gate is wired as a{' '}
+                      <strong>Book-2 risk-path overlay</strong>, not a third book.
+                      Effective equity scale f̃_t = f_t · g_t; residual → BIL as today.
+                      Gate-first knobs locked: L63 / realized_amaya / cvar_5 / g_min=0.5.
+                      Strategy id <code>skewness_managed_book2</code> — <code>enabled:false</code>{' '}
+                      until Quant gate PASS. Claim: milder MaxDD / higher Sharpe_rf0 vs
+                      unconditional Book 2; no return-edge over Book 2 expected.{' '}
+                      <strong>No new shortlist card.</strong>
                     </dd>
                   </div>
                 </dl>

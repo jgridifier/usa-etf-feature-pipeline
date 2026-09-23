@@ -513,3 +513,103 @@ def test_pct_lt_neg_k_sigma_rule_no_leakage(tmp_path):
     after = w1.loc[w1["date"].eq(decision)].iloc[0]
     assert after["left_tail_score"] == pytest.approx(before["left_tail_score"], abs=1e-12)
     assert after["g"] == pytest.approx(before["g"], abs=1e-12)
+
+
+# ---------------------------------------------------------------------------
+# Gate-first knob enforcement — Book-2 overlay
+# ---------------------------------------------------------------------------
+
+def test_gate_first_trial_knobs():
+    """Gate-first primary config (QUANT_GATE_skewness_managed.md §3.1) must match registry constants.
+
+    Verifies that make_skew_managed_trials with gate-first parameters produces a trial
+    with exactly L63 / realized_amaya / cvar_5 / g_min=0.5 — no L21 or g_min=0.25.
+    """
+    from usa_etf_features.strategy_registry import (
+        _SKEW_GATE_FIRST_LOOKBACK,
+        _SKEW_GATE_FIRST_ESTIMATOR,
+        _SKEW_GATE_FIRST_LEFT_TAIL,
+        _SKEW_GATE_FIRST_G_MIN,
+    )
+
+    # Registry constants must match the gate-first spec
+    assert _SKEW_GATE_FIRST_LOOKBACK == 63
+    assert _SKEW_GATE_FIRST_ESTIMATOR == "realized_amaya"
+    assert _SKEW_GATE_FIRST_LEFT_TAIL == "cvar_5"
+    assert abs(_SKEW_GATE_FIRST_G_MIN - 0.5) < 1e-9
+
+    # Trial factory with gate-first knobs must produce exactly one trial
+    trials = make_skew_managed_trials(
+        lookbacks=[_SKEW_GATE_FIRST_LOOKBACK],
+        g_mins=[_SKEW_GATE_FIRST_G_MIN],
+        skew_estimators=[_SKEW_GATE_FIRST_ESTIMATOR],
+        left_tail_rules=[_SKEW_GATE_FIRST_LEFT_TAIL],
+        apply_tos=["option_a_vt"],
+        f_min=0.25,
+        f_max=1.0,
+        sigma_star="expanding_annvol",
+        cash_ticker="BIL",
+        cost_bps_one_way=5.0,
+        skew_lookback_months=[21],
+    )
+    assert len(trials) == 1
+    t = trials[0]
+    assert t.lookback == 63
+    assert t.skew_estimator == "realized_amaya"
+    assert t.left_tail_rule == "cvar_5"
+    assert abs(t.g_min - 0.5) < 1e-9
+
+    # Must NOT include L21 or g_min=0.25 (grid-best, non-gate-first)
+    grid_trials = make_skew_managed_trials(
+        lookbacks=[21, 63],
+        g_mins=[0.25, 0.5],
+        skew_estimators=["realized_amaya"],
+        left_tail_rules=["cvar_5"],
+        apply_tos=["option_a_vt"],
+        f_min=0.25,
+        f_max=1.0,
+        sigma_star="expanding_annvol",
+        cash_ticker="BIL",
+        cost_bps_one_way=5.0,
+        skew_lookback_months=[21],
+    )
+    gate_first_ids = {t.trial_id for t in trials}
+    for gt in grid_trials:
+        if gt.lookback != 63 or abs(gt.g_min - 0.5) > 1e-9:
+            assert gt.trial_id not in gate_first_ids, (
+                f"Non-gate-first trial {gt.trial_id!r} must not be in the gate-first set"
+            )
+
+
+def test_gatefirst_registry_artifact_knobs():
+    """The committed gatefirst registry CSV must contain only gate-first knobs.
+
+    Verifies that data/processed/skewness_managed/skew_managed_gatefirst_registry.csv
+    was produced with L63 / realized_amaya / cvar_5 / g_min=0.5 — no grid-best config.
+    """
+    from pathlib import Path
+    import pandas as pd
+
+    artifact = (
+        Path(__file__).resolve().parents[1]
+        / "data" / "processed" / "skewness_managed" / "skew_managed_gatefirst_registry.csv"
+    )
+    if not artifact.exists():
+        pytest.skip("gatefirst registry artifact not present — run walkforward-skewness-managed to generate")
+
+    reg = pd.read_csv(artifact)
+    assert not reg.empty, "gatefirst registry must not be empty"
+
+    for _, row in reg.iterrows():
+        assert int(row["lookback"]) == 63, (
+            f"gatefirst artifact has non-gate-first lookback {row['lookback']} in trial {row['trial_id']!r}"
+        )
+        assert str(row["skew_estimator"]) == "realized_amaya", (
+            f"gatefirst artifact has non-gate-first skew_estimator {row['skew_estimator']!r}"
+        )
+        assert str(row["left_tail_rule"]) == "cvar_5", (
+            f"gatefirst artifact has non-gate-first left_tail_rule {row['left_tail_rule']!r}"
+        )
+        assert abs(float(row["g_min"]) - 0.5) < 1e-9, (
+            f"gatefirst artifact has non-gate-first g_min {row['g_min']} in trial {row['trial_id']!r}"
+        )

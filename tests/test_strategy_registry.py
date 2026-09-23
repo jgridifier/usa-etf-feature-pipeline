@@ -195,3 +195,121 @@ def test_registry_vol_target_and_rotate_walkforward_dates_do_not_leak(tmp_path):
 
     diagnostics = result["strategy_diagnostics"]
     assert diagnostics["walkforward"].eq(True).all()
+
+
+# ---------------------------------------------------------------------------
+# Justina #6 — skewness_managed_book2: gate-first knobs and enforcer tests
+# ---------------------------------------------------------------------------
+
+def test_strategies_yaml_skew_overlay_gate_first_knobs():
+    """Live config/strategies.yaml must have skewness_managed_book2 with gate-first knobs only.
+
+    Gate-first spec (QUANT_GATE_skewness_managed.md §3.1):
+      lookback=63, skew_estimator=realized_amaya, left_tail_rule=cvar_5, g_min=0.5
+    """
+    from pathlib import Path
+    import yaml
+    cfg_path = Path(__file__).resolve().parents[1] / "config" / "strategies.yaml"
+    with open(cfg_path, encoding="utf-8") as f:
+        raw = yaml.safe_load(f)
+    entries = {s["id"]: s for s in raw.get("strategies", [])}
+
+    assert "skewness_managed_book2" in entries, "skewness_managed_book2 not found in strategies.yaml"
+
+    entry = entries["skewness_managed_book2"]
+    params = entry.get("default_params", {})
+
+    # Gate-first knobs — none of these may deviate
+    assert int(params["lookback"]) == 63, f"lookback must be 63; got {params['lookback']}"
+    assert str(params["skew_estimator"]) == "realized_amaya", (
+        f"skew_estimator must be realized_amaya; got {params['skew_estimator']!r}"
+    )
+    assert str(params["left_tail_rule"]) == "cvar_5", (
+        f"left_tail_rule must be cvar_5; got {params['left_tail_rule']!r}"
+    )
+    assert abs(float(params["g_min"]) - 0.5) < 1e-9, f"g_min must be 0.5; got {params['g_min']}"
+
+    # Must stay disabled until Quant gate PASS
+    assert entry.get("enabled") is False, "skewness_managed_book2 must have enabled:false until Quant gate PASS"
+
+    # Entrypoint must be the correct overlay adapter
+    assert entry.get("entrypoint") == "usa_etf_features.strategy_registry:skewness_managed_book2"
+
+
+def test_skew_managed_enforcer_rejects_non_gatefirst_lookback(tmp_path):
+    """skewness_managed_book2 registry adapter must raise if lookback != 63."""
+    import yaml
+    import numpy as np
+    import pandas as pd
+
+    from usa_etf_features.strategy_registry import StrategySpec, skewness_managed_book2
+
+    uni_path = tmp_path / "universe.csv"
+    pd.DataFrame({
+        "Ticker": ["VOO", "QQQM", "IJR", "BIL"],
+        "Source_Section": ["APPENDIX 2"] * 4,
+        "Category": ["US Large / Broad Blend"] * 3 + ["US Treasuries / Govt / Cash-like"],
+    }).to_csv(uni_path, index=False)
+
+    rng = np.random.default_rng(99)
+    idx = pd.bdate_range("2019-01-02", periods=600)
+    px = pd.DataFrame(
+        {t: 100 * np.cumprod(1 + rng.normal(0.0003, 0.01, 600)) for t in ["VOO", "QQQM", "IJR", "BIL"]},
+        index=idx,
+    )
+
+    bad_spec = StrategySpec(
+        id="test_bad_lookback",
+        display_name="test",
+        method_citation_id="test",
+        method_citation="test",
+        entrypoint="usa_etf_features.strategy_registry:skewness_managed_book2",
+        default_params={
+            "lookback": 21,  # WRONG — must be 63
+            "skew_estimator": "realized_amaya",
+            "left_tail_rule": "cvar_5",
+            "g_min": 0.5,
+        },
+        enabled=False,
+    )
+    with pytest.raises(ValueError, match="lookback must be 63"):
+        skewness_managed_book2(px, bad_spec, universe_csv=uni_path, universe_config={}, asof=None)
+
+
+def test_skew_managed_enforcer_rejects_non_gatefirst_g_min(tmp_path):
+    """skewness_managed_book2 registry adapter must raise if g_min != 0.5."""
+    import numpy as np
+    import pandas as pd
+
+    from usa_etf_features.strategy_registry import StrategySpec, skewness_managed_book2
+
+    uni_path = tmp_path / "universe.csv"
+    pd.DataFrame({
+        "Ticker": ["VOO", "QQQM", "IJR", "BIL"],
+        "Source_Section": ["APPENDIX 2"] * 4,
+        "Category": ["US Large / Broad Blend"] * 3 + ["US Treasuries / Govt / Cash-like"],
+    }).to_csv(uni_path, index=False)
+
+    rng = np.random.default_rng(88)
+    idx = pd.bdate_range("2019-01-02", periods=600)
+    px = pd.DataFrame(
+        {t: 100 * np.cumprod(1 + rng.normal(0.0003, 0.01, 600)) for t in ["VOO", "QQQM", "IJR", "BIL"]},
+        index=idx,
+    )
+
+    bad_spec = StrategySpec(
+        id="test_bad_gmin",
+        display_name="test",
+        method_citation_id="test",
+        method_citation="test",
+        entrypoint="usa_etf_features.strategy_registry:skewness_managed_book2",
+        default_params={
+            "lookback": 63,
+            "skew_estimator": "realized_amaya",
+            "left_tail_rule": "cvar_5",
+            "g_min": 0.25,  # WRONG — must be 0.5
+        },
+        enabled=False,
+    )
+    with pytest.raises(ValueError, match="g_min must be 0.5"):
+        skewness_managed_book2(px, bad_spec, universe_csv=uni_path, universe_config={}, asof=None)
