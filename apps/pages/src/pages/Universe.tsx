@@ -96,7 +96,7 @@ function IssuerChip({ label, count, active, onClick }: IssuerChipProps) {
       type="button"
       onClick={onClick}
       className={cn(
-        'inline-flex items-center gap-1.5 px-3 py-1.5 rounded border text-2xs font-medium uppercase tracking-label transition-colors whitespace-nowrap',
+        'inline-flex items-center gap-1.5 px-3 py-1.5 border text-2xs font-medium uppercase tracking-label transition-colors whitespace-nowrap',
         active
           ? 'bg-ink text-bg border-ink'
           : 'bg-surface text-muted border-border hover:border-border-bright hover:text-body',
@@ -245,7 +245,7 @@ export default function Universe() {
             and sort any column. Panel coverage and ADV figures are research estimates — not live
             market data.
           </p>
-          <div className="inline-block border border-border rounded-lg px-3 py-2 text-xs text-muted bg-surface">
+          <div className="inline-block border border-border px-3 py-2 text-xs text-muted bg-surface">
             Research only — not investment advice. Experimental panel for methodology work.
           </div>
         </div>
@@ -289,7 +289,7 @@ export default function Universe() {
                 placeholder="Ticker / name / category…"
                 value={searchText}
                 onChange={e => setSearchText(e.target.value)}
-                className="w-full px-3 py-1.5 text-xs border border-border bg-bg rounded text-body placeholder:text-muted/50 focus:outline-none focus:ring-1 focus:ring-accent/40 focus:border-accent/40"
+                className="w-full px-3 py-1.5 text-xs border border-border bg-bg text-body placeholder:text-muted/50 focus:outline-none focus:ring-1 focus:ring-accent/40 focus:border-accent/40"
                 aria-label="Search tickers, names, or categories"
               />
             </div>
@@ -373,7 +373,7 @@ interface UniverseTableProps {
 function UniverseTable({ rows, sortKey, sortDir, onSort }: UniverseTableProps) {
   if (rows.length === 0) {
     return (
-      <div className="py-12 text-center text-sm text-muted border border-border rounded bg-surface">
+      <div className="py-12 text-center text-sm text-muted border border-border bg-surface">
         No ETFs match the current filter.
       </div>
     )
@@ -381,7 +381,7 @@ function UniverseTable({ rows, sortKey, sortDir, onSort }: UniverseTableProps) {
 
   return (
     <div
-      className="overflow-x-auto border border-border rounded"
+      className="overflow-x-auto border border-border"
       tabIndex={0}
       role="region"
       aria-label="ETF universe table"

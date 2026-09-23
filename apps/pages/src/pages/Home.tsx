@@ -377,8 +377,9 @@ export default function Home() {
                 </div>
                 <h3 className="font-display font-bold text-xl text-ink leading-tight mb-2">Wide-panel FAILs — rigor signal</h3>
                 <p className="font-serif text-sm text-body leading-relaxed mb-3">
-                  Spectral RP, Regime-Aware Dual-Regime, and vol-cond-factor-corr (#13) failed binding
-                  nulls on Sharpe. Documented on purpose — these failures are the trust signal, not a
+                  Five methods failed binding nulls: Spectral RP, Regime-Aware Dual-Regime (#2),
+                  vol-cond-factor-corr (#13), Forecast Tangency + MED (#4), and Regime-Resilient
+                  ERC (#3). Documented on purpose — these failures are the trust signal, not a
                   parallel product shelf. Research record only.
                 </p>
                 <Link
@@ -389,6 +390,137 @@ export default function Home() {
                 </Link>
               </div>
             </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ── Methods-under-test strip — allocation methods run on the panel ── */}
+      <section className="py-10 border-b border-border">
+        <div className="mx-auto max-w-6xl px-4 md:px-6">
+          <ThickRule label="Allocation methods under test" />
+          <p className="font-sans text-xs text-muted mt-3 mb-5 max-w-2xl leading-relaxed">
+            All methods scored on the experimental USA ETF panel via walk-forward OOS.
+            Binding-null gates on Sharpe; DSR / trial counts pre-declared.
+            Five FAILs documented as the rigour record. #6 skewness overlay cleared the
+            gate as a Book-2 path — not a third book.
+          </p>
+
+          <div className="divide-y divide-border border border-border bg-surface">
+            {/* Row header */}
+            <div className="hidden md:grid grid-cols-[minmax(0,2fr)_minmax(0,1.5fr)_minmax(0,1.5fr)_minmax(0,1fr)_auto] gap-x-4 px-4 py-2 bg-raised">
+              <span className="font-sans text-2xs font-medium uppercase tracking-label text-muted">Method · geometry</span>
+              <span className="font-sans text-2xs font-medium uppercase tracking-label text-muted">Binding null</span>
+              <span className="font-sans text-2xs font-medium uppercase tracking-label text-muted">Sharpe_rf0 / MaxDD</span>
+              <span className="font-sans text-2xs font-medium uppercase tracking-label text-muted">Verdict</span>
+              <span className="font-sans text-2xs font-medium uppercase tracking-label text-muted"></span>
+            </div>
+
+            {([
+              {
+                method: 'Spectral Risk Parity',
+                note: 'name N≥100 · ADIA Lab mapping · 65m OOS',
+                bindingNull: 'LW MinVar (name)',
+                metrics: '1.06 / −8.4%',
+                verdict: 'fail' as const,
+                href: './methods/spectral_risk_parity.html',
+              },
+              {
+                method: 'Regime-Aware Dual-Regime',
+                note: 'category sleeves · Luo & Mulvey · 262m OOS',
+                bindingNull: 'Unconditional ERC',
+                metrics: '0.51 / −38.6%',
+                verdict: 'fail' as const,
+                href: './methods/regime_aware_dual_regime.html',
+              },
+              {
+                method: 'Vol-cond-factor-corr (#13)',
+                note: 'Book-2 overlay · corr/vol gate · 12 trials',
+                bindingNull: 'Unconditional Book-2 VT',
+                metrics: '1.05 / −15.4%',
+                verdict: 'fail' as const,
+                href: './methods/allocation_alpha_vol_cond_factor_corr.html',
+              },
+              {
+                method: 'Forecast Tangency + MED (#4)',
+                note: 'category sleeves · 291m OOS · 1 trial',
+                bindingNull: 'ERC / LW MinVar / EW (all nulls)',
+                metrics: '0.36 / −58.0%',
+                verdict: 'fail' as const,
+                href: './methods/allocation_alpha_forecast_tangency_med.html',
+              },
+              {
+                method: 'Regime-Resilient ERC (#3)',
+                note: 'category sleeves · 280m OOS · 2 paths',
+                bindingNull: 'LW MinVar Sharpe (both paths below 0.944)',
+                metrics: '0.87 / −23.8% (best path)',
+                verdict: 'fail' as const,
+                href: './methods/regime_resilient_erc_stub.html',
+              },
+              {
+                method: 'Skewness-Managed (#6)',
+                note: 'Book-2 path overlay · gate-first · 68m OOS',
+                bindingNull: 'Unconditional Book-2 VT (1.059 / −20.1%)',
+                metrics: '1.28 / −10.1%',
+                verdict: 'pass' as const,
+                href: './methods/skewness_managed_stub.html',
+              },
+            ] as const).map(row => (
+              <div
+                key={row.method}
+                className="grid grid-cols-1 md:grid-cols-[minmax(0,2fr)_minmax(0,1.5fr)_minmax(0,1.5fr)_minmax(0,1fr)_auto] gap-x-4 gap-y-1 px-4 py-3 hover:bg-raised/60 transition-colors"
+              >
+                <div>
+                  <span className="font-sans text-xs font-medium text-ink">{row.method}</span>
+                  <span className="block font-sans text-2xs text-muted/70 mt-0.5">{row.note}</span>
+                </div>
+                <div className="flex items-start md:items-center">
+                  <span className="font-sans text-xs text-body">{row.bindingNull}</span>
+                </div>
+                <div className="flex items-start md:items-center">
+                  <span className="font-mono text-xs text-body">{row.metrics}</span>
+                </div>
+                <div className="flex items-start md:items-center">
+                  {row.verdict === 'pass' ? (
+                    <span className="font-sans text-2xs font-semibold text-up uppercase tracking-label">
+                      PASS · overlay only
+                    </span>
+                  ) : (
+                    <span className="font-sans text-2xs font-semibold text-down uppercase tracking-label">FAIL — archive</span>
+                  )}
+                </div>
+                <div className="flex items-start md:items-center gap-2">
+                  <a
+                    href={row.href}
+                    className="font-sans text-2xs text-muted hover:text-body underline underline-offset-2 decoration-border whitespace-nowrap"
+                  >
+                    method page →
+                  </a>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* #6 caveat — never a third book */}
+          <div className="mt-3 px-4 py-3 border border-up/20 bg-up/5">
+            <p className="font-sans text-2xs text-body leading-relaxed">
+              <strong className="text-ink">#6 Quant PASS note:</strong>{' '}
+              Skewness-managed overlay cleared the gate as a Book-2 path (f̃_t = f_t · g_t, gate-first
+              L63 / realized-Amaya / CVaR5 / g_min=0.5). Sharpe 1.28 &gt; Book-2 1.059; MaxDD −10.1% vs
+              −20.1%. NW t vs Book-2 = −0.80 (marginal). It is wired into live <strong className="text-ink">Book 2</strong> — not a
+              separate third book. No book count change.
+            </p>
+          </div>
+
+          <div className="mt-4 flex flex-wrap items-center gap-4">
+            <Link
+              to="/archive"
+              className="font-sans inline-flex items-center gap-2 border border-border text-body text-xs font-medium px-4 py-2 no-underline hover:border-border-bright hover:text-ink transition-all"
+            >
+              Full scoreboard → Methods / Archive
+            </Link>
+            <span className="font-sans text-2xs text-muted">
+              Justina round-1 + #4 FT-MED + #3 RR-ERC + #6 skewness overlay · updated 2026-09-23
+            </span>
           </div>
         </div>
       </section>
@@ -423,8 +555,9 @@ export default function Home() {
           <div className="mt-6 pt-6 border-t border-border/60">
             <p className="font-sans text-2xs text-muted uppercase tracking-label mb-2">Methods / Archive</p>
             <p className="font-sans text-xs text-body mb-3">
-              Justina round-1 (Spectral RP, Regime-Aware) and #13 (vol-cond-factor-corr) — all failed
-              binding-null gates. Wide-panel failures documented as the rigor record.
+              Justina round-1 (Spectral RP, Regime-Aware), #13 vol-cond-factor-corr, #4 FT-MED,
+              and #3 RR-ERC — all failed binding-null gates. Wide-panel failures documented as
+              the rigor record. #6 skewness overlay cleared as a Book-2 path only.
             </p>
             <Link
               to="/archive"

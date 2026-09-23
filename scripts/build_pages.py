@@ -350,7 +350,10 @@ def page_shell(
     fonts = (
         '<link rel="preconnect" href="https://fonts.googleapis.com">'
         '<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>'
-        '<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">'
+        '<link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,wght@0,400;0,500;0,600;1,400;1,600'
+        '&family=Playfair+Display:wght@700;900'
+        '&family=Inter:wght@400;500;600;700'
+        '&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">'
     )
     return f'''<!doctype html>
 <html lang="en">
@@ -369,7 +372,7 @@ def page_shell(
 </main>
 <footer class="site-footer">
 <p>{escape(DISCLAIMER)}</p>
-<p class="muted">Design tokens adapted from public institutional UI patterns (Inter / JetBrains Mono stand-ins). Research panel only.</p>
+<p class="muted">Static GitHub Pages · Research only</p>
 </footer>
 {scripts}
 <script src="{prefix}assets/nav.js" defer></script>

@@ -250,7 +250,7 @@ export default function Books() {
           {/* Book-2 vs Book-1 delta strip — HTML/CSS proportion mosaic */}
           {m && <DeltaStrip m={m} />}
 
-          <div className="inline-block border border-border rounded-lg px-3 py-2 text-xs text-muted bg-surface">
+          <div className="inline-block border border-border px-3 py-2 text-xs text-muted bg-surface">
             Research only — not investment advice. Panel is an arbitrary experimental USA ETF set
             for methodology work.
           </div>
@@ -311,7 +311,7 @@ export default function Books() {
           </div>
 
           {/* Not on shortlist callout */}
-          <div className="mt-5 border border-down/20 bg-down/5 rounded-xl px-5 py-4 text-sm text-muted">
+          <div className="mt-5 border border-down/20 bg-down/5 px-5 py-4 text-sm text-muted">
             <strong className="text-ink">Not on the shortlist:</strong>{' '}
             Spectral risk parity, Regime-aware dual-regime, Vol-cond factor corr #13 — all{' '}
             <strong className="text-down">FAIL — archive</strong>. Full table:{' '}
@@ -456,7 +456,7 @@ export default function Books() {
             {/* XSD sleeve — collapsed by default, clearly demoted */}
             <DisclosureSection summary="Optional gated sleeve — XSD (default OFF, not a live book — expand to view)">
               <div className="p-5">
-                <div className="border border-dashed border-border/70 rounded-lg p-4 bg-bg/60 max-w-md">
+                <div className="border border-dashed border-border/70 p-4 bg-bg/60 max-w-md">
                   <p className="section-eyebrow mb-2 text-muted/80">Optional gated sleeve — XSD</p>
                   <BookWeightArt
                     title=""
@@ -503,7 +503,7 @@ export default function Books() {
                   ScoreSimple gate from <code>strategy_diagnostics.csv</code> (<code>on</code> /{' '}
                   <code>rotate_on</code>). Optional sleeve only — not a live book.
                 </p>
-                <div className="border border-border bg-surface rounded-xl p-5">
+                <div className="border border-border bg-surface p-5">
                   <XsdChart />
                 </div>
               </div>
@@ -541,7 +541,7 @@ function WeightSnapshotTable() {
 
   return (
     <div
-      className="overflow-x-auto rounded-xl border border-border"
+      className="overflow-x-auto border border-border"
       tabIndex={0}
       role="region"
       aria-label="Latest weights snapshot"

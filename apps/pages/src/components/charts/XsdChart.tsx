@@ -19,7 +19,7 @@ export function XsdChart() {
 
   if (status === 'loading' || status === 'idle') {
     return (
-      <div className="rounded-lg border border-border bg-surface animate-pulse flex items-center justify-center text-muted text-xs" style={{ height: 120 }}>
+      <div className="border border-border bg-surface animate-pulse flex items-center justify-center text-muted text-xs" style={{ height: 120 }}>
         Loading…
       </div>
     )
@@ -29,7 +29,7 @@ export function XsdChart() {
     const snap = data?.snapshot
     const state = snap ? (snap.on ? 'ON' : 'OFF') : 'unknown'
     return (
-      <div className="rounded-xl border border-border bg-surface px-4 py-4 text-sm text-muted space-y-1">
+      <div className="border border-border bg-surface px-4 py-4 text-sm text-muted space-y-1">
         <p>No historical XSD ON/OFF timeline published yet.</p>
         {snap && (
           <p>

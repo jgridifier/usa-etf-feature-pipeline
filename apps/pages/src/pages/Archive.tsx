@@ -64,7 +64,7 @@ export default function Archive() {
       {/* ── Page header — muted, clearly not a showcase ── */}
       <section className="border-b border-border bg-raised">
         <div className="mx-auto max-w-6xl px-4 md:px-6 pt-10 pb-12">
-          <span className="inline-flex items-center gap-1.5 text-2xs font-medium uppercase tracking-label px-2.5 py-1 rounded border border-down/20 text-down/80 bg-down/5 mb-4">
+          <span className="inline-flex items-center gap-1.5 text-2xs font-medium uppercase tracking-label px-2.5 py-1 border border-down/20 text-down/80 bg-down/5 mb-4">
             Research archive · not a showcase · not live books
           </span>
           <h2 className="font-display font-black text-3xl md:text-4xl text-ink leading-tight mt-2 mb-4">
@@ -74,7 +74,7 @@ export default function Archive() {
             Justina round-1 (Spectral RP + Regime-Aware Dual-Regime) + vol-cond-factor-corr (#13) ·
             USA ETF experimental panel · updated 2026-09-21 (ET)
           </p>
-          <div className="inline-block border border-down/20 bg-down/5 rounded-lg px-4 py-3 text-xs text-muted max-w-2xl">
+          <div className="inline-block border border-down/20 bg-down/5 px-4 py-3 text-xs text-muted max-w-2xl">
             <strong className="text-ink">Research only — not investment advice.</strong>{' '}
             Negative / null results documented on purpose. These methods are{' '}
             <strong className="text-down">FAIL / ARCHIVE</strong> — not promoted to Books, not a
@@ -86,7 +86,7 @@ export default function Archive() {
       {/* ── CIO frame ── */}
       <section className="py-8 border-b border-border">
         <div className="mx-auto max-w-6xl px-4 md:px-6">
-          <div className="border border-border bg-surface rounded-xl px-6 py-5">
+          <div className="border border-border bg-surface px-6 py-5">
             <div className="flex items-center gap-2 mb-3">
               <span className="text-accent text-sm leading-none">◆</span>
               <span className="text-2xs font-medium uppercase tracking-label text-muted">CIO frame</span>
@@ -112,7 +112,7 @@ export default function Archive() {
           <div className="mt-8">
             <Eyebrow>Scoreboard</Eyebrow>
             <div
-              className="mt-4 overflow-x-auto rounded-xl border border-border"
+              className="mt-4 overflow-x-auto border border-border"
               tabIndex={0}
               role="region"
               aria-label="Methods Archive scoreboard"
@@ -213,7 +213,7 @@ export default function Archive() {
       {/* ── Books implication + links ── */}
       <section className="py-12">
         <div className="mx-auto max-w-6xl px-4 md:px-6">
-          <div className="border border-border bg-surface rounded-xl px-5 py-4 text-sm text-muted mb-8">
+          <div className="border border-border bg-surface px-5 py-4 text-sm text-muted mb-8">
             <strong className="text-ink">Books implication:</strong> No new book from Justina
             round-1 or from #13. Existing shortlist unchanged:{' '}
             <strong className="text-ink">static core + unconditional Book-2 vol-target</strong>.
@@ -239,7 +239,7 @@ export default function Archive() {
               <a
                 key={link.href}
                 href={link.href}
-                className="border border-border bg-surface rounded-lg px-3 py-2 text-2xs text-muted hover:border-border-bright hover:text-body transition-all no-underline"
+                className="border border-border bg-surface px-3 py-2 text-2xs text-muted hover:border-border-bright hover:text-body transition-all no-underline"
               >
                 {link.label}
               </a>

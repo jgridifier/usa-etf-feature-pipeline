@@ -11,7 +11,7 @@ export function Card({ children, className, muted, interactive }: CardProps) {
   return (
     <div
       className={cn(
-        'rounded-xl border border-border bg-surface shadow-card',
+        'border border-border bg-surface shadow-card',
         'bg-[image:var(--card-shine)] bg-card-shine',
         interactive && 'transition-all hover:border-border-bright hover:shadow-glow hover:bg-raised cursor-pointer',
         muted && 'opacity-50 pointer-events-none',

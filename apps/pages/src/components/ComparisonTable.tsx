@@ -62,14 +62,14 @@ export function ComparisonTable() {
 
   if (status === 'loading' || status === 'idle') {
     return (
-      <div className="rounded-xl border border-border bg-surface p-4 text-sm text-muted animate-pulse">
+      <div className="border border-border bg-surface p-4 text-sm text-muted animate-pulse">
         Loading comparison data…
       </div>
     )
   }
   if (status === 'error' || !data) {
     return (
-      <div className="rounded-xl border border-border bg-surface p-4 text-sm text-muted">
+      <div className="border border-border bg-surface p-4 text-sm text-muted">
         {error ?? 'Failed to load comparison data'}
       </div>
     )
@@ -92,7 +92,7 @@ export function ComparisonTable() {
     <div>
       {/* Live books table */}
       <div
-        className="overflow-x-auto rounded-xl border border-border mb-3"
+        className="overflow-x-auto border border-border mb-3"
         tabIndex={0}
         role="region"
         aria-label="Strategy comparison — live books"
@@ -126,7 +126,7 @@ export function ComparisonTable() {
       {/* XSD sleeve — separate, clearly subordinate */}
       {sleeve.length > 0 && (
         <div
-          className="overflow-x-auto rounded-xl border border-dashed border-border/60 opacity-60"
+          className="overflow-x-auto border border-dashed border-border/60 opacity-60"
           tabIndex={0}
           role="region"
           aria-label="Optional gated sleeve — not a live book"
