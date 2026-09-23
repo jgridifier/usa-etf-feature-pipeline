@@ -3,8 +3,89 @@
 <head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Time Series Explorer | USA ETF Lab</title>
-<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500&family=Newsreader:ital,wght@0,400;0,500;1,400&family=Playfair+Display:wght@400;600;700;900&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="../assets/style.css">
+<style>
+/* ── Paper-editorial token override for Explorer (Loop 2) ── */
+:root {
+  --primary:        #1c2d6b;
+  --primary-active: #0e1a42;
+  --ink:            #1a1410;
+  --body:           #4a4238;
+  --muted:          #7a6e60;
+  --muted-soft:     #a89f90;
+  --hairline:       #c4b89d;
+  --hairline-soft:  #d8d0c0;
+  --canvas:         #f5f0e8;
+  --surface-soft:   #ede8de;
+  --surface-strong: #e4ddd1;
+  --surface-dark:   #1a1410;
+  --on-primary:     #f5f0e8;
+  --semantic-up:    #1a5e33;
+  --semantic-down:  #8b1a1a;
+  --warn:           #7a5c1e;
+  --radius-card:    0px;
+  --radius-pill:    0px;
+  --shadow-soft:    0 1px 3px rgba(0,0,0,0.08), 0 0 0 1px rgba(0,0,0,0.04);
+}
+
+/* Paper substrate — remove white */
+body { background: var(--canvas); }
+
+/* Editorial header — cream instead of white glass */
+.site-header { background: rgba(245, 240, 232, 0.97); }
+
+/* Masthead brand — Playfair flavour */
+.brand { font-family: "Playfair Display", Georgia, serif; font-weight: 700; letter-spacing: -0.01em; }
+
+/* Active nav underline in navy */
+.site-nav a.is-active { box-shadow: inset 0 -2px 0 var(--primary); }
+@media (max-width: 720px) {
+  .site-nav a.is-active { box-shadow: none; color: var(--primary); }
+}
+
+/* Hero heading → Playfair Display */
+.hero h1 { font-family: "Playfair Display", Georgia, serif; font-weight: 700; color: #f5f0e8; }
+.hero .lede { color: #c4b89d; }
+.hero a { color: #c4b89d; }
+.hero .badge { background: rgba(245,240,232,0.12); color: #f5f0e8; border: 1px solid rgba(245,240,232,0.25); border-radius: 0; }
+.hero .callout { background: rgba(245,240,232,0.06); border: 1px solid rgba(196,184,157,0.3); color: #c4b89d; }
+
+/* Chart card section headings → Playfair */
+.explorer-grid h2 { font-family: "Playfair Display", Georgia, serif; font-weight: 600; }
+
+/* Sharp edges on all rounded elements */
+.callout        { border-radius: 0; border-left: 3px solid var(--primary); background: var(--surface-soft); color: var(--body); }
+.table-scroll   { border-radius: 0; }
+code            { border-radius: 0; }
+.placeholder    { border-radius: 0; border-style: solid; }
+.badge          { border-radius: 0; }
+.pill           { border-radius: 0; }
+.metric-card, .feature-card, .chart-card { border-radius: 0; }
+.btn            { border-radius: 0; }
+
+/* Explorer toolbar inputs/selects — paper-editorial */
+.explorer-toolbar input,
+.explorer-toolbar select {
+  border-radius: 0;
+  background: var(--surface-soft);
+  border-color: var(--hairline);
+  color: var(--ink);
+}
+.explorer-toolbar :focus-visible { outline-color: var(--primary); }
+
+/* Explorer sample strip — no rounded corners */
+.explorer-sample { border-radius: 0; background: var(--surface-soft); }
+
+/* Summary/disclosure link — navy instead of blue */
+.explorer-page summary { color: var(--primary); }
+
+/* Section heading */
+.section-head h2 { font-family: "Playfair Display", Georgia, serif; }
+
+/* Footer */
+.site-footer { border-top-color: var(--hairline); color: var(--body); }
+</style>
 </head>
 <body class="explorer-page">
 <header class="site-header"><div class="site-header-inner"><a class="brand" href="../index.html">USA ETF Lab</a><button type="button" class="nav-toggle" aria-expanded="false" aria-controls="site-nav" aria-label="Open menu"><span class="nav-toggle-bars" aria-hidden="true"></span></button><nav class="site-nav" id="site-nav" aria-label="Main"><a href="../index.html">Home</a><a href="../books.html">Books</a><a href="../runs.html">Runs</a><a href="../explorer/index.html" class="is-active">Explorer</a><a href="../methods/index.html">Methods</a></nav></div></header>
