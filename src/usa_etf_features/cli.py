@@ -1,4 +1,4 @@
-"""CLI: score-universe, build-portfolio, walkforward-ic, walkforward-vol-target, walkforward-vol-cond-factor-corr."""
+"""CLI: score-universe, build-portfolio, walkforward-ic, walkforward-vol-target, walkforward-vol-cond-factor-corr, walkforward-skewness-managed."""
 
 from __future__ import annotations
 
@@ -33,6 +33,11 @@ from .vol_cond_factor_corr import (
     load_vol_cond_factor_corr_config,
     make_vol_cfc_trials,
     run_vol_cond_factor_corr_grid,
+)
+from .skewness_managed import (
+    load_skewness_managed_config,
+    make_skew_managed_trials,
+    run_skewness_managed_grid,
 )
 from .forecast_tangency_med import (
     load_forecast_tangency_med_config,
@@ -802,6 +807,159 @@ def cmd_walkforward_regime_resilient_erc(args: argparse.Namespace) -> int:
     return 0
 
 
+def cmd_walkforward_skewness_managed(args: argparse.Namespace) -> int:
+    """Walk-forward skewness-managed Book-2 overlay (Gong–Lynch–Ogden).
+
+    Book-2 f_t = clip(σ*/σ̂_t, f_min, f_max); skew/left-tail gate g_t ∈ [g_min,1];
+    f̃_t = f_t · g_t; residual → BIL.
+
+    Primary null: unconditional Book-2 VT (Option A). Additional nulls: EW, LW MinVar, ERC.
+    Registry enabled:false until Quant gate PASS.
+
+    Research tooling only; not investment advice.
+    Lead citation: Gong, Lynch & Ogden, Skewness Managed Portfolios (Jan 2025 / Jul 2026).
+    """
+    import pandas as pd
+
+    universe_path = Path(args.universe)
+    out_path = Path(args.out)
+    weights_path = Path(args.weights)
+    registry_path = Path(args.registry)
+    returns_path = (
+        Path(args.returns) if getattr(args, "returns", None)
+        else out_path.with_name("skew_managed_oos_returns.csv")
+    )
+    state_path = (
+        Path(args.state_out) if getattr(args, "state_out", None)
+        else out_path.with_name("skew_managed_state_table.csv")
+    )
+
+    cfg_path = (
+        Path(args.config) if getattr(args, "config", None)
+        else _repo_root() / "config" / "skewness_managed.yaml"
+    )
+    sm_cfg = load_skewness_managed_config(
+        cfg_path if cfg_path.exists() else None
+    ).get("skewness_managed", {})
+
+    uni_cfg_path = (
+        Path(args.universe_config) if getattr(args, "universe_config", None)
+        else _repo_root() / "config" / "universe.yaml"
+    )
+    uni_cfg = load_universe_config(uni_cfg_path if uni_cfg_path.exists() else None)
+
+    prices = load_adj_close_csv(Path(args.prices))
+
+    monthly = None
+    if getattr(args, "monthly", None):
+        monthly = pd.read_csv(args.monthly, index_col=0, parse_dates=True).sort_index()
+        monthly.columns = [str(c).upper() for c in monthly.columns]
+
+    coverage = None
+    if getattr(args, "coverage", None) and Path(args.coverage).exists():
+        coverage = pd.read_csv(args.coverage)
+
+    if getattr(args, "grid", False):
+        lookbacks = _parse_csv_list(
+            getattr(args, "lookbacks", None) or ",".join(map(str, sm_cfg.get("lookbacks", [21, 63, 126]))),
+            cast=int,
+        )
+        g_mins = _parse_csv_list(
+            getattr(args, "g_mins", None) or ",".join(map(str, sm_cfg.get("g_min", [0.25, 0.5]))),
+            cast=float,
+        )
+        skew_estimators = _parse_csv_list(
+            getattr(args, "skew_estimators", None)
+            or ",".join(sm_cfg.get("skew_estimator", ["realized_amaya", "expected_bmv_lite"])),
+            cast=str,
+        )
+        left_tail_rules = _parse_csv_list(
+            getattr(args, "left_tail_rules", None)
+            or ",".join(sm_cfg.get("left_tail_rule", ["cvar_5", "adverse_rs", "pct_lt_neg_k_sigma"])),
+            cast=str,
+        )
+        apply_tos = _parse_csv_list(
+            getattr(args, "apply_to", None)
+            or ",".join(sm_cfg.get("apply_to", ["option_a_vt"])),
+            cast=str,
+        )
+        skew_lbs = _parse_csv_list(
+            getattr(args, "skew_lookbacks", None)
+            or ",".join(map(str, sm_cfg.get("skew_lookback_months", [63]))),
+            cast=int,
+        )
+    else:
+        lookbacks = [int(getattr(args, "lookback", 63))]
+        g_mins = [float(getattr(args, "g_min", sm_cfg.get("g_min", [0.5])[0] if isinstance(sm_cfg.get("g_min"), list) else sm_cfg.get("g_min", 0.5)))]
+        skew_estimators = [str(getattr(args, "skew_estimator", "realized_amaya"))]
+        left_tail_rules = [str(getattr(args, "left_tail_rule", "cvar_5"))]
+        apply_tos = [str(getattr(args, "apply_to", "option_a_vt"))]
+        skew_lbs = [int(getattr(args, "skew_lookback", 63))]
+
+    trials = make_skew_managed_trials(
+        lookbacks=lookbacks,
+        g_mins=g_mins,
+        skew_estimators=skew_estimators,
+        left_tail_rules=left_tail_rules,
+        apply_tos=apply_tos,
+        f_min=float(getattr(args, "f_min", None) or sm_cfg.get("f_min", 0.25)),
+        f_max=float(getattr(args, "f_max", None) or sm_cfg.get("f_max", 1.0)),
+        sigma_star=str(getattr(args, "sigma_star", None) or sm_cfg.get("sigma_star", "expanding_annvol")),
+        cash_ticker=str(getattr(args, "cash", None) or sm_cfg.get("cash_ticker", "BIL")).upper(),
+        cost_bps_one_way=float(getattr(args, "cost_bps", None) or sm_cfg.get("cost_bps_one_way", 5)),
+        skew_lookback_months=skew_lbs,
+        include_thin=bool(getattr(args, "include_thin", False)),
+        min_names=int(getattr(args, "min_names", None) or sm_cfg.get("min_names", 100)),
+        core=str(getattr(args, "core", "option_a")),
+        cov_lookback_months=int(getattr(args, "cov_lookback_months", None) or sm_cfg.get("cov_lookback_months", 36)),
+        max_null_names_cov=int(getattr(args, "cov_max_names", None) or sm_cfg.get("max_null_names_cov", 50)),
+    )
+
+    if not trials:
+        print("error: no trials configured", file=sys.stderr)
+        return 1
+
+    summary, weights, returns, registry, states = run_skewness_managed_grid(
+        prices,
+        trials,
+        universe_csv=universe_path,
+        monthly=monthly,
+        coverage=coverage,
+        universe_config=uni_cfg,
+        bootstrap_samples=int(
+            getattr(args, "bootstrap_samples", None) or sm_cfg.get("bootstrap_samples", 500)
+        ),
+        bootstrap_block_months=int(sm_cfg.get("bootstrap_block_months", 3)),
+    )
+
+    if summary.empty:
+        print(
+            "error: no skewness-managed OOS rows produced; check price history and min_names",
+            file=sys.stderr,
+        )
+        return 1
+
+    _write_csv(summary, out_path)
+    _write_csv(weights, weights_path)
+    _write_csv(returns, returns_path)
+    _write_csv(registry, registry_path)
+    _write_csv(states, state_path)
+
+    print(f"wrote skewness-managed summary    → {out_path}")
+    print(f"wrote monthly weights             → {weights_path}")
+    print(f"wrote OOS returns                 → {returns_path}")
+    print(f"wrote trial registry              → {registry_path}")
+    print(f"wrote gate state table            → {state_path}")
+    print(f"trials run: {len(trials)}")
+    print(
+        "nulls: Book-2 VT (null_a, PRIMARY), "
+        "Option A (null_b), EW (null_c), LW MinVar (null_d), ERC (null_e)"
+    )
+    print("registry enabled:false — no live book change until Quant gate PASS.")
+    print("NOT a third book; Book-2 overlay only until PASS.")
+    return 0
+
+
 def build_parser() -> argparse.ArgumentParser:
     p = argparse.ArgumentParser(
         prog="usa_etf_features",
@@ -1057,6 +1215,60 @@ def build_parser() -> argparse.ArgumentParser:
     sp.add_argument("--adv-min", type=float, default=0.0)
     sp.add_argument("--asof", default=None)
     sp.set_defaults(func=cmd_walkforward_spectral_rp)
+
+    sm = sub.add_parser(
+        "walkforward-skewness-managed",
+        help=(
+            "Walk-forward skewness-managed Book-2 overlay (Gong–Lynch–Ogden). "
+            "Gates/rescales Book-2 vol-target using skewness/left-tail diagnostics. "
+            "Primary null: unconditional Book-2 VT. Registry enabled:false until Quant gate PASS. "
+            "Research only; not investment advice."
+        ),
+    )
+    sm.add_argument("--prices", required=True, help="Wide adj-close CSV (Date + tickers)")
+    sm.add_argument("--universe", required=True, help="Path to usa_universe_categorized.csv")
+    sm.add_argument("--monthly", default=None, help="Optional monthly returns panel CSV (Date × tickers)")
+    sm.add_argument("--coverage", default=None, help="Optional history coverage CSV (thin_lt5y flags)")
+    sm.add_argument("--out", required=True, help="skew_managed_oos_summary.csv")
+    sm.add_argument("--weights", required=True, help="skew_managed_monthly_weights.csv")
+    sm.add_argument("--registry", required=True, help="skew_managed_trial_registry.csv")
+    sm.add_argument("--returns", default=None, help="Optional skew_managed_oos_returns.csv path", dest="returns")
+    sm.add_argument("--state-out", default=None, dest="state_out", help="Optional skew_managed_state_table.csv path")
+    sm.add_argument("--null", default="book2_vol_target", help="Primary null label (informational)")
+    sm.add_argument("--core", default="option_a", choices=["option_a", "g1"])
+    sm.add_argument("--lookback", type=int, default=63)
+    sm.add_argument("--f-min", type=float, default=None, dest="f_min")
+    sm.add_argument("--f-max", type=float, default=1.0, dest="f_max")
+    sm.add_argument("--g-min", type=float, default=0.5, dest="g_min")
+    sm.add_argument("--sigma-star", default="expanding_annvol", dest="sigma_star")
+    sm.add_argument("--skew-estimator", default="realized_amaya", dest="skew_estimator",
+                    choices=["realized_amaya", "expected_bmv_lite"])
+    sm.add_argument("--left-tail-rule", default="cvar_5", dest="left_tail_rule",
+                    choices=["cvar_5", "adverse_rs", "pct_lt_neg_k_sigma"])
+    sm.add_argument("--skew-lookback", type=int, default=63, dest="skew_lookback",
+                    help="Monthly lookback for CVaR / tail score")
+    sm.add_argument("--apply-to", default="option_a_vt", dest="apply_to",
+                    choices=["option_a_vt", "category_sleeves"])
+    sm.add_argument("--cash", default="BIL")
+    sm.add_argument("--cost-bps", type=float, default=5.0, dest="cost_bps")
+    sm.add_argument("--min-names", type=int, default=100, dest="min_names")
+    sm.add_argument("--cov-lookback-months", type=int, default=36, dest="cov_lookback_months")
+    sm.add_argument("--cov-max-names", type=int, default=50, dest="cov_max_names",
+                    help="Max names for LW MinVar/ERC null computation (default 50)")
+    sm.add_argument("--include-thin", action="store_true", default=False, dest="include_thin")
+    sm.add_argument("--config", default=None, help="skewness_managed YAML config path")
+    sm.add_argument("--universe-config", default=None, dest="universe_config")
+    sm.add_argument("--bootstrap-samples", type=int, default=500, dest="bootstrap_samples")
+    sm.add_argument("--grid", action="store_true", default=False, help="Run robustness grid")
+    sm.add_argument("--lookbacks", default=None, help="Comma-separated vol lookbacks for --grid")
+    sm.add_argument("--g-mins", default=None, dest="g_mins", help="Comma-separated g_min values for --grid")
+    sm.add_argument("--skew-estimators", default=None, dest="skew_estimators",
+                    help="Comma-separated skew estimators for --grid: realized_amaya,expected_bmv_lite")
+    sm.add_argument("--left-tail-rules", default=None, dest="left_tail_rules",
+                    help="Comma-separated left-tail rules for --grid: cvar_5,adverse_rs,pct_lt_neg_k_sigma")
+    sm.add_argument("--skew-lookbacks", default=None, dest="skew_lookbacks",
+                    help="Comma-separated monthly skew lookbacks for --grid, e.g. 21,63")
+    sm.set_defaults(func=cmd_walkforward_skewness_managed)
 
     return p
 
