@@ -123,6 +123,7 @@ class SkewnessManagedTrial:
     min_names: int = 100
     include_thin: bool = False
     cov_lookback_months: int = 36            # for LW MinVar / ERC nulls
+    max_null_names_cov: int = 50             # cap for MinVar/ERC (pick names with most complete window history)
 
 
 # ---------------------------------------------------------------------------
@@ -645,26 +646,57 @@ def run_skewness_managed_trial(
         if n_null >= trial.min_names or n_null >= 3:
             ret_row = monthly_panel.loc[eval_date] if eval_date in monthly_panel.index else None
             if ret_row is not None:
-                w_ew_arr = _ew_weights(tickers_null)
-                r_ew_raw = _port_ret_from_weights(ret_row, w_ew_arr, tickers_null)
-                r_ew = r_ew_raw if np.isfinite(r_ew_raw) else float("nan")
+                # EW: all tickers_null with valid eval-date return
+                tickers_ew = [t for t in tickers_null if np.isfinite(ret_row.get(t, float("nan")))]
+                if tickers_ew:
+                    w_ew_arr = _ew_weights(tickers_ew)
+                    r_ew_raw = _port_ret_from_weights(ret_row, w_ew_arr, tickers_ew)
+                    r_ew = r_ew_raw if np.isfinite(r_ew_raw) else float("nan")
 
-                if n_null >= 3:
-                    win_sub = win[tickers_null].dropna(how="any")
-                    if len(win_sub) >= max(3, n_null):
+                # LW MinVar / ERC: restrict to tickers with complete window history
+                # and valid eval-date return to avoid rank-deficient covariance
+                min_cov_obs = max(3, min(cov_lb, 12))
+                tickers_cov = [
+                    t for t in tickers_null
+                    if t in win.columns
+                    and win[t].notna().sum() >= min_cov_obs
+                    and np.isfinite(ret_row.get(t, float("nan")))
+                ]
+                n_cov = len(tickers_cov)
+                if n_cov >= 3:
+                    # Use tickers where ALL lookback window rows are non-NaN
+                    tickers_full = [t for t in tickers_cov if win[t].notna().all()]
+                    if len(tickers_full) >= 3:
+                        win_sub = win[tickers_full]
+                    else:
+                        # Fall back: fill missing with cross-sectional median per period
+                        win_sub = win[tickers_cov].copy()
+                        win_sub = win_sub.apply(lambda col: col.fillna(col.median()), axis=0)
+                        win_sub = win_sub.dropna(how="any")
+                        tickers_cov = list(win_sub.columns) if not win_sub.empty else tickers_cov
+                        tickers_full = tickers_cov
+                    if not win_sub.empty and len(win_sub) >= 3:
+                        # Cap tickers for tractable optimization (pick most-complete-history names)
+                        cols_sorted = sorted(
+                            win_sub.columns,
+                            key=lambda c: win_sub[c].notna().sum(),
+                            reverse=True,
+                        )
+                        max_cov = int(trial.max_null_names_cov)
+                        if len(cols_sorted) > max_cov:
+                            cols_sorted = cols_sorted[:max_cov]
+                        win_sub_cap = win_sub[cols_sorted]
+                        tickers_cap = cols_sorted
+                        n_cap = len(tickers_cap)
                         try:
-                            cov_mat = _ledoit_wolf_cov(win_sub.to_numpy())
-                            w_mv = _lw_minvar(cov_mat, n_null)
-                            r_minvar = _port_ret_from_weights(ret_row, w_mv, tickers_null)
+                            cov_mat = _ledoit_wolf_cov(win_sub_cap.to_numpy())
+                            w_mv = _lw_minvar(cov_mat, n_cap)
+                            r_minvar = _port_ret_from_weights(ret_row, w_mv, tickers_cap)
                         except Exception:
                             r_minvar = float("nan")
                         try:
-                            if not np.isfinite(r_minvar):
-                                cov_mat_e = _sample_cov(win_sub.to_numpy())
-                            else:
-                                cov_mat_e = cov_mat  # reuse
-                            w_erc_arr = _erc(cov_mat_e, n_null)
-                            r_erc = _port_ret_from_weights(ret_row, w_erc_arr, tickers_null)
+                            w_erc_arr = _erc(cov_mat, n_cap)
+                            r_erc = _port_ret_from_weights(ret_row, w_erc_arr, tickers_cap)
                         except Exception:
                             r_erc = float("nan")
 
@@ -902,6 +934,7 @@ def make_skew_managed_trials(
     min_names: int = 100,
     core: str = "option_a",
     cov_lookback_months: int = 36,
+    max_null_names_cov: int = 50,
 ) -> list[SkewnessManagedTrial]:
     trials: list[SkewnessManagedTrial] = []
     skew_lbs = list(skew_lookback_months) if skew_lookback_months is not None else [63]
@@ -936,6 +969,7 @@ def make_skew_managed_trials(
                                     include_thin=bool(include_thin),
                                     min_names=int(min_names),
                                     cov_lookback_months=int(cov_lookback_months),
+                                    max_null_names_cov=int(max_null_names_cov),
                                 )
                             )
     return trials

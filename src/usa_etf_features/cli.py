@@ -912,6 +912,7 @@ def cmd_walkforward_skewness_managed(args: argparse.Namespace) -> int:
         min_names=int(getattr(args, "min_names", None) or sm_cfg.get("min_names", 100)),
         core=str(getattr(args, "core", "option_a")),
         cov_lookback_months=int(getattr(args, "cov_lookback_months", None) or sm_cfg.get("cov_lookback_months", 36)),
+        max_null_names_cov=int(getattr(args, "cov_max_names", None) or sm_cfg.get("max_null_names_cov", 50)),
     )
 
     if not trials:
@@ -1252,6 +1253,8 @@ def build_parser() -> argparse.ArgumentParser:
     sm.add_argument("--cost-bps", type=float, default=5.0, dest="cost_bps")
     sm.add_argument("--min-names", type=int, default=100, dest="min_names")
     sm.add_argument("--cov-lookback-months", type=int, default=36, dest="cov_lookback_months")
+    sm.add_argument("--cov-max-names", type=int, default=50, dest="cov_max_names",
+                    help="Max names for LW MinVar/ERC null computation (default 50)")
     sm.add_argument("--include-thin", action="store_true", default=False, dest="include_thin")
     sm.add_argument("--config", default=None, help="skewness_managed YAML config path")
     sm.add_argument("--universe-config", default=None, dest="universe_config")

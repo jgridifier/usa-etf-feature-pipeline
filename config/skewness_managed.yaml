@@ -38,6 +38,7 @@ skewness_managed:
   min_names: 100
   include_thin: false
   cov_lookback_months: 36              # covariance window for LW MinVar / ERC nulls
+  max_null_names_cov: 50               # cap names for MinVar/ERC optimization (pick by history completeness)
 
   # Inference
   bootstrap_samples: 500
