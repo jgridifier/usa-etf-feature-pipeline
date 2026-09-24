@@ -2,8 +2,6 @@ import { Link } from 'react-router-dom'
 
 export default function Explorer() {
   // No auto-redirect — user must explicitly click through to the sandbox.
-  // The destination (explorer/index.html) is a separate white Inter tooling shell;
-  // this interstitial is the edition-chrome gate so the style break is deliberate.
 
   return (
     <div>
@@ -50,10 +48,9 @@ export default function Explorer() {
           {/* Context body */}
           <div className="mb-8 max-w-2xl">
             <p className="font-serif text-base text-body leading-relaxed mb-4">
-              The Explorer shell is a separate application with its own styling (white background,
-              Inter font) — the style break from the edition is intentional and expected.
-              It provides growth-panel metrics and time-series charts for exploratory research
-              use only.
+              The Explorer sandbox provides growth-panel metrics and time-series charts
+              for exploratory research use only. Controls, series pickers, and charts
+              are all inside the sandbox shell.
             </p>
             <p className="font-serif text-sm text-muted leading-relaxed">
               Scope: layer-3 diagnostics sandbox. Outputs are research artifacts — not promoted

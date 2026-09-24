@@ -1,8 +1,8 @@
 /* Static Growth-25 research explorer. Missing observations remain NaN internally. */
 (function () {
   'use strict';
-  const PRIMARY = '#0052ff', INK = '#0a0b0d', BODY = '#5b616e';
-  const UP = '#05b169', DOWN = '#cf202f', HAIR = '#dee1e6', SOFT = '#f7f7f7';
+  const PRIMARY = '#1c2d6b', INK = '#1a1410', BODY = '#4a4238';
+  const UP = '#1a5e33', DOWN = '#8b1a1a', HAIR = '#c4b89d', SOFT = '#ede8de';
   const EQUITIES = 'VOO,VTI,QQQ,QQQM,IJR,IWM,QUAL,USMV,VLUE,GSEW,IWP,IWO,IJK,IJT,VIOG,VXF,XSD,XBI,LOUP,GTEK,GINN,GVIP,BBC,VEA,EEM'.split(',');
   const finite = Number.isFinite, empty = n => new Float64Array(n).fill(NaN);
   const pct = x => finite(x) ? (100 * x).toFixed(2) + '%' : '—';

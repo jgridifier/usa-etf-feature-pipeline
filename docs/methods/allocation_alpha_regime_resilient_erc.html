@@ -28,14 +28,14 @@
   .toc ol { margin: 0.4rem 0 0; }
   footer { margin-top: 2.5rem; padding-top: 1rem; border-top: 1px solid var(--border); color: var(--muted); font-size: 0.85rem; font-family: system-ui, sans-serif; }
 </style>
-</head>
-<body>
+<!-- lab:start --><link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,wght@0,400;0,500;0,600;1,400;1,600&family=Playfair+Display:wght@700;900&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet"><link rel="stylesheet" href="../assets/style.css"><!-- lab:end --></head>
+<body><!-- lab:start --><header class="site-header"><div class="site-header-inner"><a class="brand" href="../index.html">USA ETF Lab</a><button type="button" class="nav-toggle" aria-expanded="false" aria-controls="site-nav" aria-label="Open menu"><span class="nav-toggle-bars" aria-hidden="true"></span></button><nav class="site-nav" id="site-nav" aria-label="Main"><a href="../index.html">Home</a><a href="../index.html#/books">Books</a><a href="../index.html#/runs">Runs</a><a href="../explorer/index.html">Explorer</a><a href="../methods/index.html" class="is-active">Methods</a></nav></div></header><!-- lab:end -->
 
 <h1>Allocation Alpha: Regime-Resilient ERC (LOIM Regime Parity)</h1>
 <p class="meta">Teaching note · 2026-09-22 (ET) · USA research-panel ETF · CIO Justina shortlist #3 · Next bet after #4 FT-MED FAIL/ARCHIVE · #6 skewness parked</p>
 
 <div class="disclaimer">
-<strong>Research only — not investment advice.</strong> This document explains a proposed walk-forward test of <em>regime-parity</em> / regime-resilient equal-risk-contribution (ERC) allocation on the experimental USA ETF research panel. It does not recommend buying or selling any security. Confirm tickers against the research panel before any use. <strong>No empirical success is claimed here</strong> — theory + Engineering handoff only. Live books stay <strong>static core + unconditional Book-2 vol-target only</strong>. Research / Quant gate only — this note does not change live books.
+<strong>Research only — not investment advice.</strong> This document explains a proposed walk-forward test of <em>regime-parity</em> / regime-resilient equal-risk-contribution (ERC) allocation on the experimental USA ETF research panel. It does not recommend buying or selling any security. Confirm tickers against the research panel before any use. <strong>No empirical success is claimed here</strong> — theory + Engineering handoff only. Live shortlist remains <strong>static core + VT × gate-first skew overlay</strong> (Justina #6). Unconditional Book-2 VT is the audit/Archive null only. Research / Quant gate only — this note does not change live books.
 </div>
 
 <nav class="toc" aria-label="Contents">
@@ -55,7 +55,7 @@
 <p>Portfolios context (as of 2026-09-22 ET):</p>
 <ul>
   <li><strong>Archived (research FAIL):</strong> Spectral RP · Regime-Aware dual · vol-cond-factor-corr (#13) · <strong>forecast tangency + MED (#4 / FT-MED FAIL/ARCHIVE)</strong>. Scoreboard: <code>methods/justina_round1_scoreboard.html</code>, <code>QUANT_GATE_forecast_tangency_med.md</code>, <code>QUANT_GATE_vol_cond_factor_corr.md</code>.</li>
-  <li><strong>Live books:</strong> <strong>static core + unconditional Book-2 vol-target only</strong> (<code>walkforward-vol-target</code>, <code>vol_target_real_bil/</code>). This ticket does not modify live books.</li>
+  <li><strong>Live shortlist:</strong> <strong>static core + VT × gate-first skew overlay</strong> (Justina #6). Unconditional Book-2 VT (<code>walkforward-vol-target</code>, <code>vol_target_real_bil/</code>) is the audit/Archive null only. This ticket does not modify live books.</li>
   <li><strong>Parked:</strong> Justina shortlist <strong>#6</strong> skewness overlay — not this ticket.</li>
   <li><strong>This ticket:</strong> Justina CIO shortlist <strong>#3</strong> — <strong>regime-resilient ERC construction</strong>: stress / correlation-breakdown overlays (and LOIM regime-parity risk inputs) that change <em>how ERC weights are built</em>. <strong>Primary null = unconditional ERC.</strong></li>
 </ul>
@@ -142,7 +142,7 @@ w*_t ← ERC(Σ̂_resilient,t)                             # still ERC — only 
   <li>Sharpe_rf0 (rf=0); NW t and <strong>DSR + trial_count</strong> mandatory.</li>
   <li>Thin-history flags (<code>thin_lt5y</code>+); publish with/without thin names / thin sleeves.</li>
   <li>Cash: on-list BIL (fallbacks SGOV, GBIL, SHV).</li>
-  <li><strong>Live books:</strong> static core + unconditional Book-2 VT only — unchanged by this research ticket.</li>
+  <li><strong>Live shortlist:</strong> static core + VT × gate-first skew overlay (Justina #6) — unchanged by this research ticket. Unconditional Book-2 VT is the audit/Archive null only.</li>
 </ul>
 
 <h3>Inputs</h3>
@@ -188,7 +188,7 @@ w*_t ← ERC(Σ̂_resilient,t)                             # still ERC — only 
   <li>Does <strong>not</strong> silently win via current-regime selection, peeking labels, dropping stress months from OOS, or fishing knobs after seeing outcomes.</li>
 </ol>
 
-<p><strong>Failure is informative:</strong> If resilient-ERC construction fails vs unconditional ERC (and EW / LW MinVar) after DSR, archive with a one-line null result (parity with Justina round-1 / #13 / #4). Live books stay <strong>static core + unconditional Book-2 VT only</strong>. #6 skewness stays parked.</p>
+<p><strong>Failure is informative:</strong> If resilient-ERC construction fails vs unconditional ERC (and EW / LW MinVar) after DSR, archive with a one-line null result (parity with Justina round-1 / #13 / #4). Live shortlist remains <strong>static core + VT × gate-first skew overlay</strong> (Justina #6). Unconditional Book-2 VT is the audit/Archive null only.</p>
 
 <table>
   <tr><th>Metric</th><th>Compare to</th></tr>
@@ -218,5 +218,5 @@ USA Research-Panel ETF Portfolios workstream · Quant → Engineering · Justina
 Not personalized investment advice. Confirm policy list before trading. No empirical success claimed. Live books: static core + Book-2 VT only.
 </footer>
 
-</body>
+<!-- lab:start --><footer class="site-footer"><p>Research only; not investment advice; experimental panel; no performance guarantees.</p></footer><!-- lab:end --></body>
 </html>

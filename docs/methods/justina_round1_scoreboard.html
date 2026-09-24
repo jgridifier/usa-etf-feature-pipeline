@@ -28,7 +28,7 @@
 </div>
 
 <div class="callout">
-<strong>CIO frame:</strong> Justina round-1 and the Book-2 conditional-correlation upgrade (#13) did not clear binding nulls on Sharpe (and round-1 also failed the risk path). <strong>No book cut.</strong> Live shortlist stays <strong>static core + unconditional Book-2 vol-target</strong> until something clears the same leakage · null · DSR · empirical gate.
+<strong>CIO frame:</strong> Justina round-1 and the Book-2 conditional-correlation upgrade (#13) did not clear binding nulls on Sharpe (and round-1 also failed the risk path). <strong>No book cut.</strong> Live shortlist remains <strong>static core + VT × gate-first skew overlay</strong> (Justina #6). Unconditional Book-2 VT is the audit/Archive null only. Further candidates must still clear the same leakage · null · DSR · empirical gate.
 </div>
 
 <h2>Scoreboard</h2>
@@ -90,7 +90,7 @@
 </ul>
 
 <h2>Books implication</h2>
-<p>No new book from Justina round-1 or from #13. Existing shortlist unchanged: <strong>static core</strong> + <strong>unconditional Book-2 vol-target</strong>. Next method candidates must clear the same leakage · null · DSR · empirical gate before CoS design-pass or promoted Pages.</p>
+<p>No new book from Justina round-1 or from #13. Live shortlist: <strong>static core</strong> + <strong>VT × gate-first skew overlay</strong> (Justina #6). Unconditional Book-2 VT remains the audit/Archive null only. Next method candidates must clear the same leakage · null · DSR · empirical gate before CoS design-pass or promoted Pages.</p>
 
 <p class="meta">Sources: <code>JUSTINA_ROUND1_SCOREBOARD.md</code>, <code>QUANT_GATE_vol_cond_factor_corr.md</code>, <code>data/processed/vol_cond_factor_corr/vol_cfc_oos_summary.csv</code> (best Sharpe trial <code>VCFC_option_a_vt_L21_C12_g0p5_mkt_vol</code>).</p>
 

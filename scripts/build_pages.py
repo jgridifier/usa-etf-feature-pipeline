@@ -695,6 +695,7 @@ def build_runs() -> None:
 def build_methods_index() -> None:
     methods = [
         ('allocation_alpha_vol_target.html', 'Allocation alpha: volatility-managed Option A'),
+        ('skewness_managed_stub.html', 'Skewness-Managed Book-2 Overlay (Justina #6 · gate-first PASS)'),
         ('ot_short_term_forecasting.html', 'Optimal transport: short-term forecasting'),
         ('ts_explorer_metric_menu.html', 'Time Series Explorer: quant metric menu'),
     ]
@@ -717,7 +718,7 @@ def build_methods_index() -> None:
         + '</ul>'
         '<h2 id="archive">Archive / failed nulls</h2>'
         '<p class="lede archive-lede">FAIL / ARCHIVE — research record only; <strong>not live books</strong>. '
-        'Live shortlist remains static core + unconditional Book-2 vol-target.</p>'
+        'Live shortlist remains static core + VT × gate-first skew overlay. Unconditional Book-2 VT is the audit/Archive null only.</p>'
         '<ul class="method-list archive-list">'
         + ''.join(
             f'<li><a href="{name}"><span class="badge badge-fail">FAIL</span> {escape(title)}</a></li>' for name, title in archive
@@ -745,7 +746,7 @@ def restyle_methods_shell() -> None:
             '<!-- lab:start -->'
             '<link rel="preconnect" href="https://fonts.googleapis.com">'
             '<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>'
-            '<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">'
+            '<link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,wght@0,400;0,500;0,600;1,400;1,600&family=Playfair+Display:wght@700;900&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">'
             '<link rel="stylesheet" href="../assets/style.css">'
             '<!-- lab:end -->'
         )
