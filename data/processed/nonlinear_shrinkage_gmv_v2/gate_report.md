@@ -1,6 +1,21 @@
 # NLS GMV v2 ex-cash research gate
 
-PENDING — Quant decides
+**Verdict: VOID: short-duration dominated (pre-registered tripwire) — Quant, 2026-09-26**
+
+Pre-registered criterion 5 tripwire: at 156w the method averages 84.1% short_duration weight (SHY 57.8%, SPTS 26.1%) with effective N 2.21, and the primary null (weekly LW MinVar) 67.1% short_duration; the 260w run trips the same three. Short_duration plus FTSL is 96.58% of the 156w method book (84.12% + 12.46%, average over the 65 committed rebalances); FTSL is not re-scored.
+
+Even without the tripwire it would FAIL: excess-of-BIL Sharpe −0.49 vs the null's −0.18 (and below ERC's 0.33), and 260w points the same way (−0.53 vs −0.30).
+
+The estimator did its job: it cut OOS vol by about a quarter vs linear LW (1.87% vs 2.48% at 156w, 1.89% vs 2.44% at 260w; LW2011 p < 0.001 in both windows), consistent with Ledoit & Wolf (2017). The failure comes from the min-variance objective on a mixed stock-and-bond universe, which concentrates in the lowest-vol bonds.
+
+**Follow-up:** The GMV line on the mixed universe is closed. No v3.
+
+Confirmed calls (Quant, 2026-09-26):
+
+- Criterion 1 requires BOTH LW2011 one-sided p-values (HAC and studentized block bootstrap) <= 0.10.
+- Criterion 4 (260w) needs direction only (lower vol and criterion 2 holding), no p-value requirement.
+- The monthly reference is the ex-cash 60-month LW MinVar on the same live names, reference only.
+- FTSL (floating-rate loans, not tagged cash_like) is not re-scored.
 
 Research only. Registry enabled:false. Snapshot universe implies survivorship bias. No live-book wiring.
 
@@ -40,7 +55,7 @@ Configuration: `{"adv_min": 0.0, "below_floor": "skip", "cost_bps": 5.0, "exclud
 | ERC | 6.19% | 0.306 | 0.816 | -12.26% | 26.56% | 31.63 | 105.71 | 18.01% | 1.74 | 0.3972 | 1.000 / 1.000 / 1.000 | US Treasuries / Govt / Cash-like (33.91%) |
 | Monthly LW MinVar (reference only) | 2.90% | -0.231 | 0.894 | -6.98% | 55.85% | 10.36 | 16.85 | 33.24% | 0.12 | 0.0667 | 1.000 / 0.997 / 1.000 | US Treasuries / Govt / Cash-like (43.77%) |
 
-## Mechanical reading of criteria 1–5 (not a verdict)
+## Mechanical reading of criteria 1–5
 
 Mechanical overall: VOID.
 
@@ -69,4 +84,4 @@ Extra previews: none.
 LW2011: 4999 paired circular bootstrap replicates; block size 4 months; seed 20260926. VAR(1) prewhitening, spectral radius capped at 0.97, Andrews automatic QS bandwidth, T/(T−4) correction. Common RMS return units are removed before the equal-weight moment bandwidth fits; final partial bootstrap blocks are truncated.
 Sharpe ex-BIL uses priced BIL monthly returns with TB3MS fallback; fallback shares are in summary.csv.
 
-Monthly LW MinVar is reference only. Quant decides.
+Monthly LW MinVar is reference only. The mechanical reading above matches the verdict: VOID: short-duration dominated (pre-registered tripwire) — Quant, 2026-09-26.

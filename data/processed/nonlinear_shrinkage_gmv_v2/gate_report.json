@@ -1,5 +1,22 @@
 {
-  "status": "PENDING \u2014 Quant decides",
+  "status": "VOID: short-duration dominated (pre-registered tripwire) \u2014 Quant, 2026-09-26",
+  "verdict": {
+    "verdict": "VOID",
+    "verdict_label": "VOID: short-duration dominated (pre-registered tripwire) \u2014 Quant, 2026-09-26",
+    "verdict_by": "Quant",
+    "verdict_date": "2026-09-26",
+    "verdict_reason": "Pre-registered criterion 5 tripwire: at 156w the method averages 84.1% short_duration weight (SHY 57.8%, SPTS 26.1%) with effective N 2.21, and the primary null (weekly LW MinVar) 67.1% short_duration; the 260w run trips the same three. Short_duration plus FTSL is 96.58% of the 156w method book (84.12% + 12.46%, average over the 65 committed rebalances); FTSL is not re-scored.",
+    "fail_without_tripwire": "Even without the tripwire it would FAIL: excess-of-BIL Sharpe \u22120.49 vs the null's \u22120.18 (and below ERC's 0.33), and 260w points the same way (\u22120.53 vs \u22120.30).",
+    "estimator_note": "The estimator did its job: it cut OOS vol by about a quarter vs linear LW (1.87% vs 2.48% at 156w, 1.89% vs 2.44% at 260w; LW2011 p < 0.001 in both windows), consistent with Ledoit & Wolf (2017). The failure comes from the min-variance objective on a mixed stock-and-bond universe, which concentrates in the lowest-vol bonds.",
+    "follow_up": "The GMV line on the mixed universe is closed. No v3.",
+    "dsr_decisive": false
+  },
+  "confirmed_calls": [
+    "Criterion 1 requires BOTH LW2011 one-sided p-values (HAC and studentized block bootstrap) <= 0.10.",
+    "Criterion 4 (260w) needs direction only (lower vol and criterion 2 holding), no p-value requirement.",
+    "The monthly reference is the ex-cash 60-month LW MinVar on the same live names, reference only.",
+    "FTSL (floating-rate loans, not tagged cash_like) is not re-scored."
+  ],
   "decision_rule": "Criterion 1: method AnnVol < weekly LW MinVar AnnVol and p_gate = max(p_one_sided_hac, p_one_sided_boot) <= 0.10; both LW2011 variants must pass.",
   "ticket": "/workspace/investments/justina_shortlist/ENGINEERING_TICKET_nonlinear_shrinkage_gmv_v2_excash.md",
   "trials": [
@@ -1972,6 +1989,6 @@
       "skipped": false
     }
   ],
-  "statement": "Research only. Registry enabled:false. No live-book wiring. Quant decides the gate.",
+  "statement": "Research only. Registry enabled:false. No live-book wiring. VOID: short-duration dominated (pre-registered tripwire) \u2014 Quant, 2026-09-26.",
   "dsr_decisive": false
 }

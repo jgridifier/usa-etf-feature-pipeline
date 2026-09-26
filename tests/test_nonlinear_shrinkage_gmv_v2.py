@@ -11,7 +11,7 @@ from threadpoolctl import threadpool_limits
 from usa_etf_features import nonlinear_shrinkage_gmv as v1
 from usa_etf_features.gate_metrics import CASH_LIKE, SHORT_DURATION, sharpe_exbil
 from usa_etf_features.nonlinear_shrinkage_gmv_v2 import (
-    METHOD, PRIMARY, REFERENCE, NLSGMVv2Trial, PREREGISTERED_V2, TRIAL_COUNT_V2, DECISION_RULE,
+    METHOD, PRIMARY, REFERENCE, VERDICT_LABEL, CONFIRMED_CALLS, NLSGMVv2Trial, PREREGISTERED_V2, TRIAL_COUNT_V2, DECISION_RULE,
     lw2011_variance_test, mechanical_reading, run_nls_gmv_v2_trial, run_nls_gmv_v2_gate, write_v2_artifacts,
 )
 from usa_etf_features.strategy_registry import load_strategy_registry, enabled_strategies
@@ -248,9 +248,10 @@ def test_gate_trial_count_summary_and_artifacts(panel, tmp_path):
     assert result['mechanical_reading']['overall'] in {'PASS', 'FAIL', 'VOID'}
     write_v2_artifacts(result, tmp_path / 'out')
     report = json.loads((tmp_path / 'out/gate_report.json').read_text())
-    assert report['trial_count'] == 6 and report['dsr_decisive'] is False and report['status'].startswith('PENDING')
+    assert report['trial_count'] == 6 and report['dsr_decisive'] is False and report['status'] == VERDICT_LABEL
+    assert report['verdict']['verdict'] == 'VOID' and len(report['confirmed_calls']) == 4
     md = (tmp_path / 'out/gate_report.md').read_text()
-    for needle in ('PENDING', 'Quant decides', 'reference only', 'LW2011', 'skipped months: none', 'months under 100'):
+    for needle in (VERDICT_LABEL, 'would FAIL', '96.58%', 'FTSL is not re-scored', 'No v3', 'reference only', 'LW2011', 'skipped months: none', 'months under 100'):
         assert needle in md
     assert PREREGISTERED_V2 == (NLSGMVv2Trial(156), NLSGMVv2Trial(260))
     assert PREREGISTERED_V2[0].min_names == 95 and PREREGISTERED_V2[0].exclude_cash_like
@@ -270,3 +271,25 @@ def test_registry_v2_disabled_and_v1_unchanged():
     assert v2.entrypoint in inspect.getsource(registry._strategy_current_result)
     old = next(s for s in specs if s.id == 'nonlinear_shrinkage_gmv')
     assert old.enabled is False and old.default_params['min_names'] == 100
+
+
+def test_verdict_label_and_registry_carry_the_ruling():
+    assert VERDICT_LABEL == "VOID: short-duration dominated (pre-registered tripwire) — Quant, 2026-09-26"
+    specs = load_strategy_registry('config/strategies.yaml')
+    v2 = next(s for s in specs if s.id == 'nonlinear_shrinkage_gmv_v2_excash')
+    assert VERDICT_LABEL in v2.display_name and v2.enabled is False
+    assert any('BOTH' in c for c in CONFIRMED_CALLS) and any('FTSL' in c for c in CONFIRMED_CALLS)
+    md = open('data/processed/nonlinear_shrinkage_gmv_v2/gate_report.md', encoding='utf-8').read()
+    assert VERDICT_LABEL in md and 'PENDING' not in md and 'trial_count 6' in md
+    report = json.load(open('data/processed/nonlinear_shrinkage_gmv_v2/gate_report.json', encoding='utf-8'))
+    assert report['status'] == VERDICT_LABEL and report['trial_count'] == 6
+    assert report['mechanical_reading']['overall'] == 'VOID'
+
+
+def test_short_duration_plus_ftsl_share_matches_committed_weights():
+    w = pd.read_csv('data/processed/nonlinear_shrinkage_gmv_v2/weights.csv')
+    book = w.query("window_weeks == 156 and strategy_id == @METHOD")
+    n = book.date.nunique()
+    sd = book.loc[book.ticker.isin(SHORT_DURATION), 'weight'].sum() / n
+    ftsl = book.loc[book.ticker.eq('FTSL'), 'weight'].sum() / n
+    assert n == 65 and f'{sd + ftsl:.2%}' == '96.58%' and f'{sd:.2%}' == '84.12%' and f'{ftsl:.2%}' == '12.46%'

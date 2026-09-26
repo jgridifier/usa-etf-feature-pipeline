@@ -32,7 +32,37 @@ TICKET = "/workspace/investments/justina_shortlist/ENGINEERING_TICKET_nonlinear_
 DECISION_RULE = ("Criterion 1: method AnnVol < weekly LW MinVar AnnVol and "
                  "p_gate = max(p_one_sided_hac, p_one_sided_boot) <= 0.10; "
                  "both LW2011 variants must pass.")
-STATUS = "PENDING — Quant decides"
+VERDICT_LABEL = "VOID: short-duration dominated (pre-registered tripwire) — Quant, 2026-09-26"
+STATUS = VERDICT_LABEL
+# Quant ruling on PR #37 (2026-09-26 ET). Figures are from the committed v2 artifacts.
+VERDICT = {
+    "verdict": "VOID",
+    "verdict_label": VERDICT_LABEL,
+    "verdict_by": "Quant",
+    "verdict_date": "2026-09-26",
+    "verdict_reason": (
+        "Pre-registered criterion 5 tripwire: at 156w the method averages 84.1% short_duration weight "
+        "(SHY 57.8%, SPTS 26.1%) with effective N 2.21, and the primary null (weekly LW MinVar) 67.1% "
+        "short_duration; the 260w run trips the same three. Short_duration plus FTSL is 96.58% of the 156w "
+        "method book (84.12% + 12.46%, average over the 65 committed rebalances); FTSL is not re-scored."),
+    "fail_without_tripwire": (
+        "Even without the tripwire it would FAIL: excess-of-BIL Sharpe −0.49 vs the null's −0.18 (and below "
+        "ERC's 0.33), and 260w points the same way (−0.53 vs −0.30)."),
+    "estimator_note": (
+        "The estimator did its job: it cut OOS vol by about a quarter vs linear LW (1.87% vs 2.48% at 156w, "
+        "1.89% vs 2.44% at 260w; LW2011 p < 0.001 in both windows), consistent with Ledoit & Wolf (2017). "
+        "The failure comes from the min-variance objective on a mixed stock-and-bond universe, which "
+        "concentrates in the lowest-vol bonds."),
+    "follow_up": "The GMV line on the mixed universe is closed. No v3.",
+    "dsr_decisive": False,
+}
+# Calls confirmed by Quant with the ruling.
+CONFIRMED_CALLS = (
+    "Criterion 1 requires BOTH LW2011 one-sided p-values (HAC and studentized block bootstrap) <= 0.10.",
+    "Criterion 4 (260w) needs direction only (lower vol and criterion 2 holding), no p-value requirement.",
+    "The monthly reference is the ex-cash 60-month LW MinVar on the same live names, reference only.",
+    "FTSL (floating-rate loans, not tagged cash_like) is not re-scored.",
+)
 TRIAL_COUNT_V2 = 6
 
 
@@ -369,7 +399,8 @@ def run_nls_gmv_v2_gate(weekly, monthly, universe, coverage, trials=PREREGISTERE
                  "role": "primary" if t.window_weeks == 156 else "sensitivity" if t.window_weeks == 260 else "preview",
                  "preregistered": t in PREREGISTERED_V2, "trial_count": count} for t in trials]
     result.update(summary=summary, variance_tests=tests, composition=composition, trial_registry=pd.DataFrame(registry),
-                  status=STATUS, decision_rule=DECISION_RULE, ticket=TICKET, trials=[asdict(t) for t in trials],
+                  status=STATUS, verdict=dict(VERDICT), confirmed_calls=list(CONFIRMED_CALLS),
+                  decision_rule=DECISION_RULE, ticket=TICKET, trials=[asdict(t) for t in trials],
                   trial_count=count, extra_previews=list(extra_previews),
                   trial_count_breakdown=dict(v1_carried=v1.TRIAL_COUNT, v2_configs=len(trials), extra_previews=len(extra_previews)),
                   mechanical_reading=mechanical_reading(summary, windows=tuple(t.window_weeks for t in trials)))
@@ -403,15 +434,18 @@ def write_v2_artifacts(result, out_dir="data/processed/nonlinear_shrinkage_gmv_v
     out.mkdir(parents=True, exist_ok=True)
     for key in tables:
         result[key].to_csv(out/f"{key}.csv", index=False, date_format="%Y-%m-%d")
-    report = {k: result[k] for k in ("status", "decision_rule", "ticket", "trials", "trial_count", "extra_previews",
+    report = {k: result[k] for k in ("status", "verdict", "confirmed_calls", "decision_rule", "ticket", "trials", "trial_count", "extra_previews",
                                      "trial_count_breakdown", "mechanical_reading", "summary", "variance_tests",
                                      "composition", "name_counts")}
-    report["statement"] = "Research only. Registry enabled:false. No live-book wiring. Quant decides the gate."
+    report["statement"] = "Research only. Registry enabled:false. No live-book wiring. " + VERDICT_LABEL + "."
     report["dsr_decisive"] = False
     (out/"gate_report.json").write_text(json.dumps(_json_safe(report), indent=2, allow_nan=False)+"\n")
     labels = {METHOD: "NLS GMV (method)", PRIMARY: "Weekly LW MinVar (primary null)",
               "equal_weight": "EW", "erc_weekly": "ERC", REFERENCE: "Monthly LW MinVar (reference only)"}
-    lines = ["# NLS GMV v2 ex-cash research gate", "", STATUS, "",
+    lines = ["# NLS GMV v2 ex-cash research gate", "", f"**Verdict: {VERDICT['verdict_label']}**", "",
+             VERDICT["verdict_reason"], "", VERDICT["fail_without_tripwire"], "", VERDICT["estimator_note"], "",
+             f"**Follow-up:** {VERDICT['follow_up']}", "",
+             "Confirmed calls (Quant, 2026-09-26):", ""] + [f"- {c}" for c in CONFIRMED_CALLS] + ["",
              "Research only. Registry enabled:false. Snapshot universe implies survivorship bias. No live-book wiring.",
              "", f"Ticket: `{TICKET}`", "", DECISION_RULE, "",
              "Spectral RP name settings plus exclude_cash_like=True; pre-registered floor 95, skip-and-list.",
@@ -444,7 +478,7 @@ def write_v2_artifacts(result, out_dir="data/processed/nonlinear_shrinkage_gmv_v
             lines.append("| " + label + " | " + " | ".join(values) + " |")
         lines.append("")
     reading = result["mechanical_reading"]
-    lines += ["## Mechanical reading of criteria 1–5 (not a verdict)", "", f"Mechanical overall: {reading['overall']}.", ""]
+    lines += ["## Mechanical reading of criteria 1–5", "", f"Mechanical overall: {reading['overall']}.", ""]
     for window, check in reading["windows"].items():
         m, p, e = (check["raw"][key] for key in ("method", "primary", "erc"))
         lines += [f"{window}:",
@@ -469,5 +503,5 @@ def write_v2_artifacts(result, out_dir="data/processed/nonlinear_shrinkage_gmv_v
               "VAR(1) prewhitening, spectral radius capped at 0.97, Andrews automatic QS bandwidth, T/(T−4) correction. "
               "Common RMS return units are removed before the equal-weight moment bandwidth fits; final partial bootstrap blocks are truncated.",
               "Sharpe ex-BIL uses priced BIL monthly returns with TB3MS fallback; fallback shares are in summary.csv.", "",
-              "Monthly LW MinVar is reference only. Quant decides.", ""]
+              "Monthly LW MinVar is reference only. The mechanical reading above matches the verdict: " + VERDICT_LABEL + ".", ""]
     (out/"gate_report.md").write_text("\n".join(lines))
