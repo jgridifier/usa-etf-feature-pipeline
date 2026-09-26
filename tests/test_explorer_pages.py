@@ -18,7 +18,8 @@ def test_explorer_links_and_chrome():
     assert len(re.findall(r'id="chart-', html)) == 13
     for href in re.findall(r'(?:href|src)="([^"]+)"', html):
         if not href.startswith(('https:', '#')):
-            assert (page.parent / href).is_file(), href
+            # SPA routes live behind a fragment (e.g. ../index.html#/books); check the file part.
+            assert (page.parent / href.split('#', 1)[0]).is_file(), href
     js = (page.parent / 'explorer.js').read_text()
     assert set(re.findall(r"'([.][.]/data/[^']+)'", js)) == {
         '../data/growth_alpha_adj_close.csv',
