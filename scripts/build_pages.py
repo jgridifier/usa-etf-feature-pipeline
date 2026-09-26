@@ -560,7 +560,7 @@ def build_books() -> None:
         <span class="badge">Book 2 · Vol-target</span>
         <h3>Default research path</h3>
         <p><strong>What it is:</strong> Same Option A core, scaled by estimated volatility (scale-down only in v1); cash residual in <strong>BIL</strong> when risk is high. Strategy id <code>vol_target_option_a</code>.</p>
-        <p><strong>Why it&rsquo;s on the shortlist:</strong> On this panel it improves the risk path vs Book 1 (higher Sharpe_rf0, milder MaxDD) without a strong return-alpha claim vs static (NW t vs Book 1 ≈ 0). That is a <strong>path/risk</strong> book, not a “beat the market” story.</p>
+        <p><strong>Why it&rsquo;s on the shortlist:</strong> It is the drawdown-controlled version of the same stock core: about 1 point a year less return than the VT backbone for shallower drawdowns (−10.1% vs −20.1%; Book 1 −25.6%) and lower volatility. Its Sharpe above BIL is 0.97 vs 0.84 for VT; that difference is not statistically significant. A <strong>drawdown-control</strong> book, not a “beat the market” story.</p>
         <p><strong>What it is not:</strong> Not the archived conditional factor-corr overlay (#13), which <strong>failed</strong> vs this unconditional Book 2 on Sharpe.</p>
         <p class="metric-sub">OOS snapshot (panel; rf=0 Sharpe): ~14.7% ann. return · ~13.9% vol · MaxDD ~−20.1% · Sharpe ~1.06 · same window. Modest turnover from scaling.</p>
       </article>

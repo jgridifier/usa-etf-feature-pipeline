@@ -260,10 +260,42 @@ def test_site_sharpe_artifact_and_pages_figures(rf):
         assert row["Sharpe_exBIL"] == site["comparison"][row["strategy_id"]]["exbil"]
         assert row["Sharpe_rf0"] == pytest.approx(site["comparison"][row["strategy_id"]]["rf0_legacy"], abs=1e-4)
     books_tsx = (ROOT / "apps/pages/src/pages/Books.tsx").read_text(encoding="utf-8")
-    for needle in ("Sharpe 0.75 in excess of BIL", "Sharpe 0.97 in", "0.84 in excess of BIL", "legacy rf = 0"):
+    for needle in ("Sharpe 0.75 in excess of BIL", "Sharpe above BIL 0.97 (0.84, 0.75)",
+                   "0.84 in excess of BIL", "legacy rf = 0"):
         assert needle in books_tsx
     for stale in ("Sharpe ~1.06", "higher Sharpe_rf0", "Sharpe ~0.92 ·"):
         assert stale not in books_tsx
+
+
+BOOK2_STAT_LINE = ("Max drawdown −10.1% (VT backbone −20.1%, Book 1 −25.6%) · volatility ~10.6% (~13.9%, ~15.9%) · "
+                   "return ~13.6% (~14.7%, ~14.7%) · Sharpe above BIL 0.97 (0.84, 0.75)")
+BOOK2_BODY = (
+    "Book 2 gives up about 1 point a year of return versus the VT backbone in exchange for shallower drawdowns "
+    "and lower volatility. Its protection has been seen in one bear market: in 2022 its drawdown was about half "
+    "of VT's (−10.1% vs −20.1%), and it also cushioned the autumn 2023 pullback (−3.9% vs −9.0%). The skew gate "
+    "has not switched on since January 2024, so through the 2024–2026 pullbacks Book 2 tracked VT. Its Sharpe "
+    "above BIL is 0.97 vs 0.84 for VT; that difference is not statistically significant.")
+
+
+def _site_text(rel: str) -> str:
+    import re
+    text = (ROOT / rel).read_text(encoding="utf-8").replace("&rsquo;", "'")
+    text = re.sub(r"\s*<br />\s*", " ", text)
+    return re.sub(r"\s+", " ", text)
+
+
+def test_book2_signed_off_drawdown_first_copy():
+    """CIO-signed Book 2 copy (drawdown-first) ships verbatim; no better-Sharpe framing anywhere on the site."""
+    for rel in ("apps/pages/src/pages/Books.tsx", "apps/pages/src/pages/Home.tsx"):
+        text = _site_text(rel)
+        assert BOOK2_STAT_LINE in text, rel
+        assert BOOK2_BODY in text, rel
+    for rel in ("apps/pages/src/pages/Books.tsx", "apps/pages/src/pages/Home.tsx", "apps/pages/src/pages/Runs.tsx",
+                "apps/pages/src/components/TickerBanner.tsx", "apps/pages/src/data/archive_verdicts.json",
+                "scripts/build_pages.py"):
+        low = _site_text(rel).lower()
+        for stale in ("higher sharpe", "better sharpe", "few episodes", "half the drawdown"):
+            assert stale not in low, (rel, stale)
 
 
 def test_methods_table_nulls_use_each_methods_own_window():

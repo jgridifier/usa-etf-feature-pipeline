@@ -87,9 +87,9 @@ function RiskPathFigure({ m }: { m: MetricsPayload }) {
       {/* Figure header — the story sentence */}
       <div className="px-4 py-3 border-b border-border bg-raised">
         <p className="font-serif text-base md:text-lg text-ink leading-snug">
-          <strong>HOLD</strong> — Book-2 vol-target delivers the same return as Book 1 static with{' '}
+          <strong>HOLD</strong> — Book-2&rsquo;s VT backbone (no skew gate) delivers the same return as Book 1 static with{' '}
           <span className="text-up font-semibold">+{ddPp.toFixed(1)}pp milder</span> peak drawdown.
-          Risk-path improvement, not return alpha.
+          Live Book 2 adds the skew gate: the drawdown-controlled version of the same stock core, not return alpha.
         </p>
       </div>
 
@@ -162,8 +162,8 @@ function RiskPathFigure({ m }: { m: MetricsPayload }) {
             <div className="flex-1">
               <p className="font-sans text-2xs text-muted leading-relaxed">
                 NW t vs static A: <strong className="font-mono text-body">{num(m.NW_t, 2)}</strong>{' '}
-                ≈ 0 — return parity confirmed. Sharpe is higher because drawdown is milder, not
-                because Book 2 generates alpha. Ann. return: {pct(m.AnnReturn_vt)} (VT) vs{' '}
+                ≈ 0 — return parity confirmed. The backbone&rsquo;s gain is milder drawdown, not
+                alpha. Ann. return: {pct(m.AnnReturn_vt)} (VT) vs{' '}
                 {pct(m.AnnReturn_a)} (static).
               </p>
             </div>
