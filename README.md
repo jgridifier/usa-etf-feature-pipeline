@@ -307,6 +307,7 @@ The full growth price panel is on the investments box at `/workspace/investments
   **Sharpe_rf0** stays CAGR / vol, labelled "legacy (rf = 0)".
 - `scripts/reconcile_cash_null_audit.py` writes `data/processed/cash_null_audit/` (reconciliation to Quant's audit,
   fallback shares, and `site_sharpe.json` used by the Pages build).
+- **Archived category-sleeve specs will differ at the 4th decimal if re-run** on the new universe file (USFR moved from High Yield Credit to Treasuries / cash-like); the committed outputs and `tests/data/archived_csv_sha256.json` are the archive record.
 
 ## Math appendix
 

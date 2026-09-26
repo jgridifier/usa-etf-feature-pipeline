@@ -23,6 +23,11 @@ from .vol_target import newey_west_tstat
 _REPO = Path(__file__).resolve().parents[2]
 PROCESSED = _REPO / "data" / "processed"
 
+# The memo's VCFC row is trial L126_C12_g0p25 (65 months): the first trial alphabetically, NOT the
+# headline trial. The Archive card / Methods table headline is the best Sharpe trial L21_C12_g0p5 (70 months).
+VCFC_RECON_TRIAL = "VCFC_option_a_vt_L126_C12_g0p25_mkt_vol"
+VCFC_GATE = "#13 VCFC (trial L126_C12_g0p25, 65 months; first alphabetically, not the headline trial)"
+
 # (gate, strategy) -> (printed Sharpe_rf0 or None, printed Sharpe_exBIL or None)
 MEMO: dict[tuple[str, str], tuple[str | None, str | None]] = {
     ("Spectral RP (name)", "Spectral RP"): ("1.06", "0.30"),
@@ -32,8 +37,8 @@ MEMO: dict[tuple[str, str], tuple[str | None, str | None]] = {
     ("Regime-Aware dual", "best conditional (k2_vol_corr_spread_ew)"): ("0.53", "0.44"),
     ("Regime-Aware dual", "uncond ERC"): ("0.74", "0.54"),
     ("Regime-Aware dual", "uncond EW"): (None, "0.60"),
-    ("#13 VCFC (first trial)", "method"): ("0.78", "0.51"),
-    ("#13 VCFC (first trial)", "Book-2 VT"): ("0.88", "0.67"),
+    (VCFC_GATE, "method"): ("0.78", "0.51"),
+    (VCFC_GATE, "Book-2 VT"): ("0.87", "0.67"),
     ("#4 FT-MED", "method"): ("0.36", "0.36"),
     ("#4 FT-MED", "EW"): ("0.61", "0.52"),
     ("#4 FT-MED", "LW MinVar"): ("0.60", "0.37"),
@@ -58,8 +63,8 @@ AUDIT_EXACT: dict[tuple[str, str], float] = {
     ("Regime-Aware dual", "best conditional (k2_vol_corr_spread_ew)"): 0.4421,
     ("Regime-Aware dual", "uncond ERC"): 0.5428,
     ("Regime-Aware dual", "uncond EW"): 0.5965,
-    ("#13 VCFC (first trial)", "method"): 0.5107,
-    ("#13 VCFC (first trial)", "Book-2 VT"): 0.6736,
+    (VCFC_GATE, "method"): 0.5107,
+    (VCFC_GATE, "Book-2 VT"): 0.6736,
     ("#4 FT-MED", "method"): 0.3584,
     ("#4 FT-MED", "EW"): 0.5240,
     ("#4 FT-MED", "LW MinVar"): 0.3663,
@@ -76,13 +81,15 @@ AUDIT_EXACT: dict[tuple[str, str], float] = {
     ("Book-2 VT committed run (cash = 0 proxy)", "Option A static"): 0.7509,
 }
 # Printed memo figures that do not reproduce, with the explanation. Nothing is forced.
-KNOWN_DIFFS: dict[tuple[str, str], str] = {
-    ("#13 VCFC (first trial)", "Book-2 VT"): (
-        "memo prints Sharpe_rf0 0.88; the audit script's own stats give 0.8747 (rounds to 0.87) and the helper "
-        "gives 0.8747. Memo rounding typo on the legacy figure only; Sharpe_exBIL 0.6736 matches to 1e-4."),
+KNOWN_DIFFS: dict[tuple[str, str], str] = {}
+# Notes on rows that do reproduce.
+NOTES: dict[tuple[str, str], str] = {
+    (VCFC_GATE, "Book-2 VT"): (
+        "memo now rounds the legacy Sharpe_rf0 0.8747 to 0.87, matching the audit script's stats "
+        "and this helper; an earlier memo draft printed 0.88"),
 }
 # Memo rf coverage by BIL (rest TB3MS), printed as whole percent.
-MEMO_BIL_SHARE = {"Spectral RP (name)": 100, "Regime-Aware dual": 88, "#13 VCFC (first trial)": 100,
+MEMO_BIL_SHARE = {"Spectral RP (name)": 100, "Regime-Aware dual": 88, VCFC_GATE: 100,
                   "#4 FT-MED": 80, "#3 RR-ERC Path B": 83, "#6 skew gate-first (live Book 2)": 100,
                   "Book-2 VT committed run (cash = 0 proxy)": 100}
 # Memo count statements.
@@ -115,8 +122,8 @@ def gate_frames(processed: Path = PROCESSED) -> dict[str, pd.DataFrame]:
     g["Regime-Aware dual"] = rd.rename(columns={"k2_vol_corr_spread_ew": "best conditional (k2_vol_corr_spread_ew)",
                                                 "unconditional_erc": "uncond ERC", "unconditional_ew": "uncond EW"})
     vc = _read("vol_cond_factor_corr/vol_cfc_oos_returns.csv", processed)
-    first = sorted(vc["trial_id"].unique())[0]
-    g["#13 VCFC (first trial)"] = _wide(vc, first, {"r_method": "method", "r_null_a": "Book-2 VT",
+    assert sorted(vc["trial_id"].unique())[0] == VCFC_RECON_TRIAL
+    g[VCFC_GATE] = _wide(vc, VCFC_RECON_TRIAL, {"r_method": "method", "r_null_a": "Book-2 VT",
                                                      "r_null_b": "Option A static", "r_null_c": "EW sleeves"})
     ft = _read("ft_med/ft_med_oos_returns.csv", processed)
     g["#4 FT-MED"] = _wide(ft, sorted(ft["trial_id"].unique())[0],
@@ -162,7 +169,7 @@ def reconciliation_table(processed: Path = PROCESSED, rf: pd.DataFrame | None = 
                          "Sharpe_rf0_legacy": r.Sharpe_rf0_legacy, "memo_rf0": memo_rf0,
                          "in_memo": memo_ex is not None or memo_rf0 is not None,
                          "reproduces": bool(ok) if (memo_ex or memo_rf0 or exact is not None) else None,
-                         "note": KNOWN_DIFFS.get((gate, strat), "")})
+                         "note": KNOWN_DIFFS.get((gate, strat)) or NOTES.get((gate, strat), "")})
     return pd.DataFrame(rows)
 
 

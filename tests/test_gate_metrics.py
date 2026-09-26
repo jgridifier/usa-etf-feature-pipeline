@@ -190,6 +190,13 @@ def test_reconciles_to_quant_cash_null_audit(rf):
     for key in cna.KNOWN_DIFFS:   # the known diff is a memo rounding, ex-BIL still matches exactly
         row = memo[(memo.gate == key[0]) & (memo.strategy == key[1])].iloc[0]
         assert abs(row.Sharpe_exBIL - cna.AUDIT_EXACT[key]) <= 1e-4
+    # Memo VCFC row = trial L126_C12_g0p25 (65 months), first alphabetically, not the headline trial;
+    # the memo now rounds its legacy Book-2 VT figure 0.8747 to 0.87, so every memo row reproduces.
+    assert "L126_C12_g0p25, 65 months" in cna.VCFC_GATE and "not the headline trial" in cna.VCFC_GATE
+    vc = rec[rec.gate == cna.VCFC_GATE].set_index("strategy")
+    assert vc.loc["Book-2 VT", "n_months"] == 65 and vc.loc["Book-2 VT", "memo_rf0"] == "0.87"
+    assert round(vc.loc["Book-2 VT", "Sharpe_rf0_legacy"], 4) == 0.8747 and vc.loc["Book-2 VT", "reproduces"]
+    assert "0.8747 to 0.87" in vc.loc["Book-2 VT", "note"]
     six = rec[rec.gate == "#6 skew gate-first (live Book 2)"].set_index("strategy")
     assert round(six.loc["VT x gate-first", "Sharpe_exBIL"], 2) == 0.97
     assert round(six.loc["Book-2 VT (BIL priced)", "Sharpe_exBIL"], 2) == 0.84
@@ -257,3 +264,25 @@ def test_site_sharpe_artifact_and_pages_figures(rf):
         assert needle in books_tsx
     for stale in ("Sharpe ~1.06", "higher Sharpe_rf0", "Sharpe ~0.92 ·"):
         assert stale not in books_tsx
+
+
+def test_methods_table_nulls_use_each_methods_own_window():
+    """Methods / Archive table: headline configs and each null on its method's own window."""
+    site = json.loads((AUDIT_DIR / "site_sharpe.json").read_text())["archive"]
+    cards = {c["id"]: c for c in json.loads(
+        (ROOT / "apps/pages/src/data/archive_verdicts.json").read_text(encoding="utf-8"))["cards"]}
+    shipped = {c: {r["label"]: r["sharpe"] for r in cards[c]["rows"]} for c in ("regime_dual", "vcfc")}
+    assert shipped["regime_dual"] == {"Best dual (vol_corr_spread ERC)": "0.37 (legacy 0.51)",
+                                      "Uncond ERC (null)": "0.54 (legacy 0.74)"}
+    assert shipped["vcfc"] == {"VCFC (best Sharpe trial)": "0.75 (legacy 1.05)",
+                               "Book-2 VT, VCFC run window (null)": "0.89 (legacy 1.11)"}
+    for cid in ("regime_dual", "vcfc"):
+        assert len({(f["window"], f["n_months"]) for f in site[cid].values()}) == 1   # method and null share a window
+    assert site["vcfc"]["Book-2 VT, VCFC run window (null)"]["n_months"] == 70        # best trial L21/C12/g0.5
+    assert site["regime_dual"]["Uncond ERC (null)"]["n_months"] == 262
+    for page in ("docs/methods/index.html", "docs/methods/justina_round1_scoreboard.html"):
+        html = (ROOT / page).read_text(encoding="utf-8")
+        for fig in ("0.37 (legacy 0.51)", "0.54 (legacy 0.74)", "0.75 (legacy 1.05)", "0.89 (legacy 1.11)"):
+            assert fig in html, (page, fig)
+        for wrong in ("0.67 (legacy", "0.84 (legacy", "0.67 (legacy 0.87)"):
+            assert wrong not in html, (page, wrong)
