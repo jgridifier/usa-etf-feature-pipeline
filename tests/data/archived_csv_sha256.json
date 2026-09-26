@@ -14,6 +14,14 @@
   "data/processed/nonlinear_shrinkage_gmv/trial_registry.csv": "64bdd197aa637b1a1c5f6f8d179ead9981c6da4d6dffefa8c12599b08dc6e673",
   "data/processed/nonlinear_shrinkage_gmv/weekly_vs_monthly_lw.csv": "fc5a100e2934836c356118f2dc0f8fc3d8a67d0277b2761bb904a290dbbb2cc0",
   "data/processed/nonlinear_shrinkage_gmv/weights.csv": "b237eeda613f36953730b6721ba1a133560459e893d9551ad8914207f9540133",
+  "data/processed/nonlinear_shrinkage_gmv_v2/composition.csv": "498d6eb68245f33bc50b91898b7e5b49e7ff32915a65a8307b218cf38ba613ff",
+  "data/processed/nonlinear_shrinkage_gmv_v2/name_counts.csv": "3ae1f92304995cc5dfe77a7414153d9aa5a314db7073e29032ba37e987d3a8a9",
+  "data/processed/nonlinear_shrinkage_gmv_v2/oos_returns.csv": "ca2303361e6dbe2fde2f8010b886017e818a3b8e1cbc0a9a436c8aa203a2e645",
+  "data/processed/nonlinear_shrinkage_gmv_v2/shrinkage_diagnostics.csv": "9da9e3ebd9096b51940aa96a22d34315956fbe989592d9fc3a14befe6b595ef6",
+  "data/processed/nonlinear_shrinkage_gmv_v2/summary.csv": "b87f6455a9c23ee9ceffad1f4c64aae4cbd99709c4c3530f647b10125bede90f",
+  "data/processed/nonlinear_shrinkage_gmv_v2/trial_registry.csv": "cb4bd3e8acc82b3ef9b5639ec32b6a82e88ecc8858d596b6ea2ca5ddeb226bdf",
+  "data/processed/nonlinear_shrinkage_gmv_v2/variance_tests.csv": "20523a48269d2ba31d1afb642dde26a1f87f3c47bd2aebd53861c2af63e6db79",
+  "data/processed/nonlinear_shrinkage_gmv_v2/weights.csv": "792c274b90a001eb067624bdc31b7357dc0592df9284db0969dddb4ff5475a28",
   "data/processed/regime_dual/name_level/regime_dual_diagnostics.csv": "6704e8c7e3d3a4b834bdba441ab68f79854219d460f4ace98528def0decf9449",
   "data/processed/regime_dual/name_level/regime_dual_monthly_weights.csv": "de4c60fc8fe58dfae2547f9a4d835103986cee595c1953c4d3fcc45b311b95b5",
   "data/processed/regime_dual/name_level/regime_dual_oos_returns.csv": "76bc4441bbc2f29a047eae4835ea8776b2048669087529e3d8904221af3a9985",
@@ -71,5 +79,5 @@
   "data/processed/weights_rotate_mom_only_sample.csv": "00e2e654d58ac136bd7e10b8bd553f82c9f2c9cdef06a7cadcfcfa40aa73a659",
   "data/processed/weights_rotate_scoresimple_sample.csv": "6a23eaa3b71f5f425b9bbb430099bcfa0880022eff2a18c4d044f3bb21fd4ed0"
  },
- "note": "sha256 of every archived committed CSV under data/processed as of main 8d2cc89 (before the cash_like / excess-of-BIL helper). tests/test_gate_metrics.py asserts they stay byte-identical."
+ "note": "sha256 of every archived committed CSV under data/processed as of main 8d2cc89 (before the cash_like / excess-of-BIL helper), plus the NLS GMV v2 (#37, VOID) CSVs as of main 380ff06. tests/test_gate_metrics.py asserts they stay byte-identical."
 }

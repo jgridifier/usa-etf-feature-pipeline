@@ -10,6 +10,9 @@ side effects beyond reading the committed CSVs they are pointed at.
   exclusion applies to the method and every null by construction. The flag defaults to
   ``True`` for new gates; archived trial dataclasses pin ``exclude_cash_like=False`` so
   their committed outputs are unchanged.
+* ``near_cash`` (floating-rate senior / bank-loan ETFs) is a diagnostic tag like ``short_duration``: it
+  is reported next to ``short_duration`` (and combined) in composition diagnostics and void checks for
+  future gates, and never removes a name from any gate.
 * Risk-free rate: BIL's priced monthly total return from the committed monthly panel from
   BIL's first full month on; before that, FRED ``TB3MS`` / 1200 (``data/raw/fred_tb3ms.csv``).
   :func:`window_rf_coverage` reports the share of a window that uses the fallback.
@@ -31,8 +34,13 @@ from .vol_target import annualized_vol, max_drawdown, sharpe_rf0
 MONTHS_PER_YEAR = 12
 CASH_LIKE = frozenset({"BIL", "SGOV", "SHV", "GBIL", "USFR", "GSST", "GUMI"})
 SHORT_DURATION = frozenset({"SHY", "SPTS", "BSV", "STIP"})
+# Floating-rate senior / bank-loan ETFs (rule: the fund's own name says senior loan, bank loan,
+# leveraged loan or floating-rate corporate / CLO, and it is not already cash_like; USFR, a floating-rate
+# Treasury fund, stays cash_like only). Diagnostic only: never excluded from any gate.
+NEAR_CASH = frozenset({"FTSL", "SRLN"})
 CASH_LIKE_COLUMN = "cash_like"
 SHORT_DURATION_COLUMN = "short_duration"
+NEAR_CASH_COLUMN = "near_cash"
 RF_TICKER = "BIL"
 SHARPE_RF0_LABEL = "legacy (rf = 0)"
 SHARPE_EXBIL_LABEL = "excess of BIL"
@@ -65,6 +73,10 @@ def cash_like_tickers(universe: pd.DataFrame) -> frozenset[str]:
 
 def short_duration_tickers(universe: pd.DataFrame) -> frozenset[str]:
     return tagged_tickers(universe, SHORT_DURATION_COLUMN)
+
+
+def near_cash_tickers(universe: pd.DataFrame) -> frozenset[str]:
+    return tagged_tickers(universe, NEAR_CASH_COLUMN)
 
 
 def is_cash_like(ticker: str, universe: pd.DataFrame) -> bool:
@@ -108,6 +120,43 @@ def run_gate_strategies(panel: pd.DataFrame, universe: pd.DataFrame,
             raise ValueError(f"strategy {name!r} holds names outside the gate universe: {bad}")
         out[name] = w
     return out
+
+
+# ------------------------------------------------- composition diagnostics (future gates)
+def duration_composition(weights: pd.DataFrame, universe: pd.DataFrame,
+                         group_cols: Sequence[str] = ("strategy_id",)) -> pd.DataFrame:
+    """Average short_duration, near_cash and combined weight per strategy (diagnostic only).
+
+    ``weights`` is long format with ``date``, ``ticker``, ``weight`` and ``group_cols``. Shares are
+    averaged over each group's rebalance dates. ``near_cash`` never excludes names; it only sits next to
+    ``short_duration`` in the composition report, with the combined share as a diagnostic.
+    """
+    short, near = short_duration_tickers(universe), near_cash_tickers(universe)
+    rows = []
+    for key, w in weights.groupby(list(group_cols)):
+        n = w["date"].nunique()
+        sd = float(w.loc[w["ticker"].isin(short), "weight"].sum() / n)
+        nc = float(w.loc[w["ticker"].isin(near), "weight"].sum() / n)
+        key = key if isinstance(key, tuple) else (key,)
+        rows.append({**dict(zip(group_cols, key)), "short_duration_share_mean": sd,
+                     "near_cash_share_mean": nc, "short_duration_plus_near_cash_share_mean": sd + nc})
+    return pd.DataFrame(rows)
+
+
+def composition_void_check(short_duration_share: float, eff_n: float, near_cash_share: float = 0.0,
+                           *, max_share: float = 0.50, min_eff_n: float = 5.0) -> dict:
+    """Composition tripwire inputs for future gates.
+
+    ``void_short_duration`` / ``void_effN`` are the pre-registered form used by the NLS GMV v2 gate
+    (> 50% short_duration, effective N < 5). ``flag_short_duration_plus_near_cash`` reports the combined
+    share against the same threshold as a diagnostic; whether it binds is for each gate's ticket.
+    """
+    combined = short_duration_share + near_cash_share
+    return {"short_duration_share": short_duration_share, "near_cash_share": near_cash_share,
+            "short_duration_plus_near_cash_share": combined, "eff_N": eff_n,
+            "void_short_duration": bool(short_duration_share > max_share),
+            "void_effN": bool(eff_n < min_eff_n),
+            "flag_short_duration_plus_near_cash": bool(combined > max_share)}
 
 
 # ------------------------------------------------------------------ risk-free rate
