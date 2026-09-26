@@ -13,9 +13,9 @@ Transparent, unit-tested feature scorer and **optional thematic rotation sleeve*
 | **M3** | `--optimize` / `--walkforward-optimize` research optimizer artifacts |
 | **Allocation alpha** | `walkforward-vol-target` scale-down-only volatility-managed Option A research |
 | **Book-2 upgrade** | `walkforward-vol-cond-factor-corr` conditional factor-correlation gate on Book-2 VT |
-| **Shortlist #4 (gate pending)** | `walkforward-forecast-tangency-med` — forecast EF coefficients → MED portfolio (Alexander & Scherer 2023); Archive/Methods stub until Quant gate PASS |
+| **Shortlist #4 — Archive FAIL (PR #24)** | `walkforward-forecast-tangency-med` — forecast EF coefficients → MED portfolio (Alexander & Scherer 2023); Archive FAIL (PR #24) |
 | **Shortlist #3** | `walkforward-regime-resilient-erc` — regime-resilient ERC construction (stress/corr overlays + LOIM regime-parity π-blend); Archive/Methods stub until Quant gate PASS |
-| **Shortlist #6 (gate pending)** | `walkforward-skewness-managed` — Book-2 overlay: skewness / left-tail gate on unconditional Book-2 VT (Gong–Lynch–Ogden); primary null = Book-2 VT; registry `enabled:false`; Archive/Methods stub until Quant gate PASS |
+| **Shortlist #6 — live Book-2 overlay** | `walkforward-skewness-managed` — Book-2 overlay: skewness / left-tail gate on unconditional Book-2 VT (Gong–Lynch–Ogden); primary null = Book-2 VT; live Book-2 overlay, VT × gate-first (PR #29) |
 
 ## Install
 
