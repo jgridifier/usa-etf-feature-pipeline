@@ -30,7 +30,28 @@ PRIMARY = "minvar_lw_weekly"
 REFERENCE = "minvar_lw_monthly_reference"
 SPECTRAL_DIR = "data/processed/spectral_rp/name"
 DSR_METHOD = "normal approximation; monthly Sharpe (repo deflated_sharpe_approx, Bailey & Lopez de Prado 2014)"
-DISCLAIMER = "Research only. Registry enabled:false. Quant decides the gate."
+DISCLAIMER = "Research only. Registry enabled:false. No live-book wiring."
+# Quant ruling on the v1 gate (PR #34), 2026-09-26 ET. Not PASS, not FAIL.
+VERDICT = {
+    "verdict": "VOID",
+    "verdict_label": "VOID — cash-dominated, no evidence of estimator edge",
+    "verdict_by": "Quant",
+    "verdict_date": "2026-09-26",
+    "verdict_reason": (
+        "All criteria passed mechanically, but the test design was broken: the primary null (weekly LW MinVar) "
+        "was ~68% in the cash-like category and the method ~81%, and Sharpe_rf0 rewards whichever holds more "
+        "T-bills. NW t vs the null was +0.48 (156w) / +0.76 (260w): no evidence of a return edge. DSR at a low "
+        "trial_count is effectively PSR vs zero and carries no weight."),
+    "dsr_decisive": False,
+    "cash_share_caveat": (
+        "The 'US Treasuries / Govt / Cash-like' category used for the cash shares also contains duration "
+        "(e.g. GOVT, IEF, TLT, SHY), while USFR sits in 'High Yield Credit'; quoted cash shares therefore mix "
+        "in some duration and are not a pure T-bill share."),
+    "follow_up": (
+        "v2 re-spec (Quant ticket ENGINEERING_TICKET_nonlinear_shrinkage_gmv_v2_excash.md): ex-cash universe "
+        "(cash_like tag excluded for the method and every null), Sharpe in excess of BIL (priced) with Sharpe_rf0 "
+        "as legacy, realized-vol primary test; trial_count carries forward from 4."),
+}
 ROLES = {METHOD: "method", PRIMARY: "primary_null", "erc_weekly": "null",
          "equal_weight": "null", REFERENCE: "reference_only"}
 
@@ -124,8 +145,7 @@ class NLSGMVTrial:
 
 PREREGISTERED_TRIALS = (NLSGMVTrial(156), NLSGMVTrial(260))
 # Runs of the SAME pre-registered configurations that were invalidated by a code
-# bug (not distinct variants; no parameter changed). Disclosed in the gate report;
-# not added to trial_count, but DSR is also reported as if they were counted.
+# bug. Per the Quant ruling they COUNT toward trial_count (2 configs -> +2).
 DISCLOSED_RUNS = (
     {"run": "2026-09-25 ~23:49 ET: first full walk-forward of the two pre-registered configs (156w, 260w)",
      "status": "invalid (numerical bug), superseded",
@@ -139,8 +159,9 @@ DISCLOSED_RUNS = (
      "nulls_affected": "no (EW, weekly LW MinVar, ERC do not use the estimator)"},
 )
 
+# Pre-registered configs (2) + invalidated first run counted by Quant (2).
 # Any extra preview must be appended to the reported previews and increments this count.
-TRIAL_COUNT = 2
+TRIAL_COUNT = 4
 
 
 def run_nls_gmv_trial(weekly, monthly, universe, coverage, trial=NLSGMVTrial()) -> dict[str, pd.DataFrame]:
@@ -276,7 +297,8 @@ def run_nls_gmv_gate(weekly, monthly, universe, coverage, trials=PREREGISTERED_T
     trials = tuple(trials)
     if not trials or len({t.window_weeks for t in trials}) != len(trials):
         raise ValueError("provide nonempty trials with unique window_weeks")
-    count = len(trials) + len(extra_previews)
+    counted_invalid = sum(int(r.get("n_configs", 1)) for r in disclosed_runs)
+    count = len(trials) + len(extra_previews) + counted_invalid
     runs = [run_nls_gmv_trial(weekly, monthly, universe, coverage, t) for t in trials]
     output = {key: pd.concat([r[key] for r in runs], ignore_index=True) for key in runs[0]}
     ref_oos, ref_weights = monthly_lw_reference(spectral_dir)
@@ -295,9 +317,7 @@ def run_nls_gmv_gate(weekly, monthly, universe, coverage, trials=PREREGISTERED_T
                              "preregistered": sid == METHOD and trial in PREREGISTERED_TRIALS, "trial_count": count})
     summary = summarize_gate(output["oos_returns"], output["weights"], count)
     summary["role"] = summary.strategy_id.map(ROLES)
-    counted = count + sum(int(r.get("n_configs", 1)) for r in disclosed_runs)
-    summary["DSR_if_disclosed_runs_counted"] = [
-        deflated_sharpe_approx(sr / np.sqrt(12), n, counted) for sr, n in zip(summary.Sharpe_rf0, summary.n_months)]
+    summary["DSR_decisive"] = False
     comparisons, checks = [], {}
     for trial in trials:
         window = trial.window_weeks
@@ -331,7 +351,9 @@ def run_nls_gmv_gate(weekly, monthly, universe, coverage, trials=PREREGISTERED_T
     output.update(summary=summary, null_comparison=summary.copy(), trial_registry=pd.DataFrame(registry), composition=composition,
                   weekly_vs_monthly_lw=pd.DataFrame(comparisons), gate_checks=checks, trial_count=count,
                   trials=[asdict(t) for t in trials], extra_previews=list(extra_previews),
-                  disclosed_runs=[dict(r) for r in disclosed_runs], trial_count_if_disclosed_counted=counted,
+                  disclosed_runs=[dict(r) for r in disclosed_runs], trial_count_breakdown=dict(
+                      preregistered_configs=len(trials), extra_previews=len(extra_previews),
+                      invalidated_run_configs=counted_invalid),
                   metadata={
                       "ticket_path": "/workspace/investments/justina_shortlist/ENGINEERING_TICKET_nonlinear_shrinkage_gmv.md",
                       "teaching_note_path": "/workspace/investments/methods/allocation_alpha_nonlinear_shrinkage_gmv.html",
@@ -377,15 +399,21 @@ def write_gate_artifacts(result, out_dir="data/processed/nonlinear_shrinkage_gmv
               "shrinkage_diagnostics", "weekly_vs_monthly_lw", "composition")
     for name in tables:
         result[name].to_csv(out / f"{name}.csv", index=False, date_format="%Y-%m-%d")
-    report = {k: result[k] for k in ("metadata", "trial_count", "trials", "extra_previews", "disclosed_runs",
-                                     "trial_count_if_disclosed_counted", "gate_checks")}
+    report = dict(VERDICT)
+    report.update({k: result[k] for k in ("metadata", "trial_count", "trial_count_breakdown", "trials",
+                                          "extra_previews", "disclosed_runs")})
+    report["mechanical_gate_checks_superseded_by_verdict"] = result["gate_checks"]
     report.update(statement=DISCLAIMER, summary=result["summary"].to_dict("records"),
                   weekly_vs_monthly_lw=result["weekly_vs_monthly_lw"].to_dict("records"),
                   composition=result["composition"].to_dict("records"))
     (out / "gate_report.json").write_text(json.dumps(_json_safe(report), indent=2, allow_nan=False) + "\n")
     meta = result["metadata"]
     first = result["summary"].loc[result["summary"].strategy_id.eq(METHOD)].iloc[0]
-    lines = ["# Analytical nonlinear shrinkage GMV (Bet 1) — gate report", "", DISCLAIMER, "",
+    lines = ["# Analytical nonlinear shrinkage GMV (Bet 1) — gate report", "",
+             f"**Verdict: {VERDICT['verdict_label']}** ({VERDICT['verdict_by']}, {VERDICT['verdict_date']}). "
+             "Not PASS, not FAIL.", "", VERDICT["verdict_reason"], "",
+             f"**Follow-up:** {VERDICT['follow_up']}", "", f"**Cash-share caveat:** {VERDICT['cash_share_caveat']}", "",
+             DISCLAIMER, "",
              f"- Ticket: `{meta['ticket_path']}`", f"- Teaching note: `{meta['teaching_note_path']}`",
              f"- OOS window: {pd.Timestamp(first.start):%Y-%m-%d} → {pd.Timestamp(first.end):%Y-%m-%d} ({int(first.n_months)} monthly evaluations)",
              "- Primary null: LW (2004) linear-shrinkage long-only MinVar re-estimated on the SAME weekly returns and window.",
@@ -415,26 +443,27 @@ def write_gate_artifacts(result, out_dir="data/processed/nonlinear_shrinkage_gmv
     for row in result["composition"].itertuples():
         lines.append(f"| {row.window_weeks}w | {labels.get(row.strategy_id, row.strategy_id)} | "
                      f"{row.cash_like_category_weight:.1%} | {row.top_holdings_avg} |")
-    lines += ["", f"Cash-like = universe Category \"{CASH_LIKE_CATEGORY}\" (usa_universe_categorized.csv); "
-              "e.g. USFR is categorized there as High Yield Credit, so this share is a lower bound.", ""]
-    lines += ["## DSR and trial_count", "", f"trial_count = {result['trial_count']}. {DSR_METHOD}.",
-              "Sharpe_rf0 is the repo convention (compound annual return / annualized vol, as in the Spectral RP gate); "
-              "DSR input is Sharpe_rf0/sqrt(12). With trial_count = 2 the helper's expected-max-noise term is zero "
-              "(Φ⁻¹(1 − 1/2) = 0), so DSR here is effectively a PSR vs 0 without skew/kurtosis adjustment.",
+    lines += ["", f"Cash-like = universe Category \"{CASH_LIKE_CATEGORY}\" (usa_universe_categorized.csv). "
+              "That category also contains duration (e.g. GOVT, IEF, TLT, SHY) and misses USFR (labelled High Yield "
+              "Credit), so these shares mix in some duration and are not a pure T-bill share.", ""]
+    b = result["trial_count_breakdown"]
+    lines += ["## DSR and trial_count", "",
+              f"trial_count = {result['trial_count']} ({b['preregistered_configs']} pre-registered configs + "
+              f"{b['invalidated_run_configs']} configs from the invalidated first run, counted per Quant + "
+              f"{b['extra_previews']} extra previews). {DSR_METHOD}.", "",
+              "**DSR is non-decisive.** Sharpe_rf0 is the repo convention (compound annual return / annualized vol, "
+              "as in the Spectral RP gate) and rewards cash carry; DSR input is Sharpe_rf0/sqrt(12). At this low "
+              "trial_count the expected-max-noise term is small, so DSR is effectively a PSR vs zero without "
+              "skew/kurtosis adjustment and carries no weight in the verdict.", "",
               "All extra previews count: " + (", ".join(result["extra_previews"]) or "none") + ".", "",
               "Pre-registered trials: " + ", ".join(f"{t['window_weeks']}w" for t in result["trials"]) + ".", ""]
     if result["disclosed_runs"]:
-        lines += ["### Disclosed invalidated runs (same configs; not distinct variants)", ""]
+        lines += ["### Invalidated first run (same configs; counted in trial_count)", ""]
         for run in result["disclosed_runs"]:
             lines += [f"- **{run['run']}** — {run['status']}.", f"  - Bug: {run['bug']}.", f"  - Fix: {run['fix']}.",
                       f"  - Invalid method numbers (do not use): {run['invalid_method_numbers']}.",
                       f"  - Nulls affected: {run['nulls_affected']}."]
-        lines += ["", f"Not added to trial_count; if Quant counts them, trial_count = {result['trial_count_if_disclosed_counted']}.", ""]
-        dsr = result["summary"].loc[result["summary"].strategy_id.eq(METHOD), ["window_weeks", "DSR", "DSR_if_disclosed_runs_counted"]]
-        lines += ["| Config | DSR (trial_count = %d) | DSR (trial_count = %d) |" % (result["trial_count"], result["trial_count_if_disclosed_counted"]),
-                  "|---|---|---|"]
-        lines += [f"| {int(r.window_weeks)}w | {r.DSR:.4f} | {r.DSR_if_disclosed_runs_counted:.4f} |" for r in dsr.itertuples()]
-        lines += [""]
+        lines += ["", "Counted in trial_count per the Quant ruling.", ""]
     lines += [
               "## Weekly versus monthly LW (reference only)", "",
               "This frequency comparison is separate from the estimator gate checks. The committed monthly allocation is reference only.", ""]
@@ -444,6 +473,9 @@ def write_gate_artifacts(result, out_dir="data/processed/nonlinear_shrinkage_gmv
         for metric, fmt in (("Sharpe_rf0", ".3f"), ("AnnVol", ".2%"), ("MaxDD", ".2%")):
             lines.append(f"| {metric} | {row['weekly_' + metric]:{fmt}} | {row['monthly_reference_' + metric]:{fmt}} | {row['difference_' + metric]:{fmt}} |")
         lines.append("")
-    lines += ["## Mechanical gate checks (not a verdict)", "", "```json",
-              json.dumps(_json_safe(result["gate_checks"]), indent=2), "```", "", "Quant decides.", ""]
+    lines += ["## Mechanical gate checks (superseded by the VOID verdict)", "",
+              "All v1 criteria passed mechanically, but the design was broken (cash-dominated method and null, "
+              "Sharpe_rf0), so these checks carry no weight.", "", "```json",
+              json.dumps(_json_safe(result["gate_checks"]), indent=2), "```", "",
+              f"Verdict: {VERDICT['verdict_label']}. Follow-up: v2 ex-cash re-spec.", ""]
     (out / "gate_report.md").write_text("\n".join(lines))

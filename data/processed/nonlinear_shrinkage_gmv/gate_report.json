@@ -1,4 +1,12 @@
 {
+  "verdict": "VOID",
+  "verdict_label": "VOID \u2014 cash-dominated, no evidence of estimator edge",
+  "verdict_by": "Quant",
+  "verdict_date": "2026-09-26",
+  "verdict_reason": "All criteria passed mechanically, but the test design was broken: the primary null (weekly LW MinVar) was ~68% in the cash-like category and the method ~81%, and Sharpe_rf0 rewards whichever holds more T-bills. NW t vs the null was +0.48 (156w) / +0.76 (260w): no evidence of a return edge. DSR at a low trial_count is effectively PSR vs zero and carries no weight.",
+  "dsr_decisive": false,
+  "cash_share_caveat": "The 'US Treasuries / Govt / Cash-like' category used for the cash shares also contains duration (e.g. GOVT, IEF, TLT, SHY), while USFR sits in 'High Yield Credit'; quoted cash shares therefore mix in some duration and are not a pure T-bill share.",
+  "follow_up": "v2 re-spec (Quant ticket ENGINEERING_TICKET_nonlinear_shrinkage_gmv_v2_excash.md): ex-cash universe (cash_like tag excluded for the method and every null), Sharpe in excess of BIL (priced) with Sharpe_rf0 as legacy, realized-vol primary test; trial_count carries forward from 4.",
   "metadata": {
     "ticket_path": "/workspace/investments/justina_shortlist/ENGINEERING_TICKET_nonlinear_shrinkage_gmv.md",
     "teaching_note_path": "/workspace/investments/methods/allocation_alpha_nonlinear_shrinkage_gmv.html",
@@ -18,7 +26,12 @@
     "estimator_note": "Clean-room Ledoit-Wolf (2020) analytical nonlinear shrinkage, p < n case; demeaned inside each window, effective n = T - 1 (paper Remark 2.1), c = N/n, h = n^(-1/3), h_j = lambda_j h; Hilbert transform far field (|x| >= 10) via exact series for float64 stability.",
     "input_provenance": "CLI input paths"
   },
-  "trial_count": 2,
+  "trial_count": 4,
+  "trial_count_breakdown": {
+    "preregistered_configs": 2,
+    "extra_previews": 0,
+    "invalidated_run_configs": 2
+  },
   "trials": [
     {
       "window_weeks": 156,
@@ -61,8 +74,7 @@
       "nulls_affected": "no (EW, weekly LW MinVar, ERC do not use the estimator)"
     }
   ],
-  "trial_count_if_disclosed_counted": 4,
-  "gate_checks": {
+  "mechanical_gate_checks_superseded_by_verdict": {
     "w156": {
       "vol_lower_than_primary_null": true,
       "sharpe_ge_primary_null": true,
@@ -81,7 +93,7 @@
     },
     "w260_points_same_way": true
   },
-  "statement": "Research only. Registry enabled:false. Quant decides the gate.",
+  "statement": "Research only. Registry enabled:false. No live-book wiring.",
   "summary": [
     {
       "window_weeks": 156,
@@ -100,11 +112,11 @@
       "eff_N_mean": 110.26153846153846,
       "avg_N_eligible": 110.26153846153846,
       "NW_t_vs_minvar_lw_weekly": 1.8918437200673561,
-      "DSR": 0.9720143257181255,
-      "trial_count": 2,
+      "DSR": 0.8919135566513166,
+      "trial_count": 4,
       "dsr_method": "normal approximation; monthly Sharpe (repo deflated_sharpe_approx, Bailey & Lopez de Prado 2014)",
       "role": "null",
-      "DSR_if_disclosed_runs_counted": 0.8919135566513166
+      "DSR_decisive": false
     },
     {
       "window_weeks": 156,
@@ -123,11 +135,11 @@
       "eff_N_mean": 22.54083805817178,
       "avg_N_eligible": 110.26153846153846,
       "NW_t_vs_minvar_lw_weekly": 1.2121417660525766,
-      "DSR": 0.9926793366804127,
-      "trial_count": 2,
+      "DSR": 0.9613558688435151,
+      "trial_count": 4,
       "dsr_method": "normal approximation; monthly Sharpe (repo deflated_sharpe_approx, Bailey & Lopez de Prado 2014)",
       "role": "null",
-      "DSR_if_disclosed_runs_counted": 0.9613558688435151
+      "DSR_decisive": false
     },
     {
       "window_weeks": 156,
@@ -146,11 +158,11 @@
       "eff_N_mean": 13.319906423429687,
       "avg_N_eligible": 110.26153846153846,
       "NW_t_vs_minvar_lw_weekly": -0.6967226722594707,
-      "DSR": 0.9998877495674574,
-      "trial_count": 2,
+      "DSR": 0.9987160795012576,
+      "trial_count": 4,
       "dsr_method": "normal approximation; monthly Sharpe (repo deflated_sharpe_approx, Bailey & Lopez de Prado 2014)",
       "role": "reference_only",
-      "DSR_if_disclosed_runs_counted": 0.9987160795012576
+      "DSR_decisive": false
     },
     {
       "window_weeks": 156,
@@ -169,11 +181,11 @@
       "eff_N_mean": 9.519815082087232,
       "avg_N_eligible": 110.26153846153846,
       "NW_t_vs_minvar_lw_weekly": null,
-      "DSR": 0.9999999779072959,
-      "trial_count": 2,
+      "DSR": 0.9999992017493653,
+      "trial_count": 4,
       "dsr_method": "normal approximation; monthly Sharpe (repo deflated_sharpe_approx, Bailey & Lopez de Prado 2014)",
       "role": "primary_null",
-      "DSR_if_disclosed_runs_counted": 0.9999992017493653
+      "DSR_decisive": false
     },
     {
       "window_weeks": 156,
@@ -193,10 +205,10 @@
       "avg_N_eligible": 110.26153846153846,
       "NW_t_vs_minvar_lw_weekly": 0.48132547006952064,
       "DSR": 1.0,
-      "trial_count": 2,
+      "trial_count": 4,
       "dsr_method": "normal approximation; monthly Sharpe (repo deflated_sharpe_approx, Bailey & Lopez de Prado 2014)",
       "role": "method",
-      "DSR_if_disclosed_runs_counted": 1.0
+      "DSR_decisive": false
     },
     {
       "window_weeks": 260,
@@ -215,11 +227,11 @@
       "eff_N_mean": 110.26153846153846,
       "avg_N_eligible": 110.26153846153846,
       "NW_t_vs_minvar_lw_weekly": 1.9116345489664586,
-      "DSR": 0.9720143257181255,
-      "trial_count": 2,
+      "DSR": 0.8919135566513166,
+      "trial_count": 4,
       "dsr_method": "normal approximation; monthly Sharpe (repo deflated_sharpe_approx, Bailey & Lopez de Prado 2014)",
       "role": "null",
-      "DSR_if_disclosed_runs_counted": 0.8919135566513166
+      "DSR_decisive": false
     },
     {
       "window_weeks": 260,
@@ -238,11 +250,11 @@
       "eff_N_mean": 21.295553657408032,
       "avg_N_eligible": 110.26153846153846,
       "NW_t_vs_minvar_lw_weekly": 1.172423081266435,
-      "DSR": 0.9923325155871919,
-      "trial_count": 2,
+      "DSR": 0.9599305180907813,
+      "trial_count": 4,
       "dsr_method": "normal approximation; monthly Sharpe (repo deflated_sharpe_approx, Bailey & Lopez de Prado 2014)",
       "role": "null",
-      "DSR_if_disclosed_runs_counted": 0.9599305180907813
+      "DSR_decisive": false
     },
     {
       "window_weeks": 260,
@@ -261,11 +273,11 @@
       "eff_N_mean": 13.319906423429687,
       "avg_N_eligible": 110.26153846153846,
       "NW_t_vs_minvar_lw_weekly": -0.32200112588269725,
-      "DSR": 0.9998877495674574,
-      "trial_count": 2,
+      "DSR": 0.9987160795012576,
+      "trial_count": 4,
       "dsr_method": "normal approximation; monthly Sharpe (repo deflated_sharpe_approx, Bailey & Lopez de Prado 2014)",
       "role": "reference_only",
-      "DSR_if_disclosed_runs_counted": 0.9987160795012576
+      "DSR_decisive": false
     },
     {
       "window_weeks": 260,
@@ -284,11 +296,11 @@
       "eff_N_mean": 9.241699204277802,
       "avg_N_eligible": 110.26153846153846,
       "NW_t_vs_minvar_lw_weekly": null,
-      "DSR": 0.9999999822905214,
-      "trial_count": 2,
+      "DSR": 0.9999993435884881,
+      "trial_count": 4,
       "dsr_method": "normal approximation; monthly Sharpe (repo deflated_sharpe_approx, Bailey & Lopez de Prado 2014)",
       "role": "primary_null",
-      "DSR_if_disclosed_runs_counted": 0.9999993435884881
+      "DSR_decisive": false
     },
     {
       "window_weeks": 260,
@@ -308,10 +320,10 @@
       "avg_N_eligible": 110.26153846153846,
       "NW_t_vs_minvar_lw_weekly": 0.7621848150655491,
       "DSR": 1.0,
-      "trial_count": 2,
+      "trial_count": 4,
       "dsr_method": "normal approximation; monthly Sharpe (repo deflated_sharpe_approx, Bailey & Lopez de Prado 2014)",
       "role": "method",
-      "DSR_if_disclosed_runs_counted": 1.0
+      "DSR_decisive": false
     }
   ],
   "weekly_vs_monthly_lw": [

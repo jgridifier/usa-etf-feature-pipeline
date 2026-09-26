@@ -181,7 +181,7 @@ def test_gate_reports(panel, tmp_path):
                   for d in dates for t in weekly.columns]).to_csv(tmp_path / 'weights.csv', index=False)
     trials = (trial, replace(trial, window_weeks=130))
     result = run_nls_gmv_gate(weekly, monthly, uni, coverage, trials, tmp_path)
-    assert result['trial_count'] == 2
+    assert result['trial_count'] == 4  # 2 configs + 2 invalidated-run configs (Quant ruling)
     assert set(result['summary'].role) == {'method', 'null', 'primary_null', 'reference_only'}
     assert len(result['summary']) == 10
     assert result['summary'].n_months.eq(3).all()
@@ -190,15 +190,18 @@ def test_gate_reports(panel, tmp_path):
     assert result['summary'].loc[result['summary'].strategy_id.eq(REFERENCE), 'avg_N_eligible'].eq(105).all()
     write_gate_artifacts(result, tmp_path / 'out')
     report = json.loads((tmp_path / 'out/gate_report.json').read_text())
-    assert report['trial_count'] == 2
-    assert report['trial_count_if_disclosed_counted'] == 2 + sum(r['n_configs'] for r in report['disclosed_runs'])
-    assert 'DSR_if_disclosed_runs_counted' in result['summary']
+    assert report['trial_count'] == 4
+    assert report['verdict'] == 'VOID' and report['dsr_decisive'] is False
+    assert report['trial_count_breakdown'] == {'preregistered_configs': 2, 'extra_previews': 0, 'invalidated_run_configs': 2}
+    assert not result['summary'].DSR_decisive.any()
     assert report['summary'][0]['start'] == '2020-01-31'
     md = (tmp_path / 'out/gate_report.md').read_text()
-    assert 'reference only' in md and 'Quant decides' in md
+    assert 'reference only' in md and 'VOID — cash-dominated, no evidence of estimator edge' in md
+    assert 'non-decisive' in md and 'PASS' not in md.replace('Not PASS', '')
     assert 'Holdings composition' in md
     assert set(result['composition'].strategy_id) >= {METHOD, PRIMARY, REFERENCE}
-    assert run_nls_gmv_gate(weekly, monthly, uni, coverage, trials, tmp_path, extra_previews=['x'])['trial_count'] == 3
+    assert run_nls_gmv_gate(weekly, monthly, uni, coverage, trials, tmp_path, extra_previews=['x'])['trial_count'] == 5
+    assert run_nls_gmv_gate(weekly, monthly, uni, coverage, trials, tmp_path, disclosed_runs=())['trial_count'] == 2
 
 
 def test_registry():
@@ -228,7 +231,7 @@ def test_registry_adapter_asof(panel, tmp_path):
     assert result.weights.weight.sum() == pytest.approx(1.)
     assert result.returns.date.max() == pd.Timestamp('2020-02-28')
     assert result.diagnostics.window_weeks.eq(156).all()
-    assert result.diagnostics.trial_count.eq(2).all()
+    assert result.diagnostics.trial_count.eq(4).all()
 
 
 def test_metrics_starting_wealth_and_alignment():

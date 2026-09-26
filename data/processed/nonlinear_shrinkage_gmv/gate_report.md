@@ -1,6 +1,14 @@
 # Analytical nonlinear shrinkage GMV (Bet 1) — gate report
 
-Research only. Registry enabled:false. Quant decides the gate.
+**Verdict: VOID — cash-dominated, no evidence of estimator edge** (Quant, 2026-09-26). Not PASS, not FAIL.
+
+All criteria passed mechanically, but the test design was broken: the primary null (weekly LW MinVar) was ~68% in the cash-like category and the method ~81%, and Sharpe_rf0 rewards whichever holds more T-bills. NW t vs the null was +0.48 (156w) / +0.76 (260w): no evidence of a return edge. DSR at a low trial_count is effectively PSR vs zero and carries no weight.
+
+**Follow-up:** v2 re-spec (Quant ticket ENGINEERING_TICKET_nonlinear_shrinkage_gmv_v2_excash.md): ex-cash universe (cash_like tag excluded for the method and every null), Sharpe in excess of BIL (priced) with Sharpe_rf0 as legacy, realized-vol primary test; trial_count carries forward from 4.
+
+**Cash-share caveat:** The 'US Treasuries / Govt / Cash-like' category used for the cash shares also contains duration (e.g. GOVT, IEF, TLT, SHY), while USFR sits in 'High Yield Credit'; quoted cash shares therefore mix in some duration and are not a pure T-bill share.
+
+Research only. Registry enabled:false. No live-book wiring.
 
 - Ticket: `/workspace/investments/justina_shortlist/ENGINEERING_TICKET_nonlinear_shrinkage_gmv.md`
 - Teaching note: `/workspace/investments/methods/allocation_alpha_nonlinear_shrinkage_gmv.html`
@@ -28,9 +36,9 @@ Clean-room Ledoit-Wolf (2020) analytical nonlinear shrinkage, p < n case; demean
 |---|---|---|---|---|---|---|---|---|---|---|
 | method | 5.734 | 0.58% | 0.00% | -0.03% | 64.74% | 0.3497 | 3.02 | 110.26 | 0.48 | 1.0000 |
 | weekly LW MinVar (primary null) | 2.370 | 1.31% | 0.02% | -2.96% | 30.79% | 0.1071 | 9.52 | 110.26 | — | 1.0000 |
-| EW | 0.828 | 10.76% | 1.16% | -18.40% | 12.40% | 0.0091 | 110.26 | 110.26 | 1.89 | 0.9720 |
-| ERC | 1.057 | 4.14% | 0.17% | -8.82% | 26.16% | 0.0449 | 22.54 | 110.26 | 1.21 | 0.9927 |
-| monthly LW MinVar (reference only) | 1.598 | 1.79% | 0.03% | -4.46% | 31.83% | 0.0818 | 13.32 | 110.26 | -0.70 | 0.9999 |
+| EW | 0.828 | 10.76% | 1.16% | -18.40% | 12.40% | 0.0091 | 110.26 | 110.26 | 1.89 | 0.8919 |
+| ERC | 1.057 | 4.14% | 0.17% | -8.82% | 26.16% | 0.0449 | 22.54 | 110.26 | 1.21 | 0.9614 |
+| monthly LW MinVar (reference only) | 1.598 | 1.79% | 0.03% | -4.46% | 31.83% | 0.0818 | 13.32 | 110.26 | -0.70 | 0.9987 |
 
 ## 260-week configuration
 
@@ -38,9 +46,9 @@ Clean-room Ledoit-Wolf (2020) analytical nonlinear shrinkage, p < n case; demean
 |---|---|---|---|---|---|---|---|---|---|---|
 | method | 5.627 | 0.59% | 0.00% | -0.09% | 50.34% | 0.4491 | 2.27 | 110.26 | 0.76 | 1.0000 |
 | weekly LW MinVar (primary null) | 2.387 | 1.25% | 0.02% | -2.69% | 24.32% | 0.1087 | 9.24 | 110.26 | — | 1.0000 |
-| EW | 0.828 | 10.76% | 1.16% | -18.40% | 12.40% | 0.0091 | 110.26 | 110.26 | 1.91 | 0.9720 |
-| ERC | 1.050 | 3.97% | 0.16% | -8.32% | 20.99% | 0.0471 | 21.30 | 110.26 | 1.17 | 0.9923 |
-| monthly LW MinVar (reference only) | 1.598 | 1.79% | 0.03% | -4.46% | 31.83% | 0.0818 | 13.32 | 110.26 | -0.32 | 0.9999 |
+| EW | 0.828 | 10.76% | 1.16% | -18.40% | 12.40% | 0.0091 | 110.26 | 110.26 | 1.91 | 0.8919 |
+| ERC | 1.050 | 3.97% | 0.16% | -8.32% | 20.99% | 0.0471 | 21.30 | 110.26 | 1.17 | 0.9599 |
+| monthly LW MinVar (reference only) | 1.598 | 1.79% | 0.03% | -4.46% | 31.83% | 0.0818 | 13.32 | 110.26 | -0.32 | 0.9987 |
 
 ## Holdings composition (descriptive)
 
@@ -59,17 +67,19 @@ Average over rebalances. Sharpe_rf0 uses rf = 0, so for portfolios dominated by 
 | 260w | weekly LW MinVar (primary null) | 70.0% | BIL 13.7%; USFR 13.7%; SHV 13.3%; GBIL 12.0%; SHY 9.2% |
 | 260w | method | 84.5% | BIL 53.9%; USFR 14.0%; SGOV 12.4%; SHV 11.1%; GBIL 6.7% |
 
-Cash-like = universe Category "US Treasuries / Govt / Cash-like" (usa_universe_categorized.csv); e.g. USFR is categorized there as High Yield Credit, so this share is a lower bound.
+Cash-like = universe Category "US Treasuries / Govt / Cash-like" (usa_universe_categorized.csv). That category also contains duration (e.g. GOVT, IEF, TLT, SHY) and misses USFR (labelled High Yield Credit), so these shares mix in some duration and are not a pure T-bill share.
 
 ## DSR and trial_count
 
-trial_count = 2. normal approximation; monthly Sharpe (repo deflated_sharpe_approx, Bailey & Lopez de Prado 2014).
-Sharpe_rf0 is the repo convention (compound annual return / annualized vol, as in the Spectral RP gate); DSR input is Sharpe_rf0/sqrt(12). With trial_count = 2 the helper's expected-max-noise term is zero (Φ⁻¹(1 − 1/2) = 0), so DSR here is effectively a PSR vs 0 without skew/kurtosis adjustment.
+trial_count = 4 (2 pre-registered configs + 2 configs from the invalidated first run, counted per Quant + 0 extra previews). normal approximation; monthly Sharpe (repo deflated_sharpe_approx, Bailey & Lopez de Prado 2014).
+
+**DSR is non-decisive.** Sharpe_rf0 is the repo convention (compound annual return / annualized vol, as in the Spectral RP gate) and rewards cash carry; DSR input is Sharpe_rf0/sqrt(12). At this low trial_count the expected-max-noise term is small, so DSR is effectively a PSR vs zero without skew/kurtosis adjustment and carries no weight in the verdict.
+
 All extra previews count: none.
 
 Pre-registered trials: 156w, 260w.
 
-### Disclosed invalidated runs (same configs; not distinct variants)
+### Invalidated first run (same configs; counted in trial_count)
 
 - **2026-09-25 ~23:49 ET: first full walk-forward of the two pre-registered configs (156w, 260w)** — invalid (numerical bug), superseded.
   - Bug: closed-form Epanechnikov Hilbert transform cancelled catastrophically in float64 for |x| >> sqrt(5) (wrong by orders of magnitude at |x| ~ 1e7, wrong sign at 1e8); with sample eigenvalues spanning ~7 decades the largest eigenvalues were shrunk to ~1e-9 of their sample values, so 'GMV' loaded on the highest-variance ETFs.
@@ -77,12 +87,7 @@ Pre-registered trials: 156w, 260w.
   - Invalid method numbers (do not use): 156w Sharpe 0.796 / AnnVol 14.54% / MaxDD -23.02%; 260w Sharpe 0.733 / AnnVol 14.46% / MaxDD -22.88%.
   - Nulls affected: no (EW, weekly LW MinVar, ERC do not use the estimator).
 
-Not added to trial_count; if Quant counts them, trial_count = 4.
-
-| Config | DSR (trial_count = 2) | DSR (trial_count = 4) |
-|---|---|---|
-| 156w | 1.0000 | 1.0000 |
-| 260w | 1.0000 | 1.0000 |
+Counted in trial_count per the Quant ruling.
 
 ## Weekly versus monthly LW (reference only)
 
@@ -104,7 +109,9 @@ This frequency comparison is separate from the estimator gate checks. The commit
 | AnnVol | 1.25% | 1.79% | -0.54% |
 | MaxDD | -2.69% | -4.46% | 1.77% |
 
-## Mechanical gate checks (not a verdict)
+## Mechanical gate checks (superseded by the VOID verdict)
+
+All v1 criteria passed mechanically, but the design was broken (cash-dominated method and null, Sharpe_rf0), so these checks carry no weight.
 
 ```json
 {
@@ -128,4 +135,4 @@ This frequency comparison is separate from the estimator gate checks. The commit
 }
 ```
 
-Quant decides.
+Verdict: VOID — cash-dominated, no evidence of estimator edge. Follow-up: v2 ex-cash re-spec.

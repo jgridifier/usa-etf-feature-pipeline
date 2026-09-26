@@ -194,7 +194,7 @@ strategies:
     enabled: false
 
   - id: nonlinear_shrinkage_gmv
-    display_name: Analytical Nonlinear Shrinkage GMV (research — Quant gate pending)
+    display_name: Analytical Nonlinear Shrinkage GMV (research — v1 VOID, v2 ex-cash re-spec pending)
     method_citation_id: ledoit_wolf_2020_aos_analytical_nls_2017_rfs
     method_citation: "Ledoit & Wolf (2020), AoS 48(5), 3043–3065, doi:10.1214/19-AOS1921; Ledoit & Wolf (2017), RFS 30(12), 4349–4388, doi:10.1093/rfs/hhx052; Ledoit & Wolf (2004), JMVA 88(2), 365–411."
     entrypoint: usa_etf_features.strategy_registry:nonlinear_shrinkage_gmv

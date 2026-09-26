@@ -716,7 +716,10 @@ Outputs include returns, weights, shrinkage diagnostics, summary/null comparison
 trial registry, weekly-versus-monthly LW comparison, and JSON/Markdown gate reports.
 The estimator is a clean-room implementation of the published Ledoit–Wolf
 analytical equations; no reference code was copied. Registry `enabled: false`.
-Research only; mechanical checks are not a verdict. Quant decides the gate.
+Research only. **v1 verdict (Quant, 2026-09-26): VOID — cash-dominated, no evidence of
+estimator edge** (method and primary null mostly T-bill ETFs; Sharpe_rf0 rewards cash;
+DSR at low trial_count non-decisive). trial_count = 4 (includes the invalidated first run).
+Follow-up: v2 re-spec on an ex-cash universe with Sharpe in excess of BIL.
 
 Reference-code license check (2026-09-25): the `covShrinkage` repositories
 (github.com/oledoit/covShrinkage, MikeWolf007/covShrinkage, pald22/covShrinkage) are
