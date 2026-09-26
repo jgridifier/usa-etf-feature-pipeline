@@ -40,6 +40,14 @@ SHORT_DURATION = frozenset({"SHY", "SPTS", "BSV", "STIP"})
 # Expected stored tags (documentation / tests). The universe file's boolean columns are the source of
 # truth; nothing derives a tag from fund names at runtime. New loan funds are tagged by hand and reviewed.
 NEAR_CASH = frozenset({"FTSL", "SRLN"})
+EQUITY_ONLY_COLUMN = "equity_only"
+EQUITY_ONLY = frozenset("""
+ACWI ACWX ASHS BBC BINV BLDG BUSA DFSI DFUS DGRO DVY DXJ EEM EFA EFAV EFV ESGD ESGU EWC EWJ EZU FEZ
+GSID GSIE GSLC GSSC GSUS GSWO GUSA HEFA IEFA IEUR IEV IJH IJJ IJK IJR IJS IJT INDA IQLT IUSV IVE IVV
+IWB IWC IWD IWM IWN IWO IWP IWR IWS IWV IYY JPXN JUST KBE KRE LOUP MDY PID PRF QQQ QQQM QUAL SCHA
+SCHF SCHM SCHX SCZ SDIV SDY SPY SPYM SPYV SUSA TMDV USMV VEA VEU VGK VIOG VLUE VO VOO VOOV VTI VTV
+VTWO VV VXF VYM XBI XRT XSD
+""".split())
 CASH_LIKE_COLUMN = "cash_like"
 SHORT_DURATION_COLUMN = "short_duration"
 NEAR_CASH_COLUMN = "near_cash"
@@ -67,6 +75,10 @@ def _bool_col(universe: pd.DataFrame, col: str) -> pd.Series:
 def tagged_tickers(universe: pd.DataFrame, col: str) -> frozenset[str]:
     tick = universe["Ticker"].astype(str).str.strip().str.upper()
     return frozenset(tick[_bool_col(universe, col).to_numpy()])
+
+
+def equity_only_tickers(universe: pd.DataFrame) -> frozenset[str]:
+    return tagged_tickers(universe, EQUITY_ONLY_COLUMN)
 
 
 def cash_like_tickers(universe: pd.DataFrame) -> frozenset[str]:
