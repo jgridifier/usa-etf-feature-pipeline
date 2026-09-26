@@ -1,0 +1,258 @@
+{
+  "updated": "2026-09-25",
+  "note": "Single source of truth for Archive verdict cards. Rendered by apps/pages/src/pages/Archive.tsx (#/archive) and by scripts/build_pages.py (docs/methods/index.html#archive + docs/methods/justina_round1_scoreboard.html). Numbers copied verbatim from repo artifacts / PR bodies; do not re-round. Optional link fields: nw_t_links[] and measured{label,text}; hrefs starting with http are absolute, others are relative to docs/.",
+  "cards": [
+    {
+      "id": "spectral_rp",
+      "name": "Spectral Risk Parity",
+      "detail": "ADIA Lab mapping · name mode, N≥100 · 65m OOS · n_trials=4",
+      "badge": "FAIL",
+      "verdict": "Lost to the Ledoit–Wolf MinVar null on Sharpe and on the risk path; sleeve cut last on Sharpe.",
+      "null": "Ledoit–Wolf MinVar",
+      "rows": [
+        {
+          "role": "method",
+          "label": "Spectral RP",
+          "sharpe": "1.06",
+          "maxdd": "−8.4%"
+        },
+        {
+          "role": "null",
+          "label": "LW MinVar (null)",
+          "sharpe": "1.60",
+          "maxdd": "−4.5%"
+        }
+      ],
+      "nw_t": "not computed",
+      "dsr": "0.961 (n_trials=4)",
+      "gate": {
+        "label": "PR #10",
+        "href": "https://github.com/jgridifier/usa-etf-feature-pipeline/pull/10"
+      },
+      "method_page": "methods/spectral_risk_parity.html",
+      "artifact": {
+        "label": "spectral_rp/name/summary.csv",
+        "href": "https://github.com/jgridifier/usa-etf-feature-pipeline/blob/main/data/processed/spectral_rp/name/summary.csv"
+      },
+      "archived": "2026-09-17",
+      "archived_via": "PR #10 merged",
+      "nw_t_links": [
+        {
+          "label": "scoreboard",
+          "href": "methods/justina_round1_scoreboard.html"
+        },
+        {
+          "label": "PR #10",
+          "href": "https://github.com/jgridifier/usa-etf-feature-pipeline/pull/10"
+        }
+      ]
+    },
+    {
+      "id": "regime_dual",
+      "name": "Regime-Aware Dual-Regime",
+      "detail": "Luo & Mulvey mapping · category sleeves · 262m OOS · trial_count=4",
+      "badge": "FAIL",
+      "verdict": "Dual-regime eligibility overlay worse than unconditional ERC on Sharpe, MaxDD and stress months.",
+      "null": "Unconditional ERC",
+      "rows": [
+        {
+          "role": "method",
+          "label": "Best dual (vol_corr_spread ERC)",
+          "sharpe": "0.51",
+          "maxdd": "−38.6%"
+        },
+        {
+          "role": "null",
+          "label": "Uncond ERC (null)",
+          "sharpe": "0.74",
+          "maxdd": "−22.8%"
+        }
+      ],
+      "nw_t": "not computed",
+      "dsr": "0.956 (trial_count=4)",
+      "gate": {
+        "label": "PR #11",
+        "href": "https://github.com/jgridifier/usa-etf-feature-pipeline/pull/11"
+      },
+      "method_page": "methods/regime_aware_dual_regime.html",
+      "artifact": {
+        "label": "regime_dual_summary.csv",
+        "href": "https://github.com/jgridifier/usa-etf-feature-pipeline/blob/main/data/processed/regime_dual/regime_dual_summary.csv"
+      },
+      "archived": "2026-09-17",
+      "archived_via": "PR #11 merged",
+      "nw_t_links": [
+        {
+          "label": "scoreboard",
+          "href": "methods/justina_round1_scoreboard.html"
+        },
+        {
+          "label": "PR #11",
+          "href": "https://github.com/jgridifier/usa-etf-feature-pipeline/pull/11"
+        }
+      ]
+    },
+    {
+      "id": "vcfc",
+      "name": "#13 Vol-cond-factor-corr (VCFC)",
+      "detail": "Book-2 VT × corr/vol gate · 21 sleeves · 12 trials · 5 bps · best trial L21/C12/g0.5 (~70m)",
+      "badge": "FAIL",
+      "verdict": "No trial beats the unconditional Book-2 VT null on Sharpe; every NW t vs Book-2 negative — milder MaxDD is risk compression only.",
+      "null": "Book-2 VT, VCFC run window",
+      "rows": [
+        {
+          "role": "method",
+          "label": "VCFC (best Sharpe trial)",
+          "sharpe": "1.05",
+          "maxdd": "−15.4%"
+        },
+        {
+          "role": "null",
+          "label": "Book-2 VT, VCFC run window (null)",
+          "sharpe": "1.11",
+          "maxdd": "−20.5%"
+        }
+      ],
+      "nw_t": "all 12 trials negative NW t (−1.43 to −3.10)",
+      "dsr": "1.000 (trial_count=12)",
+      "gate": {
+        "label": "PR #13",
+        "href": "https://github.com/jgridifier/usa-etf-feature-pipeline/pull/13"
+      },
+      "method_page": "methods/allocation_alpha_vol_cond_factor_corr.html",
+      "artifact": {
+        "label": "vol_cfc_oos_summary.csv",
+        "href": "https://github.com/jgridifier/usa-etf-feature-pipeline/blob/main/data/processed/vol_cond_factor_corr/vol_cfc_oos_summary.csv"
+      },
+      "archived": "2026-09-21",
+      "archived_via": "PR #13 merged"
+    },
+    {
+      "id": "ft_med",
+      "name": "#4 Forecast-tangency MED (FT-MED)",
+      "detail": "Alexander & Scherer 2023 · category sleeves · 291m OOS · 1 trial · 5 bps",
+      "badge": "FAIL",
+      "verdict": "Primary trial Sharpe below every binding null (EW, LW MinVar, ERC); MaxDD −58.0% worse than EW; turnover 403.8%/yr.",
+      "null": "EW · LW MinVar · ERC",
+      "rows": [
+        {
+          "role": "method",
+          "label": "FT-MED (primary)",
+          "sharpe": "0.358",
+          "maxdd": "−58.0%"
+        },
+        {
+          "role": "null",
+          "label": "EW (null)",
+          "sharpe": "0.610",
+          "maxdd": "−45.5%"
+        },
+        {
+          "role": "null",
+          "label": "LW MinVar (null)",
+          "sharpe": "0.595",
+          "maxdd": "−15.6%"
+        },
+        {
+          "role": "null",
+          "label": "ERC (null)",
+          "sharpe": "0.693",
+          "maxdd": "−29.1%"
+        }
+      ],
+      "nw_t": "NW t vs EW +0.12, not significant; +1.41 vs LW MinVar; +0.85 vs ERC",
+      "dsr": "N/A (trial_count=1)",
+      "gate": {
+        "label": "PR #24",
+        "href": "https://github.com/jgridifier/usa-etf-feature-pipeline/pull/24"
+      },
+      "method_page": "methods/allocation_alpha_forecast_tangency_med.html",
+      "artifact": {
+        "label": "ft_med_oos_summary.csv",
+        "href": "https://github.com/jgridifier/usa-etf-feature-pipeline/blob/main/data/processed/ft_med/ft_med_oos_summary.csv"
+      },
+      "archived": "2026-09-22",
+      "archived_via": "PR #24 merged"
+    },
+    {
+      "id": "rr_erc",
+      "name": "#3 Regime-resilient ERC (RR-ERC)",
+      "detail": "Ielpo et al. 2026 / LOIM · category sleeves · 280m OOS · 2 trials (Path A stress overlay, Path B LOIM parity) · 5 bps",
+      "badge": "FAIL",
+      "verdict": "FAIL rests on Path B: NW t +0.14 vs uncond ERC (not significant) and Sharpe 0.869 vs LW MinVar 0.944. Path A was degenerate (identical to uncond ERC).",
+      "null": "Unconditional ERC (primary) · LW MinVar",
+      "rows": [
+        {
+          "role": "method",
+          "label": "Path A (stress overlay)",
+          "sharpe": "0.866",
+          "maxdd": "−25.18%"
+        },
+        {
+          "role": "method",
+          "label": "Path B (LOIM parity)",
+          "sharpe": "0.869",
+          "maxdd": "−23.75%"
+        },
+        {
+          "role": "null",
+          "label": "Uncond ERC (primary null)",
+          "sharpe": "0.866",
+          "maxdd": "−25.18%"
+        },
+        {
+          "role": "null",
+          "label": "LW MinVar (null)",
+          "sharpe": "0.944",
+          "maxdd": "−11.9%"
+        }
+      ],
+      "nw_t": "Path A degenerate: overlay fell back to uncond ERC at every rebalance; NW t undefined (still counts toward trial_count 2). Path B: +0.14 vs uncond ERC",
+      "dsr": "1.000 (trial_count=2)",
+      "gate": {
+        "label": "PR #26",
+        "href": "https://github.com/jgridifier/usa-etf-feature-pipeline/pull/26"
+      },
+      "method_page": "methods/allocation_alpha_regime_resilient_erc.html",
+      "artifact": {
+        "label": "rr_erc_oos_summary.csv",
+        "href": "https://github.com/jgridifier/usa-etf-feature-pipeline/blob/main/data/processed/rr_erc/rr_erc_oos_summary.csv"
+      },
+      "archived": "2026-09-22",
+      "archived_via": "PR #26 merged"
+    },
+    {
+      "id": "uncond_book2_vt",
+      "name": "Unconditional Book-2 VT",
+      "detail": "Option A vol-target, no skew gate · registry vol_target_option_a_uncond (enabled:false) · 68m OOS",
+      "badge": "AUDIT NULL",
+      "verdict": "Not live and not a FAIL: the null the live #6 VT × gate-first skew overlay was measured against — kept for audit.",
+      "null": "— (this is the null)",
+      "rows": [
+        {
+          "role": "null",
+          "label": "Uncond Book-2 VT",
+          "sharpe": "1.059",
+          "maxdd": "−20.1%"
+        }
+      ],
+      "nw_t": "−0.80 (#6 overlay vs this null)",
+      "dsr": "1.00 (#6 overlay; trial_count=72)",
+      "gate": {
+        "label": "PR #29",
+        "href": "https://github.com/jgridifier/usa-etf-feature-pipeline/pull/29"
+      },
+      "method_page": "methods/skewness_managed_stub.html",
+      "artifact": {
+        "label": "skew_managed_gatefirst_summary.csv",
+        "href": "https://github.com/jgridifier/usa-etf-feature-pipeline/blob/main/data/processed/skewness_managed/skew_managed_gatefirst_summary.csv"
+      },
+      "archived": "2026-09-23",
+      "archived_via": "PR #29 merged; demoted from live to audit null",
+      "measured": {
+        "label": "#6 skew overlay measured against it",
+        "text": "1.280 / −10.1%, NW t −0.80"
+      }
+    }
+  ]
+}
