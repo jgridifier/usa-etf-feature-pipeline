@@ -76,6 +76,8 @@ def final_month_unpriced(weekly, monthly, universe, trial=NLSGMVv3Trial()):
     the final rebalance only (method and every null alike) and listed in the report. Gaps anywhere else
     still stop the run (v2's "explicit data repair required").
     """
+    # Archived #40 workaround: new gates must use the complete-month loader
+    # instead and must not copy this final-month eligibility workaround.
     monthly = monthly.sort_index()
     names = [t for t in sorted(gm.equity_only_tickers(universe)) if t in monthly and t in weekly]
     dates = [d for d in monthly.index if pd.Timestamp(trial.oos_start) <= d <= pd.Timestamp(trial.oos_end)]

@@ -299,7 +299,11 @@ def load_tb3ms(path: str | Path = DEFAULT_TB3MS) -> pd.Series:
 
 
 def load_bil_monthly(panel_path: str | Path = DEFAULT_PANEL) -> pd.Series:
-    panel = pd.read_csv(panel_path, index_col=0, parse_dates=True)
+    from .monthly_panel import load_monthly_panel
+
+    # Legacy: published Book 2 / VT Sharpe uses 68 months through the partial
+    # September 2026 row (2026-09-16); preserve site_sharpe.json reproduction.
+    panel = load_monthly_panel(panel_path, complete_months_only=False)
     s = panel[RF_TICKER].astype(float)
     s.index = pd.PeriodIndex(s.index, freq="M")
     if s.index.has_duplicates:

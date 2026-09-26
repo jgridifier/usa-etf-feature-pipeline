@@ -51,12 +51,26 @@ def load_portfolio_constraints(path: str | Path | None = None) -> dict:
         return yaml.safe_load(f)
 
 
-def month_end_trading_dates(prices: pd.DataFrame) -> pd.DatetimeIndex:
-    """Actual last trading day per calendar month (matches xsd_rotation_backtest)."""
+def month_end_trading_dates(
+    prices: pd.DataFrame, *, complete_months_only=False, asof=None,
+) -> pd.DatetimeIndex:
+    """Actual last observed trading day per month; optionally omit a partial month.
+
+    Default False preserves live vol_target / skewness_managed / walkforward /
+    strategy_registry run-strategies builds. Books adopt the cutoff at the next
+    data refresh. Explicit asof overrides the last observed price date.
+    """
     if not isinstance(prices.index, pd.DatetimeIndex):
         raise TypeError("prices index must be DatetimeIndex")
     me = prices.groupby(prices.index.to_period("M")).apply(lambda x: x.index.max())
-    return pd.DatetimeIndex(me.values).sort_values()
+    dates = pd.DatetimeIndex(me.values).sort_values()
+    if complete_months_only:
+        from .monthly_panel import partial_final_month
+
+        partial = partial_final_month(dates, asof=asof)
+        if partial is not None:
+            dates = dates[dates.to_period("M") != partial]
+    return dates
 
 
 def mom12_1_series(monthly_returns: pd.Series) -> pd.Series:

@@ -1,5 +1,6 @@
 """Enforced results writer for v3 and every future gate runner.
 
+New gate runners load monthly panels via monthly_panel.load_monthly_panel (complete months only by default).
 Archived v1/v2 writers keep their own paths and are not changed or re-scored.
 """
 from pathlib import Path
