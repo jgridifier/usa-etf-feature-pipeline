@@ -533,7 +533,7 @@ export default function Home() {
           <div className="mt-6 grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-6">
             <div className="quote-block">
               <p className="font-serif text-base md:text-lg italic text-ink leading-snug">
-                "Static core + unconditional Book-2 VT. Everything else failed binding nulls — research record only."
+                "Static core + VT × gate-first skew overlay. Everything else failed binding nulls — research record only; unconditional Book-2 VT is the audit null."
               </p>
               <cite className="text-2xs text-muted not-italic mt-2 block tracking-label uppercase font-sans">
                 Live shortlist rationale ·{' '}
