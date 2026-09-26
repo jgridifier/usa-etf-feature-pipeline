@@ -701,3 +701,33 @@ Snapshot membership/coverage can introduce survivorship bias. Missing held OOS
 returns fail explicitly. This is a teaching-note research mapping, not an exact
 ADIA solver or a claim of outperformance. See the
 [method page](docs/methods/spectral_risk_parity.html) for conventions and limitations.
+
+### Research: Analytical nonlinear shrinkage GMV (Bet 1)
+
+```bash
+usa-etf-features walkforward-nls-gmv --out-dir data/processed/nonlinear_shrinkage_gmv
+```
+
+Runs exactly the pre-registered 156- and 260-week configurations, mirroring the
+Spectral RP name gate's universe, monthly evaluation calendar, long-only solver,
+turnover and 5 bp costs. NLS, weekly LW MinVar (primary null), ERC and EW use the
+same weekly estimation window. The committed monthly LW MinVar is reference only.
+Outputs include returns, weights, shrinkage diagnostics, summary/null comparison,
+trial registry, weekly-versus-monthly LW comparison, and JSON/Markdown gate reports.
+The estimator is a clean-room implementation of the published Ledoit–Wolf
+analytical equations; no reference code was copied. Registry `enabled: false`.
+Research only. **v1 verdict (Quant, 2026-09-26): VOID — cash-dominated, no evidence of
+estimator edge** (method and primary null mostly T-bill ETFs; Sharpe_rf0 rewards cash;
+DSR at low trial_count non-decisive). trial_count = 4 (includes the invalidated first run).
+Follow-up: v2 re-spec on an ex-cash universe with Sharpe in excess of BIL.
+
+Reference-code license check (2026-09-25): the `covShrinkage` repositories
+(github.com/oledoit/covShrinkage, MikeWolf007/covShrinkage, pald22/covShrinkage) are
+MIT-licensed but contain the 2022 QIS/LIS/GIS and linear estimators, not the 2020
+analytical estimator. The 2020 Matlab ZIP on Michael Wolf's UZH publications page
+could not be retrieved (TLS error / HTTP 502), so its license is unverified and it is
+treated as unlicensed. Nothing was copied or vendored, and no reference-code fixture
+was generated; the kernel/Hilbert pieces are cross-checked against numerical
+quadrature instead. The far-field (|x| >= 10) Hilbert transform uses an exact series
+because the closed form cancels catastrophically in float64 for widely dispersed
+spectra (regression-tested).

@@ -13,3 +13,7 @@
   ticker, history dates, `years_monthly`, `thin_lt5y`, and dollar `adv_proxy`.
   These are snapshot metadata, not a historical point-in-time membership feed.
   The categorized universe retains `Source_Section=experimental_research_universe`.
+
+- `usa_universe_panel_weekly_returns.csv`: weekly simple returns on Friday dates,
+  1756 rows × 339 ETFs, 1993-01-29 → 2026-09-18; missing before inception;
+  same source snapshot as the monthly panel.
