@@ -8,6 +8,7 @@ import pytest
 from pandas.testing import assert_frame_equal
 
 from usa_etf_features.monthly_panel import (
+    PanelProvenance, panel_provenance,
     drop_partial_final_month, last_session, load_monthly_panel,
     partial_final_month, source_asof, USEquityHolidayCalendar,
     SPECIAL_FULL_DAY_CLOSURES,
@@ -34,14 +35,17 @@ def test_partial_and_legacy(panel_path, caplog):
     with caplog.at_level(logging.WARNING):
         actual = load_monthly_panel(panel_path)
     assert_frame_equal(actual, plain.iloc[:-1])
-    assert actual.attrs == dict(dropped_partial_month="2024-07", source_asof="2024-07-16", complete_months_only=True)
+    assert actual.attrs == dict(dropped_partial_month="2024-07", source_asof="2024-07-16", complete_months_only=True,
+                                monthly_panel_provenance=PanelProvenance("synthetic.csv", True, "2024-07", "2024-07-16"))
     assert "monthly panel synthetic.csv: dropped partial final month 2024-07" in caplog.text
     assert "last session 2024-07-31" in caplog.text
     assert caplog.records[0].name == "usa_etf_features.monthly_panel"
     caplog.clear()
     legacy = load_monthly_panel(panel_path, complete_months_only=False)
     assert_frame_equal(legacy, plain)
-    assert legacy.attrs == dict(dropped_partial_month=None, source_asof="2024-07-16", complete_months_only=False)
+    assert legacy.attrs == dict(dropped_partial_month=None, source_asof="2024-07-16", complete_months_only=False,
+                                monthly_panel_provenance=PanelProvenance("synthetic.csv", False, None, "2024-07-16"))
+    assert panel_provenance(legacy.loc[:"2024-06-30"]) == panel_provenance(legacy)   # survives slicing
     assert not caplog.records
 
 

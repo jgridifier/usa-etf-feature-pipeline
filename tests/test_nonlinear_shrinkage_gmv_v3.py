@@ -11,6 +11,7 @@ from threadpoolctl import threadpool_limits
 
 from usa_etf_features import gate_metrics as gm
 from usa_etf_features import nonlinear_shrinkage_gmv_v3 as v3
+from usa_etf_features.monthly_panel import load_monthly_panel, panel_provenance
 from usa_etf_features.strategy_registry import load_strategy_registry
 
 
@@ -27,6 +28,11 @@ def test_equity_tag_stored():
         assert not gm.EQUITY_ONLY & gm.tagged_tickers(u, tag)
     assert gm.equity_only_tickers(u.assign(equity_only=u.Ticker.eq('BIL'))) == {'BIL'}
     assert 'equity_only' not in gm.COMPOSITION_TAG_COLUMNS
+
+
+def gm_errors():
+    from usa_etf_features.gate_results import GateResultError
+    return GateResultError
 
 
 def rf_for(index):
@@ -133,6 +139,10 @@ def panel():
 @pytest.mark.parametrize('windows', [(26, 30), (156, 260)])
 def test_synthetic_gate_and_leakage(panel, tmp_path, windows):
     weekly, monthly, u, trial, rf = panel
+    monthly.to_csv(tmp_path / 'monthly.csv')                      # v3 rerun path: legacy load + written reason
+    loaded = load_monthly_panel(tmp_path / 'monthly.csv', complete_months_only=False)
+    pd.testing.assert_frame_equal(loaded, monthly, check_freq=False)
+    monthly = loaded
     trial = replace(trial, window_weeks=windows[0])
     result = v3.run_nls_gmv_v3_gate(weekly, monthly, u, (trial, replace(trial, window_weeks=windows[1])),
                                    extra_previews=('preview',), rf=rf, bootstrap_reps=19)
@@ -146,6 +156,13 @@ def test_synthetic_gate_and_leakage(panel, tmp_path, windows):
     v3.write_v3_artifacts(result, tmp_path)
     record = json.loads((tmp_path / 'gate_result.json').read_text())
     assert 'book_eligible' in record['fields']
+    assert v3.PARTIAL_MONTH_REASON == 'archived PR #40, preregistered 129-month window'
+    assert record['monthly_panel']['complete_months_only'] is False
+    assert record['monthly_panel']['partial_month_reason'] == v3.PARTIAL_MONTH_REASON
+    assert f'- partial-month opt-out reason: {v3.PARTIAL_MONTH_REASON}' in (tmp_path / 'gate_report.md').read_text()
+    raw = dict(result, monthly_panel_provenance=panel_provenance(pd.read_csv(tmp_path / 'monthly.csv')))
+    with pytest.raises(gm_errors(), match='load_monthly_panel'):
+        v3.write_v3_artifacts(raw, tmp_path / 'raw')
     assert record['label'] == gm.final_gate_label(record['mechanical'], record['composition'])
     ref_window = windows[0]
     refs = result['oos_returns'].query('strategy_id == @v3.USMV_REF and window_weeks == @ref_window').sort_values('date')

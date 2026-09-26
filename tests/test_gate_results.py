@@ -8,6 +8,10 @@ import pandas as pd
 import pytest
 
 from usa_etf_features.gate_results import GateResultError, validate_gate_record, write_gate_results
+from usa_etf_features.monthly_panel import load_monthly_panel, panel_provenance
+
+PANEL_CSV = Path(__file__).resolve().parents[1] / 'data/raw/usa_universe_panel_monthly_returns.csv'
+PANEL = load_monthly_panel(PANEL_CSV)          # default: complete calendar months only
 
 
 def composition(status='PASS'):
@@ -17,7 +21,8 @@ def composition(status='PASS'):
 
 def write(out, **kwargs):
     args = dict(gate_id='fake', label='PASS', mechanical='PASS', composition=None,
-                tables={'summary': pd.DataFrame({'x': [1]})}, report={}, markdown_lines=['test'])
+                tables={'summary': pd.DataFrame({'x': [1]})}, report={}, markdown_lines=['test'],
+                monthly_panel=PANEL)
     args.update(kwargs)
     return write_gate_results(out, **args)
 
@@ -58,7 +63,7 @@ def test_opt_out_and_unattached(tmp_path):
     {'label': 'FAIL', 'mechanical': 'PASS', 'composition_opt_out_reason': 'reason'},
     {'label': 'FAIL', 'mechanical': 'FAIL', 'fields': {'book_eligible': {'eligible': True, 'reason': 'x'}}},
     {'fields': {'book_eligible': {'eligible': False, 'reason': ''}}},
-    *[{'fields': {key: 'x'}} for key in ('label', 'mechanical', 'composition', 'gate_id')],
+    *[{'fields': {key: 'x'}} for key in ('label', 'mechanical', 'composition', 'gate_id', 'monthly_panel')],
 ])
 def test_invalid_records_write_nothing(tmp_path, over):
     with pytest.raises(GateResultError, match='REFUSING TO RECORD'):
@@ -74,3 +79,51 @@ def test_archived_refusal_changes_nothing():
     with pytest.raises(FileExistsError):
         write(out, label='FAIL', mechanical='FAIL', composition=composition())
     assert hashes() == before
+
+
+def test_default_load_records_dropped_partial_month(tmp_path):
+    prov = panel_provenance(PANEL)
+    assert prov.complete_months_only and prov.dropped_partial_month == '2026-09' and prov.source_asof == '2026-09-16'
+    assert PANEL.index.max() < pd.Timestamp('2026-09-01')
+    write(tmp_path, label='FAIL', mechanical='FAIL')
+    r = json.loads((tmp_path / 'gate_result.json').read_text())
+    assert r['monthly_panel'] == dict(source=PANEL_CSV.name, complete_months_only=True,
+                                      dropped_partial_month='2026-09', source_asof='2026-09-16',
+                                      partial_month_reason=None)
+    report = (tmp_path / 'gate_report.md').read_text()
+    assert '- dropped_partial_month: 2026-09' in report and '- source_asof: 2026-09-16' in report
+
+
+@pytest.mark.parametrize('panel', [pd.read_csv(PANEL_CSV, index_col=0, parse_dates=True), None,
+                                   PANEL.copy().pipe(lambda f: f.attrs.clear() or f)])
+def test_raw_read_csv_panel_refused(tmp_path, panel):
+    def runner_that_bypasses_the_loader():
+        return write(tmp_path / 'out', label='FAIL', mechanical='FAIL', monthly_panel=panel)
+    with pytest.raises(GateResultError, match='REFUSING TO RECORD.*load_monthly_panel'):
+        runner_that_bypasses_the_loader()
+    assert not (tmp_path / 'out').exists()
+
+
+LEGACY = load_monthly_panel(PANEL_CSV, complete_months_only=False)
+
+
+@pytest.mark.parametrize('reason', [None, '', '   ', 7])
+def test_legacy_panel_requires_written_reason(tmp_path, reason):
+    with pytest.raises(GateResultError, match='REFUSING TO RECORD.*partial_month_reason'):
+        write(tmp_path / 'out', label='FAIL', mechanical='FAIL', monthly_panel=LEGACY, partial_month_reason=reason)
+    assert not (tmp_path / 'out').exists()
+
+
+def test_reason_on_complete_panel_refused(tmp_path):
+    with pytest.raises(GateResultError, match='REFUSING TO RECORD.*partial_month_reason'):
+        write(tmp_path / 'out', label='FAIL', mechanical='FAIL', partial_month_reason='not needed')
+    assert not (tmp_path / 'out').exists()
+
+
+def test_legacy_panel_with_reason_recorded_and_printed(tmp_path, caplog):
+    write(tmp_path, label='FAIL', mechanical='FAIL', monthly_panel=LEGACY, partial_month_reason='  ticket 12  ')
+    r = json.loads((tmp_path / 'gate_result.json').read_text())
+    assert r['monthly_panel'] == dict(source=PANEL_CSV.name, complete_months_only=False, dropped_partial_month=None,
+                                      source_asof='2026-09-16', partial_month_reason='ticket 12')
+    assert '- partial-month opt-out reason: ticket 12' in (tmp_path / 'gate_report.md').read_text()
+    assert 'ticket 12' in caplog.text

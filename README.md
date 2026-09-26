@@ -319,6 +319,14 @@ The loader records `dropped_partial_month`, `source_asof`, and
 - `rotation.month_end_trading_dates` offers `complete_months_only=True` and `asof`,
   but defaults to False. Existing vol_target, skewness_managed, walkforward, and
   strategy_registry `run-strategies` book callers retain the final partial month.
+- **Enforced in the shared gate-results writer** (`gate_results.write_gate_results`),
+  like the composition tripwire: `load_monthly_panel` attaches a `PanelProvenance`
+  (`complete_months_only`, `dropped_partial_month`, `source_asof`, `source`) and the
+  writer stores it in `gate_result.json` / `gate_report.md`. It refuses a panel
+  without one (e.g. raw `pd.read_csv`). A `complete_months_only=False` panel needs
+  a non-empty `partial_month_reason`, which is printed and stored. The v3 rerun path
+  passes "archived PR #40, preregistered 129-month window". Archived gates that
+  don't use this writer keep their current path.
 
 Archived outputs and published Book 1 / Book 2 / VT statistics and returns CSVs
 are not regenerated and remain byte-identical. **Books adopt the complete-month
