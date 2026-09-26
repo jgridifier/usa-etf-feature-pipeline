@@ -28,6 +28,12 @@ pip install openpyxl
 pytest
 ```
 
+**CI** (`.github/workflows/ci.yml`): every push to `main` and every PR targeting
+`main` runs the job `test` on Python 3.13. It does `pip install -e ".[dev]"`, runs the full
+`pytest` suite, then runs `node tests/explorer_numerics.cjs` (Node 20) as an explicit step. It does
+no data downloads and no Pages build. Every test runs against data committed to the repo. `test`
+is a required status check for merging to `main` (repository ruleset; no review requirement).
+
 ## CLI
 
 ### Score universe (M1)
