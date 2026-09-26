@@ -547,7 +547,7 @@ export default function Home() {
             </div>
             <div className="quote-block">
               <p className="font-serif text-base md:text-lg italic text-ink leading-snug">
-                "Path and risk improvement, not return alpha. NW t vs static A ≈ 0 on this panel — milder drawdown is the claim. The unconditional VT backbone earns the same ~14.7% a year as Book-1; live Book-2 (with the skew gate) earns ~13.6% with half the drawdown."
+                "Path and risk improvement, not return alpha. NW t vs static A ≈ 0 on this panel — milder drawdown is the claim. The unconditional VT backbone earns the same ~14.7% a year as Book-1; live Book-2 (with the skew gate) earns ~13.6% with half the drawdown of the VT backbone (−10.1% vs −20.1%)."
               </p>
               <cite className="text-2xs text-muted not-italic mt-2 block tracking-label uppercase font-sans">
                 Book-2 vol-target evidence ·{' '}
