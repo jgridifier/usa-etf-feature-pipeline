@@ -1330,7 +1330,9 @@ def cmd_walkforward_nls_gmv_v3(args) -> int:
     from .gate_metrics import composition_report_lines
     from .nonlinear_shrinkage_gmv_v2 import _json_safe
     weekly = pd.read_csv(args.weekly, index_col=0, parse_dates=True)
-    monthly = pd.read_csv(args.monthly, index_col=0, parse_dates=True)
+    from .monthly_panel import load_monthly_panel
+    # Archived PR #40: retain the preregistered 129 months, including the partial month.
+    monthly = load_monthly_panel(args.monthly, complete_months_only=False)
     result = run_nls_gmv_v3_gate(weekly, monthly, pd.read_csv(args.universe))
     write_v3_artifacts(result, args.out_dir)
     print(result["summary"].to_string(index=False))

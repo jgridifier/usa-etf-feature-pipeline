@@ -15,6 +15,7 @@ import pandas as pd
 from scipy.optimize import minimize
 
 from .gate_metrics import filter_cash_like
+from .monthly_panel import load_monthly_panel
 from .portfolio import ledoit_wolf_cov
 from .vol_target import annualized_vol, sharpe_rf0, deflated_sharpe_approx
 
@@ -38,12 +39,7 @@ class SpectralTrial:
 
 
 def read_returns(path: str | Path) -> pd.DataFrame:
-    panel = pd.read_csv(path, index_col=0, parse_dates=True).sort_index()
-    # Source panel dates are actual trading dates; exclude a partial final month.
-    last = panel.index[-1]
-    if last < last + pd.offsets.BMonthEnd(0):
-        panel = panel.iloc[:-1]
-    return panel
+    return load_monthly_panel(path, complete_months_only=True)
 
 
 def spectral_weights(window: pd.DataFrame, gamma: float = 1.0) -> tuple[np.ndarray, dict]:

@@ -1,13 +1,20 @@
 """Enforced results writer for v3 and every future gate runner.
 
+New gate runners load monthly panels via monthly_panel.load_monthly_panel (complete months only by default).
+The writer enforces that like the composition tripwire: it records the panel's provenance and refuses a
+panel without one (e.g. raw pd.read_csv); a panel loaded with complete_months_only=False needs a written
+partial_month_reason, which is printed in the report and stored.
 Archived v1/v2 writers keep their own paths and are not changed or re-scored.
 """
+from dataclasses import asdict
 from pathlib import Path
 import json
+import logging
 
 import pandas as pd
 
 from .gate_metrics import INCOMPLETE_LABEL, final_gate_label
+from .monthly_panel import PanelProvenance, panel_provenance
 from .nonlinear_shrinkage_gmv_v2 import _json_safe
 
 VALID_LABELS = {"PASS", "FAIL", "VOID", INCOMPLETE_LABEL}
@@ -15,6 +22,36 @@ VALID_LABELS = {"PASS", "FAIL", "VOID", INCOMPLETE_LABEL}
 
 class GateResultError(RuntimeError):
     """A gate record violates the reporting contract."""
+
+
+def validate_monthly_panel(monthly_panel, partial_month_reason=None) -> dict:
+    """Provenance record for the gate's monthly panel (a DataFrame from load_monthly_panel or its PanelProvenance)."""
+    def refuse(message):
+        raise GateResultError("REFUSING TO RECORD: " + message)
+
+    prov = monthly_panel if isinstance(monthly_panel, PanelProvenance) else panel_provenance(monthly_panel)
+    if prov is None:
+        refuse("monthly panel has no provenance; load it with monthly_panel.load_monthly_panel "
+               "(complete calendar months only), not pd.read_csv")
+    reason = partial_month_reason
+    if reason is not None and (not isinstance(reason, str) or not reason.strip()):
+        refuse("partial_month_reason must be non-empty")
+    if not prov.complete_months_only and reason is None:
+        refuse("monthly panel was loaded with complete_months_only=False; a written partial_month_reason is required")
+    if prov.complete_months_only and reason is not None:
+        refuse("partial_month_reason only applies to panels loaded with complete_months_only=False")
+    return dict(asdict(prov), partial_month_reason=reason.strip() if reason is not None else None)
+
+
+def monthly_panel_report_lines(record) -> list:
+    lines = ['', '## Monthly panel provenance', '',
+             f"- source: {record['source']}",
+             f"- complete_months_only: {record['complete_months_only']}",
+             f"- dropped_partial_month: {record['dropped_partial_month'] or 'none'}",
+             f"- source_asof: {record['source_asof']}"]
+    if record['partial_month_reason'] is not None:
+        lines.append(f"- partial-month opt-out reason: {record['partial_month_reason']}")
+    return lines
 
 
 def validate_gate_record(*, label, mechanical, composition, composition_opt_out_reason=None, fields=None):
@@ -49,7 +86,7 @@ def validate_gate_record(*, label, mechanical, composition, composition_opt_out_
     if label != effective:
         refuse("label is inconsistent with mechanical reading + composition")
     if fields is not None:
-        if not isinstance(fields, dict) or {'label', 'mechanical', 'composition', 'gate_id'} & fields.keys():
+        if not isinstance(fields, dict) or {'label', 'mechanical', 'composition', 'gate_id', 'monthly_panel'} & fields.keys():
             refuse("fields contains reserved keys or is not a dict")
         if 'book_eligible' in fields:
             be = fields['book_eligible']
@@ -62,9 +99,11 @@ def validate_gate_record(*, label, mechanical, composition, composition_opt_out_
 
 
 def write_gate_results(out_dir, *, gate_id, label, mechanical, composition, tables, report,
-                       markdown_lines, fields=None, composition_opt_out_reason=None) -> Path:
+                       markdown_lines, monthly_panel=None, partial_month_reason=None, fields=None,
+                       composition_opt_out_reason=None) -> Path:
     record = validate_gate_record(label=label, mechanical=mechanical, composition=composition,
                                  fields=fields, composition_opt_out_reason=composition_opt_out_reason)
+    panel_record = validate_monthly_panel(monthly_panel, partial_month_reason)
     out = Path(out_dir)
     tables = dict(tables)
     if composition is not None and isinstance(composition.get('table'), pd.DataFrame):
@@ -76,11 +115,16 @@ def write_gate_results(out_dir, *, gate_id, label, mechanical, composition, tabl
     if out.resolve().is_relative_to(processed.resolve()) and any(p.exists() for p in targets):
         raise FileExistsError('refusing to overwrite existing processed artifacts')
     payload = json.dumps(_json_safe(dict(gate_id=gate_id, label=label, mechanical=mechanical,
-                                        composition=record, fields=fields or {}, report=report)),
+                                        composition=record, monthly_panel=panel_record,
+                                        fields=fields or {}, report=report)),
                          indent=2, allow_nan=False)
+    if panel_record['partial_month_reason'] is not None:
+        logging.getLogger(__name__).warning("%s: monthly panel keeps its partial final month: %s",
+                                            gate_id, panel_record['partial_month_reason'])
     out.mkdir(parents=True, exist_ok=True)
     for name, table in tables.items():
         table.to_csv(out / f'{name}.csv', index=False, date_format='%Y-%m-%d')
     (out / 'gate_result.json').write_text(payload + '\n')
-    (out / 'gate_report.md').write_text('\n'.join(markdown_lines) + '\n')
+    lines = list(markdown_lines) + monthly_panel_report_lines(panel_record)
+    (out / 'gate_report.md').write_text('\n'.join(lines) + '\n')
     return out

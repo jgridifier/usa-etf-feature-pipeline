@@ -18,6 +18,7 @@ from . import nonlinear_shrinkage_gmv as v1
 from . import nonlinear_shrinkage_gmv_v2 as v2
 from . import gate_metrics as gm
 from . import gate_results
+from .monthly_panel import panel_provenance
 from .vol_target import annualized_vol, sharpe_rf0, newey_west_tstat, deflated_sharpe_approx
 
 METHOD, PRIMARY = v1.METHOD, v1.PRIMARY
@@ -76,6 +77,8 @@ def final_month_unpriced(weekly, monthly, universe, trial=NLSGMVv3Trial()):
     the final rebalance only (method and every null alike) and listed in the report. Gaps anywhere else
     still stop the run (v2's "explicit data repair required").
     """
+    # Archived #40 workaround: new gates must use the complete-month loader
+    # instead and must not copy this final-month eligibility workaround.
     monthly = monthly.sort_index()
     names = [t for t in sorted(gm.equity_only_tickers(universe)) if t in monthly and t in weekly]
     dates = [d for d in monthly.index if pd.Timestamp(trial.oos_start) <= d <= pd.Timestamp(trial.oos_end)]
@@ -319,6 +322,10 @@ def book_eligible_line(be):
     return f"book_eligible: {'yes' if be['eligible'] else 'no'} ({be['reason']})"
 
 
+# Written reason the v3 rerun path gives the gate-results writer for keeping the partial 2026-09 row.
+PARTIAL_MONTH_REASON = "archived PR #40, preregistered 129-month window"
+
+
 def run_nls_gmv_v3_gate(weekly, monthly, universe, trials=PREREGISTERED_V3, extra_previews=(), *,
                         rf=None, bootstrap_reps=BOOTSTRAP_REPS):
     trials, extra_previews = tuple(trials), tuple(extra_previews)
@@ -364,7 +371,7 @@ def run_nls_gmv_v3_gate(weekly, monthly, universe, trials=PREREGISTERED_V3, extr
                   book_eligible=book, coverage_gaps=weekly_vs_monthly_coverage(weekly, monthly, universe),
                   trial_count=count, trials=[asdict(t) for t in trials], extra_previews=list(extra_previews),
                   status=STATUS, ticket=TICKET, bootstrap_settings=dict(bootstrap_reps=bootstrap_reps,
-                  block_size=BLOCK_SIZE, seed=SEED))
+                  block_size=BLOCK_SIZE, seed=SEED), monthly_panel_provenance=panel_provenance(monthly))
     result['report_lines'] = gate_report_lines(result)
     return result
 
@@ -437,4 +444,5 @@ def write_v3_artifacts(result, out_dir='data/processed/nonlinear_shrinkage_gmv_v
     return gate_results.write_gate_results(out_dir, gate_id=GATE_ID, label=result['label'],
         mechanical=result['mechanical_reading']['mechanical'], composition=result['composition'],
         tables={k: result[k] for k in keys}, report=report, markdown_lines=result['report_lines'],
+        monthly_panel=result.get('monthly_panel_provenance'), partial_month_reason=PARTIAL_MONTH_REASON,
         fields={'book_eligible': result['book_eligible']})

@@ -293,6 +293,46 @@ The full growth price panel is on the investments box at `/workspace/investments
 3. Hard deny off-list semis: **SMH, SOXX, SOXL, PSI**.
 4. Eligible \(E = U_{\mathrm{approved}} \setminus \mathrm{deny}\). Any \(t \notin E\) **hard-fails**. Semiconductor exposure is XSD-only under rotation/optimization paths.
 
+### Monthly panels: complete calendar months only (2026-09-26)
+
+New gate runs use `monthly_panel.load_monthly_panel`, whose
+`complete_months_only=True` default drops all rows in an incomplete final calendar
+month. Detection uses the panel's own daily source dates: an explicit `asof` wins,
+otherwise the maximum coverage `end` (DataFrame or CSV path), otherwise the last
+panel date. The US equity trading calendar includes full-day holidays and special
+closures; the cutoff has no hard-coded dates. A dropped month emits a WARNING,
+for example: `monthly panel panel.csv: dropped partial final month 2026-09 (source data through 2026-09-16; last session 2026-09-30)`.
+The loader records `dropped_partial_month`, `source_asof`, and
+`complete_months_only` in frame attrs; in-memory panels can use
+`drop_partial_final_month`.
+
+- Spectral RP's `read_returns` uses the shared complete-month rule, replacing its
+  business-month-end heuristic. Both exclude the same final row on the committed
+  panel, preserving archived spectral RP and NLS GMV v1/v2 results.
+- `gate_metrics.load_bil_monthly` explicitly uses `complete_months_only=False`:
+  published Book 2 / VT Sharpe uses 68 months through 2026-09-16.
+- Archived NLS GMV v3 CLI and registry adapters explicitly use False, retaining
+  PR #40's preregistered 129-month window including the partial September row and
+  its `final_month_unpriced` workaround. New gates must not copy that workaround.
+- Archived FT-MED / RR-ERC scripts, `regime_dual`, and registry adapters that read
+  monthly CSVs directly retain their legacy behavior.
+- `rotation.month_end_trading_dates` offers `complete_months_only=True` and `asof`,
+  but defaults to False. Existing vol_target, skewness_managed, walkforward, and
+  strategy_registry `run-strategies` book callers retain the final partial month.
+- **Enforced in the shared gate-results writer** (`gate_results.write_gate_results`),
+  like the composition tripwire: `load_monthly_panel` attaches a `PanelProvenance`
+  (`complete_months_only`, `dropped_partial_month`, `source_asof`, `source`) and the
+  writer stores it in `gate_result.json` / `gate_report.md`. It refuses a panel
+  without one (e.g. raw `pd.read_csv`). A `complete_months_only=False` panel needs
+  a non-empty `partial_month_reason`, which is printed and stored. The v3 rerun path
+  passes "archived PR #40, preregistered 129-month window". Archived gates that
+  don't use this writer keep their current path.
+
+Archived outputs and published Book 1 / Book 2 / VT statistics and returns CSVs
+are not regenerated and remain byte-identical. **Books adopt the complete-month
+cutoff at the next data refresh**. Until then the Books page says the window ends in a partial month ("Data through 16 Sep 2026 (September is a partial month)", the panel's last date). This policy is documented here only; the raw
+data README and data files are unchanged.
+
 ## Shared gate helper: cash-like tag and excess-of-BIL Sharpe
 
 `usa_etf_features.gate_metrics` (cash-null audit follow-up, 2026-09-26):

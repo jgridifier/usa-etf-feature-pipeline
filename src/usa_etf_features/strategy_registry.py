@@ -800,7 +800,9 @@ def nonlinear_shrinkage_gmv_v3_equity_only(prices, spec, *, universe_csv, asof=N
                                              summarize_v3, TRIAL_COUNT_V3)
     params = dict(spec.default_params)
     weekly = pd.read_csv(params.pop("weekly_csv"), index_col=0, parse_dates=True)
-    monthly = pd.read_csv(params.pop("monthly_csv"), index_col=0, parse_dates=True)
+    from .monthly_panel import load_monthly_panel
+    # Archived PR #40: retain the preregistered 129 months, including the partial month.
+    monthly = load_monthly_panel(params.pop("monthly_csv"), complete_months_only=False)
     if asof is not None:
         cutoff = pd.Timestamp(asof)
         monthly = monthly.loc[:cutoff]
