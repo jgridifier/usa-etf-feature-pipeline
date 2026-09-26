@@ -1203,6 +1203,15 @@ def build_parser() -> argparse.ArgumentParser:
     rr.add_argument("--bootstrap-samples", type=int, default=500, dest="bootstrap_samples")
     rr.set_defaults(func=cmd_walkforward_regime_resilient_erc)
 
+    nls = sub.add_parser("walkforward-nls-gmv", help="Research nonlinear shrinkage GMV gate")
+    nls.add_argument("--weekly", default="data/raw/usa_universe_panel_weekly_returns.csv")
+    nls.add_argument("--monthly", default="data/raw/usa_universe_panel_monthly_returns.csv")
+    nls.add_argument("--universe", default="data/raw/usa_universe_categorized.csv")
+    nls.add_argument("--coverage", default="data/raw/usa_universe_panel_history_coverage.csv")
+    nls.add_argument("--spectral-dir", default="data/processed/spectral_rp/name")
+    nls.add_argument("--out-dir", default="data/processed/nonlinear_shrinkage_gmv")
+    nls.set_defaults(func=cmd_walkforward_nls_gmv)
+
     sp = sub.add_parser("walkforward-spectral-rp", help="Experimental panel spectral RP and nulls")
     sp.add_argument("--returns", required=True)
     sp.add_argument("--universe", required=True)
@@ -1271,6 +1280,19 @@ def build_parser() -> argparse.ArgumentParser:
     sm.set_defaults(func=cmd_walkforward_skewness_managed)
 
     return p
+
+
+def cmd_walkforward_nls_gmv(args) -> int:
+    from .nonlinear_shrinkage_gmv import run_nls_gmv_gate, write_gate_artifacts, read_returns
+    weekly = pd.read_csv(args.weekly, index_col=0, parse_dates=True)
+    result = run_nls_gmv_gate(weekly, read_returns(args.monthly), pd.read_csv(args.universe),
+                              pd.read_csv(args.coverage), spectral_dir=args.spectral_dir)
+    result["metadata"]["data_files"] = {k: str(getattr(args, k)) for k in
+                                        ("weekly", "monthly", "universe", "coverage", "spectral_dir")}
+    result["metadata"]["input_provenance"] = "CLI input paths"
+    write_gate_artifacts(result, args.out_dir)
+    print(result["summary"].to_string(index=False))
+    return 0
 
 
 def cmd_walkforward_spectral_rp(args) -> int:

@@ -83,9 +83,26 @@ def spectral_weights(window: pd.DataFrame, gamma: float = 1.0) -> tuple[np.ndarr
     }
 
 
+def normalize_cov(cov: np.ndarray) -> np.ndarray:
+    return cov / np.mean(np.diag(cov))
+
+
+def long_only_minvar(cov: np.ndarray) -> np.ndarray:
+    """Long-only MinVar for an already-normalised covariance."""
+    n = len(cov)
+    result = minimize(lambda x: .5 * x @ cov @ x, np.full(n, 1 / n),
+                      jac=lambda x: cov @ x, bounds=[(0, 1)] * n,
+                      constraints={"type": "eq", "fun": lambda x: x.sum() - 1,
+                                   "jac": lambda x: np.ones(n)}, method="SLSQP",
+                      options={"maxiter": 1000, "ftol": 1e-12})
+    if not result.success:
+        raise ValueError(f"MinVar solver failed: {result.message}")
+    return result.x / result.x.sum()
+
+
 def null_weights(window: pd.DataFrame) -> dict[str, np.ndarray]:
     cov = ledoit_wolf_cov(window, force_shrinkage=True).to_numpy()
-    cov = cov / np.mean(np.diag(cov))
+    cov = normalize_cov(cov)
     n = len(cov)
     # Convex risk-budget objective; normalizing its solution yields asset ERC.
     result = minimize(lambda x: .5 * x @ cov @ x - np.log(x).sum(),
@@ -95,14 +112,7 @@ def null_weights(window: pd.DataFrame) -> dict[str, np.ndarray]:
     if not result.success:
         raise ValueError(f"ERC solver failed: {result.message}")
     erc = result.x / result.x.sum()
-    result = minimize(lambda x: .5 * x @ cov @ x, np.full(n, 1 / n),
-                      jac=lambda x: cov @ x, bounds=[(0, 1)] * n,
-                      constraints={"type": "eq", "fun": lambda x: x.sum() - 1,
-                                   "jac": lambda x: np.ones(n)}, method="SLSQP",
-                      options={"maxiter": 1000, "ftol": 1e-12})
-    if not result.success:
-        raise ValueError(f"MinVar solver failed: {result.message}")
-    return {"erc": erc, "minvar_lw": result.x / result.x.sum(), "equal_weight": np.full(n, 1 / n)}
+    return {"erc": erc, "minvar_lw": long_only_minvar(cov), "equal_weight": np.full(n, 1 / n)}
 
 
 def run_spectral_trial(returns: pd.DataFrame, universe: pd.DataFrame,

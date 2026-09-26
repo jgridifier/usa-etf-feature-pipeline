@@ -1,0 +1,11 @@
+window_weeks,strategy_id,cash_like_category_weight,top_holdings_avg,top_categories_avg
+156,equal_weight,0.08647510821659596,ACWI 0.9%; ACWX 0.9%; AGG 0.9%; BIL 0.9%; BSV 0.9%,International Developed Equity 18.1%; Commodities / Metals 14.5%; US Large / Broad Blend 8.9%
+156,erc_weekly,0.4782721931816399,USFR 9.0%; BIL 8.9%; SHV 8.3%; GBIL 7.5%; SPTS 5.0%,US Treasuries / Govt / Cash-like 47.8%; High Yield Credit 10.8%; Commodities / Metals 8.4%
+156,minvar_lw_monthly_reference,0.598701877742855,USFR 11.1%; BIL 11.0%; SHV 10.7%; GBIL 10.0%; SHY 7.7%,US Treasuries / Govt / Cash-like 59.9%; High Yield Credit 11.7%; TIPS / Inflation-Linked 6.9%
+156,minvar_lw_weekly,0.675802416396288,USFR 13.8%; BIL 13.7%; SHV 13.3%; GBIL 12.0%; SHY 8.3%,US Treasuries / Govt / Cash-like 67.6%; High Yield Credit 13.8%; TIPS / Inflation-Linked 5.5%
+156,nonlinear_shrinkage_gmv,0.809970904554923,BIL 47.3%; USFR 17.9%; SHV 17.8%; GBIL 7.9%; SGOV 7.7%,US Treasuries / Govt / Cash-like 81.0%; High Yield Credit 17.9%; TIPS / Inflation-Linked 0.6%
+260,equal_weight,0.08647510821659596,ACWI 0.9%; ACWX 0.9%; AGG 0.9%; BIL 0.9%; BSV 0.9%,International Developed Equity 18.1%; Commodities / Metals 14.5%; US Large / Broad Blend 8.9%
+260,erc_weekly,0.5124566582414638,BIL 9.0%; USFR 8.9%; SHV 8.5%; GBIL 7.8%; SPTS 5.9%,US Treasuries / Govt / Cash-like 51.2%; High Yield Credit 10.4%; Commodities / Metals 7.5%
+260,minvar_lw_monthly_reference,0.598701877742855,USFR 11.1%; BIL 11.0%; SHV 10.7%; GBIL 10.0%; SHY 7.7%,US Treasuries / Govt / Cash-like 59.9%; High Yield Credit 11.7%; TIPS / Inflation-Linked 6.9%
+260,minvar_lw_weekly,0.7000956059231717,BIL 13.7%; USFR 13.7%; SHV 13.3%; GBIL 12.0%; SHY 9.2%,US Treasuries / Govt / Cash-like 70.0%; High Yield Credit 13.7%; TIPS / Inflation-Linked 6.0%
+260,nonlinear_shrinkage_gmv,0.8445886170473018,BIL 53.9%; USFR 14.0%; SGOV 12.4%; SHV 11.1%; GBIL 6.7%,US Treasuries / Govt / Cash-like 84.5%; High Yield Credit 14.0%; TIPS / Inflation-Linked 1.1%

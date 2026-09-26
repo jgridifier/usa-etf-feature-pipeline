@@ -1,0 +1,11 @@
+window_weeks,min_names,adv_min,include_thin,thin_min_months,exclude_categories,cost_bps,oos_start,oos_end,strategy_id,role,trial_id,preregistered,trial_count
+156,100,0.0,False,60,"('Defined Outcome / Buffer / Structured', 'Specialty / Other')",5.0,2021-04-30,2026-08-31,nonlinear_shrinkage_gmv,method,nls_gmv_w156,True,2
+156,100,0.0,False,60,"('Defined Outcome / Buffer / Structured', 'Specialty / Other')",5.0,2021-04-30,2026-08-31,minvar_lw_weekly,primary_null,minvar_lw_weekly_w156,False,2
+156,100,0.0,False,60,"('Defined Outcome / Buffer / Structured', 'Specialty / Other')",5.0,2021-04-30,2026-08-31,erc_weekly,null,erc_weekly_w156,False,2
+156,100,0.0,False,60,"('Defined Outcome / Buffer / Structured', 'Specialty / Other')",5.0,2021-04-30,2026-08-31,equal_weight,null,equal_weight_w156,False,2
+156,100,0.0,False,60,"('Defined Outcome / Buffer / Structured', 'Specialty / Other')",5.0,2021-04-30,2026-08-31,minvar_lw_monthly_reference,reference_only,minvar_lw_monthly_reference_w156,False,2
+260,100,0.0,False,60,"('Defined Outcome / Buffer / Structured', 'Specialty / Other')",5.0,2021-04-30,2026-08-31,nonlinear_shrinkage_gmv,method,nls_gmv_w260,True,2
+260,100,0.0,False,60,"('Defined Outcome / Buffer / Structured', 'Specialty / Other')",5.0,2021-04-30,2026-08-31,minvar_lw_weekly,primary_null,minvar_lw_weekly_w260,False,2
+260,100,0.0,False,60,"('Defined Outcome / Buffer / Structured', 'Specialty / Other')",5.0,2021-04-30,2026-08-31,erc_weekly,null,erc_weekly_w260,False,2
+260,100,0.0,False,60,"('Defined Outcome / Buffer / Structured', 'Specialty / Other')",5.0,2021-04-30,2026-08-31,equal_weight,null,equal_weight_w260,False,2
+260,100,0.0,False,60,"('Defined Outcome / Buffer / Structured', 'Specialty / Other')",5.0,2021-04-30,2026-08-31,minvar_lw_monthly_reference,reference_only,minvar_lw_monthly_reference_w260,False,2
