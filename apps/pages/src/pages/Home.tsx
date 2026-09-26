@@ -74,10 +74,11 @@ function CioVerdictBand() {
         <div className="flex md:block items-start gap-3 px-3 py-3 md:px-5 md:py-4">
           <p className="font-sans text-2xs font-bold uppercase tracking-label text-accent whitespace-nowrap md:mb-1.5">SHIFT MEANING</p>
           <div>
-            <p className="font-serif text-sm text-ink leading-snug font-medium md:mb-1">Book-2 = risk path, not return alpha</p>
+            <p className="font-serif text-sm text-ink leading-snug font-medium md:mb-1">Book-2 = drawdown-controlled core</p>
             <p className="hidden md:block font-sans text-2xs text-body leading-relaxed">
-              Book-2 (~13.6%) earns slightly less than Book-1 (~14.7%) a year. The shift is
-              milder drawdown (−10% vs −26%) and higher Sharpe in excess of BIL (0.97 vs 0.75) — not outperformance.
+              Book-2 is the drawdown-controlled version of the same stock core: about 1 point a year less
+              return than the VT backbone (~13.6% vs ~14.7%) for shallower drawdowns (−10.1% vs −20.1%)
+              and lower volatility — not outperformance.
             </p>
           </div>
         </div>
@@ -358,7 +359,7 @@ export default function Home() {
               status="HOLD"
               statusColor="up"
               headline="Vol-target + skewness gate"
-              lede="Same Option A core, vol-scaled with skewness/left-tail gate applied (Gong–Lynch–Ogden 2025, Justina #6). f̃_t = f_t · g_t; cash residual in BIL. Slightly lower return than Book 1 (~13.6% vs ~14.7%) — the shift is milder drawdowns (−10.1% vs −25.6%) and higher Sharpe: 0.97 vs 0.75 in excess of BIL (legacy rf = 0: 1.28 vs 0.92). Risk path, not return alpha."
+              lede="Book 2 gives up about 1 point a year of return versus the VT backbone in exchange for shallower drawdowns and lower volatility. Its protection has been seen in one bear market: in 2022 its drawdown was about half of VT's (−10.1% vs −20.1%), and it also cushioned the autumn 2023 pullback (−3.9% vs −9.0%). The skew gate has not switched on since January 2024, so through the 2024–2026 pullbacks Book 2 tracked VT. Its Sharpe above BIL is 0.97 vs 0.84 for VT; that difference is not statistically significant. Max drawdown −10.1% (VT backbone −20.1%, Book 1 −25.6%) · volatility ~10.6% (~13.9%, ~15.9%) · return ~13.6% (~14.7%, ~14.7%) · Sharpe above BIL 0.97 (0.84, 0.75)"
               link={{ label: 'See Book 2 path vs Book 1', to: '/books' }}
             />
           </div>
@@ -509,9 +510,9 @@ export default function Home() {
             <p className="font-sans text-2xs text-body leading-relaxed">
               <strong className="text-ink">#6 Quant PASS note:</strong>{' '}
               Skewness-managed overlay cleared the gate as a Book-2 path (f̃_t = f_t · g_t, gate-first
-              L63 / realized-Amaya / CVaR5 / g_min=0.5). Sharpe 0.97 &gt; 0.84 for the unconditional Book-2 VT in excess of
-              BIL (legacy rf = 0: 1.28 &gt; 1.059); MaxDD −10.1% vs
-              −20.1%. NW t vs Book-2 = −0.80 (marginal). It is wired into live <strong className="text-ink">Book 2</strong> — not a
+              L63 / realized-Amaya / CVaR5 / g_min=0.5) as a drawdown control: MaxDD −10.1% vs −20.1% for the
+              unconditional Book-2 VT. Sharpe above BIL 0.97 vs 0.84 (legacy rf = 0: 1.28 vs 1.059); that difference
+              is not statistically significant. NW t vs Book-2 = −0.80. It is wired into live <strong className="text-ink">Book 2</strong> — not a
               separate third book. No book count change.
             </p>
           </div>
@@ -547,7 +548,7 @@ export default function Home() {
             </div>
             <div className="quote-block">
               <p className="font-serif text-base md:text-lg italic text-ink leading-snug">
-                "Path and risk improvement, not return alpha. NW t vs static A ≈ 0 on this panel — milder drawdown is the claim. The unconditional VT backbone earns the same ~14.7% a year as Book-1; live Book-2 (with the skew gate) earns ~13.6% with half the drawdown of the VT backbone (−10.1% vs −20.1%)."
+                "Drawdown control, not return alpha. The unconditional VT backbone earns the same ~14.7% a year as Book-1; live Book-2 (with the skew gate) gives up about 1 point a year (~13.6%) for shallower drawdowns and lower volatility. In the 2022 bear market its drawdown was about half of VT's (−10.1% vs −20.1%)."
               </p>
               <cite className="text-2xs text-muted not-italic mt-2 block tracking-label uppercase font-sans">
                 Book-2 vol-target evidence ·{' '}

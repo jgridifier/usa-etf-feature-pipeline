@@ -3,8 +3,8 @@ const TICKER_SEGMENTS = [
   'Book 1: VOO 70% / QQQM 20% / IJR 10% · buy-and-hold reference',
   'Book 2: vol-target sleeve · scale-down only · BIL cash residual',
   'DO NOT PROMOTE · Spectral RP · Regime-Aware · Vol-cond #13 — FAIL / ARCHIVE',
-  'SHIFT MEANING · same ~14.7% return · claim is risk path not return alpha',
-  'MaxDD: −20.1% vol-target vs −25.6% static · +5.4pp milder',
+  'SHIFT MEANING · Book 2 = drawdown-controlled version of the same stock core · ~1 pt/yr less return than the VT backbone',
+  'Max drawdown: Book 2 −10.1% · VT backbone −20.1% · Book 1 −25.6%',
   'XSD optional gated sleeve · never a live book · default OFF',
   'OOS window ~68 months · 2021-02 → 2026-09 · real-BIL sample · research only',
 ]
