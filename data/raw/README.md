@@ -7,6 +7,13 @@
   "High Yield Credit" to "US Treasuries / Govt / Cash-like". The Category column is otherwise unchanged and is not
   the cash tag (it still mixes duration such as GOVT/IEF/TLT/SHY). Archived committed outputs were not re-run;
   re-running an archived category-sleeve spec on this file would move USFR between sleeves.
+  `near_cash` (2026-09-26, after the NLS GMV v2 VOID) = {FTSL, SRLN}: stored values, set by hand like `cash_like`.
+  Why these two: they are floating-rate senior / bank-loan ETFs (the fund's own name says senior loan, bank loan,
+  leveraged loan or floating-rate corporate / CLO) that are not already `cash_like` (USFR, a floating-rate Treasury
+  fund, stays `cash_like` only); no other ticker in the file qualified. The rule is documentation only: code reads
+  the stored column and never derives the tag from names, and new loan funds are tagged by hand and reviewed.
+  `near_cash` never excludes a name; it feeds the default-on composition tripwire (cash_like + short_duration +
+  near_cash > 50% ⇒ VOID) for future gates. Nothing past is re-scored.
 - `fred_tb3ms.csv` — FRED series TB3MS (3-Month Treasury Bill Secondary Market Rate, discount basis, percent,
   monthly, not seasonally adjusted), 1934-01 → 2026-08, verbatim CSV from
   https://fred.stlouisfed.org/graph/fredgraph.csv?id=TB3MS (source: Board of Governors of the Federal Reserve System,

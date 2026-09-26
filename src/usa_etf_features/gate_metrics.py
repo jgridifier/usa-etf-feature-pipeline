@@ -10,6 +10,12 @@ side effects beyond reading the committed CSVs they are pointed at.
   exclusion applies to the method and every null by construction. The flag defaults to
   ``True`` for new gates; archived trial dataclasses pin ``exclude_cash_like=False`` so
   their committed outputs are unchanged.
+* ``near_cash`` is a stored boolean column like the other two tags (tagged by hand and reviewed; never
+  derived at runtime). It never removes a name from any gate.
+* Composition tripwire (default-on for every gate): average OOS share in cash_like + short_duration +
+  near_cash names, method and primary null, VOID if either is > 50%. Sleeves are looked through to
+  constituents; "not computable" is reported, never read as 0%, and blocks a PASS
+  (``INCOMPLETE_LABEL``) unless the ticket opts out with a written reason.
 * Risk-free rate: BIL's priced monthly total return from the committed monthly panel from
   BIL's first full month on; before that, FRED ``TB3MS`` / 1200 (``data/raw/fred_tb3ms.csv``).
   :func:`window_rf_coverage` reports the share of a window that uses the fallback.
@@ -31,8 +37,12 @@ from .vol_target import annualized_vol, max_drawdown, sharpe_rf0
 MONTHS_PER_YEAR = 12
 CASH_LIKE = frozenset({"BIL", "SGOV", "SHV", "GBIL", "USFR", "GSST", "GUMI"})
 SHORT_DURATION = frozenset({"SHY", "SPTS", "BSV", "STIP"})
+# Expected stored tags (documentation / tests). The universe file's boolean columns are the source of
+# truth; nothing derives a tag from fund names at runtime. New loan funds are tagged by hand and reviewed.
+NEAR_CASH = frozenset({"FTSL", "SRLN"})
 CASH_LIKE_COLUMN = "cash_like"
 SHORT_DURATION_COLUMN = "short_duration"
+NEAR_CASH_COLUMN = "near_cash"
 RF_TICKER = "BIL"
 SHARPE_RF0_LABEL = "legacy (rf = 0)"
 SHARPE_EXBIL_LABEL = "excess of BIL"
@@ -65,6 +75,10 @@ def cash_like_tickers(universe: pd.DataFrame) -> frozenset[str]:
 
 def short_duration_tickers(universe: pd.DataFrame) -> frozenset[str]:
     return tagged_tickers(universe, SHORT_DURATION_COLUMN)
+
+
+def near_cash_tickers(universe: pd.DataFrame) -> frozenset[str]:
+    return tagged_tickers(universe, NEAR_CASH_COLUMN)
 
 
 def is_cash_like(ticker: str, universe: pd.DataFrame) -> bool:
@@ -108,6 +122,155 @@ def run_gate_strategies(panel: pd.DataFrame, universe: pd.DataFrame,
             raise ValueError(f"strategy {name!r} holds names outside the gate universe: {bad}")
         out[name] = w
     return out
+
+
+# ------------------------------------------------ composition tripwire (default-on, every gate)
+COMPOSITION_TAG_COLUMNS = (CASH_LIKE_COLUMN, SHORT_DURATION_COLUMN, NEAR_CASH_COLUMN)
+COMPOSITION_MAX_SHARE = 0.50
+INCOMPLETE_LABEL = "INCOMPLETE: composition not computable"
+
+
+def look_through(weights: pd.DataFrame, constituents: pd.DataFrame | None = None) -> pd.DataFrame:
+    """Expand sleeve holdings to constituent tickers.
+
+    ``weights``: long format with ``date``, ``ticker`` (a ticker or a sleeve key) and ``weight``.
+    ``constituents``: ``sleeve``, ``ticker``, ``weight`` (within-sleeve weights, summing to 1 per sleeve)
+    and optionally ``date`` for time-varying membership. Rows whose holding is not a sleeve key pass
+    through unchanged.
+    """
+    if constituents is None or constituents.empty:
+        return weights.copy()
+    c = constituents.rename(columns={"ticker": "_constituent", "weight": "_within"})
+    keys = ["sleeve", "date"] if "date" in c.columns else ["sleeve"]
+    sums = c.groupby(keys)["_within"].sum()
+    if not np.allclose(sums.to_numpy(), 1.0, atol=1e-8):
+        raise ValueError("within-sleeve constituent weights must sum to 1 per sleeve")
+    is_sleeve = weights["ticker"].isin(set(c["sleeve"]))
+    held = weights.loc[is_sleeve].rename(columns={"ticker": "sleeve"})
+    expanded = held.merge(c, on=keys, how="left")
+    if expanded["_constituent"].isna().any():
+        raise ValueError("sleeve constituents missing for some sleeve/date")
+    expanded["ticker"] = expanded.pop("_constituent")
+    expanded["weight"] = expanded["weight"] * expanded.pop("_within")
+    expanded = expanded.drop(columns="sleeve")
+    return pd.concat([weights.loc[~is_sleeve], expanded[weights.columns]], ignore_index=True)
+
+
+def composition_shares(weights: pd.DataFrame, universe: pd.DataFrame, *,
+                       constituents: pd.DataFrame | None = None,
+                       group_cols: Sequence[str] = ("strategy_id",)) -> pd.DataFrame:
+    """Average share over the OOS window (mean over rebalance dates) in tagged names, per strategy.
+
+    Reports ``cash_like``, ``short_duration`` and ``near_cash`` shares and the combined
+    ``cash_duration_share_mean`` (the tripwire metric). Sleeves are looked through to constituents; a
+    group holding anything that is neither a universe ticker nor a sleeve with constituents is
+    ``computable = False`` with NaN shares (never read as 0%).
+    """
+    known = set(universe["Ticker"].astype(str).str.strip().str.upper())
+    tags = {col: tagged_tickers(universe, col) for col in COMPOSITION_TAG_COLUMNS}
+    rows = []
+    for key, w in weights.groupby(list(group_cols)):
+        key = key if isinstance(key, tuple) else (key,)
+        row = dict(zip(group_cols, key))
+        try:
+            x = look_through(w, constituents)
+            unknown = sorted({t for t in x["ticker"].astype(str) if t.strip().upper() not in known})
+        except ValueError as exc:
+            x, unknown = None, [str(exc)]
+        if unknown:
+            row.update({f"{c}_share_mean": np.nan for c in COMPOSITION_TAG_COLUMNS},
+                       cash_duration_share_mean=np.nan, computable=False,
+                       not_computable_reason="no constituent weights for: " + ", ".join(map(str, unknown)))
+        else:
+            n = x["date"].nunique()
+            tick = x["ticker"].astype(str).str.upper()
+            shares = {c: float(x.loc[tick.isin(t), "weight"].sum() / n) for c, t in tags.items()}
+            row.update({f"{c}_share_mean": v for c, v in shares.items()},
+                       cash_duration_share_mean=float(sum(shares.values())), computable=True,
+                       not_computable_reason="")
+        rows.append(row)
+    return pd.DataFrame(rows)
+
+
+def composition_tripwire(weights: pd.DataFrame, universe: pd.DataFrame, *, method: str, primary_null: str,
+                         constituents: pd.DataFrame | None = None, opt_out: bool = False,
+                         opt_out_reason: str | None = None, max_share: float = COMPOSITION_MAX_SHARE,
+                         strategy_col: str = "strategy_id") -> dict:
+    """Default-on composition tripwire for every gate.
+
+    Metric: average share over the OOS window in cash_like + short_duration + near_cash names combined,
+    for the method AND the primary null. VOID if either is strictly greater than ``max_share`` (50%).
+    ``NOT COMPUTABLE`` if either cannot be looked through to tickers. A ticket may opt out only with a
+    written reason (``opt_out=True, opt_out_reason="..."``), which the report prints; an opt-out without a
+    reason raises. Effective N < 5 is a per-ticket tripwire and is not part of this default.
+    """
+    reason = (opt_out_reason or "").strip()
+    if opt_out and not reason:
+        raise ValueError("composition tripwire opt-out requires a written reason (opt_out_reason)")
+    if reason and not opt_out:
+        raise ValueError("opt_out_reason given without opt_out=True")
+    sub = weights.loc[weights[strategy_col].isin([method, primary_null])]
+    table = composition_shares(sub, universe, constituents=constituents, group_cols=(strategy_col,))
+    table = table.set_index(strategy_col)
+    missing = [s for s in (method, primary_null) if s not in table.index]
+    if missing:
+        raise ValueError(f"no weights for {missing}")
+    m, p = table.loc[method], table.loc[primary_null]
+    computable = bool(m.computable and p.computable)
+    void_method = bool(computable and m.cash_duration_share_mean > max_share)
+    void_null = bool(computable and p.cash_duration_share_mean > max_share)
+    if opt_out:
+        status = "OPTED OUT"
+    elif not computable:
+        status = "NOT COMPUTABLE"
+    else:
+        status = "VOID" if (void_method or void_null) else "PASS"
+    return {"status": status, "max_share": max_share, "computable": computable,
+            "method": method, "primary_null": primary_null,
+            "method_share": float(m.cash_duration_share_mean), "null_share": float(p.cash_duration_share_mean),
+            "void_method": void_method, "void_null": void_null,
+            "opt_out": bool(opt_out), "opt_out_reason": reason or None,
+            "not_computable_reason": "; ".join(r for r in (m.not_computable_reason, p.not_computable_reason) if r),
+            "table": table.reset_index()}
+
+
+def _pct(x: float) -> str:
+    return "not computable" if x != x else f"{x:.2%}"
+
+
+def composition_report_lines(result: dict) -> list[str]:
+    """Markdown lines every gate report prints for the composition tripwire."""
+    lines = ["## Composition tripwire (cash_like + short_duration + near_cash, default-on)", "",
+             f"Status: **{result['status']}** (VOID if the method or the primary null averages > "
+             f"{result['max_share']:.0%} over the OOS window).",
+             f"- Method `{result['method']}`: {_pct(result['method_share'])}",
+             f"- Primary null `{result['primary_null']}`: {_pct(result['null_share'])}"]
+    if not result["computable"]:
+        lines.append(f"- Composition not computable: {result['not_computable_reason']}. "
+                     "This is not a pass; without a written opt-out a would-be PASS is "
+                     f"\"{INCOMPLETE_LABEL}\".")
+    if result["opt_out"]:
+        lines.append(f"- Opted out by the ticket. Reason: {result['opt_out_reason']}")
+    return lines + [""]
+
+
+def final_gate_label(mechanical: str, composition: dict) -> str:
+    """Combine a gate's own reading (PASS / FAIL / VOID) with the composition tripwire.
+
+    VOID (the gate's own tripwires or the composition tripwire) wins; a FAIL stays FAIL; a would-be PASS
+    becomes ``INCOMPLETE_LABEL`` when composition is not computable and not opted out with a reason.
+    """
+    mechanical = mechanical.upper()
+    if mechanical not in {"PASS", "FAIL", "VOID"}:
+        raise ValueError("mechanical reading must be PASS, FAIL or VOID")
+    status = composition["status"]
+    if mechanical == "VOID" or status == "VOID":
+        return "VOID"
+    if mechanical == "FAIL":
+        return "FAIL"
+    if status == "NOT COMPUTABLE":
+        return INCOMPLETE_LABEL
+    return "PASS"  # composition PASS, or OPTED OUT with a written reason (printed in the report)
 
 
 # ------------------------------------------------------------------ risk-free rate

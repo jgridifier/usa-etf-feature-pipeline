@@ -307,6 +307,22 @@ The full growth price panel is on the investments box at `/workspace/investments
   **Sharpe_rf0** stays CAGR / vol, labelled "legacy (rf = 0)".
 - `scripts/reconcile_cash_null_audit.py` writes `data/processed/cash_null_audit/` (reconciliation to Quant's audit,
   fallback shares, and `site_sharpe.json` used by the Pages build).
+- **`near_cash`** = {FTSL, SRLN}: a stored boolean column in the universe file, set like `cash_like`. The two
+  were tagged because they are floating-rate senior / bank-loan funds (the fund's own name says senior loan, bank
+  loan, leveraged loan or floating-rate corporate / CLO) that are not already `cash_like`; nothing derives the tag
+  from names at runtime, and new loan funds are tagged by hand and reviewed. It never excludes a name.
+- **Composition tripwire (default-on, every gate; not retroactive)**: `composition_tripwire(weights, universe,
+  method=..., primary_null=...)` takes the average share over the OOS window in `cash_like` + `short_duration` +
+  `near_cash` names combined, for the method AND the primary null; the run is **VOID if either is > 50%**
+  (strictly; exactly 50% passes). Category-sleeve gates pass `constituents` so each sleeve is looked through to its
+  tickers; if a gate can't, the result is **NOT COMPUTABLE** (never read as 0%) and is printed in the report
+  (`composition_report_lines`). `final_gate_label(mechanical, composition)`: VOID (from any tripwire) wins; a
+  FAIL stays FAIL; a would-be PASS with composition not computable is labelled exactly
+  **"INCOMPLETE: composition not computable"**, not PASS. A ticket may opt out only with
+  `opt_out=True, opt_out_reason="..."`; the reason is printed in the gate report (an opted-out, not-computable
+  would-be PASS is a PASS), and an opt-out without a reason raises. Effective N < 5 stays a per-ticket tripwire.
+  Sanity check on committed data: #6 live Book 2 (VT × skew gate-first) averages 24.27% (all BIL) vs 6.96% for
+  its Book-2 VT null — PASS. No archived output is re-scored.
 - **Archived category-sleeve specs will differ at the 4th decimal if re-run** on the new universe file (USFR moved from High Yield Credit to Treasuries / cash-like); the committed outputs and `tests/data/archived_csv_sha256.json` are the archive record.
 
 ## Math appendix
