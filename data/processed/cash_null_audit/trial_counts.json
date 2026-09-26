@@ -1,0 +1,18 @@
+{
+  "helper": {
+    "skew_grid_beat_vt_exbil": "48/72",
+    "skew_grid_beat_vt_rf0": "54/72",
+    "skew_grid_milder_maxdd": "72/72",
+    "vcfc_nw_t_range": "-1.4 to -3.1",
+    "vcfc_trials_losing_exbil": "12/12",
+    "vcfc_trials_losing_rf0": "12/12"
+  },
+  "memo": {
+    "skew_grid_beat_vt_exbil": "48/72",
+    "skew_grid_beat_vt_rf0": "54/72",
+    "skew_grid_milder_maxdd": "72/72",
+    "vcfc_nw_t_range": "-1.4 to -3.1",
+    "vcfc_trials_losing_exbil": "12/12",
+    "vcfc_trials_losing_rf0": "12/12"
+  }
+}

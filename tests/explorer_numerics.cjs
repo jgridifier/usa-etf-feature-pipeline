@@ -42,3 +42,38 @@ for(const beta of voo.rolls[63].beta) if(Number.isFinite(beta)) near(beta,1);
 assert.ok(voo.diagnostic.acf[0][2]>Math.abs(voo.diagnostic.acf[0][1]));
 assert.ok(Number(panel.coverage.QQQM.n_obs)<Number(panel.coverage.VOO.n_obs));
 assert.equal(panel.coverage.QQQM.thin_lt5y,'False');
+// Synthetic panel dates: month counts include dates with missing ticker returns.
+const rfDates=['2007-04-02','2007-04-03','2007-04-04','2007-05-30','2007-05-31','2007-06-01','2007-06-04','2007-06-05','2007-06-06'];
+const bilPrices=[NaN,NaN,NaN,100,101,103,NaN,104,105];
+const tb3ms='observation_date,TB3MS\n2007-04-01,6\n2007-05-01,4.8\n2007-06-01,4.5\n';
+const risk=m.riskFree(rfDates,bilPrices,tb3ms), bilReturns=m.logReturns(bilPrices);
+assert.equal(risk.fallbackUnavailable,false);
+near(risk.rf[0]+risk.rf[1]+risk.rf[2],Math.log1p(6/1200));
+near(risk.rf[3],Math.log1p(4.8/1200)/2);
+assert.deepEqual(risk.source,['TB3MS','TB3MS','TB3MS','TB3MS','BIL','BIL','','','BIL']);
+const asset=[NaN,0.01,0.02,0.03,0.04,0.05,0.06,0.07,0.08], excess=m.excessReturns(asset,risk.rf);
+for (const i of [4,5,8]) { near(risk.rf[i],bilReturns[i]); near(excess[i],asset[i]-bilReturns[i]); }
+for (const i of [0,6,7]) assert.ok(Number.isNaN(excess[i]));
+near(m.excessStats(excess,risk.source).fallbackShare,3/6);
+const validExcess=Array.from(excess).filter(Number.isFinite), avg=validExcess.reduce((a,b)=>a+b,0)/validExcess.length;
+const sd=Math.sqrt(validExcess.reduce((sum,x)=>sum+(x-avg)**2,0)/(validExcess.length-1));
+near(m.excessStats(excess,risk.source).sharpe,Math.sqrt(252)*avg/sd);
+const identical=m.excessReturns(bilReturns,risk.rf);
+assert.equal(m.excessStats(identical,risk.source).sharpe,0);
+assert.equal(m.rolling(identical,identical,2,true).sharpe[5],0);
+assert.ok(Number.isNaN(m.rolling(excess,excess,3,true).sharpe[8]));
+assert.ok(Number.isNaN(m.excessStats([NaN],['']).sharpe));
+const unavailable=m.riskFree(rfDates,bilPrices,null);
+assert.equal(unavailable.fallbackUnavailable,true);
+assert.ok(Number.isNaN(unavailable.rf[3])); near(unavailable.rf[4],bilReturns[4]);
+assert.equal(m.riskFree(rfDates,bilPrices,'invalid').fallbackUnavailable,true);
+assert.ok(Number.isNaN(m.riskFree(rfDates,bilPrices,'observation_date,TB3MS\n2007-04-01,.\n').rf[0]));
+// The default rolling path retains legacy rf=0 behavior, including zero variance.
+assert.ok(Number.isNaN(m.rolling([0,0,0],[0,0,0],3).sharpe[2]));
+near(m.rolling([0.01,0.02,0.03],[0.01,0.02,0.03],3).sharpe[2],2*Math.sqrt(252));
+for (const t of panel.tickers) {
+ const s=panel.data[t], legacy=m.rolling(s.r,s.r,63);
+ assert.deepEqual(s.rolls[63].sharpe,legacy.sharpe);
+ assert.deepEqual(s.x,m.excessReturns(s.r,panel.rf));
+ assert.deepEqual(s.excessRolls[63].sharpe,m.rolling(s.x,s.x,63,true).sharpe);
+}

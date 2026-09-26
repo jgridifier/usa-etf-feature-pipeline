@@ -1,0 +1,8 @@
+gate,start,end,n_months,fallback_months,fallback_share,bil_share,memo_bil_share_pct
+Spectral RP (name),2021-04,2026-08,65,0,0.000000,1.000000,100
+Regime-Aware dual,2004-11,2026-08,262,31,0.118321,0.881679,88
+"#13 VCFC (trial L126_C12_g0p25, 65 months; first alphabetically, not the headline trial)",2021-05,2026-09,65,0,0.000000,1.000000,100
+#4 FT-MED,2002-07,2026-09,291,59,0.202749,0.797251,80
+#3 RR-ERC Path B,2003-06,2026-09,280,48,0.171429,0.828571,83
+#6 skew gate-first (live Book 2),2021-02,2026-09,68,0,0.000000,1.000000,100
+Book-2 VT committed run (cash = 0 proxy),2021-02,2026-09,68,0,0.000000,1.000000,100

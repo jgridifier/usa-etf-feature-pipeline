@@ -13,5 +13,7 @@
   "start_date": "2021-02-26",
   "end_date": "2026-09-16",
   "mean_f": 0.9303998818557687,
-  "pct_months_f_lt_1": 0.2647058823529412
+  "pct_months_f_lt_1": 0.2647058823529412,
+  "Sharpe_exbil_vt": 0.8394,
+  "Sharpe_exbil_a": 0.7509
 }

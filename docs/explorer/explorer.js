@@ -72,8 +72,36 @@
     for (let i = 1; i < r.length; i++) if (prices[i] > 0 && prices[i-1] > 0) r[i] = Math.log(prices[i] / prices[i-1]);
     return r;
   }
+  function riskFree(dates, bilPrices, tb3msText) {
+    const rf = logReturns(bilPrices), source = Array(dates.length).fill(''), counts = new Map(), rates = new Map();
+    dates.forEach(date=>{ const month = date.slice(0,7); counts.set(month,(counts.get(month)||0)+1); });
+    let fallbackUnavailable = tb3msText == null;
+    if (!fallbackUnavailable) try {
+      const rows = parseCSV(tb3msText);
+      if (!rows.length || !Object.hasOwn(rows[0],'observation_date') || !Object.hasOwn(rows[0],'TB3MS')) throw new Error('Invalid TB3MS CSV');
+      rows.forEach(row=>{ const rate = row.TB3MS ? Number(row.TB3MS) : NaN; if (finite(rate) && rate > -1200) rates.set(row.observation_date.slice(0,7),rate); });
+      fallbackUnavailable = !rates.size;
+    } catch (_) { fallbackUnavailable = true; }
+    const first = rf.findIndex(finite), boundary = first < 0 ? dates.length : first;
+    dates.forEach((date,i)=>{
+      if (finite(rf[i])) source[i] = 'BIL';
+      else if (i < boundary && rates.has(date.slice(0,7))) {
+        const month = date.slice(0,7);
+        rf[i] = Math.log1p(rates.get(month)/1200)/counts.get(month); source[i] = 'TB3MS';
+      }
+    });
+    return { rf, source, fallbackUnavailable };
+  }
+  function excessReturns(r, rf) {
+    return Float64Array.from(r,(x,i)=>finite(x) && finite(rf[i]) ? x-rf[i] : NaN);
+  }
+  function excessStats(x, source) {
+    const m = moments(x), fallback = x.reduce((n,v,i)=>n+Number(finite(v) && source[i] === 'TB3MS'),0);
+    return { sharpe: m.sd > 0 ? Math.sqrt(252)*m.mean/m.sd : m.sd === 0 && m.mean === 0 ? 0 : NaN,
+      fallbackShare: m.n ? fallback/m.n : NaN };
+  }
   // O(n) trailing sufficient statistics; the window is dates, never compressed pairs.
-  function rolling(a, b, window) {
+  function rolling(a, b, window, zeroExcess = false) {
     const vol = empty(a.length), sharpe = empty(a.length), beta = empty(a.length), corr = empty(a.length), count = new Float64Array(a.length);
     let n = 0, sx = 0, sy = 0, xx = 0, yy = 0, xy = 0;
     function add(i, sign) {
@@ -87,6 +115,7 @@
       if (n === window) {
         const sd = Math.sqrt(vx/(n-1)); vol[i] = sd*Math.sqrt(252);
         if (sd > 0) sharpe[i] = Math.sqrt(252)*(sx/n)/sd;
+        else if (zeroExcess && sx === 0) sharpe[i] = 0;
       }
       if (vy > 0) beta[i] = cov/vy;
       if (vx > 0 && vy > 0) corr[i] = Math.max(-1, Math.min(1, cov/Math.sqrt(vx*vy)));
@@ -146,22 +175,24 @@
     const kurt = variance > 0 ? valid.reduce((sum,x) => sum+(x-m.mean)**4,0)/m.n/variance**2-3 : NaN;
     return { acf, histogram, qq, skew, kurt, negative: m.n ? valid.filter(x=>x<0).length/m.n : NaN };
   }
-  function prepare(priceText, coverageText) {
+  function prepare(priceText, coverageText, tb3msText) {
     const rows = parseCSV(priceText), coverage = Object.fromEntries(parseCSV(coverageText).map(row=>[row.ticker,row]));
     const dates = rows.map(row=>row.Date);
     if (dates.some((d,i)=>!/^\d{4}-\d{2}-\d{2}$/.test(d) || (i && d <= dates[i-1]))) throw new Error('Dates must be unique and ascending');
     const tickers = EQUITIES.filter(t=>coverage[t] && Object.hasOwn(rows[0],t));
     if (tickers.length !== 25) throw new Error('Expected all 25 equity tickers in prices and coverage');
+    const risk = riskFree(dates,Float64Array.from(rows,row=>row.BIL && finite(Number(row.BIL)) && Number(row.BIL)>0 ? Number(row.BIL) : NaN),tb3msText);
     const data = {};
     tickers.forEach(t=>{
       const prices = Float64Array.from(rows, row=>row[t] && finite(Number(row[t])) && Number(row[t])>0 ? Number(row[t]) : NaN);
-      const r = logReturns(prices), path = wealthSeries(prices,r), rolls = {};
+      const r = logReturns(prices), x = excessReturns(r,risk.rf), path = wealthSeries(prices,r), rolls = {}, excessRolls = {};
       [21,63,252].forEach(w=>{ rolls[w] = rolling(r,r,w); });
-      data[t] = { prices, r, ...path, rolls, diagnostic: diagnostics(r) };
+      [63,252].forEach(w=>{ excessRolls[w] = rolling(x,x,w,true); });
+      data[t] = { prices, r, x, ...path, rolls, excessRolls, excess: excessStats(x,risk.source), diagnostic: diagnostics(r) };
     });
-    return { dates, tickers, coverage, data };
+    return { dates, tickers, coverage, data, ...risk };
   }
-  const math = { parseCSV, moments, pairs, pearson, ranks, correlation, logReturns, rolling, wealthSeries, monthlyReturns, normalQuantile, diagnostics, prepare };
+  const math = { parseCSV, moments, pairs, pearson, ranks, correlation, logReturns, riskFree, excessReturns, excessStats, rolling, wealthSeries, monthlyReturns, normalQuantile, diagnostics, prepare };
   // Node entry point allows numerical regression tests without a browser/build system.
   if (typeof module !== 'undefined' && module.exports) { module.exports = math; return; }
 
@@ -247,14 +278,15 @@
     const monthText = row=>row ? row[0]+' · '+pct(row[1]) : '—';
     const lastWealth = Array.from(s.wealth).findLast(finite);
     const summary = [ ['AnnReturn (compounded; 252/n_obs)',pct((lastWealth/100)**(252/count)-1)], ['AnnVol (daily log returns)',pct(m.sd*Math.sqrt(252))],
-      ['MaxDD',pct(Math.min(...s.dd.filter(finite)))], ['Sharpe_rf0',num(m.sd>0 ? Math.sqrt(252)*m.mean/m.sd : NaN)],
+      ['MaxDD',pct(Math.min(...s.dd.filter(finite)))], ['Sharpe (excess of BIL; TB3MS before BIL)',num(s.excess.sharpe)],
+      ['rf source: TB3MS fallback share',pct(s.excess.fallbackShare)], ['Sharpe_rf0 — legacy (rf = 0)',num(m.sd>0 ? Math.sqrt(252)*m.mean/m.sd : NaN)],
       ['Best month (month-end)',monthText(months.at(-1))],['Worst month (month-end)',monthText(months[0])],['Start / end',panel.dates[first]+' / '+panel.dates[last]],
       ['n_obs (valid closes) / valid daily returns',count+' / '+m.n],['Skewness (moment)',num(diag.skew)],['Excess kurtosis (moment)',num(diag.kurt)],['Hit rate r < 0',pct(diag.negative)] ];
     $('stats').replaceChildren(); summary.forEach(([k,v])=>{const tr=document.createElement('tr'), th=document.createElement('th'),td=document.createElement('td');th.scope='row';th.textContent=k;td.textContent=v;tr.append(th,td);$('stats').append(tr);});
     lines('price',dates,[['Adjusted close',cut(s.prices)],['Wealth (100)',cut(s.wealth),{yAxisIndex:1}]],false,{ yAxis:[{type:'value',name:'Adj close',scale:true},{type:'value',name:'Wealth',scale:true}],grid:{left:65,right:65,top:65,bottom:60} });
     lines('drawdown',dates,[['Drawdown',cut(s.dd),{areaStyle:{opacity:0.1},itemStyle:{color:DOWN}}]],true);
     lines('vol',dates,[21,63,252].map(w=>['σ̂('+w+')',cut(s.rolls[w].vol)]),true);
-    lines('sharpe',dates,[63,252].map(w=>['Sharpe('+w+')',cut(s.rolls[w].sharpe)]));
+    lines('sharpe',dates,[...[63,252].map(w=>['Sharpe ex-BIL('+w+')',cut(s.excessRolls[w].sharpe)]), ...[63,252].map(w=>['legacy rf=0 ('+w+')',cut(s.rolls[w].sharpe),{lineStyle:{type:'dashed',width:1}}])]);
     lines('market',dates,[... [63,252].map(w=>['β('+w+') vs '+proxy,cut(market[w].beta)]), ...[63,252].map(w=>['corr('+w+') vs '+proxy,cut(market[w].corr),{lineStyle:{type:'dashed',width:1.5}}])]);
     lines('peer',dates,[63,252].map(w=>['corr('+w+') vs '+peer,cut(peerRoll[w].corr)]),false,{yAxis:{type:'value',min:-1,max:1}});
     draw('hist',{xAxis:{type:'category',name:'Log return',data:diag.histogram.map(row=>pct((row[0]+row[1])/2)),axisLabel:{hideOverlap:true}},yAxis:{type:'value',name:'Count'},series:[{type:'bar',name:'Daily log returns',data:diag.histogram.map(row=>row[2]),barCategoryGap:0}]});
@@ -266,17 +298,18 @@
     draw('scatter',{xAxis:{type:'value',name:ticker+' log r',axisLabel:{formatter:pct}},yAxis:{type:'value',name:peer+' log r',axisLabel:{formatter:pct}},tooltip:{trigger:'item'},series:[{name:'Overlapping returns · n='+a.length,type:'scatter',symbolSize:3,itemStyle:{opacity:0.35},data:scatter,large:true}]});
     const correlations=panel.tickers.map(t=>{const c=correlation(s.r,panel.data[t].r,method);return [t,c.value,c.n];});
     draw('panel',{grid:{left:55,right:25,top:35,bottom:35},xAxis:{type:'value',min:-1,max:1},yAxis:{type:'category',data:panel.tickers,inverse:true,axisLabel:{interval:0}},series:[{name:method+' vs '+ticker,type:'bar',data:asData(correlations.map(row=>row[1]))}]});
-    const fields={adj_close:cut(s.prices),log_return:cut(s.r),wealth_100:cut(s.wealth),drawdown:cut(s.dd)};
+    const fields={adj_close:cut(s.prices),log_return:cut(s.r),rf_log_return:cut(panel.rf),rf_is_tb3ms:cut(Float64Array.from(panel.source,v=>v ? Number(v==='TB3MS') : NaN)),wealth_100:cut(s.wealth),drawdown:cut(s.dd)};
     [21,63,252].forEach(w=>{fields['vol_'+w]=cut(s.rolls[w].vol);});
-    [63,252].forEach(w=>{fields['sharpe_rf0_'+w]=cut(s.rolls[w].sharpe);fields['beta_'+proxy+'_'+w]=cut(market[w].beta);fields['corr_'+proxy+'_'+w]=cut(market[w].corr);fields['market_overlap_'+w]=cut(market[w].count);fields['peer_corr_'+peer+'_'+w]=cut(peerRoll[w].corr);fields['peer_overlap_'+w]=cut(peerRoll[w].count);});
+    [63,252].forEach(w=>{fields['sharpe_rf0_'+w]=cut(s.rolls[w].sharpe);fields['sharpe_exbil_'+w]=cut(s.excessRolls[w].sharpe);fields['beta_'+proxy+'_'+w]=cut(market[w].beta);fields['corr_'+proxy+'_'+w]=cut(market[w].corr);fields['market_overlap_'+w]=cut(market[w].count);fields['peer_corr_'+peer+'_'+w]=cut(peerRoll[w].corr);fields['peer_overlap_'+w]=cut(peerRoll[w].count);});
     displayed={ticker,proxy,peer,fields,dates};
     fallbackData=[['Return histogram',['Bin start','Bin end','Count'],diag.histogram],['Normal QQ',['Normal quantile','Standardized return'],diag.qq],['ACF',['Lag','ACF(r)','ACF(|r|)'],diag.acf],['Lead–lag vs '+peer,['Lag k','Correlation','Overlap n'],leadLag],['Scatter vs '+peer,[ticker+' log return',peer+' log return'],scatter],['Panel '+method,['Ticker','Correlation','Overlap n'],correlations],renderHeat()];
     updateFallback();
     $('status').textContent=window.echarts ? ticker+' · market '+proxy+' · peer '+peer+' · '+method+' panel correlation.' : 'Chart library unavailable. Computed statistics, data tables, and CSV export are available.';
+    if (panel.fallbackUnavailable) $('status').textContent+=' TB3MS fallback was unavailable; pre-BIL excess values are blank.';
   }
   async function init() {
     try {
-      const texts=await Promise.all(['../data/growth_alpha_adj_close.csv','../data/growth_panel_history_coverage.csv'].map(async url=>{const response=await fetch(url);if(!response.ok)throw new Error(url+' ('+response.status+')');return response.text();}));
+      const texts=await Promise.all(['../data/growth_alpha_adj_close.csv','../data/growth_panel_history_coverage.csv','../data/fred_tb3ms.csv'].map(async (url,i)=>{try {const response=await fetch(url);if(!response.ok)throw new Error(url+' ('+response.status+')');return await response.text();} catch(error) {if(i===2)return null;throw error;}}));
       panel=prepare(...texts);
       panel.tickers.forEach(t=>{const option=document.createElement('option');option.value=t;$('tickers').append(option);const peer=document.createElement('option');peer.value=t;peer.textContent=t;$('peer').append(peer);});
       $('peer').value='QQQM';

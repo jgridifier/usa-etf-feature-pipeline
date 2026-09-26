@@ -8,6 +8,7 @@ interface CompRow {
   AnnVol: number
   MaxDD: number
   Sharpe_rf0: number
+  Sharpe_exBIL?: number | null
   NW_t_vs_option_a: number | null
   turnover_per_year: number
   n_months: number
@@ -49,7 +50,7 @@ function TableRow({ row, dim = false }: { row: CompRow; dim?: boolean }) {
       <td className="px-4 py-3 text-right font-mono text-ink">{pct(row.AnnReturn)}</td>
       <td className="px-4 py-3 text-right font-mono text-body">{pct(row.AnnVol)}</td>
       <td className="px-4 py-3 text-right font-mono text-down">{pct(row.MaxDD)}</td>
-      <td className="px-4 py-3 text-right font-mono text-ink">{num(row.Sharpe_rf0)}</td>
+      <td className="px-4 py-3 text-right font-mono text-ink">{row.Sharpe_exBIL == null ? '—' : num(row.Sharpe_exBIL)} ({num(row.Sharpe_rf0)})</td>
       <td className="px-4 py-3 text-right font-mono text-body">{num(row.NW_t_vs_option_a)}</td>
       <td className="px-4 py-3 text-right font-mono text-muted">{pct(row.turnover_per_year)}</td>
       <td className="px-4 py-3 text-right font-mono text-muted">{row.n_months}</td>
@@ -82,7 +83,7 @@ export function ComparisonTable() {
     { key: 'Ann. Return', align: 'right' },
     { key: 'Ann. Vol', align: 'right' },
     { key: 'Max DD', align: 'right' },
-    { key: 'Sharpe rf0', align: 'right' },
+    { key: 'Sharpe ex-BIL (legacy rf0)', align: 'right' },
     { key: 'NW t vs A', align: 'right' },
     { key: 'TO/yr', align: 'right' },
     { key: 'Mo.', align: 'right' },

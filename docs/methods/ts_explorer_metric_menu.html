@@ -55,8 +55,8 @@
   <p class="math">DD_t = W_t / \max_{s\le t} W_s - 1</p>
   <p>Rolling market β vs proxy \(m\) (default VOO):</p>
   <p class="math">\betâ_t(W) = \widehat{\mathrm{Cov}}(r, r^m)_W / \widehat{\mathrm{Var}}(r^m)_W</p>
-  <p>Rolling Sharpe (rf = 0 for v1 simplicity; optional excess vs BIL later):</p>
-  <p class="math">SR̂_t(W) = \sqrt{252} \cdot \bar{r}_W / \mathrm{std}(r)_W</p>
+  <p>Rolling Sharpe in excess of BIL (headline since 2026-09-26; rf = BIL daily log return, FRED TB3MS/1200 per month spread over trading days before BIL's first close; the rf = 0 version is kept and labelled legacy):</p>
+  <p class="math">SR̂_t(W) = \sqrt{252} \cdot \overline{(r - r_f)}_W / \mathrm{std}(r - r_f)_W</p>
   <p><strong>Leakage / honesty rules:</strong> every rolling chart titles the exact window; summary stats print start/end and <code>n_obs</code>; tickers with short history get a visible thin-history badge (from coverage CSV). No forward-filled returns across gaps — drop or break the series.</p>
 
   <h2>4. What we will do on the USA ETF / growth-panel data</h2>
@@ -72,14 +72,14 @@
       <tr><td>Returns</td><td>Daily log returns; optional toggle simple returns</td><td>Full history</td></tr>
       <tr><td>Drawdown</td><td>Underwater chart from peak wealth</td><td>Full history</td></tr>
       <tr><td>Realized vol</td><td>Trailing σ̂ annualized</td><td>W ∈ {21, 63, 252}; default show 21 + 63</td></tr>
-      <tr><td>Rolling Sharpe</td><td>Trailing SR (rf=0)</td><td>W ∈ {63, 252}</td></tr>
+      <tr><td>Rolling Sharpe</td><td>Trailing SR in excess of BIL (legacy rf=0 dashed)</td><td>W ∈ {63, 252}</td></tr>
       <tr><td>Market model</td><td>Rolling β and rolling corr vs VOO</td><td>W ∈ {63, 252}; secondary proxy toggle QQQM</td></tr>
       <tr><td>Panel corr</td><td>Full-sample Spearman (and Pearson) corr of chosen ticker vs all Growth-25; bar or heat row</td><td>Pairwise on overlapping dates only</td></tr>
       <tr><td>Corr matrix</td><td>Growth-25 × Growth-25 heat (toggle 63d rolling “as-of” last date)</td><td>Must stay readable on mobile (scroll / brush)</td></tr>
       <tr><td>Distribution</td><td>Histogram of r; QQ vs Normal; skew, excess kurtosis, hit rate r&lt;0</td><td>Full overlap sample</td></tr>
       <tr><td>Dependence (stylized facts)</td><td>ACF of r and of |r| (lags 1…40)</td><td>Cont (2001) check</td></tr>
       <tr><td>Pairwise lab</td><td>Pick peer → scatter r vs r_peer, rolling corr, lead–lag cross-corr at lags −5…+5</td><td>Default peer QQQM</td></tr>
-      <tr><td>Stats table</td><td>AnnReturn, AnnVol, MaxDD, Sharpe_rf0, Best/Worst month (month-end), start/end</td><td>Match pipeline annualization (252d / 12m)</td></tr>
+      <tr><td>Stats table</td><td>AnnReturn, AnnVol, MaxDD, Sharpe excess of BIL (+ TB3MS fallback share), Sharpe_rf0 legacy, Best/Worst month (month-end), start/end</td><td>Match pipeline annualization (252d / 12m)</td></tr>
       <tr><td>Export</td><td>Download CSV of displayed computed series</td><td>Client-side</td></tr>
     </tbody>
   </table>

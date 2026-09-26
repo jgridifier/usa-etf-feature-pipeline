@@ -11,6 +11,8 @@ interface MetricsPayload {
   AnnVol_a: number
   MaxDD_a: number
   Sharpe_a: number
+  Sharpe_exbil_vt: number
+  Sharpe_exbil_a: number
   NW_t: number
   n_months: number
   start_date: string
@@ -74,8 +76,8 @@ function CioVerdictBand() {
           <div>
             <p className="font-serif text-sm text-ink leading-snug font-medium md:mb-1">Book-2 = risk path, not return alpha</p>
             <p className="hidden md:block font-sans text-2xs text-body leading-relaxed">
-              Book-2 and Book-1 earn roughly the same annual return (~14.7%). The shift is
-              milder drawdown (−20% vs −26%) and higher Sharpe — not outperformance.
+              Book-2 (~13.6%) earns slightly less than Book-1 (~14.7%) a year. The shift is
+              milder drawdown (−10% vs −26%) and higher Sharpe in excess of BIL (0.97 vs 0.75) — not outperformance.
             </p>
           </div>
         </div>
@@ -154,7 +156,7 @@ function MaxDdVisual({ m }: { m: MetricsPayload }) {
       <div className="p-4 space-y-3">
         <div>
           <div className="flex items-center justify-between mb-1">
-            <span className="font-sans text-2xs font-medium text-muted uppercase tracking-label">Book 2 vol-target</span>
+            <span className="font-sans text-2xs font-medium text-muted uppercase tracking-label">Book-2 VT backbone (no skew gate)</span>
             <span className="font-mono text-xs font-bold text-ink">{pct(m.MaxDD_vt)}</span>
           </div>
           <div className="relative h-8 bg-raised border border-border overflow-hidden">
@@ -201,7 +203,8 @@ function MaxDdVisual({ m }: { m: MetricsPayload }) {
         <p className="font-sans text-2xs text-muted leading-relaxed pt-1">
           {m.n_months}mo OOS · {m.start_date} → {m.end_date} ·
           NW t ≈ {num(m.NW_t, 2)} (return parity — risk-path claim only) ·
-          Sharpe {num(m.Sharpe_vt, 2)} vs {num(m.Sharpe_a, 2)}
+          Sharpe {num(m.Sharpe_exbil_vt, 2)} vs {num(m.Sharpe_exbil_a, 2)} in excess of BIL (legacy rf=0{' '}
+          {num(m.Sharpe_vt, 2)} vs {num(m.Sharpe_a, 2)})
         </p>
       </div>
     </div>
@@ -347,7 +350,7 @@ export default function Home() {
               status="HOLD"
               statusColor="up"
               headline="Static core"
-              lede="Fixed weights VOO 70% / QQQM 20% / IJR 10%. No timing, no vol scale. Clean null for any overlay or timing claim. Buy-and-hold reference for the entire panel."
+              lede="Fixed weights VOO 70% / QQQM 20% / IJR 10%. No timing, no vol scale. Clean null for any overlay or timing claim. Buy-and-hold reference for the entire panel. Sharpe 0.75 in excess of BIL (legacy rf = 0: 0.92), 2021-02 → 2026-09."
               link={{ label: 'See Book 1 composition', to: '/books' }}
             />
             <ArticleCard
@@ -355,7 +358,7 @@ export default function Home() {
               status="HOLD"
               statusColor="up"
               headline="Vol-target + skewness gate"
-              lede="Same Option A core, vol-scaled with skewness/left-tail gate applied (Gong–Lynch–Ogden 2025, Justina #6). f̃_t = f_t · g_t; cash residual in BIL. Same ~14.7% return as Book 1 — the shift is milder drawdowns and higher Sharpe. Risk path, not return alpha."
+              lede="Same Option A core, vol-scaled with skewness/left-tail gate applied (Gong–Lynch–Ogden 2025, Justina #6). f̃_t = f_t · g_t; cash residual in BIL. Slightly lower return than Book 1 (~13.6% vs ~14.7%) — the shift is milder drawdowns (−10.1% vs −25.6%) and higher Sharpe: 0.97 vs 0.75 in excess of BIL (legacy rf = 0: 1.28 vs 0.92). Risk path, not return alpha."
               link={{ label: 'See Book 2 path vs Book 1', to: '/books' }}
             />
           </div>
@@ -400,7 +403,8 @@ export default function Home() {
           <ThickRule label="Allocation methods under test" />
           <p className="font-sans text-xs text-muted mt-3 mb-5 max-w-2xl leading-relaxed">
             All methods scored on the experimental USA ETF panel via walk-forward OOS.
-            Binding-null gates on Sharpe; DSR / trial counts pre-declared.
+            Binding-null gates on Sharpe; DSR / trial counts pre-declared. Sharpe shown in excess of BIL,
+            legacy rf = 0 in parentheses (the basis of the archived verdicts, which do not change).
             Five FAILs documented as the rigour record. #6 skewness overlay cleared the
             gate as a Book-2 path — not a third book.
           </p>
@@ -410,7 +414,7 @@ export default function Home() {
             <div className="hidden md:grid grid-cols-[minmax(0,2fr)_minmax(0,1.5fr)_minmax(0,1.5fr)_minmax(0,1fr)_auto] gap-x-4 px-4 py-2 bg-raised">
               <span className="font-sans text-2xs font-medium uppercase tracking-label text-muted">Method · geometry</span>
               <span className="font-sans text-2xs font-medium uppercase tracking-label text-muted">Binding null</span>
-              <span className="font-sans text-2xs font-medium uppercase tracking-label text-muted">Sharpe_rf0 / MaxDD</span>
+              <span className="font-sans text-2xs font-medium uppercase tracking-label text-muted">Sharpe ex-BIL (legacy rf0) / MaxDD</span>
               <span className="font-sans text-2xs font-medium uppercase tracking-label text-muted">Verdict</span>
               <span className="font-sans text-2xs font-medium uppercase tracking-label text-muted"></span>
             </div>
@@ -420,7 +424,7 @@ export default function Home() {
                 method: 'Spectral Risk Parity',
                 note: 'name N≥100 · ADIA Lab mapping · 65m OOS',
                 bindingNull: 'LW MinVar (name)',
-                metrics: '1.06 / −8.4%',
+                metrics: '0.30 (1.06) / −8.4%',
                 verdict: 'fail' as const,
                 href: './methods/spectral_risk_parity.html',
               },
@@ -428,7 +432,7 @@ export default function Home() {
                 method: 'Regime-Aware Dual-Regime',
                 note: 'category sleeves · Luo & Mulvey · 262m OOS',
                 bindingNull: 'Unconditional ERC',
-                metrics: '0.51 / −38.6%',
+                metrics: '0.37 (0.51) / −38.6%',
                 verdict: 'fail' as const,
                 href: './methods/regime_aware_dual_regime.html',
               },
@@ -436,7 +440,7 @@ export default function Home() {
                 method: 'Vol-cond-factor-corr (#13)',
                 note: 'Book-2 overlay · corr/vol gate · 12 trials',
                 bindingNull: 'Unconditional Book-2 VT',
-                metrics: '1.05 / −15.4%',
+                metrics: '0.75 (1.05) / −15.4%',
                 verdict: 'fail' as const,
                 href: './methods/allocation_alpha_vol_cond_factor_corr.html',
               },
@@ -444,23 +448,23 @@ export default function Home() {
                 method: 'Forecast Tangency + MED (#4)',
                 note: 'category sleeves · 291m OOS · 1 trial',
                 bindingNull: 'ERC / LW MinVar / EW (all nulls)',
-                metrics: '0.36 / −58.0%',
+                metrics: '0.36 (0.36) / −58.0%',
                 verdict: 'fail' as const,
                 href: './methods/allocation_alpha_forecast_tangency_med.html',
               },
               {
                 method: 'Regime-Resilient ERC (#3)',
                 note: 'category sleeves · 280m OOS · 2 paths',
-                bindingNull: 'LW MinVar Sharpe (both paths below 0.944)',
-                metrics: '0.87 / −23.8% (best path)',
+                bindingNull: 'Uncond ERC (primary) · LW MinVar (legacy rf=0: both paths below 0.944)',
+                metrics: '0.66 (0.87) / −23.8% (best path)',
                 verdict: 'fail' as const,
                 href: './methods/regime_resilient_erc_stub.html',
               },
               {
                 method: 'Skewness-Managed (#6)',
                 note: 'Book-2 path overlay · gate-first · 68m OOS',
-                bindingNull: 'Unconditional Book-2 VT (1.059 / −20.1%)',
-                metrics: '1.28 / −10.1%',
+                bindingNull: 'Unconditional Book-2 VT (0.84, legacy 1.059 / −20.1%)',
+                metrics: '0.97 (1.28) / −10.1%',
                 verdict: 'pass' as const,
                 href: './methods/skewness_managed_stub.html',
               },
@@ -505,7 +509,8 @@ export default function Home() {
             <p className="font-sans text-2xs text-body leading-relaxed">
               <strong className="text-ink">#6 Quant PASS note:</strong>{' '}
               Skewness-managed overlay cleared the gate as a Book-2 path (f̃_t = f_t · g_t, gate-first
-              L63 / realized-Amaya / CVaR5 / g_min=0.5). Sharpe 1.28 &gt; Book-2 1.059; MaxDD −10.1% vs
+              L63 / realized-Amaya / CVaR5 / g_min=0.5). Sharpe 0.97 &gt; 0.84 for the unconditional Book-2 VT in excess of
+              BIL (legacy rf = 0: 1.28 &gt; 1.059); MaxDD −10.1% vs
               −20.1%. NW t vs Book-2 = −0.80 (marginal). It is wired into live <strong className="text-ink">Book 2</strong> — not a
               separate third book. No book count change.
             </p>
@@ -542,7 +547,7 @@ export default function Home() {
             </div>
             <div className="quote-block">
               <p className="font-serif text-base md:text-lg italic text-ink leading-snug">
-                "Path and risk improvement, not return alpha. NW t vs static A ≈ 0 on this panel — milder drawdown is the claim. Book-1 and Book-2 earn the same ~14.7% per year."
+                "Path and risk improvement, not return alpha. NW t vs static A ≈ 0 on this panel — milder drawdown is the claim. The unconditional VT backbone earns the same ~14.7% a year as Book-1; live Book-2 (with the skew gate) earns ~13.6% with half the drawdown of the VT backbone (−10.1% vs −20.1%)."
               </p>
               <cite className="text-2xs text-muted not-italic mt-2 block tracking-label uppercase font-sans">
                 Book-2 vol-target evidence ·{' '}
@@ -574,13 +579,14 @@ export default function Home() {
                 <div className="p-5">
                   <p className="font-serif text-sm text-body mb-4">
                     {m.n_months}-month OOS · {m.start_date} → {m.end_date} · real-BIL sample.
-                    Evidence for the live Book-2 sleeve — not a separate promoted book.
+                    Unconditional VT backbone of the live Book-2 sleeve (no skew gate) — not a separate promoted book.
+                    Sharpe in excess of BIL; legacy rf = 0 below.
                   </p>
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">
                     <div className="stat-card">
-                      <div className="stat-label">Sharpe (vt)</div>
-                      <div className="stat-value text-accent">{num(m.Sharpe_vt, 2)}</div>
-                      <div className="stat-sub">Static A: {num(m.Sharpe_a, 2)}</div>
+                      <div className="stat-label">Sharpe ex-BIL (vt)</div>
+                      <div className="stat-value text-accent">{num(m.Sharpe_exbil_vt, 2)}</div>
+                      <div className="stat-sub">Static A: {num(m.Sharpe_exbil_a, 2)} · legacy rf=0 {num(m.Sharpe_vt, 2)} / {num(m.Sharpe_a, 2)}</div>
                     </div>
                     <div className="stat-card">
                       <div className="stat-label">Max drawdown (vt)</div>

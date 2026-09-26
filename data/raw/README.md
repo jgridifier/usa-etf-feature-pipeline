@@ -1,6 +1,18 @@
 # Raw data
 
-- `usa_universe_categorized.csv` — USA research-universe universe (committed).
+- `usa_universe_categorized.csv` — USA research-universe universe (committed). Boolean tag columns
+  (2026-09-26, cash-null audit): `cash_like` = {BIL, SGOV, SHV, GBIL, USFR, GSST, GUMI} (T-bill / floating-rate /
+  ultrashort, duration ≤ ~1y; excluded by the shared gate helper when `exclude_cash_like=True`) and
+  `short_duration` = {SHY, SPTS, BSV, STIP} (diagnostic only, never excluded). USFR's Category was corrected from
+  "High Yield Credit" to "US Treasuries / Govt / Cash-like". The Category column is otherwise unchanged and is not
+  the cash tag (it still mixes duration such as GOVT/IEF/TLT/SHY). Archived committed outputs were not re-run;
+  re-running an archived category-sleeve spec on this file would move USFR between sleeves.
+- `fred_tb3ms.csv` — FRED series TB3MS (3-Month Treasury Bill Secondary Market Rate, discount basis, percent,
+  monthly, not seasonally adjusted), 1934-01 → 2026-08, verbatim CSV from
+  https://fred.stlouisfed.org/graph/fredgraph.csv?id=TB3MS (source: Board of Governors of the Federal Reserve System,
+  H.15, via FRED, Federal Reserve Bank of St. Louis). Downloaded by Quant on 2026-09-26 for the cash-null audit;
+  a re-fetch from the build box timed out (FRED blocks it), so this is Quant's copy, byte-identical. Used as the
+  risk-free fallback rf = TB3MS / 1200 for months before BIL's first full month (2007-06).
 - `growth_alpha_adj_close_sample.csv` — slim adj-close sample for demos/CI (committed).
 - Full history `growth_alpha_adj_close.csv` is **gitignored**. On the research box use:
   `/workspace/investments/growth_alpha_adj_close.csv`

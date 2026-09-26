@@ -25,7 +25,15 @@ CIO_COPIES = [
     (CIO / 'run_latest' / 'strategy_comparison.csv', 'strategy_comparison.csv'),
     (CIO / 'run_latest' / 'suggested_weights.csv', 'suggested_weights.csv'),
     (CIO / 'run_latest' / 'strategy_diagnostics.csv', 'strategy_diagnostics.csv'),
+    # Risk-free fallback for the Explorer's excess-of-BIL Sharpe (committed FRED series).
+    (ROOT / 'data' / 'raw' / 'fred_tb3ms.csv', 'fred_tb3ms.csv'),
 ]
+# Every Sharpe the site shows: excess of BIL (headline) + legacy rf = 0 (from the shared gate helper).
+SITE_SHARPE = ROOT / 'data' / 'processed' / 'cash_null_audit' / 'site_sharpe.json'
+
+
+def site_sharpe() -> dict:
+    return json.loads(SITE_SHARPE.read_text(encoding='utf-8')) if SITE_SHARPE.exists() else {}
 
 NAV = [
     ('index.html', 'Home'),
@@ -211,16 +219,17 @@ def build_viz() -> None:
         short = comparison
     labels = {
         'static_option_a': 'Book 1 — Static Option A',
-        'vol_target_option_a': 'Book 2 — Vol-target Option A',
+        'vol_target_option_a': 'Unconditional Book-2 VT (audit null)',
         'score_rotate_xsd': 'Optional gated sleeve — XSD',
         'm3_p2_core_rotate': 'M3 P2 (held off)',
     }
     stances = {
         'static_option_a': 'Benchmark policy baseline',
-        'vol_target_option_a': 'Default research path — risk path, not return alpha',
+        'vol_target_option_a': 'Audit null for the live Book-2 VT × gate-first overlay (0.97 excess of BIL)',
         'score_rotate_xsd': 'Optional gated sleeve',
         'm3_p2_core_rotate': 'Held off the shortlist',
     }
+    exbil = site_sharpe().get('comparison', {})
     rows_out = []
     for r in short:
         sid = r['strategy_id']
@@ -232,6 +241,7 @@ def build_viz() -> None:
             'AnnVol': float(r['AnnVol']),
             'MaxDD': float(r['MaxDD']),
             'Sharpe_rf0': float(r['Sharpe_rf0']),
+            'Sharpe_exBIL': exbil.get(sid, {}).get('exbil'),
             'NW_t_vs_option_a': float(nw) if nw not in ('', None) else None,
             'turnover_per_year': float(r['turnover_per_year']) if r.get('turnover_per_year') not in ('', None) else None,
             'n_months': int(float(r['n_months'])) if r.get('n_months') else None,
@@ -266,6 +276,11 @@ def build_viz() -> None:
             'mean_f': float(s['mean_f']),
             'pct_months_f_lt_1': float(s['pct_months_f_lt_1']),
         }
+        vt_run = site_sharpe().get('vol_target_run', {})
+        if vt_run:
+            # Same series as vol_target_oos_returns.csv (BIL priced); headline Sharpe is excess of BIL.
+            metrics['Sharpe_exbil_vt'] = vt_run['vt']['exbil']
+            metrics['Sharpe_exbil_a'] = vt_run['option_a']['exbil']
     write_json('viz_metrics.json', metrics)
 
 
@@ -725,9 +740,9 @@ def verdict_card_html(card, prefix) -> str:
         f'<p class="metric-sub">{escape(card["detail"])}</p>'
         f'<p><em>{escape(card["verdict"])}</em></p>'
         f'<p><strong>Binding null:</strong> {escape(card["null"])}</p>'
-        + table_html(['', 'Sharpe', 'MaxDD'], rows, f'{card["name"]} OOS vs null')
+        + table_html(['', 'Sharpe ex-BIL (legacy rf = 0)', 'MaxDD'], rows, f'{card["name"]} OOS vs null')
         + measured_html
-        + f'<p><strong>NW t:</strong> {escape(card["nw_t"])}{nw_links} · <strong>DSR (vs zero Sharpe):</strong> {escape(card["dsr"])}</p>'
+        + f'<p><strong>NW t:</strong> {escape(card["nw_t"])}{nw_links} · <strong>DSR (legacy rf = 0 Sharpe, vs zero):</strong> {escape(card["dsr"])}</p>'
         '<p class="muted">Gate memo / PR: '
         f'<a href="{escape(card["gate"]["href"])}" target="_blank" rel="noreferrer">{escape(card["gate"]["label"])}</a> · '
         f'<a href="{escape(prefix + method_page)}">Method page</a> · OOS artifact: '
@@ -765,7 +780,10 @@ def build_archive_scoreboard() -> None:
         '<li>Predeclared nulls and DSR / trial counts reported (normal-approx DSR where applicable).</li>'
         '<li>Brand-scrub / experimental-panel language only.</li></ul>'
         '<p class="muted">Sources: card numbers are copied from repo artifacts (data/processed/*/…summary.csv) '
-        'and gate PR bodies (#10, #11, #13, #24, #26, #27, #29); single source: apps/pages/src/data/archive_verdicts.json.</p>'
+        'and gate PR bodies (#10, #11, #13, #24, #26, #27, #29); single source: apps/pages/src/data/archive_verdicts.json. '
+        'Sharpe is shown in excess of BIL (rf = BIL priced monthly return; FRED TB3MS/1200 before BIL\'s first full month, 2007-06), '
+        'with the legacy rf = 0 Sharpe (CAGR / vol, the basis of the archived verdicts) in parentheses. No verdict changes '
+        '(data/processed/cash_null_audit/reconciliation.md).</p>'
         '</div></section>'
     )
     write_page('methods/justina_round1_scoreboard.html', page_shell(
