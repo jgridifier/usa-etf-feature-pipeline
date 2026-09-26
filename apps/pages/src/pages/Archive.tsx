@@ -13,6 +13,8 @@ interface ArchiveCard {
   null: string
   rows: { role: string; label: string; sharpe: string; maxdd: string }[]
   nw_t: string
+  nw_t_links?: { label: string; href: string }[]
+  measured?: { label: string; text: string }
   dsr: string
   gate: { label: string; href: string }
   method_page: string
@@ -27,6 +29,12 @@ interface ArchiveData {
 }
 
 const archiveData: ArchiveData = archive
+
+const linkClass = 'text-muted hover:text-body underline underline-offset-2 decoration-border'
+
+function resolveHref(href: string) {
+  return href.startsWith('http') ? href : './' + href
+}
 
 function Eyebrow({ children }: { children: React.ReactNode }) {
   return <p className="section-eyebrow">{children}</p>
@@ -131,8 +139,31 @@ export default function Archive() {
                       </tbody>
                     </table>
                   </div>
+                  {card.measured && (
+                    <p className="mt-3 text-sm text-body">
+                      <span className="font-medium text-muted">{card.measured.label}:</span>{' '}
+                      <span className="font-mono">{card.measured.text}</span>
+                    </p>
+                  )}
                   <dl className="mt-4 text-xs text-body space-y-2">
-                    <div><dt className="font-medium text-muted">NW t</dt><dd className="font-mono">{card.nw_t}</dd></div>
+                    <div>
+                      <dt className="font-medium text-muted">NW t</dt>
+                      <dd className="font-mono">
+                        {card.nw_t}
+                        {card.nw_t_links?.map(link => (
+                          <span key={link.href}>
+                            {' · '}
+                            <a
+                              href={resolveHref(link.href)}
+                              {...(link.href.startsWith('http') ? { target: '_blank', rel: 'noreferrer' } : {})}
+                              className={linkClass}
+                            >
+                              {link.label}
+                            </a>
+                          </span>
+                        ))}
+                      </dd>
+                    </div>
                     <div><dt className="font-medium text-muted">DSR</dt><dd className="font-mono">{card.dsr}</dd></div>
                   </dl>
                   <p className="mt-4 text-2xs text-muted">

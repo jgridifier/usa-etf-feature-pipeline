@@ -1,6 +1,6 @@
 {
   "updated": "2026-09-25",
-  "note": "Single source of truth for Archive verdict cards. Rendered by apps/pages/src/pages/Archive.tsx (#/archive) and by scripts/build_pages.py (docs/methods/index.html#archive + docs/methods/justina_round1_scoreboard.html). Numbers copied verbatim from repo artifacts / PR bodies; do not re-round.",
+  "note": "Single source of truth for Archive verdict cards. Rendered by apps/pages/src/pages/Archive.tsx (#/archive) and by scripts/build_pages.py (docs/methods/index.html#archive + docs/methods/justina_round1_scoreboard.html). Numbers copied verbatim from repo artifacts / PR bodies; do not re-round. Optional link fields: nw_t_links[] and measured{label,text}; hrefs starting with http are absolute, others are relative to docs/.",
   "cards": [
     {
       "id": "spectral_rp",
@@ -23,7 +23,7 @@
           "maxdd": "−4.5%"
         }
       ],
-      "nw_t": "see gate memo",
+      "nw_t": "not computed",
       "dsr": "0.961 (n_trials=4)",
       "gate": {
         "label": "PR #10",
@@ -35,7 +35,17 @@
         "href": "https://github.com/jgridifier/usa-etf-feature-pipeline/blob/main/data/processed/spectral_rp/name/summary.csv"
       },
       "archived": "2026-09-17",
-      "archived_via": "PR #10 merged"
+      "archived_via": "PR #10 merged",
+      "nw_t_links": [
+        {
+          "label": "scoreboard",
+          "href": "methods/justina_round1_scoreboard.html"
+        },
+        {
+          "label": "PR #10",
+          "href": "https://github.com/jgridifier/usa-etf-feature-pipeline/pull/10"
+        }
+      ]
     },
     {
       "id": "regime_dual",
@@ -58,7 +68,7 @@
           "maxdd": "−22.8%"
         }
       ],
-      "nw_t": "see gate memo",
+      "nw_t": "not computed",
       "dsr": "0.956 (trial_count=4)",
       "gate": {
         "label": "PR #11",
@@ -70,7 +80,17 @@
         "href": "https://github.com/jgridifier/usa-etf-feature-pipeline/blob/main/data/processed/regime_dual/regime_dual_summary.csv"
       },
       "archived": "2026-09-17",
-      "archived_via": "PR #11 merged"
+      "archived_via": "PR #11 merged",
+      "nw_t_links": [
+        {
+          "label": "scoreboard",
+          "href": "methods/justina_round1_scoreboard.html"
+        },
+        {
+          "label": "PR #11",
+          "href": "https://github.com/jgridifier/usa-etf-feature-pipeline/pull/11"
+        }
+      ]
     },
     {
       "id": "vcfc",
@@ -78,7 +98,7 @@
       "detail": "Book-2 VT × corr/vol gate · 21 sleeves · 12 trials · 5 bps · best trial L21/C12/g0.5 (~70m)",
       "badge": "FAIL",
       "verdict": "No trial beats the unconditional Book-2 VT null on Sharpe; every NW t vs Book-2 negative — milder MaxDD is risk compression only.",
-      "null": "Unconditional Book-2 VT",
+      "null": "Book-2 VT, VCFC run window",
       "rows": [
         {
           "role": "method",
@@ -88,12 +108,12 @@
         },
         {
           "role": "null",
-          "label": "Uncond Book-2 VT (null)",
+          "label": "Book-2 VT, VCFC run window (null)",
           "sharpe": "1.11",
           "maxdd": "−20.5%"
         }
       ],
-      "nw_t": "−2.33 (best trial); all 12 trials ≈ −1.43 to −3.10",
+      "nw_t": "all 12 trials negative NW t (−1.43 to −3.10)",
       "dsr": "1.000 (trial_count=12)",
       "gate": {
         "label": "PR #13",
@@ -140,7 +160,7 @@
           "maxdd": "−29.1%"
         }
       ],
-      "nw_t": "+0.12 vs EW (not significant); +1.41 vs LW MinVar; +0.85 vs ERC",
+      "nw_t": "NW t vs EW +0.12, not significant; +1.41 vs LW MinVar; +0.85 vs ERC",
       "dsr": "N/A (trial_count=1)",
       "gate": {
         "label": "PR #24",
@@ -159,7 +179,7 @@
       "name": "#3 Regime-resilient ERC (RR-ERC)",
       "detail": "Ielpo et al. 2026 / LOIM · category sleeves · 280m OOS · 2 trials (Path A stress overlay, Path B LOIM parity) · 5 bps",
       "badge": "FAIL",
-      "verdict": "Neither path significantly beats unconditional ERC (NW t −0.69 / +0.14); both lose to LW MinVar on Sharpe (0.944).",
+      "verdict": "FAIL rests on Path B: NW t +0.14 vs uncond ERC (not significant) and Sharpe 0.869 vs LW MinVar 0.944. Path A was degenerate (identical to uncond ERC).",
       "null": "Unconditional ERC (primary) · LW MinVar",
       "rows": [
         {
@@ -184,10 +204,10 @@
           "role": "null",
           "label": "LW MinVar (null)",
           "sharpe": "0.944",
-          "maxdd": "see gate memo"
+          "maxdd": "−11.9%"
         }
       ],
-      "nw_t": "−0.69 (Path A) / +0.14 (Path B) vs uncond ERC",
+      "nw_t": "Path A degenerate: overlay fell back to uncond ERC at every rebalance; NW t undefined (still counts toward trial_count 2). Path B: +0.14 vs uncond ERC",
       "dsr": "1.000 (trial_count=2)",
       "gate": {
         "label": "PR #26",
@@ -206,24 +226,18 @@
       "name": "Unconditional Book-2 VT",
       "detail": "Option A vol-target, no skew gate · registry vol_target_option_a_uncond (enabled:false) · 68m OOS",
       "badge": "AUDIT NULL",
-      "verdict": "Not live and not a FAIL: the null the live VT × gate-first skew overlay (Justina #6) was measured against — kept for audit.",
+      "verdict": "Not live and not a FAIL: the null the live #6 VT × gate-first skew overlay was measured against — kept for audit.",
       "null": "— (this is the null)",
       "rows": [
         {
-          "role": "method",
-          "label": "Live VT × gate-first overlay",
-          "sharpe": "1.280",
-          "maxdd": "−0.101"
-        },
-        {
           "role": "null",
-          "label": "Uncond Book-2 VT (audit null)",
+          "label": "Uncond Book-2 VT",
           "sharpe": "1.059",
-          "maxdd": "−0.201"
+          "maxdd": "−20.1%"
         }
       ],
-      "nw_t": "−0.80 (overlay vs uncond VT; risk-path claim, not return alpha)",
-      "dsr": "1.00 (overlay; trial_count=72)",
+      "nw_t": "−0.80 (#6 overlay vs this null)",
+      "dsr": "1.00 (#6 overlay; trial_count=72)",
       "gate": {
         "label": "PR #29",
         "href": "https://github.com/jgridifier/usa-etf-feature-pipeline/pull/29"
@@ -234,7 +248,11 @@
         "href": "https://github.com/jgridifier/usa-etf-feature-pipeline/blob/main/data/processed/skewness_managed/skew_managed_gatefirst_summary.csv"
       },
       "archived": "2026-09-23",
-      "archived_via": "PR #29 merged (demoted from live to audit null)"
+      "archived_via": "PR #29 merged; demoted from live to audit null",
+      "measured": {
+        "label": "#6 skew overlay measured against it",
+        "text": "1.280 / −10.1%, NW t −0.80"
+      }
     }
   ]
 }

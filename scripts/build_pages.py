@@ -703,6 +703,21 @@ def verdict_card_html(card, prefix) -> str:
         method_page = method_page.removeprefix('methods/')
     badge_class = 'badge badge-fail' if card['badge'] == 'FAIL' else 'badge'
     rows = [[row['label'], row['sharpe'], row['maxdd']] for row in card['rows']]
+
+    def href_for(href: str) -> str:
+        if href.startswith('http'):
+            return href
+        return prefix + (href.removeprefix('methods/') if not prefix else href)
+
+    def link(item: dict) -> str:
+        ext = ' target="_blank" rel="noreferrer"' if item['href'].startswith('http') else ''
+        return f'<a href="{escape(href_for(item["href"]))}"{ext}>{escape(item["label"])}</a>'
+
+    nw_links = ''.join(' · ' + link(item) for item in card.get('nw_t_links', []))
+    measured = card.get('measured')
+    measured_html = (
+        f'<p><strong>{escape(measured["label"])}:</strong> {escape(measured["text"])}</p>' if measured else ''
+    )
     return (
         f'<article class="feature-card archive-card" id="card-{escape(card["id"])}">'
         f'<span class="{badge_class}">{escape(card["badge"])}</span>'
@@ -711,7 +726,8 @@ def verdict_card_html(card, prefix) -> str:
         f'<p><em>{escape(card["verdict"])}</em></p>'
         f'<p><strong>Binding null:</strong> {escape(card["null"])}</p>'
         + table_html(['', 'Sharpe', 'MaxDD'], rows, f'{card["name"]} OOS vs null')
-        + f'<p><strong>NW t:</strong> {escape(card["nw_t"])} · <strong>DSR:</strong> {escape(card["dsr"])}</p>'
+        + measured_html
+        + f'<p><strong>NW t:</strong> {escape(card["nw_t"])}{nw_links} · <strong>DSR:</strong> {escape(card["dsr"])}</p>'
         '<p class="muted">Gate memo / PR: '
         f'<a href="{escape(card["gate"]["href"])}" target="_blank" rel="noreferrer">{escape(card["gate"]["label"])}</a> · '
         f'<a href="{escape(prefix + method_page)}">Method page</a> · OOS artifact: '
