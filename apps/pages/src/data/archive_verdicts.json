@@ -234,6 +234,51 @@
       }
     },
     {
+      "id": "nls_gmv_v3",
+      "name": "Bet 1 NLS GMV v3 (stocks-only nonlinear shrinkage min-variance)",
+      "detail": "Ledoit & Wolf 2020 analytical NLS · 96 stock ETFs (equity_only) · weekly 156w primary / 260w sensitivity · 129m OOS (2016-01 → 2026-09) · 5 bps · trial_count=8 (final)",
+      "badge": "VOID",
+      "verdict": "VOID: concentrated holdings (effective N under 5). Composition 0.00% for the method and the null; effective N 2.63 (method) vs 3.19 (null), with 64–74% of weight in USMV and EFAV. It would also have failed all six pre-registered criteria mechanically.",
+      "null": "Weekly LW MinVar on the same 96 names (primary)",
+      "rows": [
+        {
+          "role": "method",
+          "label": "NLS GMV v3 (156w, method)",
+          "sharpe": "0.53 (legacy 0.69)",
+          "maxdd": "−23.1%"
+        },
+        {
+          "role": "null",
+          "label": "Weekly LW MinVar (primary null)",
+          "sharpe": "0.55 (legacy 0.72)",
+          "maxdd": "−22.2%"
+        },
+        {
+          "role": "reference",
+          "label": "USMV buy-and-hold (in-sample reference only)",
+          "sharpe": "0.70 (legacy 0.85)",
+          "maxdd": "−19.1%"
+        }
+      ],
+      "nw_t": "−1.01 vs weekly LW MinVar (156w)",
+      "dsr": "0.293 — on Sharpe ex-BIL, not legacy (Bailey & López de Prado, cross-trial variance; trial_count=8)",
+      "gate": {
+        "label": "PR #40",
+        "href": "https://github.com/jgridifier/usa-etf-feature-pipeline/pull/40"
+      },
+      "method_page": "methods/allocation_alpha_nonlinear_shrinkage_gmv.html",
+      "artifact": {
+        "label": "nonlinear_shrinkage_gmv_v3/summary.csv",
+        "href": "https://github.com/jgridifier/usa-etf-feature-pipeline/blob/main/data/processed/nonlinear_shrinkage_gmv_v3/summary.csv"
+      },
+      "archived": "2026-09-26",
+      "archived_via": "PR #40 merged; minimum-variance line closed, no v4",
+      "measured": {
+        "label": "Quant lesson (2026-09-26)",
+        "text": "On stocks the estimator's edge disappears: vol only 10.66% vs 10.83% (about 1.5% lower, LW2011 p ≈ 0.15), and the 260w run went the other way. With long-only caps the no-short constraint already does most of the shrinking (Jagannathan & Ma 2003). The minimum-variance line is closed for good — no v4. USMV buy-and-hold is an in-sample reference only, not a sleeve candidate."
+      }
+    },
+    {
       "id": "uncond_book2_vt",
       "name": "Unconditional Book-2 VT",
       "detail": "Option A vol-target, no skew gate · registry vol_target_option_a_uncond (enabled:false) · 68m OOS",

@@ -200,6 +200,29 @@
         "window": "2021-02..2026-09",
         "rf_fallback_share": 0.0
       }
+    },
+    "nls_gmv_v3": {
+      "NLS GMV v3 (156w, method)": {
+        "exbil": 0.5282,
+        "rf0_legacy": 0.6949,
+        "n_months": 129,
+        "window": "2016-01..2026-09",
+        "rf_fallback_share": 0.0
+      },
+      "Weekly LW MinVar (primary null)": {
+        "exbil": 0.5506,
+        "rf0_legacy": 0.7155,
+        "n_months": 129,
+        "window": "2016-01..2026-09",
+        "rf_fallback_share": 0.0
+      },
+      "USMV buy-and-hold (in-sample reference only)": {
+        "exbil": 0.6977,
+        "rf0_legacy": 0.8525,
+        "n_months": 129,
+        "window": "2016-01..2026-09",
+        "rf_fallback_share": 0.0
+      }
     }
   },
   "skew_nulls": {

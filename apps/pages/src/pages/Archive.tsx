@@ -67,14 +67,15 @@ export default function Archive() {
             Methods Archive
           </h2>
           <p className="text-base text-body max-w-2xl mb-5 leading-relaxed">
-            Archived methods: Justina round-1 (Spectral RP, Regime-Aware), #13 VCFC, #4 FT-MED, #3 RR-ERC ·
-            plus the unconditional Book-2 VT audit null · USA ETF experimental panel · updated {archiveData.updated} (ET)
+            Archived methods: Justina round-1 (Spectral RP, Regime-Aware), #13 VCFC, #4 FT-MED, #3 RR-ERC,
+            Bet 1 NLS GMV v3 (VOID) · plus the unconditional Book-2 VT audit null · USA ETF experimental panel · updated {archiveData.updated} (ET)
           </p>
           <div className="inline-block border border-down/20 bg-down/5 px-4 py-3 text-xs text-muted max-w-2xl">
             <strong className="text-ink">Research only — not investment advice.</strong>{' '}
             Negative / null results documented on purpose. The five failed methods are{' '}
             <strong className="text-down">FAIL / ARCHIVE</strong> — not promoted to Books, not a
-            showcase, not part of the live shortlist. Unconditional Book-2 VT is an AUDIT NULL (not live, not a FAIL).
+            showcase, not part of the live shortlist. Bet 1 NLS GMV v3 is VOID (concentrated holdings) and the
+            minimum-variance line is closed. Unconditional Book-2 VT is an AUDIT NULL (not live, not a FAIL).
           </div>
         </div>
       </section>
@@ -88,7 +89,7 @@ export default function Archive() {
               <span className="text-2xs font-medium uppercase tracking-label text-muted">CIO frame</span>
             </div>
             <p className="font-serif text-base italic text-ink leading-snug mb-3">
-              None of the five archived methods cleared its binding null.{' '}
+              None of the five archived methods cleared its binding null, and NLS GMV v3 is VOID.{' '}
               <strong className="not-italic">No book cut.</strong>
             </p>
             <p className="text-sm text-body leading-relaxed">
@@ -211,6 +212,7 @@ export default function Archive() {
               { label: 'Vol-cond factor corr #13', href: './methods/allocation_alpha_vol_cond_factor_corr.html' },
               { label: 'FT-MED #4', href: './methods/allocation_alpha_forecast_tangency_med.html' },
               { label: 'RR-ERC #3', href: './methods/allocation_alpha_regime_resilient_erc.html' },
+              { label: 'NLS GMV v3 (Bet 1)', href: './methods/allocation_alpha_nonlinear_shrinkage_gmv.html' },
               { label: 'Vol-target (Book 2)', href: './methods/allocation_alpha_vol_target.html' },
               { label: 'Skewness overlay #6', href: './methods/skewness_managed_stub.html' },
               { label: 'Archive scoreboard (static HTML)', href: './methods/justina_round1_scoreboard.html' },
@@ -226,7 +228,7 @@ export default function Archive() {
           </div>
 
           <p className="mt-6 text-2xs text-muted/50">
-            Sources: card numbers are copied from repo artifacts (data/processed/*/…summary.csv) and gate PR bodies (#10, #11, #13, #24, #26, #27, #29); single source: apps/pages/src/data/archive_verdicts.json. Sharpe is shown in excess of BIL (rf = BIL priced monthly return; FRED TB3MS/1200 before BIL's first full month, 2007-06), with the legacy rf = 0 Sharpe (CAGR / vol, the basis of the archived verdicts) in parentheses. No verdict changes.
+            Sources: card numbers are copied from repo artifacts (data/processed/*/…summary.csv) and gate PR bodies (#10, #11, #13, #24, #26, #27, #29, #40); single source: apps/pages/src/data/archive_verdicts.json. Sharpe is shown in excess of BIL (rf = BIL priced monthly return; FRED TB3MS/1200 before BIL's first full month, 2007-06), with the legacy rf = 0 Sharpe (CAGR / vol, the basis of the archived verdicts) in parentheses. No verdict changes.
           </p>
         </div>
       </section>

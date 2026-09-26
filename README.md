@@ -781,6 +781,7 @@ p = max(HAC p, studentized circular block bootstrap p) ≤ 0.10, one-sided, with
 VOID tripwires: method or primary null average `short_duration` weight > 50% or effective N < 5.
 trial_count = 6 (4 carried from v1 incl. the invalidated run + 2). DSR is reported, not decisive.
 Registry entry `nonlinear_shrinkage_gmv_v2_excash` is `enabled: false`.
+
 **v2 verdict: VOID: short-duration dominated (pre-registered tripwire) — Quant, 2026-09-26.** The 156w
 method averages 84.1% short_duration (effective N 2.21) and the primary null 67.1%; short_duration plus FTSL
 is 96.58% of the 156w method book (FTSL not re-scored). Even without the tripwire it would FAIL (excess-of-BIL
@@ -788,3 +789,30 @@ Sharpe −0.49 vs the null's −0.18; 260w points the same way). The estimator c
 linear LW (1.87% vs 2.48%, LW2011 p < 0.001 in both windows), consistent with Ledoit & Wolf (2017); the
 failure comes from the min-variance objective on a mixed stock-and-bond universe. The GMV line on the mixed
 universe is closed, with no v3.
+
+### NLS GMV v3 — stocks-only (research; VOID, line closed)
+
+```bash
+usa-etf-features walkforward-nls-gmv-v3 --out-dir data/processed/nonlinear_shrinkage_gmv_v3
+```
+
+Pre-registered stocks-only re-scope (`nonlinear_shrinkage_gmv_v3.py`, reusing the v1 estimator and the v2
+LW2011 test). Universe: the 96 hand-reviewed names in the stored `equity_only` column; eligible once a name
+has the full 156 (260) weeks of weekly history; floor 65, skip-and-list. OOS 2016-01..2026-09 (129 months;
+the 2026-09 row is the partial month to 2026-09-16); the Book 2 window 2021-02..2026-09 is a sub-period, not
+a trial. Primary null: weekly LW MinVar on the same names; EW and ERC nulls; buy-and-hold USMV and ACWI
+references. trial_count = 8; DSR (Bailey & López de Prado 2014) uses the cross-trial Sharpe variance from
+the line's trial registry. The composition tripwire runs with max share 0% (anything above is VOID), and
+`book_eligible` (PASS and beats buy-and-hold USMV on Sharpe ex-BIL or MaxDD) is printed under the label and
+stored as its own field. **v3 verdict: VOID: concentrated holdings (effective N under 5) — Quant, 2026-09-26.**
+Composition 0.00% / 0.00%; effective N 2.63 (method) / 3.19 (primary null); 64–74% of weight in USMV and EFAV;
+it would also have failed all six criteria mechanically; `book_eligible: no`. On stocks the estimator's edge
+disappears (vol 10.66% vs 10.83%, p ≈ 0.15; 260w the other way): with long-only caps the no-short constraint
+already does most of the shrinking (Jagannathan & Ma 2003). The minimum-variance line is closed for good, no v4;
+USMV buy-and-hold is an in-sample reference only, not a sleeve candidate. Final trial_count 8. Registry entry
+`nonlinear_shrinkage_gmv_v3_equity_only` stays `enabled: false`; Archive card `nls_gmv_v3`.
+
+Gate results for v3 and every future gate go through `gate_results.write_gate_results`, which refuses
+(`GateResultError`) to record a PASS unless a `composition_tripwire` result, or an opt-out with a written
+reason, is attached, and refuses any label that differs from `final_gate_label(mechanical, composition)`.
+Archived gates keep their own writers and are not re-scored.

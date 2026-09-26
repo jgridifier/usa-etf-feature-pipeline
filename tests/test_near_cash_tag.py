@@ -28,7 +28,7 @@ def _w(**books):
 # ------------------------------------------------------------------------------ stored tag
 def test_near_cash_is_a_stored_column_like_cash_like():
     header = (ROOT / "data/raw/usa_universe_categorized.csv").read_text().splitlines()[0].split(",")
-    assert header[-3:] == ["cash_like", "short_duration", "near_cash"]
+    assert header[-4:] == ["cash_like", "short_duration", "near_cash", "equity_only"]
     stored = UNIVERSE.set_index("Ticker").near_cash.astype(str)
     assert set(stored.unique()) == {"True", "False"}
     assert set(stored[stored.eq("True")].index) == set(NEAR_CASH) == {"FTSL", "SRLN"}

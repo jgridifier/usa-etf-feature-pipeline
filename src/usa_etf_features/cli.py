@@ -1221,6 +1221,13 @@ def build_parser() -> argparse.ArgumentParser:
     nls2.add_argument("--out-dir", default="data/processed/nonlinear_shrinkage_gmv_v2")
     nls2.set_defaults(func=cmd_walkforward_nls_gmv_v2)
 
+    nls3 = sub.add_parser("walkforward-nls-gmv-v3", help="Research stocks-only NLS GMV v3 gate")
+    nls3.add_argument("--weekly", default="data/raw/usa_universe_panel_weekly_returns.csv")
+    nls3.add_argument("--monthly", default="data/raw/usa_universe_panel_monthly_returns.csv")
+    nls3.add_argument("--universe", default="data/raw/usa_universe_categorized.csv")
+    nls3.add_argument("--out-dir", default="data/processed/nonlinear_shrinkage_gmv_v3")
+    nls3.set_defaults(func=cmd_walkforward_nls_gmv_v3)
+
     sp = sub.add_parser("walkforward-spectral-rp", help="Experimental panel spectral RP and nulls")
     sp.add_argument("--returns", required=True)
     sp.add_argument("--universe", required=True)
@@ -1314,6 +1321,24 @@ def cmd_walkforward_nls_gmv_v2(args) -> int:
     print(result["summary"].to_string(index=False))
     reading = {k: v for k, v in result["mechanical_reading"].items() if k != "windows"}
     print(json.dumps(_json_safe(reading), indent=2))
+    return 0
+
+
+def cmd_walkforward_nls_gmv_v3(args) -> int:
+    import json
+    from .nonlinear_shrinkage_gmv_v3 import run_nls_gmv_v3_gate, write_v3_artifacts, book_eligible_line
+    from .gate_metrics import composition_report_lines
+    from .nonlinear_shrinkage_gmv_v2 import _json_safe
+    weekly = pd.read_csv(args.weekly, index_col=0, parse_dates=True)
+    monthly = pd.read_csv(args.monthly, index_col=0, parse_dates=True)
+    result = run_nls_gmv_v3_gate(weekly, monthly, pd.read_csv(args.universe))
+    write_v3_artifacts(result, args.out_dir)
+    print(result["summary"].to_string(index=False))
+    for line in composition_report_lines(result["composition"]):
+        print(line)
+    print(f"Label: {result['label']}")
+    print(book_eligible_line(result["book_eligible"]))
+    print(json.dumps(_json_safe(result["mechanical_reading"]), indent=2, allow_nan=False))
     return 0
 
 
