@@ -13,6 +13,8 @@ interface MetricsPayload {
   AnnVol_a: number
   MaxDD_a: number
   Sharpe_a: number
+  Sharpe_exbil_vt: number
+  Sharpe_exbil_a: number
   NW_t: number
   n_months: number
   start_date: string
@@ -72,8 +74,8 @@ function CioVerdictBand() {
           <div>
             <p className="font-serif text-sm text-ink leading-snug font-medium md:mb-1">Book-2 = risk path, not return alpha</p>
             <p className="hidden md:block font-sans text-2xs text-body leading-relaxed">
-              Book-1 and Book-2 earn ~14.7% ann. return. Choosing Book-2 buys milder drawdowns
-              and higher Sharpe — not better absolute return.
+              Book-1 earns ~14.7% and Book-2 ~13.6% ann. return. Choosing Book-2 buys milder drawdowns
+              (−10.1% vs −25.6%) and higher Sharpe in excess of BIL (0.97 vs 0.75) — not better absolute return.
             </p>
           </div>
         </div>
@@ -156,7 +158,7 @@ function DeltaStrip({ m }: { m: MetricsPayload }) {
         {/* Book 2 — vol-target */}
         <div>
           <div className="flex items-center justify-between mb-1">
-            <span className="font-sans text-2xs font-medium text-muted uppercase tracking-label">Book 2 vol-target</span>
+            <span className="font-sans text-2xs font-medium text-muted uppercase tracking-label">Book-2 VT backbone (no skew gate)</span>
             <span className="font-mono text-xs font-bold text-ink">{pct(m.MaxDD_vt)}</span>
           </div>
           <div className="relative h-8 bg-raised border border-border overflow-hidden">
@@ -166,7 +168,7 @@ function DeltaStrip({ m }: { m: MetricsPayload }) {
               style={{ width: `${vtPct}%`, background: 'rgba(139,26,26,0.10)', borderRight: '3px solid rgba(139,26,26,0.45)' }}
             />
             <div className="absolute inset-0 flex items-center px-2">
-              <span className="font-sans text-2xs text-down/60 font-medium">MaxDD {pct(m.MaxDD_vt)} · Sharpe {num(m.Sharpe_vt, 2)}</span>
+              <span className="font-sans text-2xs text-down/60 font-medium">MaxDD {pct(m.MaxDD_vt)} · Sharpe {num(m.Sharpe_exbil_vt, 2)} ex-BIL (legacy rf=0 {num(m.Sharpe_vt, 2)})</span>
             </div>
           </div>
         </div>
@@ -183,7 +185,7 @@ function DeltaStrip({ m }: { m: MetricsPayload }) {
               style={{ width: `${statPct}%`, background: 'rgba(139,26,26,0.22)', borderRight: '3px solid rgba(139,26,26,0.65)' }}
             />
             <div className="absolute inset-0 flex items-center px-2">
-              <span className="font-sans text-2xs text-down/70 font-medium">MaxDD {pct(m.MaxDD_a)} · Sharpe {num(m.Sharpe_a, 2)}</span>
+              <span className="font-sans text-2xs text-down/70 font-medium">MaxDD {pct(m.MaxDD_a)} · Sharpe {num(m.Sharpe_exbil_a, 2)} ex-BIL (legacy rf=0 {num(m.Sharpe_a, 2)})</span>
             </div>
           </div>
         </div>
@@ -282,7 +284,8 @@ export default function Books() {
                 vol scale. Clean null for any overlay or timing claim.
               </p>
               <div className="text-2xs text-muted pt-3 border-t border-border">
-                OOS snapshot: ~14.7% ann. return · ~15.9% vol · MaxDD ~−25.6% · Sharpe ~0.92 · 68 months
+                OOS snapshot: ~14.7% ann. return · ~15.9% vol · MaxDD ~−25.6% · Sharpe 0.75 in excess of BIL
+                (legacy rf = 0: ~0.92) · 68 months (2021-02 → 2026-09)
               </div>
             </article>
 
@@ -302,10 +305,13 @@ export default function Books() {
               <p className="text-sm text-body leading-relaxed mb-4">
                 Same Option A core, scaled by estimated volatility (scale-down only) with skewness/left-tail
                 gate applied (Gong–Lynch–Ogden 2025). Cash in <strong>BIL</strong> when risk or skew is
-                adverse. Same ~14.7% return as Book 1 — the shift is milder drawdown and higher Sharpe.
+                adverse. Slightly lower return than Book 1 (~13.6% vs ~14.7%) — the shift is milder drawdown and
+                higher Sharpe in excess of BIL.
               </p>
               <div className="text-2xs text-muted pt-3 border-t border-border">
-                OOS snapshot: ~14.7% ann. return · ~13.9% vol · MaxDD ~−20.1% · Sharpe ~1.06 · 68 months
+                OOS snapshot (VT × gate-first): ~13.6% ann. return · ~10.6% vol · MaxDD ~−10.1% · Sharpe 0.97 in
+                excess of BIL (legacy rf = 0: 1.28) · 68 months. Unconditional VT audit null: 0.84 in excess of BIL,
+                MaxDD ~−20.1%; NW t −0.80 (risk-path improvement, no return edge).
               </div>
             </article>
           </div>
@@ -370,8 +376,8 @@ export default function Books() {
                   <div>
                     <dt className="section-eyebrow mb-0.5">Why it's on the shortlist</dt>
                     <dd className="text-body leading-relaxed">
-                      On this panel it improves the risk path vs Book 1 (higher Sharpe_rf0, milder
-                      MaxDD) without a strong return-alpha claim vs static (NW t vs Book 1 ≈ 0). A{' '}
+                      On this panel it improves the risk path vs Book 1 (higher Sharpe in excess of BIL,
+                      0.97 vs 0.75; milder MaxDD) without a strong return-alpha claim vs static (NW t vs Book 1 ≈ 0). A{' '}
                       <strong>path/risk</strong> book, not a "beat the market" story.
                     </dd>
                   </div>
@@ -379,7 +385,7 @@ export default function Books() {
                     <dt className="section-eyebrow mb-0.5">What it is not</dt>
                     <dd className="text-body leading-relaxed">
                       Not the archived conditional factor-corr overlay (#13), which{' '}
-                      <strong>failed</strong> vs this unconditional Book 2 on Sharpe.
+                      <strong>failed</strong> vs the unconditional Book-2 VT on Sharpe (legacy rf = 0 and in excess of BIL).
                     </dd>
                   </div>
                   <div>
@@ -392,11 +398,13 @@ export default function Books() {
                       <code>vol_target_option_a</code> (entrypoint: <code>vol_target_book2</code>).
                     </dd>
                     <dd className="text-body leading-relaxed mt-2">
-                      <strong>Claim vs unconditional Book-2 VT null</strong> (Sharpe_rf0 ≈ 1.059 /{' '}
+                      <strong>Claim vs unconditional Book-2 VT null</strong> (Sharpe 0.84 in excess of BIL,
+                      legacy rf = 0 ≈ 1.059 /{' '}
                       MaxDD ≈ −20.1% / 68 months — archived in{' '}
                       <code>vol_target_oos_summary.csv</code> and registry entry{' '}
                       <code>vol_target_option_a_uncond</code>):{' '}
-                      milder MaxDD / higher Sharpe_rf0; no return-edge expected.{' '}
+                      milder MaxDD / higher Sharpe (0.97 vs 0.84 in excess of BIL; legacy rf = 0 1.28 vs
+                      1.059); no return-edge expected.{' '}
                       <strong>No new shortlist card. Two books only.</strong>{' '}
                       Cash-null audit (Quant, 2026-09-26): About 40% of the rf=0 Sharpe gap was cash carry.
                       In excess of BIL it is 0.97 vs 0.84 and the drawdown cut is unchanged, so the PASS as
@@ -488,7 +496,9 @@ export default function Books() {
           <div className="mt-8">
             <Eyebrow>Strategy comparison</Eyebrow>
             <p className="text-sm text-body mt-1 mb-6 max-w-2xl">
-              Live Books 1–2 vs benchmark. Optional XSD sleeve shown last, subordinate — not a peer.
+              Book 1 and the unconditional Book-2 VT audit null from the latest registry run; the live Book 2 is
+              the VT × gate-first overlay (0.97 in excess of BIL, cards above). Sharpe is in excess of BIL with
+              the legacy rf = 0 value in parentheses. Optional XSD sleeve shown last, subordinate — not a peer.
             </p>
             <ComparisonTable />
           </div>

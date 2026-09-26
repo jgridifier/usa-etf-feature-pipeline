@@ -293,6 +293,21 @@ The full growth price panel is on the investments box at `/workspace/investments
 3. Hard deny off-list semis: **SMH, SOXX, SOXL, PSI**.
 4. Eligible \(E = U_{\mathrm{approved}} \setminus \mathrm{deny}\). Any \(t \notin E\) **hard-fails**. Semiconductor exposure is XSD-only under rotation/optimization paths.
 
+## Shared gate helper: cash-like tag and excess-of-BIL Sharpe
+
+`usa_etf_features.gate_metrics` (cash-null audit follow-up, 2026-09-26):
+
+- **Tags** in `data/raw/usa_universe_categorized.csv`: `cash_like` = {BIL, SGOV, SHV, GBIL, USFR, GSST, GUMI};
+  `short_duration` = {SHY, SPTS, BSV, STIP} (diagnostic only). `filter_cash_like(names, universe, exclude_cash_like=True)`
+  is applied once to the eligible list shared by the method and every null (`SpectralTrial` / `NLSGMVTrial` expose
+  `exclude_cash_like`, pinned `False` for the archived gates so committed outputs stay byte-identical; new gates set it True).
+- **rf**: BIL priced monthly return from BIL's first full month (2007-06); FRED TB3MS / 1200 before
+  (`data/raw/fred_tb3ms.csv`). `window_rf_coverage` reports the fallback share of a window.
+- **Sharpe_exBIL** = mean(r − rf)·12 / (std(r − rf)·√12), arithmetic on monthly returns (headline everywhere on Pages).
+  **Sharpe_rf0** stays CAGR / vol, labelled "legacy (rf = 0)".
+- `scripts/reconcile_cash_null_audit.py` writes `data/processed/cash_null_audit/` (reconciliation to Quant's audit,
+  fallback shares, and `site_sharpe.json` used by the Pages build).
+
 ## Math appendix
 
 Daily return \(r_{i,t} = P_{i,t}/P_{i,t-1}-1\).

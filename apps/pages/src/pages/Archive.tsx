@@ -123,7 +123,7 @@ export default function Archive() {
                     <table className="w-full text-xs">
                       <thead>
                         <tr className="border-b border-border bg-raised text-left">
-                          {['', 'Sharpe', 'MaxDD'].map(h => (
+                          {['', 'Sharpe ex-BIL (legacy rf = 0)', 'MaxDD'].map(h => (
                             <th key={h} className="px-4 py-3 font-medium text-muted text-2xs uppercase tracking-label">{h}</th>
                           ))}
                         </tr>
@@ -164,7 +164,7 @@ export default function Archive() {
                         ))}
                       </dd>
                     </div>
-                    <div><dt className="font-medium text-muted">DSR (vs zero Sharpe)</dt><dd className="font-mono">{card.dsr}</dd></div>
+                    <div><dt className="font-medium text-muted">DSR (legacy rf = 0 Sharpe, vs zero)</dt><dd className="font-mono">{card.dsr}</dd></div>
                   </dl>
                   <p className="mt-4 text-2xs text-muted">
                     Gate memo / PR: <a href={card.gate.href} target="_blank" rel="noreferrer" className="text-muted hover:text-body underline underline-offset-2 decoration-border">{card.gate.label}</a>{' · '}
@@ -226,7 +226,7 @@ export default function Archive() {
           </div>
 
           <p className="mt-6 text-2xs text-muted/50">
-            Sources: card numbers are copied from repo artifacts (data/processed/*/…summary.csv) and gate PR bodies (#10, #11, #13, #24, #26, #27, #29); single source: apps/pages/src/data/archive_verdicts.json.
+            Sources: card numbers are copied from repo artifacts (data/processed/*/…summary.csv) and gate PR bodies (#10, #11, #13, #24, #26, #27, #29); single source: apps/pages/src/data/archive_verdicts.json. Sharpe is shown in excess of BIL (rf = BIL priced monthly return; FRED TB3MS/1200 before BIL's first full month, 2007-06), with the legacy rf = 0 Sharpe (CAGR / vol, the basis of the archived verdicts) in parentheses. No verdict changes.
           </p>
         </div>
       </section>

@@ -24,6 +24,7 @@ def test_explorer_links_and_chrome():
     assert set(re.findall(r"'([.][.]/data/[^']+)'", js)) == {
         '../data/growth_alpha_adj_close.csv',
         '../data/growth_panel_history_coverage.csv',
+        '../data/fred_tb3ms.csv',
     }
     for path in (ROOT / 'docs').rglob('*.html'):
         text = path.read_text()

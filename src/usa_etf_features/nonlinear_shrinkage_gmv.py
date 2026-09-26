@@ -22,6 +22,7 @@ import numpy as np
 import pandas as pd
 from sklearn.covariance import LedoitWolf
 
+from .gate_metrics import filter_cash_like
 from .spectral_risk_parity import long_only_minvar, normalize_cov, null_weights, read_returns
 from .vol_target import sharpe_rf0, annualized_vol, newey_west_tstat, deflated_sharpe_approx
 
@@ -141,6 +142,9 @@ class NLSGMVTrial:
     cost_bps: float = 5.0
     oos_start: str = "2021-04-30"
     oos_end: str = "2026-08-31"
+    # Shared gate helper flag (gate_metrics.filter_cash_like). False reproduces the archived
+    # v1 (VOID) run byte-for-byte; the v2 re-spec sets it True.
+    exclude_cash_like: bool = False
 
 
 PREREGISTERED_TRIALS = (NLSGMVTrial(156), NLSGMVTrial(260))
@@ -181,6 +185,8 @@ def run_nls_gmv_trial(weekly, monthly, universe, coverage, trial=NLSGMVTrial()) 
     uni = universe.set_index("Ticker")
     names = monthly.columns.intersection(uni.index).intersection(weekly.columns).tolist()
     names = [t for t in names if uni.loc[t, "Category"] not in trial.exclude_categories]
+    # One eligible list feeds the method and every null, so the exclusion applies to all.
+    names = filter_cash_like(names, universe, trial.exclude_cash_like)
     if coverage is not None:
         cov = coverage.set_index("ticker").reindex(names)
         if not trial.include_thin:

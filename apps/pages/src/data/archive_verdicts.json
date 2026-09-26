@@ -1,6 +1,6 @@
 {
   "updated": "2026-09-26",
-  "note": "Single source of truth for Archive verdict cards. Rendered by apps/pages/src/pages/Archive.tsx (#/archive) and by scripts/build_pages.py (docs/methods/index.html#archive + docs/methods/justina_round1_scoreboard.html). Numbers copied verbatim from repo artifacts / PR bodies; do not re-round. Optional link fields: nw_t_links[] and measured{label,text}; hrefs starting with http are absolute, others are relative to docs/.",
+  "note": "Single source of truth for Archive verdict cards. Rendered by apps/pages/src/pages/Archive.tsx (#/archive) and by scripts/build_pages.py (docs/methods/index.html#archive + docs/methods/justina_round1_scoreboard.html). Numbers copied verbatim from repo artifacts / PR bodies; do not re-round. Sharpe cells show the excess-of-BIL Sharpe (headline) with the legacy rf = 0 Sharpe (CAGR / vol, the figure the archived verdicts were judged on) in parentheses; excess figures come from data/processed/cash_null_audit/site_sharpe.json (tests/test_gate_metrics.py checks them). Optional link fields: nw_t_links[] and measured{label,text}; hrefs starting with http are absolute, others are relative to docs/.",
   "cards": [
     {
       "id": "spectral_rp",
@@ -13,13 +13,13 @@
         {
           "role": "method",
           "label": "Spectral RP",
-          "sharpe": "1.06",
+          "sharpe": "0.30 (legacy 1.06)",
           "maxdd": "−8.4%"
         },
         {
           "role": "null",
           "label": "LW MinVar (null)",
-          "sharpe": "1.60",
+          "sharpe": "−0.25 (legacy 1.60)",
           "maxdd": "−4.5%"
         }
       ],
@@ -62,13 +62,13 @@
         {
           "role": "method",
           "label": "Best dual (vol_corr_spread ERC)",
-          "sharpe": "0.51",
+          "sharpe": "0.37 (legacy 0.51)",
           "maxdd": "−38.6%"
         },
         {
           "role": "null",
           "label": "Uncond ERC (null)",
-          "sharpe": "0.74",
+          "sharpe": "0.54 (legacy 0.74)",
           "maxdd": "−22.8%"
         }
       ],
@@ -107,13 +107,13 @@
         {
           "role": "method",
           "label": "VCFC (best Sharpe trial)",
-          "sharpe": "1.05",
+          "sharpe": "0.75 (legacy 1.05)",
           "maxdd": "−15.4%"
         },
         {
           "role": "null",
           "label": "Book-2 VT, VCFC run window (null)",
-          "sharpe": "1.11",
+          "sharpe": "0.89 (legacy 1.11)",
           "maxdd": "−20.5%"
         }
       ],
@@ -142,25 +142,25 @@
         {
           "role": "method",
           "label": "FT-MED (primary)",
-          "sharpe": "0.358",
+          "sharpe": "0.358 (legacy 0.358)",
           "maxdd": "−58.0%"
         },
         {
           "role": "null",
           "label": "EW (null)",
-          "sharpe": "0.610",
+          "sharpe": "0.524 (legacy 0.610)",
           "maxdd": "−45.5%"
         },
         {
           "role": "null",
           "label": "LW MinVar (null)",
-          "sharpe": "0.595",
+          "sharpe": "0.366 (legacy 0.595)",
           "maxdd": "−15.6%"
         },
         {
           "role": "null",
           "label": "ERC (null)",
-          "sharpe": "0.693",
+          "sharpe": "0.522 (legacy 0.693)",
           "maxdd": "−29.1%"
         }
       ],
@@ -187,31 +187,31 @@
       "name": "#3 Regime-resilient ERC (RR-ERC)",
       "detail": "Ielpo et al. 2026 / LOIM · category sleeves · 280m OOS · 2 trials (Path A stress overlay, Path B LOIM parity) · 5 bps",
       "badge": "FAIL",
-      "verdict": "FAIL rests on Path B: NW t +0.14 vs uncond ERC (not significant) and Sharpe 0.869 vs LW MinVar 0.944. Path A was degenerate (identical to uncond ERC).",
+      "verdict": "FAIL rests on Path B: NW t +0.14 vs uncond ERC (not significant) and Sharpe 0.869 vs LW MinVar 0.944 (legacy rf = 0; in excess of BIL 0.665 vs 0.642). Path A was degenerate (identical to uncond ERC).",
       "null": "Unconditional ERC (primary) · LW MinVar",
       "rows": [
         {
           "role": "method",
           "label": "Path A (stress overlay)",
-          "sharpe": "0.866",
+          "sharpe": "0.662 (legacy 0.866)",
           "maxdd": "−25.18%"
         },
         {
           "role": "method",
           "label": "Path B (LOIM parity)",
-          "sharpe": "0.869",
+          "sharpe": "0.665 (legacy 0.869)",
           "maxdd": "−23.75%"
         },
         {
           "role": "null",
           "label": "Uncond ERC (primary null)",
-          "sharpe": "0.866",
+          "sharpe": "0.662 (legacy 0.866)",
           "maxdd": "−25.18%"
         },
         {
           "role": "null",
           "label": "LW MinVar (null)",
-          "sharpe": "0.944",
+          "sharpe": "0.642 (legacy 0.944)",
           "maxdd": "−11.9%"
         }
       ],
@@ -244,7 +244,7 @@
         {
           "role": "null",
           "label": "Uncond Book-2 VT",
-          "sharpe": "1.059",
+          "sharpe": "0.839 (legacy 1.059)",
           "maxdd": "−20.1%"
         }
       ],
@@ -263,7 +263,7 @@
       "archived_via": "PR #29 merged; demoted from live to audit null",
       "measured": {
         "label": "#6 skew overlay measured against it",
-        "text": "1.280 / −10.1%, NW t −0.80. Cash-null audit (Quant, 2026-09-26): About 40% of the rf=0 Sharpe gap was cash carry. In excess of BIL it is 0.97 vs 0.84 and the drawdown cut is unchanged, so the PASS as a risk overlay stands."
+        "text": "0.966 excess of BIL (legacy rf = 0: 1.280) / −10.1%, NW t −0.80. Cash-null audit (Quant, 2026-09-26): About 40% of the rf=0 Sharpe gap was cash carry. In excess of BIL it is 0.97 vs 0.84 and the drawdown cut is unchanged, so the PASS as a risk overlay stands."
       }
     }
   ]

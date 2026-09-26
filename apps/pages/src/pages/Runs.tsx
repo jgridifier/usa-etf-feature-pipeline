@@ -16,6 +16,8 @@ interface MetricsPayload {
   AnnVol_a: number
   MaxDD_a: number
   Sharpe_a: number
+  Sharpe_exbil_vt: number
+  Sharpe_exbil_a: number
   NW_t: number
   n_months: number
   start_date: string
@@ -106,7 +108,7 @@ function RiskPathFigure({ m }: { m: MetricsPayload }) {
             <div className="flex items-center justify-between mb-1">
               <div className="flex items-center gap-2">
                 <span className="font-sans text-2xs font-bold text-up uppercase tracking-label">HOLD</span>
-                <span className="font-sans text-xs text-muted">Book 2 — vol-target</span>
+                <span className="font-sans text-xs text-muted">Book-2 VT backbone (no skew gate)</span>
               </div>
               <span className="font-mono text-sm font-bold text-ink">{pct(m.MaxDD_vt)}</span>
             </div>
@@ -122,7 +124,7 @@ function RiskPathFigure({ m }: { m: MetricsPayload }) {
               />
               <div className="absolute inset-0 flex items-center px-3">
                 <span className="font-sans text-2xs text-down/60 font-medium">
-                  MaxDD {pct(m.MaxDD_vt)} ← milder peak loss · Sharpe {num(m.Sharpe_vt, 2)}
+                  MaxDD {pct(m.MaxDD_vt)} ← milder peak loss · Sharpe {num(m.Sharpe_exbil_vt, 2)} ex-BIL (legacy rf=0 {num(m.Sharpe_vt, 2)})
                 </span>
               </div>
             </div>
@@ -149,7 +151,7 @@ function RiskPathFigure({ m }: { m: MetricsPayload }) {
               />
               <div className="absolute inset-0 flex items-center px-3">
                 <span className="font-sans text-2xs text-down/70 font-medium">
-                  MaxDD {pct(m.MaxDD_a)} ← deeper peak loss · Sharpe {num(m.Sharpe_a, 2)}
+                  MaxDD {pct(m.MaxDD_a)} ← deeper peak loss · Sharpe {num(m.Sharpe_exbil_a, 2)} ex-BIL (legacy rf=0 {num(m.Sharpe_a, 2)})
                 </span>
               </div>
             </div>
@@ -209,10 +211,11 @@ export default function Runs() {
           <div className="mx-auto max-w-6xl px-4 md:px-6">
             <ThickRule label="OOS snapshot" />
             <div className="mt-6">
-              <Eyebrow>Book-2 vol-target — key metrics</Eyebrow>
+              <Eyebrow>Book-2 VT backbone (no skew gate) — key metrics</Eyebrow>
               <p className="font-sans text-sm text-body mt-1 mb-5 max-w-2xl">
                 Moreira &amp; Muir (2017) · mean f = {m.mean_f.toFixed(2)} · months with f&lt;1:{' '}
-                {(100 * m.pct_months_f_lt_1).toFixed(0)}% · rf=0 Sharpe parity.
+                {(100 * m.pct_months_f_lt_1).toFixed(0)}% · Sharpe in excess of BIL (legacy rf = 0 kept).
+                Live Book 2 adds the #6 skew gate: 0.97 in excess of BIL.
               </p>
               {/* MaxDD leads; Sharpe last with context note */}
               <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">
@@ -232,9 +235,9 @@ export default function Runs() {
                   <div className="stat-sub">Static A: {pct(m.AnnVol_a)}</div>
                 </div>
                 <div className="stat-card">
-                  <div className="stat-label">Sharpe (vt)</div>
-                  <div className="stat-value text-body">{num(m.Sharpe_vt)}</div>
-                  <div className="stat-sub">Static A: {num(m.Sharpe_a)} — higher via milder DD</div>
+                  <div className="stat-label">Sharpe ex-BIL (vt)</div>
+                  <div className="stat-value text-body">{num(m.Sharpe_exbil_vt)}</div>
+                  <div className="stat-sub">Static A: {num(m.Sharpe_exbil_a)} — higher via milder DD · legacy rf=0 {num(m.Sharpe_vt)} / {num(m.Sharpe_a)}</div>
                 </div>
               </div>
               <p className="font-sans text-xs text-muted">

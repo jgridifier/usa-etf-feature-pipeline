@@ -14,6 +14,7 @@ import numpy as np
 import pandas as pd
 from scipy.optimize import minimize
 
+from .gate_metrics import filter_cash_like
 from .portfolio import ledoit_wolf_cov
 from .vol_target import annualized_vol, sharpe_rf0, deflated_sharpe_approx
 
@@ -31,6 +32,9 @@ class SpectralTrial:
         "Defined Outcome / Buffer / Structured", "Specialty / Other",
     )
     cost_bps: float = 5.0
+    # Shared gate helper flag (gate_metrics.filter_cash_like). False for the archived gate
+    # so committed outputs are unchanged; new gates (e.g. NLS GMV v2) set it True.
+    exclude_cash_like: bool = False
 
 
 def read_returns(path: str | Path) -> pd.DataFrame:
@@ -132,6 +136,8 @@ def run_spectral_trial(returns: pd.DataFrame, universe: pd.DataFrame,
     names = panel.columns.intersection(uni.index).tolist()
     if trial.mode == "name":
         names = [t for t in names if uni.loc[t, "Category"] not in trial.exclude_categories]
+    # One eligible list feeds the method and every null, so the exclusion applies to all.
+    names = filter_cash_like(names, universe, trial.exclude_cash_like)
     thin = pd.Series(False, index=names)
     if coverage is not None:
         cov = coverage.set_index("ticker").reindex(names)
