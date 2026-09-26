@@ -1212,6 +1212,15 @@ def build_parser() -> argparse.ArgumentParser:
     nls.add_argument("--out-dir", default="data/processed/nonlinear_shrinkage_gmv")
     nls.set_defaults(func=cmd_walkforward_nls_gmv)
 
+    nls2 = sub.add_parser("walkforward-nls-gmv-v2",
+                          help="Research NLS GMV v2 gate (ex-cash; the two pre-registered configs only)")
+    nls2.add_argument("--weekly", default="data/raw/usa_universe_panel_weekly_returns.csv")
+    nls2.add_argument("--monthly", default="data/raw/usa_universe_panel_monthly_returns.csv")
+    nls2.add_argument("--universe", default="data/raw/usa_universe_categorized.csv")
+    nls2.add_argument("--coverage", default="data/raw/usa_universe_panel_history_coverage.csv")
+    nls2.add_argument("--out-dir", default="data/processed/nonlinear_shrinkage_gmv_v2")
+    nls2.set_defaults(func=cmd_walkforward_nls_gmv_v2)
+
     sp = sub.add_parser("walkforward-spectral-rp", help="Experimental panel spectral RP and nulls")
     sp.add_argument("--returns", required=True)
     sp.add_argument("--universe", required=True)
@@ -1292,6 +1301,19 @@ def cmd_walkforward_nls_gmv(args) -> int:
     result["metadata"]["input_provenance"] = "CLI input paths"
     write_gate_artifacts(result, args.out_dir)
     print(result["summary"].to_string(index=False))
+    return 0
+
+
+def cmd_walkforward_nls_gmv_v2(args) -> int:
+    import json
+    from .nonlinear_shrinkage_gmv_v2 import run_nls_gmv_v2_gate, write_v2_artifacts, read_returns, _json_safe
+    weekly = pd.read_csv(args.weekly, index_col=0, parse_dates=True)
+    result = run_nls_gmv_v2_gate(weekly, read_returns(args.monthly), pd.read_csv(args.universe),
+                                 pd.read_csv(args.coverage))
+    write_v2_artifacts(result, args.out_dir)
+    print(result["summary"].to_string(index=False))
+    reading = {k: v for k, v in result["mechanical_reading"].items() if k != "windows"}
+    print(json.dumps(_json_safe(reading), indent=2))
     return 0
 
 

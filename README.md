@@ -747,3 +747,22 @@ was generated; the kernel/Hilbert pieces are cross-checked against numerical
 quadrature instead. The far-field (|x| >= 10) Hilbert transform uses an exact series
 because the closed form cancels catastrophically in float64 for widely dispersed
 spectra (regression-tested).
+
+### Research: NLS GMV v2 (ex-cash, Bet 1)
+
+```bash
+usa-etf-features walkforward-nls-gmv-v2 --out-dir data/processed/nonlinear_shrinkage_gmv_v2
+```
+
+Pre-registered re-run of the same estimator (`nonlinear_shrinkage_gmv_v2.py`) per Quant's v2 ticket.
+Changes vs v1: the `cash_like` tag is removed from the one eligible list shared by the method and every
+null (Spectral RP name settings otherwise); name floor 95 (a rebalance below it is skipped for all
+strategies and listed; eligible N per rebalance and months under 100 are reported); Sharpe in excess of
+BIL (`gate_metrics`) is the headline, with rf = 0 kept as legacy. Configs: 156w primary, 260w sensitivity.
+Nulls: weekly LW MinVar (primary), EW, ERC; a monthly LW MinVar on the same ex-cash names is reference
+only. Criterion 1 is the Ledoit–Wolf (2011) log-variance-difference test, pre-registered as
+p = max(HAC p, studentized circular block bootstrap p) ≤ 0.10, one-sided, with lower OOS vol.
+VOID tripwires: method or primary null average `short_duration` weight > 50% or effective N < 5.
+trial_count = 6 (4 carried from v1 incl. the invalidated run + 2). DSR is reported, not decisive.
+Registry entry `nonlinear_shrinkage_gmv_v2_excash` is `enabled: false`. The report gives the
+mechanical reading only; Quant decides.

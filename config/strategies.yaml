@@ -208,3 +208,17 @@ strategies:
       include_thin: false
       cost_bps: 5.0
     enabled: false
+  - id: nonlinear_shrinkage_gmv_v2_excash
+    display_name: Analytical Nonlinear Shrinkage GMV v2 ex-cash (research — Quant gate pending)
+    method_citation_id: ledoit_wolf_2020_aos_analytical_nls_2017_rfs
+    method_citation: "Ledoit & Wolf (2020), AoS 48(5), 3043–3065, doi:10.1214/19-AOS1921; Ledoit & Wolf (2017), RFS 30(12), 4349–4388, doi:10.1093/rfs/hhx052; Ledoit & Wolf (2004), JMVA 88(2), 365–411; Ledoit & Wolf (2011), Wilmott 2011(55), 86–89 (variance test)."
+    entrypoint: usa_etf_features.strategy_registry:nonlinear_shrinkage_gmv_v2_excash
+    default_params:
+      weekly_csv: data/raw/usa_universe_panel_weekly_returns.csv
+      monthly_csv: data/raw/usa_universe_panel_monthly_returns.csv
+      coverage_csv: data/raw/usa_universe_panel_history_coverage.csv
+      window_weeks: 156
+      min_names: 95
+      exclude_cash_like: true
+      cost_bps: 5.0
+    enabled: false
