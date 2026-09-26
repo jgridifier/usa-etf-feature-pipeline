@@ -238,7 +238,12 @@ ARCHIVE_ROWS = {
                "LW MinVar (null)": ("#3 RR-ERC Path B", "LW MinVar")},
     "uncond_book2_vt": {"Uncond Book-2 VT": ("#6 skew gate-first (live Book 2)", "Book-2 VT (BIL priced)"),
                         "#6 overlay (measured)": ("#6 skew gate-first (live Book 2)", "VT x gate-first")},
+    # v3 stocks-only NLS GMV (PR #40), 156w primary, full 2016-01..2026-09 window.
+    "nls_gmv_v3": {"NLS GMV v3 (156w, method)": ("nlsv3:nonlinear_shrinkage_gmv", "return"),
+                   "Weekly LW MinVar (primary null)": ("nlsv3:minvar_lw_weekly", "return"),
+                   "USMV buy-and-hold (in-sample reference only)": ("nlsv3:buy_hold_usmv", "return")},
 }
+NLS_V3_RETURNS = "nonlinear_shrinkage_gmv_v3/oos_returns.csv"
 
 
 def site_sharpe_figures(processed: Path = PROCESSED, rf: pd.DataFrame | None = None) -> dict:
@@ -255,6 +260,10 @@ def site_sharpe_figures(processed: Path = PROCESSED, rf: pd.DataFrame | None = N
             return _wide(vc, src[5:], {col: col})[col]
         if src == "rrA":
             return _wide(rr, path_a, {col: col})[col]
+        if src.startswith("nlsv3:"):
+            v3 = _read(NLS_V3_RETURNS, processed)
+            v3 = v3.loc[v3["window_weeks"].eq(156) & v3["strategy_id"].eq(src[6:])]
+            return v3.set_index("date")[col].astype(float)
         return frames[src][col]
 
     short = pd.read_csv(processed / "cash_null_audit" / "shortlist_strategy_returns.csv", parse_dates=["date"])

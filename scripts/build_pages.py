@@ -754,7 +754,8 @@ def verdict_card_html(card, prefix) -> str:
 def build_archive_scoreboard() -> None:
     archive = load_archive_cards()
     subtitle = (
-        'Archived methods: Justina round-1 (Spectral RP, Regime-Aware), #13 VCFC, #4 FT-MED, #3 RR-ERC · '
+        'Archived methods: Justina round-1 (Spectral RP, Regime-Aware), #13 VCFC, #4 FT-MED, #3 RR-ERC, '
+        'Bet 1 NLS GMV v3 (VOID) · '
         'plus the unconditional Book-2 VT audit null · USA ETF experimental panel · '
         f'updated {archive["updated"]} (ET)'
     )
@@ -766,9 +767,10 @@ def build_archive_scoreboard() -> None:
         '<div class="callout"><strong>Research only — not investment advice.</strong> '
         'Negative / null results documented on purpose. The five failed methods are '
         '<strong>FAIL / ARCHIVE</strong> — not promoted to Books, not a showcase, not part of the live shortlist. '
+        'Bet 1 NLS GMV v3 is VOID (concentrated holdings) and the minimum-variance line is closed. '
         'Unconditional Book-2 VT is an AUDIT NULL (not live, not a FAIL).</div>'
         '<div class="callout"><strong>CIO frame:</strong> '
-        '<p><em>None of the five archived methods cleared its binding null.</em> <strong>No book cut.</strong></p>'
+        '<p><em>None of the five archived methods cleared its binding null, and NLS GMV v3 is VOID.</em> <strong>No book cut.</strong></p>'
         '<p>Live shortlist: <strong>static core + VT × gate-first skew overlay</strong> (Justina #6, PR #29). '
         'Unconditional Book-2 VT is the audit null that overlay was measured against — not live, not a FAIL.</p>'
         '<p>Further candidates must clear the same leakage · null · DSR · empirical gate. '
@@ -780,7 +782,7 @@ def build_archive_scoreboard() -> None:
         '<li>Predeclared nulls and DSR / trial counts reported (normal-approx DSR where applicable).</li>'
         '<li>Brand-scrub / experimental-panel language only.</li></ul>'
         '<p class="muted">Sources: card numbers are copied from repo artifacts (data/processed/*/…summary.csv) '
-        'and gate PR bodies (#10, #11, #13, #24, #26, #27, #29); single source: apps/pages/src/data/archive_verdicts.json. '
+        'and gate PR bodies (#10, #11, #13, #24, #26, #27, #29, #40); single source: apps/pages/src/data/archive_verdicts.json. '
         'Sharpe is shown in excess of BIL (rf = BIL priced monthly return; FRED TB3MS/1200 before BIL\'s first full month, 2007-06), '
         'with the legacy rf = 0 Sharpe (CAGR / vol, the basis of the archived verdicts) in parentheses. No verdict changes '
         '(data/processed/cash_null_audit/reconciliation.md).</p>'
@@ -811,7 +813,7 @@ def build_methods_index() -> None:
         )
         + '</ul>'
         '<h2 id="archive">Archive / failed nulls</h2>'
-        '<p class="lede archive-lede">5 FAIL / ARCHIVE methods + 1 AUDIT NULL — research record only; <strong>not live books</strong>. '
+        '<p class="lede archive-lede">5 FAIL / ARCHIVE methods + 1 VOID (NLS GMV v3) + 1 AUDIT NULL — research record only; <strong>not live books</strong>. '
         'Live shortlist: static core + VT × gate-first skew overlay (Justina #6). '
         'Unconditional Book-2 VT is the audit null, not a FAIL.</p>'
         + ''.join(verdict_card_html(card, '') for card in archive['cards'])

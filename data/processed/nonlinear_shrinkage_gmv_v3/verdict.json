@@ -1,0 +1,11 @@
+{
+  "verdict": "VOID",
+  "verdict_label": "VOID: concentrated holdings (effective N under 5)",
+  "verdict_by": "Quant",
+  "verdict_date": "2026-09-26",
+  "verdict_reason": "Composition 0.00% for the method and the primary null, but effective N 2.63 (method) and 3.19 (weekly LW MinVar null) are under 5; 64-74% of weight sits in USMV and EFAV. It would also have failed all six pre-registered criteria mechanically.",
+  "lesson": "On stocks the estimator's edge disappears: vol 10.66% vs 10.83% (LW2011 p about 0.15) and the 260w run went the other way. With long-only caps the no-short constraint already does most of the shrinking (Jagannathan & Ma 2003).",
+  "follow_up": "The minimum-variance line is closed for good; no v4. USMV buy-and-hold is an in-sample reference only, not a sleeve candidate.",
+  "judgment_calls_accepted": true,
+  "final_trial_count": 8
+}

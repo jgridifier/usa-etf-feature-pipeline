@@ -34,7 +34,25 @@ BOOK2_SUBPERIOD = ('2021-02', '2026-09')
 BOOTSTRAP_REPS, BLOCK_SIZE, SEED = 5000, 4, 20260926
 GATE_ID = 'nonlinear_shrinkage_gmv_v3_equity_only'
 TICKET = '/workspace/investments/justina_shortlist/ENGINEERING_TICKET_nonlinear_shrinkage_gmv_v3_equity_only.md'
-STATUS = 'PENDING QUANT'
+VERDICT_LABEL = 'VOID: concentrated holdings (effective N under 5)'
+# Quant ruling on PR #40 (2026-09-26 ET; CIO and CoS agree). Figures are from the committed v3 artifacts.
+VERDICT = {
+    'verdict': 'VOID',
+    'verdict_label': VERDICT_LABEL,
+    'verdict_by': 'Quant',
+    'verdict_date': '2026-09-26',
+    'verdict_reason': ('Composition 0.00% for the method and the primary null, but effective N 2.63 (method) and '
+                       '3.19 (weekly LW MinVar null) are under 5; 64-74% of weight sits in USMV and EFAV. '
+                       'It would also have failed all six pre-registered criteria mechanically.'),
+    'lesson': ("On stocks the estimator's edge disappears: vol 10.66% vs 10.83% (LW2011 p about 0.15) and the 260w "
+               'run went the other way. With long-only caps the no-short constraint already does most of the '
+               'shrinking (Jagannathan & Ma 2003).'),
+    'follow_up': 'The minimum-variance line is closed for good; no v4. USMV buy-and-hold is an in-sample reference only, not a sleeve candidate.',
+    'judgment_calls_accepted': True,
+    'final_trial_count': 8,
+}
+# The committed run's gate_report.md says 'PENDING QUANT'; the artifacts are not rewritten after the ruling.
+STATUS = VERDICT_LABEL
 ROOT = Path(__file__).resolve().parents[2]
 
 
@@ -352,7 +370,7 @@ def run_nls_gmv_v3_gate(weekly, monthly, universe, trials=PREREGISTERED_V3, extr
 
 
 def gate_report_lines(result):
-    lines = ['# NLS GMV v3 equity-only research gate', '', 'Status: PENDING QUANT — mechanical reading only',
+    lines = ['# NLS GMV v3 equity-only research gate', '', f'Status: {STATUS} (Quant) — mechanical reading below',
              f"**Label (mechanical + composition): {result['label']}**", book_eligible_line(result['book_eligible']), '',
              'Research only; snapshot universe implies survivorship bias. Registry enabled:false.', '']
     lines += gm.composition_report_lines(result['composition'])

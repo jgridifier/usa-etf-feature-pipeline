@@ -406,7 +406,7 @@ export default function Home() {
             All methods scored on the experimental USA ETF panel via walk-forward OOS.
             Binding-null gates on Sharpe; DSR / trial counts pre-declared. Sharpe shown in excess of BIL,
             legacy rf = 0 in parentheses (the basis of the archived verdicts, which do not change).
-            Five FAILs documented as the rigour record. #6 skewness overlay cleared the
+            Five FAILs and one VOID (NLS GMV v3, concentrated holdings) documented as the rigour record. #6 skewness overlay cleared the
             gate as a Book-2 path — not a third book.
           </p>
 
@@ -525,7 +525,7 @@ export default function Home() {
               Full scoreboard → Methods / Archive
             </Link>
             <span className="font-sans text-2xs text-muted">
-              Justina round-1 + #4 FT-MED + #3 RR-ERC + #6 skewness overlay · updated 2026-09-23
+              Justina round-1 + #4 FT-MED + #3 RR-ERC + #6 skewness overlay + NLS GMV v3 (VOID) · updated 2026-09-26
             </span>
           </div>
         </div>
@@ -562,8 +562,9 @@ export default function Home() {
             <p className="font-sans text-2xs text-muted uppercase tracking-label mb-2">Methods / Archive</p>
             <p className="font-sans text-xs text-body mb-3">
               Justina round-1 (Spectral RP, Regime-Aware), #13 vol-cond-factor-corr, #4 FT-MED,
-              and #3 RR-ERC — all failed binding-null gates. Wide-panel failures documented as
-              the rigor record. #6 skewness overlay cleared as a Book-2 path only.
+              and #3 RR-ERC — all failed binding-null gates; NLS GMV v3 is VOID (concentrated holdings) and the
+              minimum-variance line is closed. Wide-panel failures documented as the rigor record. #6 skewness
+              overlay cleared as a Book-2 path only.
             </p>
             <Link
               to="/archive"

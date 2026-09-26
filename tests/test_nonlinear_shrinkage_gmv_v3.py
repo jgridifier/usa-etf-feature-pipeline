@@ -240,3 +240,27 @@ def test_committed_v3_book_eligible_is_its_own_field_and_never_the_label():
     counts = pd.read_csv(V3_DIR / 'name_counts.csv')
     c156 = counts.loc[counts.window_weeks.eq(156)]
     assert len(c156) == 129 and not c156.skipped.any() and c156.n_eligible.between(65, 94).all()
+
+
+def test_quant_verdict_and_archive_card():
+    assert v3.VERDICT_LABEL == 'VOID: concentrated holdings (effective N under 5)' and v3.STATUS == v3.VERDICT_LABEL
+    assert json.loads((V3_DIR / 'verdict.json').read_text()) == v3.VERDICT
+    assert v3.VERDICT['final_trial_count'] == v3.TRIAL_COUNT_V3 == 8
+    specs = {s.id: s for s in load_strategy_registry('config/strategies.yaml')}
+    assert not specs[v3.GATE_ID].enabled and v3.VERDICT_LABEL in specs[v3.GATE_ID].display_name
+    cards = {c['id']: c for c in json.loads(Path('apps/pages/src/data/archive_verdicts.json').read_text())['cards']}
+    card = cards['nls_gmv_v3']
+    assert card['badge'] == 'VOID' and card['verdict'].startswith(v3.VERDICT_LABEL)
+    assert 'failed all six' in card['verdict'] and 'no v4' in card['measured']['text']
+    assert 'in-sample reference only, not a sleeve candidate' in card['measured']['text']
+    s = pd.read_csv(V3_DIR / 'summary.csv')
+    s = s.loc[s.window_weeks.eq(156) & s.period.str.startswith('full')].set_index('strategy_id')
+    rows = {r['label']: r for r in card['rows']}
+    for label, sid in (('NLS GMV v3 (156w, method)', v3.METHOD), ('Weekly LW MinVar (primary null)', v3.PRIMARY),
+                       ('USMV buy-and-hold (in-sample reference only)', v3.USMV_REF)):
+        assert rows[label]['sharpe'] == f"{s.loc[sid, 'Sharpe_exBIL']:.2f} (legacy {s.loc[sid, 'Sharpe_rf0_legacy']:.2f})"
+        assert rows[label]['maxdd'] == f"{s.loc[sid, 'MaxDD']:.1%}".replace('-', '−')
+    assert f"{s.loc[v3.METHOD, 'eff_N_mean']:.2f}" in card['verdict'] and f"{s.loc[v3.PRIMARY, 'eff_N_mean']:.2f}" in card['verdict']
+    low = sorted(round(100 * s.loc[k, ['usmv_share_mean', 'efav_share_mean']].sum()) for k in (v3.METHOD, v3.PRIMARY))
+    assert f"{low[0]}–{low[1]}%" in card['verdict']
+    assert Path('docs/methods/allocation_alpha_nonlinear_shrinkage_gmv.html').exists()

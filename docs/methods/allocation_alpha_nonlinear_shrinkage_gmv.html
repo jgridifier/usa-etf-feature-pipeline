@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>Allocation Alpha — Analytical Nonlinear Shrinkage Min-Variance (Bet 1)</title>
+<style>
+  :root { --fg:#1a1a1a; --muted:#555; --border:#ddd; --bg:#fafafa; --accent:#0b5fff; --ok:#0a7a3e; --warn:#a15c00; }
+  * { box-sizing: border-box; }
+  body { font-family: Georgia, "Times New Roman", serif; color: var(--fg); line-height: 1.55; max-width: 42rem; margin: 2rem auto; padding: 0 1.25rem; background: #fff; }
+  h1,h2,h3 { font-family: system-ui, -apple-system, Segoe UI, sans-serif; line-height: 1.25; }
+  h1 { font-size: 1.65rem; margin-bottom: 0.25rem; }
+  h2 { font-size: 1.25rem; margin-top: 2rem; border-bottom: 1px solid var(--border); padding-bottom: 0.3rem; }
+  h3 { font-size: 1.05rem; margin-top: 1.4rem; color: #222; }
+  .meta { color: var(--muted); font-family: system-ui, sans-serif; font-size: 0.9rem; margin-bottom: 1.5rem; }
+  .disclaimer { background: #fff8e6; border: 1px solid #f0d78c; padding: 0.75rem 1rem; border-radius: 6px; font-size: 0.92rem; margin: 1rem 0 1.5rem; }
+  .callout { background: var(--bg); border-left: 4px solid var(--accent); padding: 0.75rem 1rem; margin: 1rem 0; }
+  .ok { border-left-color: var(--ok); }
+  .warn { border-left-color: var(--warn); }
+  table { border-collapse: collapse; width: 100%; font-size: 0.92rem; margin: 0.75rem 0 1rem; }
+  th, td { border: 1px solid var(--border); padding: 0.4rem 0.55rem; text-align: left; vertical-align: top; }
+  th { background: var(--bg); font-family: system-ui, sans-serif; }
+  code, .math { font-family: "JetBrains Mono", Menlo, Consolas, monospace; font-size: 0.9em; background: #f3f3f3; padding: 0 0.2em; border-radius: 3px; }
+  pre.math { display: block; padding: 0.7rem 0.9rem; overflow-x: auto; line-height: 1.5; }
+  a { color: var(--accent); }
+</style>
+<!-- lab:start --><link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,wght@0,400;0,500;0,600;1,400;1,600&family=Playfair+Display:wght@700;900&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet"><link rel="stylesheet" href="../assets/style.css"><!-- lab:end --></head>
+<body><!-- lab:start --><header class="site-header"><div class="site-header-inner"><a class="brand" href="../index.html">USA ETF Lab</a><button type="button" class="nav-toggle" aria-expanded="false" aria-controls="site-nav" aria-label="Open menu"><span class="nav-toggle-bars" aria-hidden="true"></span></button><nav class="site-nav" id="site-nav" aria-label="Main"><a href="../index.html">Home</a><a href="../index.html#/books">Books</a><a href="../index.html#/runs">Runs</a><a href="../explorer/index.html">Explorer</a><a href="../methods/index.html" class="is-active">Methods</a></nav></div></header><!-- lab:end -->
+<h1>Analytical Nonlinear Shrinkage Min-Variance</h1>
+<div class="meta">Bet 1: a name-scale allocator across 100+ ETFs · Quant teaching note · 2026-09-25 · status: pre-gate (registry <code>enabled:false</code>)</div>
+
+<div class="disclaimer">Research only. This is a methodology experiment on an arbitrary research panel of ETFs. It is not personalized investment advice and carries no approval status. Nothing here touches the two live books.</div>
+
+<div class="callout">
+<strong>One-sentence version.</strong> We keep the exact objective of our primary null (long-only global minimum variance) and change only one thing: instead of shrinking every eigenvalue of the covariance matrix toward the average by the same amount (Ledoit–Wolf linear shrinkage), we shrink each eigenvalue by its own amount, using the closed-form formula in Ledoit &amp; Wolf (2020). If this wins, the win belongs to the covariance estimator and nothing else.
+</div>
+
+<h2>1. Why this paper</h2>
+<p>Spectral Risk Parity is the only method in our Archive that allocated across 100+ individual ETFs, and it lost to the LW MinVar baseline (Sharpe 1.06 against 1.60, max drawdown −8.4% against −4.5%). That result says the hard part at this scale is estimating a 125×125 covariance matrix from limited history, not finding a clever objective. The Ledoit–Wolf nonlinear shrinkage papers attack exactly that problem, and they are written by the same authors as the linear estimator inside our primary null. That makes this the cleanest possible next test: same objective, same universe, same constraints, a better-founded estimator.</p>
+<p>CIO ranked it first of three candidates (the others were Hierarchical Risk Parity and norm-constrained min-variance). I picked it because attribution is unambiguous. HRP changes both the estimator and the allocation rule, and the published comparisons often show it with higher variance than a well-shrunk MinVar. Norm-constrained MinVar adds a cross-validation loop that is easy to leak and adds trials. Both stay available as follow-ups if this one fails.</p>
+
+<h2>2. What the original work found</h2>
+<h3>Ledoit &amp; Wolf (2017), "Nonlinear Shrinkage of the Covariance Matrix for Portfolio Selection: Markowitz Meets Goldilocks," <em>Review of Financial Studies</em> 30(12)</h3>
+<ul>
+<li><strong>Setup.</strong> Large-dimensional asymptotics, where the number of assets N and the number of observations T grow together so their ratio c = N/T stays fixed. In that regime the sample eigenvalues are systematically too spread out: the big ones are too big and the small ones are too small.</li>
+<li><strong>Claim.</strong> For portfolio selection (they focus on the global minimum-variance portfolio and Markowitz with a signal), the optimal rotation-equivariant estimator keeps the sample eigenvectors and replaces each eigenvalue with a value that depends nonlinearly on where it sits in the spectrum. They estimate it with the QuEST numerical procedure.</li>
+<li><strong>Results.</strong> On US stock data with N from 100 to 1000, monthly rebalancing and daily returns, nonlinear shrinkage produced lower out-of-sample standard deviation for the GMV portfolio than the sample covariance, linear shrinkage, and factor-model alternatives. The gains grow as N/T rises.</li>
+<li><strong>Limitations.</strong> The headline metric is out-of-sample <em>variance</em>, not Sharpe ratio. Their main experiments allow short sales; long-only constraints act like extra shrinkage (Jagannathan &amp; Ma, 2003) and can shrink the gap between estimators. QuEST is slow.</li>
+</ul>
+<h3>Ledoit &amp; Wolf (2020), "Analytical Nonlinear Shrinkage of Large-Dimensional Covariance Matrices," <em>Annals of Statistics</em> 48(5)</h3>
+<ul>
+<li><strong>Claim.</strong> The same optimal nonlinear shrinkage can be computed in closed form with a kernel density estimate of the sample spectrum and its Hilbert transform. No numerical optimization is needed.</li>
+<li><strong>Results.</strong> Accuracy is essentially the same as QuEST and it runs orders of magnitude faster, which matters for a walk-forward with dozens of rebalances.</li>
+<li><strong>Limitations.</strong> The theory assumes roughly i.i.d. observations. Weekly ETF returns have volatility clustering and fat tails, so the estimator is a good approximation, not an exact optimum. Very small T relative to N (c near or above 1) is handled, but the estimate gets noisier.</li>
+</ul>
+
+<h2>3. Core math and intuition</h2>
+<p>Let <code>R</code> be the T×N matrix of demeaned weekly returns inside the estimation window, and let the sample covariance be</p>
+<pre class="math">S = R'R / T = U diag(λ_1, …, λ_N) U'</pre>
+<p>with sample eigenvalues λ<sub>i</sub> and eigenvectors in the columns of U. Every estimator in this family keeps U and replaces the λ's.</p>
+<table>
+<tr><th>Estimator</th><th>New eigenvalue</th><th>What it does</th></tr>
+<tr><td>Sample</td><td><code>d_i = λ_i</code></td><td>No correction; small eigenvalues are too small, so MinVar loads on noise directions.</td></tr>
+<tr><td>Ledoit–Wolf linear (our null)</td><td><code>d_i = ρ·λ̄ + (1−ρ)·λ_i</code></td><td>Pulls every eigenvalue toward the mean with one intensity ρ.</td></tr>
+<tr><td>Nonlinear (this method)</td><td><code>d_i = λ_i / [ (π c λ_i f̃(λ_i))² + (1 − c − π c λ_i Hf̃(λ_i))² ]</code></td><td>Each eigenvalue gets its own correction, depending on how crowded its neighborhood of the spectrum is.</td></tr>
+</table>
+<p>Here c = N/T, f̃ is a kernel density estimate of the sample eigenvalues (Epanechnikov kernel with a locally adaptive bandwidth h<sub>i</sub> = λ<sub>i</sub>·T<sup>−1/3</sup> in the paper), and Hf̃ is its Hilbert transform, which the paper gives in closed form for that kernel. The intuition: where sample eigenvalues are densely packed, the estimator pulls them together hard; isolated large eigenvalues (the market factor, a rates factor) are kept closer to their sample values. Linear shrinkage cannot do both at once.</p>
+<p>The shrunk covariance is</p>
+<pre class="math">Σ̃ = U diag(d_1, …, d_N) U'</pre>
+<p>and the allocation step is identical to the null:</p>
+<pre class="math">w* = argmin_w  w' Σ̃ w
+     s.t.  1'w = 1,  0 ≤ w_i ≤ cap_i   (same caps as the Spectral RP gate)</pre>
+<p>Without constraints this is w ∝ Σ̃<sup>−1</sup>1. With the long-only box constraints it is a small quadratic program, the same solver the LW MinVar null already uses.</p>
+
+<h2>4. What we will do on the USA ETF panel</h2>
+<h3>Inputs and geometry</h3>
+<ul>
+<li><strong>Universe.</strong> Identical to the Spectral RP gate: about 125 names that pass ADV ≥ $10M and the thin-history filter, at least 100 names at every rebalance. Eligibility is decided using data available at the rebalance date only.</li>
+<li><strong>Returns.</strong> Covariance is estimated from <code>usa_universe_panel_weekly_returns.csv</code> (339 tickers, weekly from 1993 to 2026-09-18). Monthly T is too short for 125 names (it would push c well above 1). Performance is measured on the same OOS window, rebalance calendar, caps and cost model as the Spectral RP gate.</li>
+<li><strong>Windows.</strong> The primary estimation window is 156 weeks (3 years, c ≈ 0.8). The only pre-registered sensitivity is 260 weeks (5 years, c ≈ 0.5). A name needs a complete window to be eligible at that rebalance.</li>
+<li><strong>Rebalance.</strong> Monthly. Weights for month t+1 use weekly returns ending on or before the last week of month t. No same-month data.</li>
+</ul>
+<h3>Nulls (all on the same universe, calendar, caps and costs)</h3>
+<table>
+<tr><th>Null</th><th>Role</th></tr>
+<tr><td>LW MinVar on the <strong>same weekly returns and window</strong></td><td>Primary null. This isolates the estimator change from the frequency change, which was the Chief of Staff's condition.</td></tr>
+<tr><td>LW MinVar on monthly returns (existing: Sharpe 1.60, MaxDD −4.5%)</td><td>Reference only, so the result lines up with the Archive. Not a pass criterion.</td></tr>
+<tr><td>Equal weight (1/N)</td><td>Checks that any optimizer beats naive diversification (DeMiguel, Garlappi &amp; Uppal, 2009).</td></tr>
+<tr><td>ERC on the weekly LW covariance</td><td>Risk-parity comparator, same as the Spectral RP gate.</td></tr>
+</table>
+<h3>Leakage and trial rules</h3>
+<ul>
+<li>Unit test: changing any return after the rebalance date must leave that date's weights unchanged.</li>
+<li>Demeaning, bandwidth, and c are computed inside each window only.</li>
+<li><code>trial_count</code> covers every variant anyone previews across all three CIO candidates. Pre-registered, that is 2 (156w and 260w). Any extra preview is added to the count and to DSR.</li>
+<li>Registry entry <code>nonlinear_shrinkage_gmv</code> stays <code>enabled:false</code> until the Quant gate.</li>
+</ul>
+
+<h2>5. How we will know it worked</h2>
+<div class="callout ok">
+<strong>PASS (all required), against weekly LW MinVar on the primary 156w config:</strong>
+<ol>
+<li>Realized OOS volatility is lower, which is the paper's actual claim.</li>
+<li>Sharpe_rf0 is at least as high and max drawdown is no worse.</li>
+<li>DSR ≥ 0.95 using the full <code>trial_count</code>.</li>
+<li>The 260w sensitivity points the same direction (it does not need to pass on its own).</li>
+<li>It also beats EW and ERC on Sharpe_rf0.</li>
+</ol>
+</div>
+<p>I also want to see turnover, concentration (HHI and effective number of names), and a Newey–West t-stat on the monthly return difference against weekly LW MinVar. A variance cut with a flat t-stat is the expected shape of a real win here, the same pattern as the #6 overlay.</p>
+<div class="callout warn">
+<strong>What a PASS does and does not mean.</strong> LW MinVar is a null, not a live book, so a PASS makes this a candidate. Whether and where it maps onto the shortlist is CIO's call. There is no third book without that decision. A FAIL goes to the Archive with the standard verdict card.
+</div>
+<p><strong>Honest prior.</strong> Long-only caps already act as shrinkage, and at c ≈ 0.8 linear shrinkage is a strong baseline. I expect a modest variance reduction and a coin-flip on Sharpe. If weekly LW MinVar itself beats the monthly 1.60, that is a finding about sampling frequency, and it will be reported separately from the estimator verdict.</p>
+
+<h2>6. Citations and links</h2>
+<ul>
+<li>Ledoit, O. &amp; Wolf, M. (2017). Nonlinear Shrinkage of the Covariance Matrix for Portfolio Selection: Markowitz Meets Goldilocks. <em>Review of Financial Studies</em>, 30(12), 4349–4388. <a href="https://doi.org/10.1093/rfs/hhx052">doi:10.1093/rfs/hhx052</a></li>
+<li>Ledoit, O. &amp; Wolf, M. (2020). Analytical Nonlinear Shrinkage of Large-Dimensional Covariance Matrices. <em>Annals of Statistics</em>, 48(5), 3043–3065. <a href="https://doi.org/10.1214/19-AOS1921">doi:10.1214/19-AOS1921</a></li>
+<li>Ledoit, O. &amp; Wolf, M. (2004). A Well-Conditioned Estimator for Large-Dimensional Covariance Matrices. <em>Journal of Multivariate Analysis</em>, 88(2), 365–411. (The linear estimator in our null.)</li>
+<li>Jagannathan, R. &amp; Ma, T. (2003). Risk Reduction in Large Portfolios: Why Imposing the Wrong Constraints Helps. <em>Journal of Finance</em>, 58(4), 1651–1683.</li>
+<li>DeMiguel, V., Garlappi, L. &amp; Uppal, R. (2009). Optimal Versus Naive Diversification: How Inefficient Is the 1/N Portfolio Strategy? <em>Review of Financial Studies</em>, 22(5), 1915–1953.</li>
+<li>Bailey, D. &amp; López de Prado, M. (2014). The Deflated Sharpe Ratio. <em>Journal of Portfolio Management</em>, 40(5), 94–107.</li>
+<li>CIO candidate memo: <code>/workspace/investments/justina_shortlist/CIO_BET1_NAME_SCALE_ALLOCATORS.md</code>. Engineering ticket: <code>/workspace/investments/justina_shortlist/ENGINEERING_TICKET_nonlinear_shrinkage_gmv.md</code>.</li>
+</ul>
+
+<section id="v2">
+<h2>v2: why v1 was void (added 2026-09-26)</h2>
+<p><strong>What happened.</strong> The first gate (PR #34) ran on a universe that still contained T-bill ETFs. A minimum-variance portfolio of that universe is mostly T-bills: the method averaged about 81% in bill-type funds with an effective number of names near 3, and the weekly LW MinVar null averaged about 68%. The gate scored everything with Sharpe at a zero risk-free rate, which rewards holding bills, because bills have almost no volatility and still earn about 4–5% a year. The 5.73 Sharpe was cash yield, and the difference against the null was not significant (Newey–West t of +0.48). The run was ruled <em>VOID: cash-dominated, no evidence of estimator edge</em>.</p>
+<p><strong>What changes in v2.</strong></p>
+<ul>
+<li>A single <code>cash_like</code> tag (BIL, SGOV, SHV, GBIL, USFR, GSST, GUMI) removes bill, floating-rate and ultrashort funds from the eligible set for the method and every null.</li>
+<li>Sharpe is measured in excess of BIL: \( SR = \frac{\overline{r - r_{BIL}}\cdot 12}{\mathrm{sd}(r - r_{BIL})\sqrt{12}} \). A 100% BIL portfolio scores about zero.</li>
+<li>The primary test is lower out-of-sample volatility than weekly LW MinVar, since that is the criterion Ledoit &amp; Wolf (2017, RFS) use for GMV, with a robust variance-difference test (Ledoit &amp; Wolf 2011, Wilmott). Excess Sharpe is secondary.</li>
+<li>A composition check voids the run again if it simply moves into 1–3 year Treasuries (short-duration share above 50%) or holds fewer than 5 effective names.</li>
+<li>The name floor is 95, because 98–114 names are eligible per rebalance after the exclusion. trial_count carries forward from v1 and is 6.</li>
+</ul>
+<p><strong>What the audit found.</strong> Re-scoring every archived gate in excess of BIL flipped no verdict. The skewness overlay on Book 2 keeps its PASS as a risk overlay; about 40% of its original Sharpe gap was cash carry, but the drawdown cut is unchanged. Neither live book was judged against a cash-heavy null. Details are in <code>QUANT_AUDIT_cash_null_rf0.md</code>.</p>
+</section>
+
+<section id="v2-result">
+<h2>v2 result (2026-09-26): void again, line closed</h2>
+<p>With cash funds removed, both the method and the Ledoit–Wolf benchmark moved into 1–3 year Treasuries (the method held 84% in SHY and SPTS, with about 2 effective names). The estimator did what the 2017 paper says: out-of-sample volatility was about a quarter lower than the benchmark's, and the difference was highly significant. But excess return over T-bills was negative, so as a portfolio it fails, and the pre-registered composition check voided it. The lesson is that a minimum-variance objective on a mixed stock-and-bond universe always ends up in the safest bonds available. The mixed-universe line is closed. Any further test would use an equity-only set and carry forward the 6 trials already spent.</p>
+</section>
+
+<section id="v3">
+<h2>v3: the stocks-only test (added 2026-09-26, pre-registered)</h2>
+<p><strong>Why a third try is worth one.</strong> v1 and v2 showed that the estimator itself works: in v2, out-of-sample volatility was about a quarter lower than the linear Ledoit–Wolf benchmark, with p &lt; 0.001. What failed was the universe. When bonds are allowed, a minimum-variance portfolio just finds the safest bonds. Removing every bond and cash fund asks the question we actually care about: among stock funds only, does a better covariance estimate give a lower-risk stock portfolio than the linear estimator does? Jared approved this re-scope on 2026-09-26.</p>
+<p><strong>What changes.</strong></p>
+<ul>
+<li><em>Universe.</em> The universe is a hand-reviewed list of 96 stock ETFs, stored as an <code>equity_only</code> column in the universe file. It includes US size and style funds, international developed and emerging markets, global, factor, dividend, sector, country and one global REIT fund. It excludes every bond, cash, commodity, crypto, buffer or defined-outcome, managed-floor, leveraged and multi-asset fund, plus two index tickers that aren't funds. Between 70 and 94 names have the three years of history the 156-week window needs in each month of the test window.</li>
+<li><em>Window.</em> Stock funds have longer histories than the mixed set, so the test runs from January 2016 to September 2026, 129 months. That span includes late 2018, the 2020 crash and the 2022 bear market. The 68 months that match the Book 2 window are reported as a sub-period, not as a separate trial.</li>
+<li><em>The benchmark stays stocks-only.</em> The primary benchmark is the same weekly linear Ledoit–Wolf minimum-variance portfolio, run on the same 96 stock funds with the same caps and costs. A win can't come from owning fewer bonds, because neither side owns any.</li>
+<li><em>Counting trials.</em> The count carries forward from 6. This test adds two configurations (a 156-week primary and a 260-week sensitivity), which brings it to 8. The deflated Sharpe ratio uses 8, and any extra preview run adds one.</li>
+<li><em>Composition check.</em> The standard composition tripwire must run and should read about 0%, because no bond or cash fund can enter. If it reads above 0% or can't be computed, the stock filter has leaked and the run can't pass.</li>
+</ul>
+<p><strong>What a stocks-only minimum-variance portfolio tends to do.</strong> Clarke, de Silva &amp; Thorley (2006, <em>Journal of Portfolio Management</em> 33(1)) show that long-only minimum-variance stock portfolios lean heavily toward low-beta, low-volatility holdings. Here that probably means USMV, EFAV, the world low-vol fund GSWO, dividend funds and currency-hedged funds. The benchmark will lean the same way, so the head-to-head comparison is still fair. We will also report the share held in the three dedicated low-volatility funds, and show plain buy-and-hold USMV as a reference. That tells Jared whether the optimizer adds anything beyond simply owning a low-volatility fund.</p>
+<p><strong>How we'll judge it (fixed before any run).</strong> A PASS on the 156-week primary requires all six of the following:</p>
+<ol>
+<li>Lower realized volatility than the stocks-only benchmark, with one-sided p ≤ 0.05 on the Ledoit–Wolf (2011) variance-difference test.</li>
+<li>Sharpe above T-bills at least as high as the benchmark's.</li>
+<li>A maximum drawdown no worse than the benchmark's.</li>
+<li>A deflated Sharpe ratio of at least 0.95 using 8 trials.</li>
+<li>The 260-week run points the same way on items 1 and 2.</li>
+<li>The composition check is computable and reads 0%, and the portfolio holds at least 5 effective names.</li>
+</ol>
+<p>A failed tripwire makes the run VOID. Otherwise, missing any item is a FAIL. A PASS makes the estimator a candidate covariance estimator for the existing books. It does not create a new book.</p>
+<p><strong>Usable in a book? A separate rule, also fixed in advance.</strong> The books hold three stock ETFs plus BIL, so a 96-fund estimator could only enter them as a low-volatility stock sleeve. It counts as usable for a book only if it passes the gate <em>and</em> also beats plain buy-and-hold USMV on either Sharpe above T-bills or maximum drawdown over the full window. A PASS that doesn't beat USMV stays research-only.</p>
+<p><strong>Honest expectations.</strong> Stock funds are much more correlated with each other than a mixed stock-and-bond set, so the room for any minimum-variance method to cut risk is smaller. Many funds are near-copies (SPY, IVV, VOO, SPYM), which makes the sample covariance nearly singular. That is exactly where nonlinear shrinkage should help, but it also means the effective number of names counted by ticker overstates diversification. For that reason we also report effective N counted by category.</p>
+<p><strong>Added citations.</strong> Clarke, R., de Silva, H. &amp; Thorley, S. (2006). Minimum-Variance Portfolios in the U.S. Equity Market. <em>Journal of Portfolio Management</em>, 33(1), 10–24. Ledoit, O. &amp; Wolf, M. (2011). Robust Performances Hypothesis Testing with the Variance. <em>Wilmott</em>, 2011(55), 86–89. Bailey &amp; López de Prado (2014), cited above, for the deflated Sharpe ratio.</p>
+</section>
+
+<section id="v3-result">
+<h2>v3 result (2026-09-26): void, and the line is closed for good</h2>
+<p>The stock filter held: no bond or cash fund entered. Both optimizers still collapsed into four or five funds, putting roughly two thirds to three quarters into the low-volatility funds USMV and EFAV, with about 2.6 effective names for the method and 3.2 for the benchmark. That trips the pre-registered effective-N check, so the run is void. It would have failed on every criterion anyway. Volatility was only about 1.6% lower than the benchmark's (10.66% vs 10.83%, p about 0.15), and Sharpe above T-bills, maximum drawdown and the deflated Sharpe (0.29 at 8 trials) were all worse or far short of the bar. The 260-week run pointed the other way.</p>
+<p>Why the estimator's edge disappeared: in v2 it cut volatility by a quarter, but here the long-only portfolio sits in a corner of a few low-volatility funds, so the no-short constraint already does most of the shrinking (Jagannathan &amp; Ma 2003), and a better eigenvalue estimate has little left to change. Plain buy-and-hold USMV beat both optimizers (Sharpe 0.70, drawdown -19.1%). That is an in-sample comparison against a fund that was never the method under test, so it doesn't make USMV a sleeve candidate. All three runs of this estimator are closed after 8 trials.</p>
+</section>
+<!-- lab:start --><footer class="site-footer"><p>Research only; not investment advice; experimental panel; no performance guarantees.</p></footer><!-- lab:end --></body>
+</html>
