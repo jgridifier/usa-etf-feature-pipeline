@@ -164,7 +164,7 @@ export default function Archive() {
                         ))}
                       </dd>
                     </div>
-                    <div><dt className="font-medium text-muted">DSR</dt><dd className="font-mono">{card.dsr}</dd></div>
+                    <div><dt className="font-medium text-muted">DSR (vs zero Sharpe)</dt><dd className="font-mono">{card.dsr}</dd></div>
                   </dl>
                   <p className="mt-4 text-2xs text-muted">
                     Gate memo / PR: <a href={card.gate.href} target="_blank" rel="noreferrer" className="text-muted hover:text-body underline underline-offset-2 decoration-border">{card.gate.label}</a>{' · '}

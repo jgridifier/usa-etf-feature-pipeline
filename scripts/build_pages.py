@@ -727,7 +727,7 @@ def verdict_card_html(card, prefix) -> str:
         f'<p><strong>Binding null:</strong> {escape(card["null"])}</p>'
         + table_html(['', 'Sharpe', 'MaxDD'], rows, f'{card["name"]} OOS vs null')
         + measured_html
-        + f'<p><strong>NW t:</strong> {escape(card["nw_t"])}{nw_links} · <strong>DSR:</strong> {escape(card["dsr"])}</p>'
+        + f'<p><strong>NW t:</strong> {escape(card["nw_t"])}{nw_links} · <strong>DSR (vs zero Sharpe):</strong> {escape(card["dsr"])}</p>'
         '<p class="muted">Gate memo / PR: '
         f'<a href="{escape(card["gate"]["href"])}" target="_blank" rel="noreferrer">{escape(card["gate"]["label"])}</a> · '
         f'<a href="{escape(prefix + method_page)}">Method page</a> · OOS artifact: '
