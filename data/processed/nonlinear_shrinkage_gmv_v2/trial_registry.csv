@@ -1,0 +1,3 @@
+window_weeks,min_names,below_floor,adv_min,include_thin,thin_min_months,exclude_categories,exclude_cash_like,cost_bps,oos_start,oos_end,reference_lookback_months,trial_id,role,preregistered,trial_count
+156,95,skip,0.0,False,60,"('Defined Outcome / Buffer / Structured', 'Specialty / Other')",True,5.0,2021-04-30,2026-08-31,60,nls_gmv_v2_w156,primary,True,6
+260,95,skip,0.0,False,60,"('Defined Outcome / Buffer / Structured', 'Specialty / Other')",True,5.0,2021-04-30,2026-08-31,60,nls_gmv_v2_w260,sensitivity,True,6

@@ -760,6 +760,40 @@ def nonlinear_shrinkage_gmv(prices, spec, *, universe_csv, asof=None) -> Strateg
     return StrategyResult(formatted, diagnostics, returns)
 
 
+def nonlinear_shrinkage_gmv_v2_excash(prices, spec, *, universe_csv, asof=None) -> StrategyResult:
+    """Research adapter for the v2 ex-cash 156-week primary configuration (enabled:false)."""
+    from .nonlinear_shrinkage_gmv_v2 import (METHOD, NLSGMVv2Trial, run_nls_gmv_v2_trial,
+                                             summarize_v2, TRIAL_COUNT_V2)
+    from .spectral_risk_parity import read_returns
+    params = dict(spec.default_params)
+    weekly = pd.read_csv(params.pop("weekly_csv"), index_col=0, parse_dates=True)
+    monthly = read_returns(params.pop("monthly_csv"))
+    coverage_path = params.pop("coverage_csv", None)
+    if asof is not None:
+        cutoff = pd.Timestamp(asof)
+        monthly = monthly.loc[:cutoff]
+        if cutoff < cutoff + pd.offsets.BMonthEnd(0):
+            monthly = monthly.loc[monthly.index.to_period("M") < cutoff.to_period("M")]
+        if monthly.empty:
+            raise ValueError("no completed months at asof")
+        weekly = weekly.loc[:cutoff]
+        params["oos_end"] = monthly.index[-1].strftime("%Y-%m-%d")
+    universe = pd.read_csv(universe_csv)
+    result = run_nls_gmv_v2_trial(weekly, monthly, universe,
+                                  pd.read_csv(coverage_path) if coverage_path else None, NLSGMVv2Trial(**params))
+    weights = result["weights"].query("strategy_id == @METHOD")
+    latest = weights.loc[weights.decision_date.eq(weights.decision_date.max())]
+    formatted = _format_weights(latest[["ticker", "weight"]], strategy_id=spec.id,
+                                date=latest.decision_date.iloc[0])
+    summary, _, _ = summarize_v2(result["oos_returns"], result["weights"], result["name_counts"], universe,
+                                 TRIAL_COUNT_V2, bootstrap_reps=0)
+    diagnostics = result["shrinkage_diagnostics"].merge(summary.query("strategy_id == @METHOD"), on="window_weeks")
+    diagnostics["strategy_id"] = spec.id
+    returns = result["oos_returns"].query("strategy_id == @METHOD").copy()
+    returns["strategy_id"] = spec.id
+    return StrategyResult(formatted, diagnostics, returns)
+
+
 def spectral_risk_parity(prices, spec, *, universe_csv, asof=None) -> StrategyResult:
     """Run full panel or derive monthly returns from the supplied daily prices."""
     from .spectral_risk_parity import SpectralTrial, read_returns, run_spectral_trial
@@ -832,6 +866,8 @@ def _strategy_current_result(
 ) -> StrategyResult:
     if spec.entrypoint == "usa_etf_features.strategy_registry:nonlinear_shrinkage_gmv":
         return nonlinear_shrinkage_gmv(prices, spec, universe_csv=universe_csv, asof=asof)
+    if spec.entrypoint == "usa_etf_features.strategy_registry:nonlinear_shrinkage_gmv_v2_excash":
+        return nonlinear_shrinkage_gmv_v2_excash(prices, spec, universe_csv=universe_csv, asof=asof)
     if spec.entrypoint == "usa_etf_features.strategy_registry:spectral_risk_parity":
         return spectral_risk_parity(prices, spec, universe_csv=universe_csv, asof=asof)
     if spec.entrypoint == FT_MED_ENTRYPOINT:
