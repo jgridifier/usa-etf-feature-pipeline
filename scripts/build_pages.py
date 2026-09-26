@@ -10,6 +10,7 @@ from html import escape
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
+ARCHIVE_JSON = ROOT / 'apps' / 'pages' / 'src' / 'data' / 'archive_verdicts.json'
 DOCS = ROOT / 'docs'
 DATA = DOCS / 'data'
 ASSETS = DOCS / 'assets'
@@ -692,6 +693,70 @@ def build_runs() -> None:
     ))
 
 
+def load_archive_cards() -> dict:
+    return json.loads(ARCHIVE_JSON.read_text(encoding='utf-8'))
+
+
+def verdict_card_html(card, prefix) -> str:
+    method_page = card['method_page']
+    if not prefix:
+        method_page = method_page.removeprefix('methods/')
+    badge_class = 'badge badge-fail' if card['badge'] == 'FAIL' else 'badge'
+    rows = [[row['label'], row['sharpe'], row['maxdd']] for row in card['rows']]
+    return (
+        f'<article class="feature-card archive-card" id="card-{escape(card["id"])}">'
+        f'<span class="{badge_class}">{escape(card["badge"])}</span>'
+        f'<p><strong>{escape(card["name"])}</strong></p>'
+        f'<p class="metric-sub">{escape(card["detail"])}</p>'
+        f'<p><em>{escape(card["verdict"])}</em></p>'
+        f'<p><strong>Binding null:</strong> {escape(card["null"])}</p>'
+        + table_html(['', 'Sharpe', 'MaxDD'], rows, f'{card["name"]} OOS vs null')
+        + f'<p><strong>NW t:</strong> {escape(card["nw_t"])} · <strong>DSR:</strong> {escape(card["dsr"])}</p>'
+        '<p class="muted">Gate memo / PR: '
+        f'<a href="{escape(card["gate"]["href"])}" target="_blank" rel="noreferrer">{escape(card["gate"]["label"])}</a> · '
+        f'<a href="{escape(prefix + method_page)}">Method page</a> · OOS artifact: '
+        f'<a href="{escape(card["artifact"]["href"])}" target="_blank" rel="noreferrer">{escape(card["artifact"]["label"])}</a> · '
+        f'Archived {escape(card["archived"])} ({escape(card["archived_via"])})</p></article>'
+    )
+
+
+def build_archive_scoreboard() -> None:
+    archive = load_archive_cards()
+    subtitle = (
+        'Archived methods: Justina round-1 (Spectral RP, Regime-Aware), #13 VCFC, #4 FT-MED, #3 RR-ERC · '
+        'plus the unconditional Book-2 VT audit null · USA ETF experimental panel · '
+        f'updated {archive["updated"]} (ET)'
+    )
+    content = (
+        '<section class="band"><div class="band-inner">'
+        '<p><span class="badge">Research archive · not a showcase · not live books</span></p>'
+        '<h1>Methods Archive scoreboard</h1>'
+        f'<p class="muted">{escape(subtitle)}</p>'
+        '<div class="callout"><strong>Research only — not investment advice.</strong> '
+        'Negative / null results documented on purpose. The five failed methods are '
+        '<strong>FAIL / ARCHIVE</strong> — not promoted to Books, not a showcase, not part of the live shortlist. '
+        'Unconditional Book-2 VT is an AUDIT NULL (not live, not a FAIL).</div>'
+        '<div class="callout"><strong>CIO frame:</strong> '
+        '<p><em>None of the five archived methods cleared its binding null.</em> <strong>No book cut.</strong></p>'
+        '<p>Live shortlist: <strong>static core + VT × gate-first skew overlay</strong> (Justina #6, PR #29). '
+        'Unconditional Book-2 VT is the audit null that overlay was measured against — not live, not a FAIL.</p>'
+        '<p>Further candidates must clear the same leakage · null · DSR · empirical gate. '
+        '<a href="../index.html#/">Back to live shortlist →</a></p></div>'
+        '<h2>Verdict cards</h2>'
+        + ''.join(verdict_card_html(card, '') for card in archive['cards'])
+        + '<h2>What cleared the process (not the nulls)</h2><ul>'
+        '<li>Walk-forward leakage gates + unit tests (decision / feature_end ≤ t; labels next month).</li>'
+        '<li>Predeclared nulls and DSR / trial counts reported (normal-approx DSR where applicable).</li>'
+        '<li>Brand-scrub / experimental-panel language only.</li></ul>'
+        '<p class="muted">Sources: card numbers are copied from repo artifacts (data/processed/*/…summary.csv) '
+        'and gate PR bodies (#10, #11, #13, #24, #26, #27, #29); single source: apps/pages/src/data/archive_verdicts.json.</p>'
+        '</div></section>'
+    )
+    write_page('methods/justina_round1_scoreboard.html', page_shell(
+        'Methods Archive scoreboard', content, prefix='../', active='methods/index.html', include_charts=False,
+    ))
+
+
 def build_methods_index() -> None:
     methods = [
         ('allocation_alpha_vol_target.html', 'Allocation alpha: volatility-managed Option A'),
@@ -699,17 +764,12 @@ def build_methods_index() -> None:
         ('ot_short_term_forecasting.html', 'Optimal transport: short-term forecasting'),
         ('ts_explorer_metric_menu.html', 'Time Series Explorer: quant metric menu'),
     ]
-    archive = [
-        ('justina_round1_scoreboard.html', 'Methods Archive scoreboard (Justina round-1 + vol-cond #13)'),
-        ('spectral_risk_parity.html', 'Spectral Risk Parity: research archive (did not clear MinVar null)'),
-        ('regime_aware_dual_regime.html', 'Regime-Aware Dual-Regime: research archive (did not clear uncond ERC)'),
-        ('allocation_alpha_vol_cond_factor_corr.html', 'Vol-cond-factor-corr (#13): research archive (did not clear Book-2 VT null)'),
-    ]
+    archive = load_archive_cards()
     content = (
         '<section class="hero hero-compact"><div class="hero-inner">'
         '<span class="badge">Teaching notes</span><h1>Methods</h1>'
         '<p class="lede">Citation-backed method pages. Open viz deep-links to the Runs lab.</p>'
-        '<div class="cta-row"><a class="btn btn-primary" href="../runs.html">Open OOS viz</a></div>'
+        '<div class="cta-row"><a class="btn btn-primary" href="../index.html#/runs">Open OOS viz</a></div>'
         '</div></section>'
         '<section class="band"><div class="band-inner"><ul class="method-list">'
         + ''.join(
@@ -717,13 +777,12 @@ def build_methods_index() -> None:
         )
         + '</ul>'
         '<h2 id="archive">Archive / failed nulls</h2>'
-        '<p class="lede archive-lede">FAIL / ARCHIVE — research record only; <strong>not live books</strong>. '
-        'Live shortlist remains static core + VT × gate-first skew overlay. Unconditional Book-2 VT is the audit/Archive null only.</p>'
-        '<ul class="method-list archive-list">'
-        + ''.join(
-            f'<li><a href="{name}"><span class="badge badge-fail">FAIL</span> {escape(title)}</a></li>' for name, title in archive
-        )
-        + '</ul></div></section>'
+        '<p class="lede archive-lede">5 FAIL / ARCHIVE methods + 1 AUDIT NULL — research record only; <strong>not live books</strong>. '
+        'Live shortlist: static core + VT × gate-first skew overlay (Justina #6). '
+        'Unconditional Book-2 VT is the audit null, not a FAIL.</p>'
+        + ''.join(verdict_card_html(card, '') for card in archive['cards'])
+        + '<p class="cta-inline"><a href="justina_round1_scoreboard.html">Archive scoreboard page →</a></p>'
+        '</div></section>'
     )
     write_page('methods/index.html', page_shell(
         'Methods', content, prefix='../', active='methods/index.html', include_charts=False,
@@ -732,7 +791,7 @@ def build_methods_index() -> None:
 
 def restyle_methods_shell() -> None:
     methods = sorted(
-        p.name for p in (DOCS / 'methods').glob('*.html') if p.name != 'index.html'
+        p.name for p in (DOCS / 'methods').glob('*.html') if p.name not in {'index.html', 'justina_round1_scoreboard.html'}
     )
     for name in methods:
         p = DOCS / 'methods' / name
@@ -778,6 +837,7 @@ def main() -> None:
             path.unlink()
             print('Removed leftover', leftover)
     build_methods_index()
+    build_archive_scoreboard()
     restyle_methods_shell()
     print('Built docs viz JSON + methods under', DOCS)
 

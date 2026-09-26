@@ -559,6 +559,12 @@ Deep Pages stub: `docs/methods/skewness_managed_stub.html`
 
 This repository is **research infrastructure only**. It does not constitute investment advice, an offer to sell securities, or a recommendation to buy or sell any ETF. Past feature ranks, rotation gates, and backtest-style constructs are not indicative of future results.
 
+## Pages layout frozen
+
+The GitHub Pages layout, IA (nav/routes/sections), and paper-editorial theme (Newsreader/Playfair, cream/navy) are frozen as of 2026-09-25.
+Future Pages PRs should only change verdicts and content (e.g. `apps/pages/src/data/archive_verdicts.json`, copy, numbers from repo artifacts), not layout, CSS, tokens or navigation.
+A redesign needs an explicit CIO ask.
+
 ## GitHub Pages research lab (v2 — Vite + React)
 
 The site in `docs/` is a **Vite + React + Tailwind** app (source: `apps/pages/`), statically

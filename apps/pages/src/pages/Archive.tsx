@@ -1,44 +1,32 @@
 import { Link } from 'react-router-dom'
 
-interface ScoreboardRow {
-  method: string
-  methodNote: string
-  bindingNull: string
-  methodSharpe: string
-  nullSharpe: string
-  stress: string
-  links: { label: string; href: string }[]
+import { Card } from '../components/ui/card'
+import { Badge } from '../components/ui/badge'
+import archive from '../data/archive_verdicts.json'
+
+interface ArchiveCard {
+  id: string
+  name: string
+  detail: string
+  badge: string
+  verdict: string
+  null: string
+  rows: { role: string; label: string; sharpe: string; maxdd: string }[]
+  nw_t: string
+  dsr: string
+  gate: { label: string; href: string }
+  method_page: string
+  artifact: { label: string; href: string }
+  archived: string
+  archived_via: string
 }
 
-const SCOREBOARD: ScoreboardRow[] = [
-  {
-    method: 'Spectral Risk Parity (ADIA Lab mapping)',
-    methodNote: 'Name mode, N≥100, 65m OOS, n_trials=4',
-    bindingNull: 'Ledoit–Wolf MinVar',
-    methodSharpe: '1.06 / −8.4%',
-    nullSharpe: '1.60 / −4.5%\n(ERC 0.98 / −10.1%; EW 0.83 / −18.4%)',
-    stress: 'Mild MaxDD edge vs ERC only; loses to MinVar on vol and drawdown. Sleeve mode (343m) last on Sharpe.',
-    links: [{ label: 'method page', href: './methods/spectral_risk_parity.html' }],
-  },
-  {
-    method: 'Regime-Aware Dual-Regime (Luo & Mulvey mapping)',
-    methodNote: 'Category sleeves, 262m, trial_count=4, gross of costs',
-    bindingNull: 'Unconditional ERC',
-    methodSharpe: '0.51 / −38.6%\n(best dual: vol_corr_spread ERC)',
-    nullSharpe: '0.74 / −22.8%\n(EW 0.70 / −42%; always-calm 0.53 / −52%)',
-    stress: 'Ex-post stress (n=53): dual mean −3.3%/mo vs uncond ERC −2.5%/mo — no left-tail rescue. Name-level same pattern (0.57/−33% vs 0.90/−22%).',
-    links: [{ label: 'method page', href: './methods/regime_aware_dual_regime.html' }],
-  },
-  {
-    method: 'Vol-cond-factor-corr (#13)',
-    methodNote: 'Book-2 VT × corr/vol gate; min_names=100; 21 sleeves; 12 trials; 5 bps; best trial L21/C12/g0.5 (~70m)',
-    bindingNull: 'Unconditional Book-2 VT',
-    methodSharpe: '1.05 / −15.4%\n(best Sharpe trial; no trial beats Book-2 Sharpe)',
-    nullSharpe: 'Book-2 1.11 / −20.5%\n(also fails vs static Option A on NW t, all negative)',
-    stress: 'All 12 trials NW t vs Book-2 negative (≈ −1.43 to −3.10). MaxDD milder than Book-2 in 12/12 — risk compression only; not allocation alpha vs live Book-2.',
-    links: [{ label: 'method page', href: './methods/allocation_alpha_vol_cond_factor_corr.html' }],
-  },
-]
+interface ArchiveData {
+  updated: string
+  cards: ArchiveCard[]
+}
+
+const archiveData: ArchiveData = archive
 
 function Eyebrow({ children }: { children: React.ReactNode }) {
   return <p className="section-eyebrow">{children}</p>
@@ -71,14 +59,14 @@ export default function Archive() {
             Methods Archive
           </h2>
           <p className="text-base text-body max-w-2xl mb-5 leading-relaxed">
-            Justina round-1 (Spectral RP + Regime-Aware Dual-Regime) + vol-cond-factor-corr (#13) ·
-            USA ETF experimental panel · updated 2026-09-21 (ET)
+            Archived methods: Justina round-1 (Spectral RP, Regime-Aware), #13 VCFC, #4 FT-MED, #3 RR-ERC ·
+            plus the unconditional Book-2 VT audit null · USA ETF experimental panel · updated {archiveData.updated} (ET)
           </p>
           <div className="inline-block border border-down/20 bg-down/5 px-4 py-3 text-xs text-muted max-w-2xl">
             <strong className="text-ink">Research only — not investment advice.</strong>{' '}
-            Negative / null results documented on purpose. These methods are{' '}
+            Negative / null results documented on purpose. The five failed methods are{' '}
             <strong className="text-down">FAIL / ARCHIVE</strong> — not promoted to Books, not a
-            showcase, not part of the live shortlist.
+            showcase, not part of the live shortlist. Unconditional Book-2 VT is an AUDIT NULL (not live, not a FAIL).
           </div>
         </div>
       </section>
@@ -92,88 +80,77 @@ export default function Archive() {
               <span className="text-2xs font-medium uppercase tracking-label text-muted">CIO frame</span>
             </div>
             <p className="font-serif text-base italic text-ink leading-snug mb-3">
-              Justina round-1 and the Book-2 conditional-correlation upgrade (#13) did not clear
-              binding nulls on Sharpe (and round-1 also failed the risk path).{' '}
+              None of the five archived methods cleared its binding null.{' '}
               <strong className="not-italic">No book cut.</strong>
             </p>
             <p className="text-sm text-body leading-relaxed">
-              Live shortlist stays{' '}
-              <strong className="text-ink">static core + unconditional Book-2 vol-target</strong>{' '}
-              until something clears the same leakage · null · DSR · empirical gate.
+              Live shortlist: <strong className="text-ink">static core + VT × gate-first skew overlay</strong> (Justina #6, PR #29).
+              Unconditional Book-2 VT is the audit null that overlay was measured against — not live, not a FAIL.
+            </p>
+            <p className="text-sm text-body leading-relaxed">
+              Further candidates must clear the same leakage · null · DSR · empirical gate.{' '}
+              <Link to="/" className="text-muted hover:text-body underline underline-offset-2 decoration-border">
+                Back to live shortlist →
+              </Link>
             </p>
           </div>
         </div>
       </section>
 
-      {/* ── Scoreboard ── */}
+      {/* ── Verdict cards ── */}
       <section className="py-12 border-b border-border">
         <div className="mx-auto max-w-6xl px-4 md:px-6">
           <SectionRule label="Results" />
           <div className="mt-8">
-            <Eyebrow>Scoreboard</Eyebrow>
-            <div
-              className="mt-4 overflow-x-auto border border-border"
-              tabIndex={0}
-              role="region"
-              aria-label="Methods Archive scoreboard"
-            >
-              <table className="w-full text-xs">
-                <thead>
-                  <tr className="border-b border-border bg-raised text-left">
-                    {[
-                      'Method', 'Binding null',
-                      'Method Sharpe / MaxDD', 'Null Sharpe / MaxDD',
-                      'Stress / A/B path', 'Verdict', 'Links',
-                    ].map(h => (
-                      <th
-                        key={h}
-                        className="px-4 py-3 font-medium text-muted text-2xs uppercase tracking-label whitespace-nowrap first:min-w-[180px]"
-                      >
-                        {h}
-                      </th>
-                    ))}
-                  </tr>
-                </thead>
-                <tbody>
-                  {SCOREBOARD.map((row, i) => (
-                    <tr
-                      key={i}
-                      className="border-b border-border last:border-0 hover:bg-raised transition-colors align-top"
-                    >
-                      <td className="px-4 py-4 min-w-[180px]">
-                        <span className="font-medium text-ink block">{row.method}</span>
-                        <span className="text-muted/60">{row.methodNote}</span>
-                      </td>
-                      <td className="px-4 py-4 text-body min-w-[120px]">{row.bindingNull}</td>
-                      <td className="px-4 py-4 font-mono whitespace-pre-line min-w-[140px]">{row.methodSharpe}</td>
-                      <td className="px-4 py-4 font-mono whitespace-pre-line min-w-[140px]">{row.nullSharpe}</td>
-                      <td className="px-4 py-4 text-body min-w-[200px] max-w-xs">{row.stress}</td>
-                      <td className="px-4 py-4 whitespace-nowrap">
-                        <span className="font-semibold text-down">FAIL — archive</span>
-                      </td>
-                      <td className="px-4 py-4">
-                        {row.links.map(link => (
-                          <a
-                            key={link.href}
-                            href={link.href}
-                            className="block text-muted hover:text-body text-2xs underline underline-offset-2 decoration-border"
-                          >
-                            {link.label}
-                          </a>
+            <Eyebrow>Verdict cards</Eyebrow>
+            <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-6">
+              {archiveData.cards.map(card => (
+                <Card key={card.id} className="p-5">
+                  <Badge variant={card.badge === 'FAIL' ? 'archive' : 'quiet'}>{card.badge}</Badge>
+                  <h3 className="font-display text-xl text-ink mt-2">{card.name}</h3>
+                  <p className="text-xs text-muted mb-3">{card.detail}</p>
+                  <p className="font-serif text-base italic text-ink leading-snug mb-3">{card.verdict}</p>
+                  <p className="text-sm text-body mb-3">Binding null: {card.null}</p>
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-xs">
+                      <thead>
+                        <tr className="border-b border-border bg-raised text-left">
+                          {['', 'Sharpe', 'MaxDD'].map(h => (
+                            <th key={h} className="px-4 py-3 font-medium text-muted text-2xs uppercase tracking-label">{h}</th>
+                          ))}
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {card.rows.map(row => (
+                          <tr key={row.label} className="border-b border-border last:border-0 align-top">
+                            <td className="px-4 py-3 text-body">{row.label}</td>
+                            <td className="px-4 py-3 font-mono text-body">{row.sharpe}</td>
+                            <td className="px-4 py-3 font-mono text-body">{row.maxdd}</td>
+                          </tr>
                         ))}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+                      </tbody>
+                    </table>
+                  </div>
+                  <dl className="mt-4 text-xs text-body space-y-2">
+                    <div><dt className="font-medium text-muted">NW t</dt><dd className="font-mono">{card.nw_t}</dd></div>
+                    <div><dt className="font-medium text-muted">DSR</dt><dd className="font-mono">{card.dsr}</dd></div>
+                  </dl>
+                  <p className="mt-4 text-2xs text-muted">
+                    Gate memo / PR: <a href={card.gate.href} target="_blank" rel="noreferrer" className="text-muted hover:text-body underline underline-offset-2 decoration-border">{card.gate.label}</a>{' · '}
+                    <a href={'./' + card.method_page} className="text-muted hover:text-body underline underline-offset-2 decoration-border">Method page</a>{' · '}
+                    OOS artifact: <a href={card.artifact.href} target="_blank" rel="noreferrer" className="text-muted hover:text-body underline underline-offset-2 decoration-border">{card.artifact.label}</a>{' · '}
+                    Archived {card.archived} ({card.archived_via})
+                  </p>
+                </Card>
+              ))}
             </div>
           </div>
         </div>
       </section>
 
-      {/* ── What cleared / didn't ── */}
+      {/* ── What cleared the process ── */}
       <section className="py-12 bg-hero-gradient border-b border-border">
-        <div className="mx-auto max-w-6xl px-4 md:px-6 grid grid-cols-1 md:grid-cols-2 gap-8">
+        <div className="mx-auto max-w-6xl px-4 md:px-6">
           <div>
             <Eyebrow>What cleared the process (not the nulls)</Eyebrow>
             <ul className="space-y-2 text-sm text-body list-none mt-4">
@@ -189,52 +166,23 @@ export default function Archive() {
               ))}
             </ul>
           </div>
-          <div>
-            <Eyebrow>What did not clear</Eyebrow>
-            <ul className="space-y-2 text-sm text-body list-none mt-4">
-              {[
-                ['Spectral', 'no edge vs LW MinVar on Sharpe or risk path; sleeve cut rejects.'],
-                ['Regime-Aware', 'dual eligibility overlay worse than unconditional ERC on Sharpe, MaxDD, and stress months; higher turnover.'],
-                ['Vol-cond-factor-corr (#13)', 'no Sharpe beat of unconditional Book-2 VT; every NW t vs Book-2 negative. Milder MaxDD alone does not clear the book bar.'],
-              ].map(([name, detail], i) => (
-                <li key={i} className="flex gap-2">
-                  <span className="text-down mt-0.5 flex-shrink-0">✗</span>
-                  <span>
-                    <strong className="text-ink">{name}:</strong>{' '}
-                    {detail}
-                  </span>
-                </li>
-              ))}
-            </ul>
-          </div>
         </div>
       </section>
 
-      {/* ── Books implication + links ── */}
+      {/* ── Teaching links ── */}
       <section className="py-12">
         <div className="mx-auto max-w-6xl px-4 md:px-6">
-          <div className="border border-border bg-surface px-5 py-4 text-sm text-muted mb-8">
-            <strong className="text-ink">Books implication:</strong> No new book from Justina
-            round-1 or from #13. Existing shortlist unchanged:{' '}
-            <strong className="text-ink">static core + unconditional Book-2 vol-target</strong>.
-            Next method candidates must clear the same leakage · null · DSR · empirical gate before
-            CoS design-pass or promoted Pages.{' '}
-            <Link
-              to="/"
-              className="text-muted hover:text-body underline underline-offset-2 decoration-border"
-            >
-              Back to live shortlist →
-            </Link>
-          </div>
-
           <Eyebrow>Teaching pages (static HTML)</Eyebrow>
           <div className="mt-3 flex flex-wrap gap-2">
             {[
               { label: 'Spectral RP', href: './methods/spectral_risk_parity.html' },
               { label: 'Regime-Aware Dual-Regime', href: './methods/regime_aware_dual_regime.html' },
-              { label: 'Vol-cond factor corr', href: './methods/allocation_alpha_vol_cond_factor_corr.html' },
+              { label: 'Vol-cond factor corr #13', href: './methods/allocation_alpha_vol_cond_factor_corr.html' },
+              { label: 'FT-MED #4', href: './methods/allocation_alpha_forecast_tangency_med.html' },
+              { label: 'RR-ERC #3', href: './methods/allocation_alpha_regime_resilient_erc.html' },
               { label: 'Vol-target (Book 2)', href: './methods/allocation_alpha_vol_target.html' },
-              { label: 'Justina round-1 scoreboard (legacy HTML)', href: './methods/justina_round1_scoreboard.html' },
+              { label: 'Skewness overlay #6', href: './methods/skewness_managed_stub.html' },
+              { label: 'Archive scoreboard (static HTML)', href: './methods/justina_round1_scoreboard.html' },
             ].map(link => (
               <a
                 key={link.href}
@@ -247,10 +195,7 @@ export default function Archive() {
           </div>
 
           <p className="mt-6 text-2xs text-muted/50">
-            Sources: <code>JUSTINA_ROUND1_SCOREBOARD.md</code>,{' '}
-            <code>QUANT_GATE_vol_cond_factor_corr.md</code>,{' '}
-            <code>data/processed/vol_cond_factor_corr/vol_cfc_oos_summary.csv</code> (best Sharpe
-            trial <code>VCFC_option_a_vt_L21_C12_g0p5_mkt_vol</code>).
+            Sources: card numbers are copied from repo artifacts (data/processed/*/…summary.csv) and gate PR bodies (#10, #11, #13, #24, #26, #27, #29); single source: apps/pages/src/data/archive_verdicts.json.
           </p>
         </div>
       </section>
