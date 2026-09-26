@@ -397,7 +397,10 @@ export default function Books() {
                       <code>vol_target_oos_summary.csv</code> and registry entry{' '}
                       <code>vol_target_option_a_uncond</code>):{' '}
                       milder MaxDD / higher Sharpe_rf0; no return-edge expected.{' '}
-                      <strong>No new shortlist card. Two books only.</strong>
+                      <strong>No new shortlist card. Two books only.</strong>{' '}
+                      Cash-null audit (Quant, 2026-09-26): About 40% of the rf=0 Sharpe gap was cash carry.
+                      In excess of BIL it is 0.97 vs 0.84 and the drawdown cut is unchanged, so the PASS as
+                      a risk overlay stands.
                     </dd>
                   </div>
                 </dl>

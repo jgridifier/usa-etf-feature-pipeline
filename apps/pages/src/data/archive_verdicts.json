@@ -1,5 +1,5 @@
 {
-  "updated": "2026-09-25",
+  "updated": "2026-09-26",
   "note": "Single source of truth for Archive verdict cards. Rendered by apps/pages/src/pages/Archive.tsx (#/archive) and by scripts/build_pages.py (docs/methods/index.html#archive + docs/methods/justina_round1_scoreboard.html). Numbers copied verbatim from repo artifacts / PR bodies; do not re-round. Optional link fields: nw_t_links[] and measured{label,text}; hrefs starting with http are absolute, others are relative to docs/.",
   "cards": [
     {
@@ -45,7 +45,11 @@
           "label": "PR #10",
           "href": "https://github.com/jgridifier/usa-etf-feature-pipeline/pull/10"
         }
-      ]
+      ],
+      "measured": {
+        "label": "Cash-null audit (Quant, 2026-09-26)",
+        "text": "Its LW MinVar null was about half cash-like ETFs; it scores 1.60 at rf=0 but −0.25 in excess of BIL. Spectral RP still trails ERC and EW in excess of BIL, so the FAIL stands."
+      }
     },
     {
       "id": "regime_dual",
@@ -172,7 +176,11 @@
         "href": "https://github.com/jgridifier/usa-etf-feature-pipeline/blob/main/data/processed/ft_med/ft_med_oos_summary.csv"
       },
       "archived": "2026-09-22",
-      "archived_via": "PR #24 merged"
+      "archived_via": "PR #24 merged",
+      "measured": {
+        "label": "Cash-null audit (Quant, 2026-09-26)",
+        "text": "In excess of BIL the method still trails EW, ERC and LW MVO; the FAIL doesn't depend on the low-vol LW MinVar null."
+      }
     },
     {
       "id": "rr_erc",
@@ -219,7 +227,11 @@
         "href": "https://github.com/jgridifier/usa-etf-feature-pipeline/blob/main/data/processed/rr_erc/rr_erc_oos_summary.csv"
       },
       "archived": "2026-09-22",
-      "archived_via": "PR #26 merged"
+      "archived_via": "PR #26 merged",
+      "measured": {
+        "label": "Cash-null audit (Quant, 2026-09-26)",
+        "text": "LW MinVar outranks Path B at rf=0 but not in excess of BIL; the FAIL rests on Path B vs uncond ERC and stands."
+      }
     },
     {
       "id": "uncond_book2_vt",
@@ -251,7 +263,7 @@
       "archived_via": "PR #29 merged; demoted from live to audit null",
       "measured": {
         "label": "#6 skew overlay measured against it",
-        "text": "1.280 / −10.1%, NW t −0.80"
+        "text": "1.280 / −10.1%, NW t −0.80. Cash-null audit (Quant, 2026-09-26): About 40% of the rf=0 Sharpe gap was cash carry. In excess of BIL it is 0.97 vs 0.84 and the drawdown cut is unchanged, so the PASS as a risk overlay stands."
       }
     }
   ]
