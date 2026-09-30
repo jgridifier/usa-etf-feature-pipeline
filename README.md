@@ -890,7 +890,7 @@ EPO universe. Primary w=0.75; sensitivities 0.50 and 0.90; 11 counted trials.
 The gate has **not yet been run**.
 
 The design is locked in `preregistration/epo_allocator.yaml`, SHA-256
-`c071017a22edb21e4ad5c89071194771074c03da5df9a8604baab36324332d75`.
+`9c4ebc4ab0760a2862e1827fe224102b5a75e1e5298c6533cbf5a9390432d67a`.
 The runner checks that both disk and HEAD match the pin and the entire git tree
 is clean before loading data. After the data refresh and committing the work:
 
@@ -899,7 +899,12 @@ is clean before loading data. After the data refresh and committing the work:
 ```
 
 Complete months only. Book eligibility requires PASS, strictly higher full-window
-Sharpe_exBIL than the anchor, higher Sharpe or shallower MaxDD than Book 1 on its
-available months, and at least 50% average equity weight (CIO growth-mandate fit).
+Sharpe_exBIL than the anchor, higher Sharpe or shallower MaxDD than Book 1 (net vs
+net: the rebuilt monthly-rebalanced 70/20/10 mix with the same drifted-turnover
+5 bp cost model, on the overlap months from 2020-11 only, with EPO restricted to
+the same months), and at least 50% average equity weight (CIO growth-mandate fit).
+The published gross Book 1 series is printed as a reference line only. Signal is
+12-1 (final; 12-0 is not run). VT and SPHD are equity (98 equity / 20 bond /
+17 commodity).
 These CIO conditions do not change the gate label. No reruns or retuning to chase
 significance; statistical/classical methods only, no pretrained models.

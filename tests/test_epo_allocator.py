@@ -15,7 +15,7 @@ from usa_etf_features import epo_allocator as e, gate_metrics as gm
 from usa_etf_features.monthly_panel import load_monthly_panel
 from usa_etf_features.gate_results import GateResultError
 
-PIN = 'c071017a22edb21e4ad5c89071194771074c03da5df9a8604baab36324332d75'
+PIN = '9c4ebc4ab0760a2862e1827fe224102b5a75e1e5298c6533cbf5a9390432d67a'
 
 
 def test_universe_and_preregistration():
@@ -52,6 +52,21 @@ def test_universe_and_preregistration():
     assert 'growth-mandate fit' in p['book_eligibility']['cio_condition_2_asset_mix']
     assert 'No reruns' in p['no_reruns'] and 'no large pretrained' in p['method_constraint']['rule']
     assert e.WINDOW_WEEKS == 156 and e.MIN_MONTHS == 60
+
+    # Quant + CIO rulings (2026-09-30): nothing open, counts stated exactly, 12-0 never run.
+    text = raw.decode().lower()
+    assert 'pending' not in text and 'open item' not in text
+    ac = p['asset_class']
+    assert ac['counts'] == dict(epo_universe=135, equity=98, bond=20, commodity=17)
+    assert ac['added_39_split'] == dict(bond=20, commodity=17, bond_or_commodity=37, equity=2)
+    assert set(ac['equity_among_added']) == {'VT', 'SPHD'} and 'equity_among_added_note' not in ac
+    assert set(classes.index[classes.eq('equity')]) == gm.EQUITY_ONLY | {'VT', 'SPHD'}
+    assert p['signal']['final'] is True and 'NOT a sensitivity' in p['signal']['twelve_zero']
+    assert 'drifted' in p['costs']['primary'] and 'previous target' in p['costs']['diagnostic']
+    assert 'net' in p['nulls']['reference'] and 'reference line only' in p['nulls']['book1_published_reference']
+    assert 'overlap months only' in p['book_eligibility']['book1_window'] and '2020-11' in p['book_eligibility']['book1_window']
+    assert p['book_eligibility']['anchor_window'].startswith('full OOS')
+    assert '<= 50%' in p['gate']['c6'] and 'observed shares are printed' in p['gate']['c6']
 
 
 @pytest.fixture
@@ -282,6 +297,20 @@ def test_synthetic_gate_writer(panels, monkeypatch, tmp_path):
     assert f"**Label (mechanical + composition): {result['label']}**\nbook_eligible:" in report
     assert '0.00%' in report and 'asset_class_mix' in report
     for sid in (e.METHOD, e.PRIMARY, e.ANCHOR): assert sid in report
+    bc = result['book1_comparison']
+    oos = result['oos_returns']
+    assert bc['full_oos_months'] == oos.strategy_id.eq(e.METHOD).sum()
+    assert bc['overlap_months'] == oos.strategy_id.eq(e.BOOK1).sum() > 0
+    first_all_three = monthly[['VOO', 'QQQM', 'IJR']].dropna().index
+    assert pd.Timestamp(bc['overlap_start']) == first_all_three[first_all_three >= pd.Timestamp(bc['full_start'])][0]
+    b1 = result['book1_window_summary'].set_index('strategy_id')
+    assert b1.loc[e.METHOD, 'n_months'] == b1.loc[e.BOOK1, 'n_months'] == bc['overlap_months']   # method restricted
+    assert b1.loc[e.METHOD, 'start'] == b1.loc[e.BOOK1, 'start']
+    assert f"Month counts: full OOS {bc['full_oos_months']}" in report and f"Book 1 overlap {bc['overlap_months']}" in report
+    assert 'Book 1 published gross series (reference only, not used for eligibility)' in report
+    assert 'Observed composition share' in report and 'limit <= 50%' in report
+    assert 'drifted-weight turnover is primary' in report and 'turnover_target' in report
+    assert payload['fields']['book1_comparison']['overlap_months'] == bc['overlap_months']
     broken = dict(result, monthly_panel_provenance=pd.read_csv(tmp_path/'monthly.csv'))
     with pytest.raises(GateResultError, match='provenance'):
         e.write_epo_artifacts(broken, tmp_path/'bad')
@@ -364,3 +393,30 @@ def test_inputs_sigma_ddof(toy):
     np.testing.assert_allclose(omega, .95*np.corrcoef(x, rowvar=False)+.05*np.eye(3))
     np.testing.assert_allclose(cov, np.diag(sigma)@omega@np.diag(sigma))
     np.testing.assert_allclose(V, np.diag(sigma**2))
+
+
+def test_book1_overlap_counts_and_window():
+    full = pd.date_range('2016-11-30', '2026-08-31', freq='ME')
+    book = full[full >= '2020-11-01']
+    oos = pd.concat([pd.DataFrame(dict(strategy_id=e.METHOD, date=full)),
+                     pd.DataFrame(dict(strategy_id=e.BOOK1, date=book))])
+    bc = e.book1_comparison(oos)
+    assert (bc['full_oos_months'], bc['overlap_months']) == (118, 70)
+    assert bc['overlap_start'] == '2020-11-30' and bc['overlap_end'] == '2026-08-31'
+    after_refresh = pd.concat([oos, pd.DataFrame(dict(strategy_id=[e.METHOD, e.BOOK1], date=pd.Timestamp('2026-09-30')))])
+    assert e.book1_comparison(after_refresh)['full_oos_months'] == 119
+    outside = pd.concat([oos, pd.DataFrame(dict(strategy_id=[e.BOOK1], date=[pd.Timestamp('2016-10-31')]))])
+    with pytest.raises(ValueError, match='outside the method OOS window'):
+        e.book1_comparison(outside)
+    committed = load_monthly_panel(e.ROOT/'data/raw/usa_universe_panel_monthly_returns.csv')
+    assert committed[['VOO', 'QQQM', 'IJR']].dropna().index[0].to_period('M') == pd.Period(e.BOOK1_FIRST_MONTH)
+
+
+def test_published_book1_reference_is_gross_reference_only():
+    rf = gm.risk_free_monthly()
+    dates = pd.date_range('2016-11-30', '2026-08-31', freq='ME')
+    ref = e.published_book1_reference(dates, rf)
+    pub = pd.read_csv(e.ROOT/e.PUBLISHED_BOOK1, parse_dates=['date'])
+    assert ref['available'] and ref['used_for_eligibility'] is False and 'gross' in ref['source']
+    assert ref['start'] == '2021-02-26' and ref['end'] == '2026-08-31'          # partial 2026-09 excluded
+    assert ref['n_months'] == (pub.date.dt.to_period('M') <= pd.Period('2026-08')).sum() == 67

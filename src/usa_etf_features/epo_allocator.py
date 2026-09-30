@@ -28,6 +28,8 @@ METHODS = ('epo_a_w075', 'epo_a_w050', 'epo_a_w090')
 PRIMARY = 'lw_minvar_156w'
 ANCHOR, TREND, EW, ERC = 'anchor_ivol', 'trend_ivol', 'equal_weight', 'erc_lw'
 BOOK1 = 'book1_static_option_a'
+BOOK1_FIRST_MONTH = '2020-11'   # QQQM's first full month on the committed panel (documentation + test)
+PUBLISHED_BOOK1 = Path('data/processed/vol_target_oos_returns.csv')   # published gross Book 1 (r_option_a)
 W_GRID = (0.75, 0.50, 0.90)
 WINDOW_WEEKS, NAME_FLOOR, MIN_MONTHS = 156, 100, 60
 FIRST_DECISION, SUBPERIOD = '2016-10-31', '2021-02'
@@ -36,7 +38,7 @@ TRIAL_COUNT = v3.TRIAL_COUNT_V3 + len(W_GRID)
 assert TRIAL_COUNT == 11
 BOOTSTRAP_REPS, BLOCK_SIZE, SEED = 5000, 4, 20260930
 PREREG_PATH = Path('preregistration/epo_allocator.yaml')
-PREREG_SHA256 = 'c071017a22edb21e4ad5c89071194771074c03da5df9a8604baab36324332d75'
+PREREG_SHA256 = '9c4ebc4ab0760a2862e1827fe224102b5a75e1e5298c6533cbf5a9390432d67a'
 lw2008_sharpe_test = v3.lw2008_sharpe_test
 deflated_sharpe_bailey_lp = v3.deflated_sharpe_bailey_lp
 book_eligible_line = v3.book_eligible_line
@@ -320,7 +322,9 @@ def _summary(oos, weights, universe, rf, period_role):
         rows.append(dict(strategy_id=sid, period_role=period_role, n_months=len(r), start=r.index.min(), end=r.index.max(),
             CAGR=cagr, AnnReturn=cagr, AnnVol=annualized_vol(r), Sharpe_exBIL=gm.sharpe_exbil(r, rf),
             Sharpe_rf0_legacy=sharpe_rf0(r), MaxDD=float((wealth/np.maximum.accumulate(wealth)-1).min()),
-            turnover_per_year=12*sub.turnover.mean(), HHI_mean=hhi.mean(), eff_N_mean=(1/hhi).mean(),
+            turnover_per_year=12*sub.turnover.mean(),
+            turnover_target_per_year_diagnostic=12*sub.turnover_target.mean() if 'turnover_target' in sub else np.nan,
+            HHI_mean=hhi.mean(), eff_N_mean=(1/hhi).mean(),
             names_held_mean=w.assign(held=w.weight > .001).groupby('date').held.sum().mean(),
             eff_N_category_mean=(1/(cats**2).sum(axis=1)).mean(), largest_single_name=avg.idxmax(),
             largest_single_name_share=avg.max(), largest_category=cats.mean().idxmax(),
@@ -443,6 +447,39 @@ def book_eligibility_epo(label, summary_full, book1_window_summary, asset_mix,
         lw2008_p_vs_book1=lw2008_p_vs_book1, lw2008_p_vs_anchor=lw2008_p_vs_anchor)
 
 
+def book1_comparison(oos):
+    """Month counts for the two comparison windows (anchor: full OOS; Book 1: overlap only)."""
+    method = pd.DatetimeIndex(oos.loc[oos.strategy_id.eq(METHOD), 'date']).sort_values()
+    book = pd.DatetimeIndex(oos.loc[oos.strategy_id.eq(BOOK1), 'date']).sort_values()
+    overlap = method.intersection(book)
+    # Book 1 rows exist only on months where VOO, QQQM and IJR all have returns (QQQM's first full
+    # month is 2020-11 on the committed panel); the method is restricted to exactly those months.
+    if len(book.difference(method)):
+        raise ValueError('Book 1 months outside the method OOS window')
+    return dict(full_oos_months=len(method), full_start=str(method[0].date()), full_end=str(method[-1].date()),
+                overlap_months=len(overlap), overlap_start=str(overlap[0].date()) if len(overlap) else None,
+                overlap_end=str(overlap[-1].date()) if len(overlap) else None,
+                overlap_dates=[str(d.date()) for d in overlap], anchor_window='full OOS',
+                book1_window='overlap months only; method restricted to the same months; net vs net')
+
+
+def published_book1_reference(method_dates, rf, path=None):
+    """Published gross Book 1 (r_option_a), on its months inside the OOS window; reference only."""
+    path = ROOT / PUBLISHED_BOOK1 if path is None else Path(path)
+    if not path.exists():
+        return dict(available=False, source=str(PUBLISHED_BOOK1))
+    pub = pd.read_csv(path, parse_dates=['date']).drop_duplicates('date').set_index('date')['r_option_a']
+    months = set(pd.DatetimeIndex(method_dates).to_period('M'))
+    pub = pub.loc[[d.to_period('M') in months for d in pub.index]].sort_index()
+    if pub.empty:
+        return dict(available=False, source=str(PUBLISHED_BOOK1))
+    wealth = np.r_[1., (1+pub).cumprod()]
+    return dict(available=True, source=f'{PUBLISHED_BOOK1} r_option_a (published, gross)', n_months=len(pub),
+                start=str(pub.index[0].date()), end=str(pub.index[-1].date()),
+                CAGR=float((1+pub).prod()**(12/len(pub))-1), Sharpe_exBIL=gm.sharpe_exbil(pub, rf),
+                MaxDD=float((wealth/np.maximum.accumulate(wealth)-1).min()), used_for_eligibility=False)
+
+
 def run_epo_gate(weekly, monthly, universe, *, rf=None, bootstrap_reps=BOOTSTRAP_REPS):
     provenance = panel_provenance(monthly)
     gate_results.validate_monthly_panel(provenance)
@@ -458,9 +495,11 @@ def run_epo_gate(weekly, monthly, universe, *, rf=None, bootstrap_reps=BOOTSTRAP
     result['category_spread'] = category_spread(result['weights'], universe)
     result['asset_class_mix'] = asset_class_mix(result['weights'], universe)
     oos = result['oos_returns']
-    book_dates = oos.loc[oos.strategy_id.eq(BOOK1), 'date']
+    result['book1_comparison'] = book1_comparison(oos)
+    book_dates = pd.DatetimeIndex(result['book1_comparison']['overlap_dates'])
     overlap = oos.loc[oos.date.isin(book_dates) & oos.strategy_id.isin([METHOD, BOOK1])]
     result['book1_window_summary'] = _summary(overlap, result['weights'], universe, rf, 'Book 1 overlap')
+    result['book1_published_reference'] = published_book1_reference(oos.loc[oos.strategy_id.eq(METHOD), 'date'], rf)
     def p_vs(base):
         tests = result['tests']
         t = tests.loc[tests.period_role.eq('full window') & tests.strategy_id.eq(METHOD) & tests.primary_null.eq(base)]
@@ -497,6 +536,18 @@ def gate_report_lines(result):
     lines = ['# Anchored EPO allocator — PENDING QUANT', '',
              f"**Label (mechanical + composition): {result['label']}**", book_eligible_line(result['book_eligible']), '']
     lines += gm.composition_report_lines(result['composition'])
+    c = result['composition']
+    lines += [f"Observed composition share (cash_like + short_duration + near_cash): method {c['method_share']:.2%}, "
+              f"primary null {c['null_share']:.2%}; limit <= {c['max_share']:.0%}.", '']
+    bc = result['book1_comparison']
+    lines += [f"Month counts: full OOS {bc['full_oos_months']} ({bc['full_start']}..{bc['full_end']}; anchor comparison window); "
+              f"Book 1 overlap {bc['overlap_months']} ({bc['overlap_start']}..{bc['overlap_end']}; method restricted to the same months, net vs net)."]
+    pub = result['book1_published_reference']
+    lines += [(f"Book 1 published gross series (reference only, not used for eligibility): {pub['source']}, {pub['n_months']} months "
+               f"{pub['start']}..{pub['end']}: CAGR {pub['CAGR']:.4f}, Sharpe_exBIL {pub['Sharpe_exBIL']:.4f}, MaxDD {pub['MaxDD']:.4f}.")
+              if pub.get('available') else f"Book 1 published gross series (reference only): not available ({pub['source']}).",
+              'Turnover: drifted-weight turnover is primary and drives costs for every strategy (including the rebuilt Book 1); '
+              'turnover_target (vs previous target weights) is a diagnostic.', '']
     lines += [f"Monthly panel window: {result['monthly_panel_window']}",
               f"Eligible N per rebalance (min/mean/max): {eligible.min()} / {eligible.mean():.2f} / {eligible.max()}",
               'Skipped months: ' + (', '.join(counts.loc[counts.skipped, 'date'].astype(str)) or 'none'),
@@ -512,7 +563,7 @@ def gate_report_lines(result):
               'DSR: Bailey–López de Prado (2014), N=11; cross-trial monthly Sharpe variance excludes the two invalid runs with no ex-BIL Sharpe. Sub-period is not a trial.',
               'No reruns or retuning to chase significance. A not-significant edge is recorded as not significant. Any preview or rerun adds a trial and needs a new ticket.',
               "Jared's method rule: statistical or classical methods only; no large pretrained models or model downloads.",
-              'VT and SPHD retain the pinned equity tags; the preregistration records a pending Quant ruling.']
+              'Signal is 12-1 (final); 12-0 is not a sensitivity and is not run.']
     return lines
 
 
@@ -526,4 +577,6 @@ def write_epo_artifacts(result, out_dir='data/processed/epo_allocator'):
         composition=result['composition'], monthly_panel=result['monthly_panel_provenance'],
         tables=tables, report=result['reading'],
         markdown_lines=gate_report_lines(result), fields=dict(book_eligible=result['book_eligible'], trial_count=TRIAL_COUNT,
-        asset_class_mix=result['asset_class_mix'].to_dict('records'), preregistration=result['preregistration']))
+        asset_class_mix=result['asset_class_mix'].to_dict('records'), preregistration=result['preregistration'],
+        book1_comparison={k: v for k, v in result['book1_comparison'].items() if k != 'overlap_dates'},
+        book1_published_reference=result['book1_published_reference']))
