@@ -275,21 +275,27 @@ def test_site_sharpe_artifact_and_pages_figures(rf, frozen_rf):
         assert row["Sharpe_exBIL"] == site["comparison"][row["strategy_id"]]["exbil"]
         assert row["Sharpe_rf0"] == pytest.approx(site["comparison"][row["strategy_id"]]["rf0_legacy"], abs=1e-4)
     books_tsx = (ROOT / "apps/pages/src/pages/Books.tsx").read_text(encoding="utf-8")
-    for needle in ("Sharpe 0.75 in excess of BIL", "Sharpe above BIL 0.97 (0.84, 0.75)",
-                   "0.84 in excess of BIL", "legacy rf = 0"):
+    # Re-pinned 2026-10-01: data refresh through the 2026-09-30 close. Return / Sharpe figures in the
+    # prose now render from live outputs via <LiveFig> (see tests/test_live_figures.py for the rendered values).
+    for needle in ('Sharpe <LiveFig k="book1.exbil" /> in excess of BIL',
+                   'Sharpe above BIL <LiveFig k="book2.exbil" /> (<LiveFig k="vt.exbil" />, <LiveFig k="book1.exbil" />)',
+                   '<LiveFig k="vt.exbil" /> in excess of BIL', "legacy rf = 0"):
         assert needle in books_tsx
     for stale in ("Sharpe ~1.06", "higher Sharpe_rf0", "Sharpe ~0.92 ·"):
         assert stale not in books_tsx
 
 
+# Re-pinned 2026-10-01: data refresh through the 2026-09-30 close. Return / Sharpe figures in the
+# prose now render from live outputs via <LiveFig> (see tests/test_live_figures.py for the rendered values).
 BOOK2_STAT_LINE = ("Max drawdown −10.1% (VT backbone −20.1%, Book 1 −25.6%) · volatility ~10.6% (~13.9%, ~15.9%) · "
-                   "return ~13.6% (~14.7%, ~14.7%) · Sharpe above BIL 0.97 (0.84, 0.75)")
+                   'return ~<LiveFig k="book2.return" /> (~<LiveFig k="vt.return" />, ~<LiveFig k="book1.return" />) · '
+                   'Sharpe above BIL <LiveFig k="book2.exbil" /> (<LiveFig k="vt.exbil" />, <LiveFig k="book1.exbil" />)')
 BOOK2_BODY = (
-    "Book 2 gives up about 1 point a year of return versus the VT backbone in exchange for shallower drawdowns "
+    'Book 2 gives up about <LiveFig k="gap.points" /> a year of return versus the VT backbone in exchange for shallower drawdowns '
     "and lower volatility. Its protection has been seen in one bear market: in 2022 its drawdown was about half "
     "of VT's (−10.1% vs −20.1%), and it also cushioned the autumn 2023 pullback (−3.9% vs −9.0%). The skew gate "
     "has not switched on since January 2024, so through the 2024–2026 pullbacks Book 2 tracked VT. Its Sharpe "
-    "above BIL is 0.97 vs 0.84 for VT; that difference is not statistically significant.")
+    'above BIL is <LiveFig k="book2.exbil" /> vs <LiveFig k="vt.exbil" /> for VT; that difference is not statistically significant.')
 
 
 def _site_text(rel: str) -> str:

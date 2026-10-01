@@ -5,15 +5,15 @@
 
 :root {
   /* Paper substrate */
-  --bg:            #f5f0e8;
-  --surface:       #ede8de;
-  --raised:        #e4ddd1;
-  --border:        #c4b89d;
-  --border-bright: #8a7c68;
+  --bg:            #ffffff;
+  --surface:       #f4f5f7;
+  --raised:        #e9ebef;
+  --border:        #c3c7cf;
+  --border-bright: #858a94;
   /* Typography */
   --ink:    #1a1410;
-  --body:   #4a4238;
-  --muted:  #7a6e60;
+  --body:   #3f434a;
+  --muted:  #6b7079;
   /* Accent — deep editorial navy */
   --accent: #1c2d6b;
   --accent-dim: #0e1a42;
@@ -27,7 +27,7 @@
   --surface-soft:  var(--surface);
   --surface-strong: var(--raised);
   --hairline:      var(--border);
-  --hairline-soft: rgba(196,184,157,0.4);
+  --hairline-soft: rgba(195,199,207,0.4);
   --semantic-up:   var(--up);
   --semantic-down: var(--down);
   /* No rounding — sharp editorial edges */
@@ -78,7 +78,7 @@ button:focus-visible,
   position: sticky;
   top: 0;
   z-index: 40;
-  background: rgba(245,240,232,0.96);
+  background: rgba(255,255,255,0.96);
   backdrop-filter: blur(8px);
   border-bottom: 1px solid var(--border);
 }
@@ -378,7 +378,7 @@ th {
 }
 td {
   padding: 0.75rem 1rem;
-  border-bottom: 1px solid rgba(196,184,157,0.4);
+  border-bottom: 1px solid rgba(195,199,207,0.4);
   vertical-align: top;
   line-height: 1.5;
 }
@@ -410,7 +410,7 @@ tr:hover td { background: var(--surface); }
   margin: 0.75rem 0 0;
 }
 .method-list li {
-  border-bottom: 1px solid rgba(196,184,157,0.4);
+  border-bottom: 1px solid rgba(195,199,207,0.4);
 }
 .method-list li:last-child { border-bottom: none; }
 .method-list a {
@@ -472,13 +472,13 @@ tr:hover td { background: var(--surface); }
   line-height: 1.6;
   padding-top: 1.25rem;
   padding-bottom: 1.25rem;
-  border-bottom: 1px solid rgba(196,184,157,0.4);
+  border-bottom: 1px solid rgba(195,199,207,0.4);
 }
 .site-footer p.muted {
   font-family: var(--font-sans);
   font-size: 0.62rem;
   font-style: normal;
-  color: rgba(122,110,96,0.5);
+  color: rgba(107,112,121,0.5);
   letter-spacing: 0.08em;
   border-bottom: none;
   padding-bottom: 1.5rem;

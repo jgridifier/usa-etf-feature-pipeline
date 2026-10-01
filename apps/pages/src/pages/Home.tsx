@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom'
 import { useJsonData } from '../hooks/useJsonData'
 import { pct, num } from '../lib/utils'
+import { LiveFig } from '../lib/liveFigures'
 
 interface MetricsPayload {
   AnnReturn_vt: number
@@ -76,8 +77,8 @@ function CioVerdictBand() {
           <div>
             <p className="font-serif text-sm text-ink leading-snug font-medium md:mb-1">Book-2 = drawdown-controlled core</p>
             <p className="hidden md:block font-sans text-2xs text-body leading-relaxed">
-              Book-2 is the drawdown-controlled version of the same stock core: about 1 point a year less
-              return than the VT backbone (~13.6% vs ~14.7%) for shallower drawdowns (−10.1% vs −20.1%)
+              Book-2 is the drawdown-controlled version of the same stock core: about <LiveFig k="gap.points" /> a year less
+              return than the VT backbone (~<LiveFig k="book2.return" /> vs ~<LiveFig k="vt.return" />) for shallower drawdowns (−10.1% vs −20.1%)
               and lower volatility — not outperformance.
             </p>
           </div>
@@ -254,7 +255,7 @@ function ArticleCard({
   status: string
   statusColor: 'up' | 'down' | 'muted'
   headline: string
-  lede: string
+  lede: React.ReactNode
   link?: { label: string; to: string }
 }) {
   const statusClasses = {
@@ -351,7 +352,7 @@ export default function Home() {
               status="HOLD"
               statusColor="up"
               headline="Static core"
-              lede="Fixed weights VOO 70% / QQQM 20% / IJR 10%. No timing, no vol scale. Clean null for any overlay or timing claim. Buy-and-hold reference for the entire panel. Sharpe 0.75 in excess of BIL (legacy rf = 0: 0.92), 2021-02 → 2026-09."
+              lede={<>Fixed weights VOO 70% / QQQM 20% / IJR 10%. No timing, no vol scale. Clean null for any overlay or timing claim. Buy-and-hold reference for the entire panel. Sharpe <LiveFig k="book1.exbil" /> in excess of BIL (legacy rf = 0: <LiveFig k="book1.rf0" />), 2021-02 → 2026-09.</>}
               link={{ label: 'See Book 1 composition', to: '/books' }}
             />
             <ArticleCard
@@ -359,7 +360,7 @@ export default function Home() {
               status="HOLD"
               statusColor="up"
               headline="Vol-target + skewness gate"
-              lede="Book 2 gives up about 1 point a year of return versus the VT backbone in exchange for shallower drawdowns and lower volatility. Its protection has been seen in one bear market: in 2022 its drawdown was about half of VT's (−10.1% vs −20.1%), and it also cushioned the autumn 2023 pullback (−3.9% vs −9.0%). The skew gate has not switched on since January 2024, so through the 2024–2026 pullbacks Book 2 tracked VT. Its Sharpe above BIL is 0.97 vs 0.84 for VT; that difference is not statistically significant. Max drawdown −10.1% (VT backbone −20.1%, Book 1 −25.6%) · volatility ~10.6% (~13.9%, ~15.9%) · return ~13.6% (~14.7%, ~14.7%) · Sharpe above BIL 0.97 (0.84, 0.75)"
+              lede={<>Book 2 gives up about <LiveFig k="gap.points" /> a year of return versus the VT backbone in exchange for shallower drawdowns and lower volatility. Its protection has been seen in one bear market: in 2022 its drawdown was about half of VT's (−10.1% vs −20.1%), and it also cushioned the autumn 2023 pullback (−3.9% vs −9.0%). The skew gate has not switched on since January 2024, so through the 2024–2026 pullbacks Book 2 tracked VT. Its Sharpe above BIL is <LiveFig k="book2.exbil" /> vs <LiveFig k="vt.exbil" /> for VT; that difference is not statistically significant. Max drawdown −10.1% (VT backbone −20.1%, Book 1 −25.6%) · volatility ~10.6% (~13.9%, ~15.9%) · return ~<LiveFig k="book2.return" /> (~<LiveFig k="vt.return" />, ~<LiveFig k="book1.return" />) · Sharpe above BIL <LiveFig k="book2.exbil" /> (<LiveFig k="vt.exbil" />, <LiveFig k="book1.exbil" />)</>}
               link={{ label: 'See Book 2 path vs Book 1', to: '/books' }}
             />
           </div>
@@ -464,8 +465,8 @@ export default function Home() {
               {
                 method: 'Skewness-Managed (#6)',
                 note: 'Book-2 path overlay · gate-first · 68m OOS',
-                bindingNull: 'Unconditional Book-2 VT (0.84, legacy 1.059 / −20.1%)',
-                metrics: '0.97 (1.28) / −10.1%',
+                bindingNull: <>Unconditional Book-2 VT (<LiveFig k="vt.exbil" />, legacy <LiveFig k="vt.rf0" /> / −20.1%)</>,
+                metrics: <><LiveFig k="book2.exbil" /> (<LiveFig k="book2.rf0" />) / −10.1%</>,
                 verdict: 'pass' as const,
                 href: './methods/skewness_managed_stub.html',
               },
@@ -511,7 +512,7 @@ export default function Home() {
               <strong className="text-ink">#6 Quant PASS note:</strong>{' '}
               Skewness-managed overlay cleared the gate as a Book-2 path (f̃_t = f_t · g_t, gate-first
               L63 / realized-Amaya / CVaR5 / g_min=0.5) as a drawdown control: MaxDD −10.1% vs −20.1% for the
-              unconditional Book-2 VT. Sharpe above BIL 0.97 vs 0.84 (legacy rf = 0: 1.28 vs 1.059); that difference
+              unconditional Book-2 VT. Sharpe above BIL <LiveFig k="book2.exbil" /> vs <LiveFig k="vt.exbil" /> (legacy rf = 0: <LiveFig k="book2.rf0" /> vs <LiveFig k="vt.rf0" />); that difference
               is not statistically significant. NW t vs Book-2 = −0.80. It is wired into live <strong className="text-ink">Book 2</strong> — not a
               separate third book. No book count change.
             </p>
@@ -548,7 +549,7 @@ export default function Home() {
             </div>
             <div className="quote-block">
               <p className="font-serif text-base md:text-lg italic text-ink leading-snug">
-                "Drawdown control, not return alpha. The unconditional VT backbone earns the same ~14.7% a year as Book-1; live Book-2 (with the skew gate) gives up about 1 point a year (~13.6%) for shallower drawdowns and lower volatility. In the 2022 bear market its drawdown was about half of VT's (−10.1% vs −20.1%)."
+                "Drawdown control, not return alpha. The unconditional VT backbone earns the same ~<LiveFig k="vt.return.whole" /> a year as Book-1; live Book-2 (with the skew gate) gives up about <LiveFig k="gap.points" /> a year (~<LiveFig k="book2.return" />) for shallower drawdowns and lower volatility. In the 2022 bear market its drawdown was about half of VT's (−10.1% vs −20.1%)."
               </p>
               <cite className="text-2xs text-muted not-italic mt-2 block tracking-label uppercase font-sans">
                 Book-2 vol-target evidence ·{' '}

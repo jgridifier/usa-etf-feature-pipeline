@@ -5,6 +5,7 @@ import { useJsonData } from '../hooks/useJsonData'
 import { pct, num } from '../lib/utils'
 import { ArrowDownToLine } from 'lucide-react'
 import { Link } from 'react-router-dom'
+import { LiveFig } from '../lib/liveFigures'
 
 interface MetricsPayload {
   trial_id: string
@@ -65,7 +66,7 @@ function RunsCioStrip() {
         </div>
         <div className="flex items-center gap-2 px-4 py-2.5 min-w-0">
           <span className="font-sans text-2xs font-bold uppercase tracking-label text-accent whitespace-nowrap">SHIFT MEANING</span>
-          <span className="font-sans text-2xs text-body">Same ~14.7% return — claim is risk path, not return alpha.</span>
+          <span className="font-sans text-2xs text-body">Same ~<LiveFig k="vt.return.whole" /> return — claim is risk path, not return alpha.</span>
         </div>
       </div>
     </div>
@@ -215,7 +216,7 @@ export default function Runs() {
               <p className="font-sans text-sm text-body mt-1 mb-5 max-w-2xl">
                 Moreira &amp; Muir (2017) · mean f = {m.mean_f.toFixed(2)} · months with f&lt;1:{' '}
                 {(100 * m.pct_months_f_lt_1).toFixed(0)}% · Sharpe in excess of BIL (legacy rf = 0 kept).
-                Live Book 2 adds the #6 skew gate: 0.97 in excess of BIL.
+                Live Book 2 adds the #6 skew gate: <LiveFig k="book2.exbil" /> in excess of BIL.
               </p>
               {/* MaxDD leads; Sharpe last with context note */}
               <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">

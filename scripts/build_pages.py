@@ -100,6 +100,50 @@ def copy_cio_inputs() -> None:
             shutil.copy2(src, nested / 'run_latest' / name)
 
 
+LIVE = ROOT / 'data' / 'processed' / 'live'
+LIVE_SOURCES = {
+    # book key: (live CSV, return column, site_sharpe.json books key)
+    'book1': ('vol_target_oos_returns.csv', 'r_option_a', 'book1_static_core'),
+    'book2': ('skew_managed_gatefirst_returns.csv', 'r_method', 'book2_vt_x_gatefirst'),
+    'vt': ('vol_target_oos_returns.csv', 'r_vt', 'uncond_vt_audit_null'),
+}
+
+
+def live_book_stats(returns: list[float]) -> dict:
+    """CAGR, sample vol x sqrt(12), monthly-wealth max drawdown (peak starts at 1)."""
+    n = len(returns)
+    wealth, peak, max_dd = 1.0, 1.0, 0.0
+    for r in returns:
+        wealth *= 1.0 + r
+        peak = max(peak, wealth)
+        max_dd = min(max_dd, wealth / peak - 1.0)
+    mean = sum(returns) / n
+    vol = (sum((r - mean) ** 2 for r in returns) / (n - 1)) ** 0.5 * 12 ** 0.5
+    return {'ann_return': wealth ** (12.0 / n) - 1.0, 'ann_vol': vol, 'max_dd': max_dd}
+
+
+def build_live_figures() -> None:
+    """docs/data/live_figures.json: figures the Books/Home/Runs prose renders."""
+    site = json.loads((ROOT / 'data/processed/cash_null_audit/site_sharpe.json').read_text(encoding='utf-8'))
+    books, months = {}, None
+    for key, (name, col, site_key) in LIVE_SOURCES.items():
+        with (LIVE / name).open(newline='', encoding='utf-8') as f:
+            rows = list(csv.DictReader(f))
+        dates = [r['date'][:7] for r in rows]
+        months = months or (len(rows), dates[0], dates[-1], rows[-1]['date'][:10])
+        stats = live_book_stats([float(r[col]) for r in rows])
+        stats['sharpe_exbil'] = site['books'][site_key]['exbil']
+        stats['sharpe_rf0'] = site['books'][site_key]['rf0_legacy']
+        stats['source'] = f'data/processed/live/{name}:{col}; site_sharpe.json books.{site_key}'
+        books[key] = stats
+    write_json('live_figures.json', {
+        'asof': months[3],
+        'n_months': months[0],
+        'window': f'{months[1]}..{months[2]}',
+        'books': books,
+    })
+
+
 def cumprod_wealth(returns: list[float]) -> list[float]:
     wealth = [1.0]
     w = 1.0
@@ -261,7 +305,8 @@ def build_viz() -> None:
     }
     stances = {
         'static_option_a': 'Benchmark policy baseline',
-        'vol_target_option_a': 'Audit null for the live Book-2 VT × gate-first overlay (0.97 excess of BIL)',
+        'vol_target_option_a': 'Audit null for the live Book-2 VT × gate-first overlay '
+        f"({site_sharpe()['books']['book2_vt_x_gatefirst']['exbil']:.2f} excess of BIL)",
         'score_rotate_xsd': 'Optional gated sleeve',
         'm3_p2_core_rotate': 'Held off the shortlist',
     }
@@ -906,6 +951,7 @@ def main() -> None:
     copy_cio_inputs()
     refresh_weights_snapshot()
     build_viz()
+    build_live_figures()
     # Pages v2 React SPA owns Home/Books/Runs via HashRouter on docs/index.html.
     # Do not emit leftover books.html / runs.html (or overwrite SPA index.html).
     for leftover in ('books.html', 'runs.html'):

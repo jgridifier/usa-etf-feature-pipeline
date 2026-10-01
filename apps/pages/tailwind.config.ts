@@ -9,15 +9,15 @@ const config: Config = {
     extend: {
       colors: {
         // Paper-editorial substrate — cream field, ink black
-        bg:      '#f5f0e8',
-        surface: '#ede8de',
-        raised:  '#e4ddd1',
-        border:  '#c4b89d',
-        'border-bright': '#8a7c68',
+        bg:      '#ffffff',
+        surface: '#f4f5f7',
+        raised:  '#e9ebef',
+        border:  '#c3c7cf',
+        'border-bright': '#858a94',
         // Typography — warm near-black ink
         ink:   '#1a1410',
-        body:  '#4a4238',
-        muted: '#7a6e60',
+        body:  '#3f434a',
+        muted: '#6b7079',
         // Accent — deep editorial navy (not bright blue, not green)
         accent: {
           DEFAULT: '#1c2d6b',
@@ -41,12 +41,12 @@ const config: Config = {
         '3xs': ['0.55rem', { lineHeight: '0.875rem' }],
       },
       borderColor: {
-        DEFAULT: '#c4b89d',
+        DEFAULT: '#c3c7cf',
       },
       backgroundImage: {
-        'hero-gradient':   'linear-gradient(to bottom, #ede8de, #f5f0e8)',
+        'hero-gradient':   'linear-gradient(to bottom, #f4f5f7, #ffffff)',
         'card-shine':      'linear-gradient(135deg, rgba(255,255,255,0.4) 0%, rgba(255,255,255,0) 60%)',
-        'masthead-rule':   'linear-gradient(90deg, transparent, #c4b89d 30%, #c4b89d 70%, transparent)',
+        'masthead-rule':   'linear-gradient(90deg, transparent, #c3c7cf 30%, #c3c7cf 70%, transparent)',
         'paper-grain':     'url("data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' width=\'300\' height=\'300\'%3E%3Cfilter id=\'n\'%3E%3CfeTurbulence type=\'fractalNoise\' baseFrequency=\'0.9\' numOctaves=\'4\' stitchTiles=\'stitch\'/%3E%3CfeColorMatrix type=\'saturate\' values=\'0\'/%3E%3C/filter%3E%3Crect width=\'300\' height=\'300\' filter=\'url(%23n)\' opacity=\'0.025\'/%3E%3C/svg%3E")',
       },
       boxShadow: {

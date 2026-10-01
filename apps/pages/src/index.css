@@ -122,7 +122,7 @@
   /* ── Masthead rule line ── */
   .masthead-rule {
     height: 1px;
-    background: var(--masthead-rule, linear-gradient(90deg, transparent, #c4b89d 30%, #c4b89d 70%, transparent));
+    background: var(--masthead-rule, linear-gradient(90deg, transparent, #c3c7cf 30%, #c3c7cf 70%, transparent));
   }
 
   /* ── Broadsheet thick rule ── */

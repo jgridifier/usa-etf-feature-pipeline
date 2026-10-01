@@ -18,8 +18,7 @@ NOTES_DIR = ROOT / 'docs' / 'notes'
 # slug, title, status ('published' | 'pending'), pending reason
 NOTES = [
     ('allocator_candidates', 'CIO note: candidates for the 100+ ETF allocator (30 Sep 2026)', 'published', ''),
-    ('book2_lw2008_drawdowns', 'Book 2: LW2008 test and drawdowns', 'pending',
-     'Pending: Quant rerun on the complete-September panel.'),
+    ('book2_lw2008_drawdowns', 'Quant note: Book 2 vs the VT backbone (Sharpe test and drawdowns, Oct 2026)', 'published', ''),
     ('book2_reframe', 'Book 2 reframe (CIO)', 'pending',
      'Pending: CIO writes this after the Quant rerun.'),
 ]

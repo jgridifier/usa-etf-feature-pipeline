@@ -99,3 +99,16 @@ def test_pending_notes_are_marked_not_linked():
         if status == 'pending':
             assert f'data-pending-note="notes/{slug}.md"' in methods_index, slug
             assert f'href="../notes/{slug}' not in methods_index, slug
+
+
+# Quant's note is published byte-identical to /workspace/investments/published_notes/.
+LW2008_NOTE_SHA256 = 'a759b628e3b1d6fe6c47bc6159ab0892c55c7965906afce6aa720ff4ffb4b2bd'
+
+
+def test_quant_lw2008_note_published_unchanged():
+    import hashlib
+    path = NOTES / 'book2_lw2008_drawdowns.md'
+    assert hashlib.sha256(path.read_bytes()).hexdigest() == LW2008_NOTE_SHA256
+    index = (DOCS / 'methods' / 'index.html').read_text(encoding='utf-8')
+    assert 'href="../notes/book2_lw2008_drawdowns.html"' in index
+    assert 'data-pending-note="notes/book2_lw2008_drawdowns.md"' not in index
