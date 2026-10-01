@@ -49,6 +49,7 @@ import sys  # noqa: E402
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from build_notes import build_notes, notes_list_html  # noqa: E402
 from labels import relabel_archive  # noqa: E402
+import build_epo_results as epo_results  # noqa: E402
 
 
 def read_csv(name: str) -> list[dict]:
@@ -859,7 +860,8 @@ def build_archive_scoreboard() -> None:
         'Unconditional vol-target backbone is the audit null that overlay was measured against — not live, not a FAIL.</p>'
         '<p>Further candidates must clear the same leakage · null · DSR · empirical gate. '
         '<a href="../index.html#/">Back to live shortlist →</a></p></div>'
-        '<h2>Verdict cards</h2>'
+        + ('<h2 id="pending">Pending review</h2>' + epo_results.pending_card_html() if epo_results.available() else '')
+        + '<h2>Verdict cards</h2>'
         + ''.join(verdict_card_html(card, '') for card in archive['cards'])
         + '<h2>What cleared the process (not the nulls)</h2><ul>'
         '<li>Walk-forward leakage gates + unit tests (decision / feature_end ≤ t; labels next month).</li>'
@@ -881,7 +883,10 @@ def build_methods_index() -> None:
     methods = [
         ('allocation_alpha_vol_target.html', 'Allocation alpha: volatility-managed Option A'),
         ('skewness_managed_stub.html', 'Skewness-Managed Book-2 Overlay (Justina #6 · gate-first PASS)'),
-        ('allocation_alpha_epo.html', 'Enhanced Portfolio Optimization (EPO) with a 12-1 trend signal (Bet 1 · pre-gate)'),
+        ('allocation_alpha_epo.html', 'Enhanced Portfolio Optimization (EPO) with a 12-1 trend signal (Bet 1'
+         + (')' if epo_results.available() else ' · pre-gate)')),
+        *([(epo_results.PAGE.removeprefix('methods/'),
+            f'EPO gate results: {epo_results.label()} · pending Quant review')] if epo_results.available() else []),
         ('spectral_risk_parity_adia.html', 'Spectral Risk Parity (ADIA Lab): teaching note (archived)'),
         ('regime_aware_dual_regime_allocation.html', 'Regime-Aware Dual-Regime Allocation: teaching note (archived)'),
         ('ot_short_term_forecasting.html', 'Optimal transport: short-term forecasting'),
@@ -901,6 +906,7 @@ def build_methods_index() -> None:
         + '</ul>'
         '<h2 id="notes">Notes for Jared</h2>'
         + notes_list_html('../notes/')
+        + ('<h2 id="pending">Pending review</h2>' + epo_results.pending_card_html() if epo_results.available() else '')
         + '<h2 id="archive">Archive / failed nulls</h2>'
         '<p class="lede archive-lede">5 FAIL / ARCHIVE methods + 1 VOID (NLS GMV v3) + 1 AUDIT NULL — research record only; <strong>not live books</strong>. '
         'Live shortlist: static core + vol-target backbone × gate-first skew overlay (Justina #6). '
@@ -916,7 +922,7 @@ def build_methods_index() -> None:
 
 def restyle_methods_shell() -> None:
     methods = sorted(
-        p.name for p in (DOCS / 'methods').glob('*.html') if p.name not in {'index.html', 'justina_round1_scoreboard.html'}
+        p.name for p in (DOCS / 'methods').glob('*.html') if p.name not in {'index.html', 'justina_round1_scoreboard.html', epo_results.PAGE.removeprefix('methods/')}
     )
     for name in methods:
         p = DOCS / 'methods' / name
@@ -963,6 +969,7 @@ def main() -> None:
         if path.exists():
             path.unlink()
             print('Removed leftover', leftover)
+    epo_results.build_epo_results(page_shell, write_page)
     build_methods_index()
     build_archive_scoreboard()
     restyle_methods_shell()
