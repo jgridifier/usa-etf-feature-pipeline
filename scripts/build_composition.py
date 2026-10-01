@@ -393,9 +393,13 @@ def svg_stack(months, series: dict, colors: dict, *, gate=None, limit=None, titl
         parts.append(f'<text x="{L - 3}" y="{y + 3:.1f}" text-anchor="end" class="cot-axis">{int(frac * 100)}%</text>')
     years = sorted({m[:4] for m in months})
     stepy = max(1, len(years) // 5)
+    last_x = -1e9
     for yr in years[::stepy]:
         i = next(i for i, m in enumerate(months) if m.startswith(yr))
         x = _xy(i, n, 0)[0]
+        if x - last_x < 28:          # a partial first year (e.g. Nov 2020) would collide with the next label
+            continue
+        last_x = x
         parts.append(f'<text x="{x:.1f}" y="{H - 5}" text-anchor="middle" class="cot-axis">{yr}</text>')
     if limit is not None:
         y = _xy(0, n, limit)[1]
