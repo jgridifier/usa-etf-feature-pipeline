@@ -59,7 +59,7 @@
     opt.xAxis = { type: 'category', data: payload.dates, axisLabel: { hideOverlap: true } };
     opt.yAxis = { type: 'value', scale: true, name: 'Wealth', nameTextStyle: { color: BODY } };
     opt.series = [
-      { name: 'Vol-target (Book 2)', type: 'line', showSymbol: false, data: payload.equity.vol_target_option_a, lineStyle: { width: 2 } },
+      { name: 'Backbone', type: 'line', showSymbol: false, data: payload.equity.vol_target_option_a, lineStyle: { width: 2 } },
       { name: 'Static Option A', type: 'line', showSymbol: false, data: payload.equity.static_option_a, lineStyle: { width: 2 } },
     ];
     chart.setOption(opt);
@@ -70,8 +70,8 @@
     var chart = echarts.init(el);
     var opt = baseChartOption();
     opt.title = {
-      text: 'Drawdown · MaxDD vt ' + pct(payload.max_dd && payload.max_dd.vol_target_option_a) +
-        ' vs A ' + pct(payload.max_dd && payload.max_dd.static_option_a),
+      text: 'Drawdown · MaxDD Backbone ' + pct(payload.max_dd && payload.max_dd.vol_target_option_a) +
+        ' vs Static Option A ' + pct(payload.max_dd && payload.max_dd.static_option_a),
       left: 0, top: 0, textStyle: { fontSize: 13, fontWeight: 600, color: INK },
     };
     opt.xAxis = { type: 'category', data: payload.dates, axisLabel: { hideOverlap: true } };
@@ -84,7 +84,7 @@
       valueFormatter: function (v) { return pct(v); },
     };
     opt.series = [
-      { name: 'Vol-target (Book 2)', type: 'line', showSymbol: false, areaStyle: { opacity: 0.08 }, data: payload.drawdown.vol_target_option_a },
+      { name: 'Backbone', type: 'line', showSymbol: false, areaStyle: { opacity: 0.08 }, data: payload.drawdown.vol_target_option_a },
       { name: 'Static Option A', type: 'line', showSymbol: false, areaStyle: { opacity: 0.05 }, data: payload.drawdown.static_option_a },
     ];
     chart.setOption(opt);

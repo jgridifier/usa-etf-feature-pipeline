@@ -57,7 +57,7 @@ export function EquityChart() {
     xAxis: { type: 'category', data: data.dates, axisLabel: { hideOverlap: true, color: COLORS.muted, fontSize: 11 }, axisLine: { lineStyle: { color: COLORS.border } } },
     yAxis: { type: 'value', scale: true, name: 'Wealth', nameTextStyle: { color: COLORS.muted }, axisLabel: { color: COLORS.muted, fontSize: 11 }, splitLine: { lineStyle: { color: COLORS.border } } },
     series: [
-      { name: 'Vol-target (Book 2)', type: 'line', showSymbol: false, data: data.equity.vol_target_option_a, lineStyle: { width: 2, color: COLORS.series1 }, itemStyle: { color: COLORS.series1 } },
+      { name: 'Backbone', type: 'line', showSymbol: false, data: data.equity.vol_target_option_a, lineStyle: { width: 2, color: COLORS.series1 }, itemStyle: { color: COLORS.series1 } },
       { name: 'Static Option A', type: 'line', showSymbol: false, data: data.equity.static_option_a, lineStyle: { width: 2, color: COLORS.series2 }, itemStyle: { color: COLORS.series2 } },
     ],
   }
@@ -74,7 +74,7 @@ export function DrawdownChart() {
   const opt: ChartOption = {
     ...baseOption(),
     title: {
-      text: `Drawdown · MaxDD vt ${pct(data.max_dd?.vol_target_option_a)} vs A ${pct(data.max_dd?.static_option_a)}`,
+      text: `Drawdown · MaxDD Backbone ${pct(data.max_dd?.vol_target_option_a)} vs Static Option A ${pct(data.max_dd?.static_option_a)}`,
       left: 0, top: 0,
       textStyle: { fontSize: 12, fontWeight: 600, color: COLORS.body },
     },
@@ -82,7 +82,7 @@ export function DrawdownChart() {
     yAxis: { type: 'value', axisLabel: { formatter: (v: number) => (100 * v).toFixed(0) + '%', color: COLORS.muted, fontSize: 11 }, splitLine: { lineStyle: { color: COLORS.border } } },
     series: [
       {
-        name: 'Vol-target (Book 2)',
+        name: 'Backbone',
         type: 'line', showSymbol: false,
         data: data.drawdown.vol_target_option_a,
         lineStyle: { width: 2, color: COLORS.down },
