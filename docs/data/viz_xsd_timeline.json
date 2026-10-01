@@ -4,7 +4,7 @@
   "source": "strategy_diagnostics.csv",
   "snapshot": {
     "strategy_id": "score_rotate_xsd",
-    "date": "2026-09-16 00:00:00",
+    "date": "2026-09-30 00:00:00",
     "on": false,
     "on_raw": "False",
     "rotate_on": null,

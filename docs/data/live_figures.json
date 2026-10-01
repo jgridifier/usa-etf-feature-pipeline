@@ -1,0 +1,31 @@
+{
+  "asof": "2026-09-30",
+  "n_months": 68,
+  "window": "2021-02..2026-09",
+  "books": {
+    "book1": {
+      "ann_return": 0.15031554243105405,
+      "ann_vol": 0.15850858549167818,
+      "max_dd": -0.25562713849928165,
+      "sharpe_exbil": 0.7699,
+      "sharpe_rf0": 0.9483,
+      "source": "data/processed/live/vol_target_oos_returns.csv:r_option_a; site_sharpe.json books.book1_static_core"
+    },
+    "book2": {
+      "ann_return": 0.13924407813595674,
+      "ann_vol": 0.10561394080593858,
+      "max_dd": -0.10116624654920892,
+      "sharpe_exbil": 0.9967,
+      "sharpe_rf0": 1.3184,
+      "source": "data/processed/live/skew_managed_gatefirst_returns.csv:r_method; site_sharpe.json books.book2_vt_x_gatefirst"
+    },
+    "vt": {
+      "ann_return": 0.15073070287175083,
+      "ann_vol": 0.1386311754124008,
+      "max_dd": -0.201285918526651,
+      "sharpe_exbil": 0.8615,
+      "sharpe_rf0": 1.0873,
+      "source": "data/processed/live/vol_target_oos_returns.csv:r_vt; site_sharpe.json books.uncond_vt_audit_null"
+    }
+  }
+}

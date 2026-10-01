@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CIO note: Book 2, the drawdown-controlled version of the same core (Oct 2026) | USA ETF Lab</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,wght@0,400;0,500;0,600;1,400;1,600&family=Playfair+Display:wght@700;900&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/style.css">
+<link rel="icon" type="image/svg+xml" href="../favicon.svg">
+
+</head>
+<body>
+<header class="site-header"><div class="site-header-inner"><a class="brand" href="../index.html">USA ETF Lab</a><button type="button" class="nav-toggle" aria-expanded="false" aria-controls="site-nav" aria-label="Open menu"><span class="nav-toggle-bars" aria-hidden="true"></span></button><nav class="site-nav" id="site-nav" aria-label="Main"><a href="../index.html">Home</a><a href="../index.html#/books">Books</a><a href="../index.html#/runs">Runs</a><a href="../explorer/index.html">Explorer</a><a href="../methods/index.html" class="is-active">Methods</a></nav></div></header>
+<main class="page">
+<section class="band"><div class="band-inner note-body"><p><span class="badge">Note for Jared</span></p><h1>Book 2: the drawdown-controlled version of the same core</h1>
+<p><em>CIO · October 2026 · Data through 30 Sep 2026 (68 complete months, Feb 2021 – Sep 2026). Research on an experimental ETF panel for personal decision-making, not investment advice.</em></p>
+<h2>What "backbone" means here</h2>
+<p>In these notes, the <strong>vol-target backbone</strong> is not the Vanguard Total World ETF (ticker VT). It holds Book 1's 70/20/10 core (VOO / QQQM / IJR) and scales part of it into cash (BIL) only when the core's volatility runs high. Book 2 adds a skewness-based risk gate on top of that backbone. All three lines therefore share the same US equity core.</p>
+<h2>In short</h2>
+<p>Book 2 is best read as <strong>Book 1's core with two brakes</strong> (the vol target plus the risk gate), not as a higher-Sharpe book. It gave up about <strong>1.2 points a year</strong> of return against the vol-target backbone. In return, its volatility was lower and its worst drawdown was about <strong>half of the backbone's</strong> in the 2022 bear market. Its Sharpe edge over the backbone is <strong>not statistically significant</strong>.</p>
+<h2>The three lines side by side</h2>
+<div class="table-scroll" tabindex="0" role="region" aria-label="table"><table><thead><tr><th scope="col"></th><th scope="col">Return</th><th scope="col">Volatility</th><th scope="col">Max drawdown</th><th scope="col">Sharpe above BIL</th></tr></thead><tbody><tr><td>Book 1 (static core)</td><td>15.0%</td><td>~15.9%</td><td>−25.6%</td><td>0.77</td></tr><tr><td>Backbone (vol target)</td><td>15.1%</td><td>~13.9%</td><td>−20.1%</td><td>0.86</td></tr><tr><td>Book 2 (backbone + risk gate)</td><td>13.9%</td><td>~10.6%</td><td>−10.1%</td><td>1.00</td></tr></tbody></table></div>
+<p>Returns are annualized and net of trading costs. Sharpe is measured above cash (BIL).</p>
+<h2>How to choose between them</h2>
+<ul><li>
+<strong>Book 1</strong> takes the full equity path and accepts drawdowns of about 25%.
+</li><li>
+<strong>Book 2</strong> holds the same core but has cut drawdowns about in half in one bear market so far. The cost is roughly a point a year of return.
+</li></ul>
+<h2>What the evidence does and doesn't say</h2>
+<ul><li>
+<strong>Sharpe:</strong> Book 2 is at 1.00 against 0.86 for the backbone. Ledoit–Wolf (2008) tests put that gap at p ≈ 0.30–0.38, which is not significant. Against Book 1 (0.77), p ≈ 0.20, also not significant. The Sharpe gap isn't a reason on its own to pick Book 2.
+</li><li>
+<strong>Drawdowns:</strong> the protection came from a <strong>single stretch</strong>. The gate was on from October 2021 to December 2023. That covers the 2022 bear market (−10.1% vs −20.1%) and the autumn 2023 pullback (−3.9% vs −9.0%). Since January 2024 the gate hasn't switched on, and Book 2 has tracked the backbone through the 2024, 2025 and 2026 pullbacks.
+</li><li>
+<strong>Sample size:</strong> 68 months contain only one real bear market. The halving is large, but it rests on one episode.
+</li></ul>
+<h2>What would change this view</h2>
+<ul><li>
+<strong>Strengthens it:</strong> another bear market in which the gate engages and again roughly halves the drawdown.
+</li><li>
+<strong>Weakens it:</strong> a sharp selloff in which the gate stays off, or a long gap in return against the backbone with no drawdown benefit to show for it.
+</li></ul>
+<p>See also: <em>Book 2 vs the vol-target backbone</em>, Quant's significance and drawdown-episode note.</p><p class="dl"><a href="book2_reframe.md">Markdown source</a> · <a href="../methods/index.html#notes">All notes</a></p></div></section>
+</main>
+<footer class="site-footer">
+<p>Research only; not investment advice; experimental panel; no performance guarantees.</p>
+<p class="muted">Static GitHub Pages · Research only</p>
+</footer>
+
+<script src="../assets/nav.js" defer></script>
+</body>
+</html>

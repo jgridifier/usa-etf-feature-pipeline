@@ -3,6 +3,7 @@ import { XsdChart } from '../components/charts/XsdChart'
 import { ComparisonTable } from '../components/ComparisonTable'
 import { useJsonData } from '../hooks/useJsonData'
 import { pct, num, dataUrl } from '../lib/utils'
+import { LiveFig } from '../lib/liveFigures'
 
 interface MetricsPayload {
   AnnReturn_vt: number
@@ -74,8 +75,8 @@ function CioVerdictBand() {
           <div>
             <p className="font-serif text-sm text-ink leading-snug font-medium md:mb-1">Book-2 = drawdown-controlled core</p>
             <p className="hidden md:block font-sans text-2xs text-body leading-relaxed">
-              Book-2 is the drawdown-controlled version of the same stock core: about 1 point a year less
-              return than the VT backbone (~13.6% vs ~14.7%) for shallower drawdowns (−10.1% vs −20.1%)
+              Book-2 is the drawdown-controlled version of the same stock core: about <LiveFig k="gap.points" /> a year less
+              return than the vol-target backbone (~<LiveFig k="book2.return" /> vs ~<LiveFig k="vt.return" />) for shallower drawdowns (−10.1% vs −20.1%)
               and lower volatility — not better absolute return.
             </p>
           </div>
@@ -159,7 +160,7 @@ function DeltaStrip({ m }: { m: MetricsPayload }) {
         {/* Book 2 — vol-target */}
         <div>
           <div className="flex items-center justify-between mb-1">
-            <span className="font-sans text-2xs font-medium text-muted uppercase tracking-label">Book-2 VT backbone (no skew gate)</span>
+            <span className="font-sans text-2xs font-medium text-muted uppercase tracking-label">Backbone (no skew gate)</span>
             <span className="font-mono text-xs font-bold text-ink">{pct(m.MaxDD_vt)}</span>
           </div>
           <div className="relative h-8 bg-raised border border-border overflow-hidden">
@@ -255,7 +256,7 @@ export default function Books() {
 
           <div className="inline-block border border-border px-3 py-2 text-xs text-muted bg-surface">
             Research only — not investment advice. Panel is an arbitrary experimental USA ETF set
-            for methodology work. Data through 16 Sep 2026 (September is a partial month).
+            for methodology work. Data through 30 Sep 2026.
           </div>
         </div>
       </section>
@@ -285,8 +286,8 @@ export default function Books() {
                 vol scale. Clean null for any overlay or timing claim.
               </p>
               <div className="text-2xs text-muted pt-3 border-t border-border">
-                OOS snapshot: ~14.7% ann. return · ~15.9% vol · MaxDD ~−25.6% · Sharpe 0.75 in excess of BIL
-                (legacy rf = 0: ~0.92) · 68 months (2021-02 → 2026-09)
+                OOS snapshot: ~<LiveFig k="book1.return" /> ann. return · ~15.9% vol · MaxDD ~−25.6% · Sharpe <LiveFig k="book1.exbil" /> in excess of BIL
+                (legacy rf = 0: ~<LiveFig k="book1.rf0" />) · 68 months (2021-02 → 2026-09)
               </div>
             </article>
 
@@ -304,19 +305,19 @@ export default function Books() {
                 Drawdown-controlled version of the same stock core
               </p>
               <p className="text-sm text-body leading-relaxed mb-4">
-                Book 2 gives up about 1 point a year of return versus the VT backbone in exchange for
+                Book 2 gives up about <LiveFig k="gap.points" /> a year of return versus the vol-target backbone in exchange for
                 shallower drawdowns and lower volatility. Its protection has been seen in one bear market: in
-                2022 its drawdown was about half of VT&rsquo;s (−10.1% vs −20.1%), and it also cushioned the
+                2022 its drawdown was about half of the vol-target backbone&rsquo;s (−10.1% vs −20.1%), and it also cushioned the
                 autumn 2023 pullback (−3.9% vs −9.0%). The skew gate has not switched on since January 2024, so
-                through the 2024–2026 pullbacks Book 2 tracked VT. Its Sharpe above BIL is 0.97 vs 0.84 for VT;
+                through the 2024–2026 pullbacks Book 2 tracked the vol-target backbone. Its Sharpe above BIL is <LiveFig k="book2.exbil" /> vs <LiveFig k="vt.exbil" /> for the vol-target backbone;
                 that difference is not statistically significant.
               </p>
               <div className="text-2xs text-muted pt-3 border-t border-border">
-                Max drawdown −10.1% (VT backbone −20.1%, Book 1 −25.6%) · volatility ~10.6% (~13.9%, ~15.9%) ·
-                return ~13.6% (~14.7%, ~14.7%) · Sharpe above BIL 0.97 (0.84, 0.75)
+                Max drawdown −10.1% (vol-target backbone −20.1%, Book 1 −25.6%) · volatility ~10.6% (~13.9%, ~15.9%) ·
+                return ~<LiveFig k="book2.return" /> (~<LiveFig k="vt.return" />, ~<LiveFig k="book1.return" />) · Sharpe above BIL <LiveFig k="book2.exbil" /> (<LiveFig k="vt.exbil" />, <LiveFig k="book1.exbil" />)
                 <br />
                 Same Option A core, vol-scaled (scale-down only) with the skewness/left-tail gate
-                (Gong–Lynch–Ogden 2025); cash in <strong>BIL</strong>. Legacy rf = 0 Sharpe: 1.28 · NW t vs VT
+                (Gong–Lynch–Ogden 2025); cash in <strong>BIL</strong>. Legacy rf = 0 Sharpe: <LiveFig k="book2.rf0" /> · NW t vs the vol-target backbone
                 −0.80 · 68 months (2021-02 → 2026-09).
               </div>
             </article>
@@ -382,9 +383,9 @@ export default function Books() {
                   <div>
                     <dt className="section-eyebrow mb-0.5">Why it's on the shortlist</dt>
                     <dd className="text-body leading-relaxed">
-                      It is the drawdown-controlled version of the same stock core: about 1 point a year less
-                      return than the VT backbone for shallower drawdowns (−10.1% vs −20.1%; Book 1 −25.6%) and
-                      lower volatility (~10.6% vs ~13.9%). Its Sharpe above BIL is 0.97 vs 0.84 for VT; that
+                      It is the drawdown-controlled version of the same stock core: about <LiveFig k="gap.points" /> a year less
+                      return than the vol-target backbone for shallower drawdowns (−10.1% vs −20.1%; Book 1 −25.6%) and
+                      lower volatility (~10.6% vs ~13.9%). Its Sharpe above BIL is <LiveFig k="book2.exbil" /> vs <LiveFig k="vt.exbil" /> for the vol-target backbone; that
                       difference is not statistically significant. A{' '}
                       <strong>drawdown-control</strong> book, not a "beat the market" story.
                     </dd>
@@ -393,7 +394,7 @@ export default function Books() {
                     <dt className="section-eyebrow mb-0.5">What it is not</dt>
                     <dd className="text-body leading-relaxed">
                       Not the archived conditional factor-corr overlay (#13), which{' '}
-                      <strong>failed</strong> vs the unconditional Book-2 VT on Sharpe (legacy rf = 0 and in excess of BIL).
+                      <strong>failed</strong> vs the unconditional vol-target backbone on Sharpe (legacy rf = 0 and in excess of BIL).
                     </dd>
                   </div>
                   <div>
@@ -406,17 +407,17 @@ export default function Books() {
                       <code>vol_target_option_a</code> (entrypoint: <code>vol_target_book2</code>).
                     </dd>
                     <dd className="text-body leading-relaxed mt-2">
-                      <strong>Claim vs unconditional Book-2 VT null</strong> (Sharpe 0.84 in excess of BIL,
-                      legacy rf = 0 ≈ 1.059 /{' '}
+                      <strong>Claim vs unconditional vol-target backbone null</strong> (Sharpe <LiveFig k="vt.exbil" /> in excess of BIL,
+                      legacy rf = 0 ≈ <LiveFig k="vt.rf0" /> /{' '}
                       MaxDD ≈ −20.1% / 68 months — archived in{' '}
                       <code>vol_target_oos_summary.csv</code> and registry entry{' '}
                       <code>vol_target_option_a_uncond</code>):{' '}
                       shallower MaxDD (−10.1% vs −20.1%) and lower volatility (~10.6% vs ~13.9%); Sharpe above
-                      BIL 0.97 vs 0.84 (legacy rf = 0 1.28 vs 1.059), a difference that is not statistically
+                      BIL <LiveFig k="book2.exbil" /> vs <LiveFig k="vt.exbil" /> (legacy rf = 0 <LiveFig k="book2.rf0" /> vs <LiveFig k="vt.rf0" />), a difference that is not statistically
                       significant; no return-edge expected.{' '}
                       <strong>No new shortlist card. Two books only.</strong>{' '}
                       Cash-null audit (Quant, 2026-09-26): About 40% of the rf=0 Sharpe gap was cash carry.
-                      In excess of BIL it is 0.97 vs 0.84 and the drawdown cut is unchanged, so the PASS as
+                      In excess of BIL it is <LiveFig k="book2.exbil" /> vs <LiveFig k="vt.exbil" /> and the drawdown cut is unchanged, so the PASS as
                       a risk overlay stands.
                     </dd>
                   </div>
@@ -505,8 +506,8 @@ export default function Books() {
           <div className="mt-8">
             <Eyebrow>Strategy comparison</Eyebrow>
             <p className="text-sm text-body mt-1 mb-6 max-w-2xl">
-              Book 1 and the unconditional Book-2 VT audit null from the latest registry run; the live Book 2 is
-              the VT × gate-first overlay (0.97 in excess of BIL, cards above). Sharpe is in excess of BIL with
+              Book 1 and the unconditional vol-target backbone audit null from the latest registry run; the live Book 2 is
+              the vol-target backbone × gate-first overlay (<LiveFig k="book2.exbil" /> in excess of BIL, cards above). Sharpe is in excess of BIL with
               the legacy rf = 0 value in parentheses. Optional XSD sleeve shown last, subordinate — not a peer.
             </p>
             <ComparisonTable />

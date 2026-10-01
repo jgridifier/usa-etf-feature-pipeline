@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Quant note: Book 2 vs the vol-target backbone (Sharpe test and drawdowns, Oct 2026) | USA ETF Lab</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,wght@0,400;0,500;0,600;1,400;1,600&family=Playfair+Display:wght@700;900&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/style.css">
+<link rel="icon" type="image/svg+xml" href="../favicon.svg">
+
+</head>
+<body>
+<header class="site-header"><div class="site-header-inner"><a class="brand" href="../index.html">USA ETF Lab</a><button type="button" class="nav-toggle" aria-expanded="false" aria-controls="site-nav" aria-label="Open menu"><span class="nav-toggle-bars" aria-hidden="true"></span></button><nav class="site-nav" id="site-nav" aria-label="Main"><a href="../index.html">Home</a><a href="../index.html#/books">Books</a><a href="../index.html#/runs">Runs</a><a href="../explorer/index.html">Explorer</a><a href="../methods/index.html" class="is-active">Methods</a></nav></div></header>
+<main class="page">
+<section class="band"><div class="band-inner note-body"><p><span class="badge">Note for Jared</span></p><h1>Book 2 vs the vol-target backbone: is the Sharpe edge real, and where did the drawdown protection come from?</h1>
+<p><em>Quant · October 2026 · Data through 30 Sep 2026 (68 complete months, Feb 2021 – Sep 2026). Research only, not investment advice.</em></p>
+<p><strong>What the "backbone" is.</strong> The <strong>vol-target backbone</strong> (labelled "Backbone" in tables): Book 1's static 70/20/10 core (VOO, QQQM, IJR), scaled down toward BIL cash when its volatility runs high. It is not the Vanguard Total World ETF (ticker VT), and earlier drafts that called it "VT" meant the backbone. Book 2 is that backbone with a skewness-managed gate added. When the vol target isn't cutting exposure, the backbone holds exactly the Book 1 core, so in calm periods all three series move together.</p>
+<h2>In short</h2>
+<ul><li>
+Above cash (BIL), Book 2's Sharpe ratio is <strong>1.00</strong>, against <strong>0.86</strong> for the backbone. The gap of <strong>0.14</strong> is <strong>not statistically significant</strong>: p is about 0.30–0.32 by HAC and about 0.37–0.38 by bootstrap. For significance at the 5% level, the gap would need to be about 0.27.
+</li><li>
+Book 2's worst drawdown was <strong>−10.1%</strong>, against <strong>−20.1%</strong> for the backbone, a ratio of <strong>0.50</strong>. Both happened in the <strong>2022 bear market</strong>.
+</li><li>
+That protection has shown up in <strong>one bear market</strong> (2022), plus a smaller cut in autumn 2023. In the 2024, 2025 and 2026 drawdowns the overlay did not engage, and Book 2 matched the backbone.
+</li></ul>
+<h2>Method</h2>
+<p>Ledoit, O. &amp; Wolf, M. (2008), "Robust performance hypothesis testing with the Sharpe ratio," <em>Journal of Empirical Finance</em> 15(5), 850–859. <a href="https://doi.org/10.1016/j.jempfin.2008.03.002">doi:10.1016/j.jempfin.2008.03.002</a></p>
+<p>The test asks whether two Sharpe ratios measured on the same months really differ. It allows for fat tails and for returns that are correlated over time, which the textbook test assumes away. We used two versions:</p>
+<ul><li>
+The delta method with a HAC covariance, a standard error that is robust to autocorrelation. We tried Bartlett and Parzen kernels with bandwidths of 4 and 6 months.
+</li><li>
+The paper's studentized circular block bootstrap, with 20,000 draws and blocks of 3, 4 and 6 months.
+</li></ul>
+<p>All returns are monthly and net of trading costs, measured in excess of BIL.</p>
+<h2>Sharpe-difference results (annualized, excess of BIL)</h2>
+<div class="table-scroll" tabindex="0" role="region" aria-label="table"><table><thead><tr><th scope="col"></th><th scope="col">Book 2</th><th scope="col">Backbone</th><th scope="col">Difference</th><th scope="col">p (two-sided)</th></tr></thead><tbody><tr><td>HAC, Bartlett, 4 months</td><td>1.00</td><td>0.86</td><td>+0.14</td><td>0.31</td></tr><tr><td>HAC, Parzen, 4 months</td><td>1.00</td><td>0.86</td><td>+0.14</td><td>0.32</td></tr><tr><td>HAC, Parzen, 6 months</td><td>1.00</td><td>0.86</td><td>+0.14</td><td>0.30</td></tr><tr><td>Bootstrap, blocks of 3 / 4 / 6</td><td></td><td></td><td></td><td>0.37 / 0.37 / 0.38</td></tr></tbody></table></div>
+<p>For reference: Book 2 vs Book 1, above BIL, is 1.00 vs 0.77, a gap of +0.23 with HAC p ≈ 0.20. That is not significant either.</p>
+<h2>Drawdown episodes (month-end total returns; intra-month lows were deeper)</h2>
+<div class="table-scroll" tabindex="0" role="region" aria-label="table"><table><thead><tr><th scope="col">Episode</th><th scope="col">Peak → trough</th><th scope="col">Book 1</th><th scope="col">Backbone</th><th scope="col">Book 2</th></tr></thead><tbody><tr><td>Sep 2021</td><td>Aug → Sep 2021</td><td>−4.6%</td><td>−4.6%</td><td>−4.6%</td></tr><tr><td>2022 bear market</td><td>Dec 2021 → Sep 2022</td><td>−25.6%</td><td>−20.1%</td><td>−10.1%</td></tr><tr><td>Autumn 2023</td><td>Jul → Oct 2023</td><td>−9.0%*</td><td>−9.0%</td><td>−3.9%</td></tr><tr><td>Apr 2024</td><td>Mar → Apr 2024</td><td>−4.2%</td><td>−4.2%</td><td>−4.2%</td></tr><tr><td>2025 tariff selloff</td><td>Jan → Apr 2025</td><td>−8.6%</td><td>−8.6%</td><td>−8.6%</td></tr><tr><td>Q1 2026</td><td>Jan → Mar 2026</td><td>−5.7%</td><td>−5.7%</td><td>−5.7%</td></tr></tbody></table></div>
+<p>*Book 1 was still below its 2021 peak at the time.</p>
+<h2>Why the record looks like this</h2>
+<p>Book 2 is the backbone with a skewness-managed risk gate on top. The gate cut exposure in just one continuous stretch, October 2021 to December 2023. In 40 of the 68 months Book 2's return equals the backbone's, and in 47 months the backbone's equals Book 1's, because the vol target only scales down in high-vol stretches. From January 2024 on, the two are identical apart from trading costs. So the halved worst drawdown comes from a single episode. A Sharpe gap this size, over fewer than six years, can't be told apart from luck.</p>
+<h2>What would change the conclusion</h2>
+<p>More bear markets in which the gate engages. Until then, the honest description is "about half of the backbone's drawdown in one bear market, at a cost of roughly a point a year of return, with no statistically significant Sharpe edge."</p><p class="dl"><a href="book2_lw2008_drawdowns.md">Markdown source</a> · <a href="../methods/index.html#notes">All notes</a></p></div></section>
+</main>
+<footer class="site-footer">
+<p>Research only; not investment advice; experimental panel; no performance guarantees.</p>
+<p class="muted">Static GitHub Pages · Research only</p>
+</footer>
+
+<script src="../assets/nav.js" defer></script>
+</body>
+</html>

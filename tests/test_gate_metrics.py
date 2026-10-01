@@ -34,6 +34,11 @@ def rf():
     return risk_free_monthly()
 
 
+@pytest.fixture(scope="module")
+def frozen_rf():
+    return cna.frozen_audit_rf()
+
+
 # ------------------------------------------------------------------ tags
 def test_tag_coverage(universe):
     assert universe["cash_like"].dtype == bool and universe["short_duration"].dtype == bool
@@ -144,7 +149,7 @@ def test_tb3ms_file_and_fallback_rule(rf):
         window_rf_coverage(pd.date_range("1920-01-31", periods=3, freq="ME"), rf)
 
 
-def test_bil_priced_return_is_used_not_zero_proxy(rf):
+def test_bil_priced_return_is_used_not_zero_proxy(rf, frozen_rf):
     bil = load_bil_monthly()
     window = rf.loc[pd.Period("2021-02", "M"):pd.Period("2026-09", "M")]
     assert (window.source == "BIL").all()
@@ -153,8 +158,12 @@ def test_bil_priced_return_is_used_not_zero_proxy(rf):
     # A zero-rf proxy would give the arithmetic rf=0 Sharpe, not the audited 0.966.
     sk = pd.read_csv(ROOT / "data/processed/skewness_managed/skew_managed_gatefirst_returns.csv",
                      parse_dates=["date"]).set_index("date")["r_method"]
-    assert sharpe_exbil(sk, rf) == pytest.approx(0.9664, abs=1e-4)
+    assert sharpe_exbil(sk, frozen_rf) == pytest.approx(0.9664, abs=1e-4)
     assert sharpe_excess(sk, np.zeros(len(sk))) > 1.2
+    live = pd.read_csv(ROOT / "data/processed/live/skew_managed_gatefirst_returns.csv",
+                       parse_dates=["date"]).set_index("date")["r_method"]
+    # Re-pinned 2026-10-01: data refresh through 2026-09-30 close
+    assert sharpe_exbil(live, rf) == pytest.approx(0.9967, abs=1e-4)
 
 
 def test_sharpe_formulas(rf):
@@ -181,7 +190,8 @@ def test_all_bil_portfolio_scores_zero(rf):
 
 
 # ------------------------------------------------------- reconciliation
-def test_reconciles_to_quant_cash_null_audit(rf):
+def test_reconciles_to_quant_cash_null_audit(frozen_rf):
+    rf = frozen_rf
     rec = cna.reconciliation_table(rf=rf)
     memo = rec[rec.in_memo]
     assert len(memo) == len(cna.MEMO)
@@ -208,7 +218,8 @@ def test_reconciles_to_quant_cash_null_audit(rf):
     assert (np.round(fb.bil_share * 100) == fb.memo_bil_share_pct).all()
 
 
-def test_reconciliation_artifact_is_current(rf):
+def test_reconciliation_artifact_is_current(frozen_rf):
+    rf = frozen_rf
     committed = pd.read_csv(AUDIT_DIR / "reconciliation.csv")
     fresh = cna.reconciliation_table(rf=rf)
     for col in ("Sharpe_exBIL", "Sharpe_rf0_legacy", "rf_fallback_share"):
@@ -233,14 +244,18 @@ def _fmt(x, nd):
     return f"{x:.{nd}f}".replace("-", "−")
 
 
-def test_site_sharpe_artifact_and_pages_figures(rf):
+def test_site_sharpe_artifact_and_pages_figures(rf, frozen_rf):
     site = json.loads((AUDIT_DIR / "site_sharpe.json").read_text())
-    fresh = cna.site_sharpe_figures(rf=rf)
+    fresh = cna.site_sharpe_figures(rf=rf, live_dir=ROOT / "data/processed/live")
     assert json.loads(json.dumps(fresh)) == site
+    frozen = cna.site_sharpe_figures(rf=frozen_rf)
+    assert site["archive"] == frozen["archive"]
+    assert site["books"]["uncond_vt_committed_cash0"] == frozen["books"]["uncond_vt_committed_cash0"]
     books = site["books"]
-    assert round(books["book1_static_core"]["exbil"], 2) == 0.75
-    assert round(books["book2_vt_x_gatefirst"]["exbil"], 2) == 0.97
-    assert round(books["uncond_vt_audit_null"]["exbil"], 2) == 0.84
+    # Re-pinned 2026-10-01: data refresh through 2026-09-30 close
+    assert round(books["book1_static_core"]["exbil"], 2) == 0.77
+    assert round(books["book2_vt_x_gatefirst"]["exbil"], 2) == 1.00
+    assert round(books["uncond_vt_audit_null"]["exbil"], 2) == 0.86
     # Archive cards: "<excess of BIL> (legacy <rf = 0>)" at the card's own precision.
     cards = json.loads((ROOT / "apps/pages/src/data/archive_verdicts.json").read_text(encoding="utf-8"))["cards"]
     for card in cards:
@@ -260,21 +275,28 @@ def test_site_sharpe_artifact_and_pages_figures(rf):
         assert row["Sharpe_exBIL"] == site["comparison"][row["strategy_id"]]["exbil"]
         assert row["Sharpe_rf0"] == pytest.approx(site["comparison"][row["strategy_id"]]["rf0_legacy"], abs=1e-4)
     books_tsx = (ROOT / "apps/pages/src/pages/Books.tsx").read_text(encoding="utf-8")
-    for needle in ("Sharpe 0.75 in excess of BIL", "Sharpe above BIL 0.97 (0.84, 0.75)",
-                   "0.84 in excess of BIL", "legacy rf = 0"):
+    # Re-pinned 2026-10-01: data refresh through the 2026-09-30 close. Return / Sharpe figures in the
+    # prose now render from live outputs via <LiveFig> (see tests/test_live_figures.py for the rendered values).
+    for needle in ('Sharpe <LiveFig k="book1.exbil" /> in excess of BIL',
+                   'Sharpe above BIL <LiveFig k="book2.exbil" /> (<LiveFig k="vt.exbil" />, <LiveFig k="book1.exbil" />)',
+                   '<LiveFig k="vt.exbil" /> in excess of BIL', "legacy rf = 0"):
         assert needle in books_tsx
     for stale in ("Sharpe ~1.06", "higher Sharpe_rf0", "Sharpe ~0.92 ·"):
         assert stale not in books_tsx
 
 
-BOOK2_STAT_LINE = ("Max drawdown −10.1% (VT backbone −20.1%, Book 1 −25.6%) · volatility ~10.6% (~13.9%, ~15.9%) · "
-                   "return ~13.6% (~14.7%, ~14.7%) · Sharpe above BIL 0.97 (0.84, 0.75)")
+# Re-pinned 2026-10-01: data refresh through the 2026-09-30 close; "VT" display label renamed to
+# "vol-target backbone" (CoS ruling). Return / Sharpe figures in the
+# prose now render from live outputs via <LiveFig> (see tests/test_live_figures.py for the rendered values).
+BOOK2_STAT_LINE = ("Max drawdown −10.1% (vol-target backbone −20.1%, Book 1 −25.6%) · volatility ~10.6% (~13.9%, ~15.9%) · "
+                   'return ~<LiveFig k="book2.return" /> (~<LiveFig k="vt.return" />, ~<LiveFig k="book1.return" />) · '
+                   'Sharpe above BIL <LiveFig k="book2.exbil" /> (<LiveFig k="vt.exbil" />, <LiveFig k="book1.exbil" />)')
 BOOK2_BODY = (
-    "Book 2 gives up about 1 point a year of return versus the VT backbone in exchange for shallower drawdowns "
+    'Book 2 gives up about <LiveFig k="gap.points" /> a year of return versus the vol-target backbone in exchange for shallower drawdowns '
     "and lower volatility. Its protection has been seen in one bear market: in 2022 its drawdown was about half "
-    "of VT's (−10.1% vs −20.1%), and it also cushioned the autumn 2023 pullback (−3.9% vs −9.0%). The skew gate "
-    "has not switched on since January 2024, so through the 2024–2026 pullbacks Book 2 tracked VT. Its Sharpe "
-    "above BIL is 0.97 vs 0.84 for VT; that difference is not statistically significant.")
+    "of the vol-target backbone's (−10.1% vs −20.1%), and it also cushioned the autumn 2023 pullback (−3.9% vs −9.0%). The skew gate "
+    "has not switched on since January 2024, so through the 2024–2026 pullbacks Book 2 tracked the vol-target backbone. Its Sharpe "
+    'above BIL is <LiveFig k="book2.exbil" /> vs <LiveFig k="vt.exbil" /> for the vol-target backbone; that difference is not statistically significant.')
 
 
 def _site_text(rel: str) -> str:

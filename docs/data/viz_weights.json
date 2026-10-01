@@ -12,7 +12,7 @@
     "vol_target_option_a": {
       "label": "Book 2 \u2014 Vol-target Option A",
       "asof": "2026-08-31",
-      "eval_date": "2026-09-16",
+      "eval_date": "2026-09-30",
       "f": 1.0,
       "weights": {
         "VOO": 0.7,
@@ -23,7 +23,7 @@
     },
     "score_rotate_xsd": {
       "label": "Optional gated sleeve \u2014 XSD",
-      "asof": "2026-09-16",
+      "asof": "2026-09-30",
       "rotate_on": "False",
       "weights": {
         "VOO": 0.7,

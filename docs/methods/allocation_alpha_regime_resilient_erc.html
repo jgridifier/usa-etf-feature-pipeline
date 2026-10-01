@@ -13,7 +13,7 @@
   h2 { font-size: 1.25rem; margin-top: 2rem; border-bottom: 1px solid var(--border); padding-bottom: 0.3rem; }
   h3 { font-size: 1.05rem; margin-top: 1.4rem; color: #222; }
   .meta { color: var(--muted); font-family: system-ui, sans-serif; font-size: 0.9rem; margin-bottom: 1.5rem; }
-  .disclaimer { background: #fff8e6; border: 1px solid #f0d78c; padding: 0.75rem 1rem; border-radius: 6px; font-size: 0.92rem; margin: 1rem 0 1.5rem; }
+  .disclaimer { background: #f1f3f9; border: 1px solid #b8c0d6; padding: 0.75rem 1rem; border-radius: 6px; font-size: 0.92rem; margin: 1rem 0 1.5rem; }
   .callout { background: var(--bg); border-left: 4px solid var(--accent); padding: 0.75rem 1rem; margin: 1rem 0; }
   .ok { border-left-color: var(--ok); }
   table { border-collapse: collapse; width: 100%; font-size: 0.92rem; margin: 0.75rem 0 1rem; }
@@ -28,14 +28,14 @@
   .toc ol { margin: 0.4rem 0 0; }
   footer { margin-top: 2.5rem; padding-top: 1rem; border-top: 1px solid var(--border); color: var(--muted); font-size: 0.85rem; font-family: system-ui, sans-serif; }
 </style>
-<!-- lab:start --><link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,wght@0,400;0,500;0,600;1,400;1,600&family=Playfair+Display:wght@700;900&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet"><link rel="stylesheet" href="../assets/style.css"><!-- lab:end --></head>
+<!-- lab:start --><link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,wght@0,400;0,500;0,600;1,400;1,600&family=Playfair+Display:wght@700;900&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet"><link rel="stylesheet" href="../assets/style.css"><link rel="icon" type="image/svg+xml" href="../favicon.svg"><!-- lab:end --></head>
 <body><!-- lab:start --><header class="site-header"><div class="site-header-inner"><a class="brand" href="../index.html">USA ETF Lab</a><button type="button" class="nav-toggle" aria-expanded="false" aria-controls="site-nav" aria-label="Open menu"><span class="nav-toggle-bars" aria-hidden="true"></span></button><nav class="site-nav" id="site-nav" aria-label="Main"><a href="../index.html">Home</a><a href="../index.html#/books">Books</a><a href="../index.html#/runs">Runs</a><a href="../explorer/index.html">Explorer</a><a href="../methods/index.html" class="is-active">Methods</a></nav></div></header><!-- lab:end -->
 
 <h1>Allocation Alpha: Regime-Resilient ERC (LOIM Regime Parity)</h1>
 <p class="meta">Teaching note · 2026-09-22 (ET) · USA research-panel ETF · CIO Justina shortlist #3 · Next bet after #4 FT-MED FAIL/ARCHIVE · #6 skewness parked</p>
 
 <div class="disclaimer">
-<strong>Research only — not investment advice.</strong> This document explains a proposed walk-forward test of <em>regime-parity</em> / regime-resilient equal-risk-contribution (ERC) allocation on the experimental USA ETF research panel. It does not recommend buying or selling any security. Confirm tickers against the research panel before any use. <strong>No empirical success is claimed here</strong> — theory + Engineering handoff only. Live shortlist remains <strong>static core + VT × gate-first skew overlay</strong> (Justina #6). Unconditional Book-2 VT is the audit/Archive null only. Research / Quant gate only — this note does not change live books.
+<strong>Research only — not investment advice.</strong> This document explains a proposed walk-forward test of <em>regime-parity</em> / regime-resilient equal-risk-contribution (ERC) allocation on the experimental USA ETF research panel. It does not recommend buying or selling any security. Confirm tickers against the research panel before any use. <strong>No empirical success is claimed here</strong> — theory + Engineering handoff only. Live shortlist remains <strong>static core + vol-target backbone × gate-first skew overlay</strong> (Justina #6). Unconditional vol-target backbone is the audit/Archive null only. Research / Quant gate only — this note does not change live books.
 </div>
 
 <nav class="toc" aria-label="Contents">
@@ -55,7 +55,7 @@
 <p>Portfolios context (as of 2026-09-22 ET):</p>
 <ul>
   <li><strong>Archived (research FAIL):</strong> Spectral RP · Regime-Aware dual · vol-cond-factor-corr (#13) · <strong>forecast tangency + MED (#4 / FT-MED FAIL/ARCHIVE)</strong>. Scoreboard: <code>methods/justina_round1_scoreboard.html</code>, <code>QUANT_GATE_forecast_tangency_med.md</code>, <code>QUANT_GATE_vol_cond_factor_corr.md</code>.</li>
-  <li><strong>Live shortlist:</strong> <strong>static core + VT × gate-first skew overlay</strong> (Justina #6). Unconditional Book-2 VT (<code>walkforward-vol-target</code>, <code>vol_target_real_bil/</code>) is the audit/Archive null only. This ticket does not modify live books.</li>
+  <li><strong>Live shortlist:</strong> <strong>static core + vol-target backbone × gate-first skew overlay</strong> (Justina #6). Unconditional vol-target backbone (<code>walkforward-vol-target</code>, <code>vol_target_real_bil/</code>) is the audit/Archive null only. This ticket does not modify live books.</li>
   <li><strong>Parked:</strong> Justina shortlist <strong>#6</strong> skewness overlay — not this ticket.</li>
   <li><strong>This ticket:</strong> Justina CIO shortlist <strong>#3</strong> — <strong>regime-resilient ERC construction</strong>: stress / correlation-breakdown overlays (and LOIM regime-parity risk inputs) that change <em>how ERC weights are built</em>. <strong>Primary null = unconditional ERC.</strong></li>
 </ul>
@@ -64,7 +64,7 @@
 <strong>CIO clarification — construction, not selection:</strong> This is <em>regime-resilient ERC construction</em>. Stress windows, corr-breakdown / Diversification-Under-Stress diagnostics, and/or LOIM-style regime-conditioned Σ̂ pools alter the inputs (or π-blend of local ERCs) used inside the ERC weight solve. It is <strong>not</strong> a rerun of archived dual-regime <em>selection</em> (Luo/Mulvey-style: classify the <em>current</em> regime → pick assets / hold only that regime’s portfolio) vs unconditional ERC. Every month still emits an ERC-family construction.
 </div>
 
-<p><strong>Distinct from archived work:</strong> not spectral eigenrisk (#1); <strong>not</strong> dual-regime asset selection (#2 FAIL); not Book-2 conditional-corr timing (#13 FAIL); not forecast-tangency MED (#4 FAIL). Live books stay static core + Book-2 VT only.</p>
+<p><strong>Distinct from archived work:</strong> not spectral eigenrisk (#1); <strong>not</strong> dual-regime asset selection (#2 FAIL); not Book-2 conditional-corr timing (#13 FAIL); not forecast-tangency MED (#4 FAIL). Live books stay static core + vol-target backbone only.</p>
 
 <h2 id="original">2. What the original work found</h2>
 
@@ -124,7 +124,7 @@ w*_t ← ERC(Σ̂_resilient,t)                             # still ERC — only 
 <p><strong>Intuition in one sentence:</strong> Keep the ERC <em>solver</em>; make the risk inputs regime-resilient (stress-mixed Σ̂ and/or π-blend of local ERCs) — do <em>not</em> switch to a current-regime selected portfolio.</p>
 
 <div class="callout ok">
-<strong>What we are <em>not</em> doing:</strong> dual-regime <em>selection</em> (Luo/Mulvey-style classify current regime → allocate); reopening Spectral RP / Regime-Aware dual / vol-cond-factor-corr / FT-MED; modifying live books (static core + Book-2 VT stay as-is); claiming LOIM OOS numbers on our panel; Forma; production trading or WRDS dumps; building #6 skewness on this ticket.
+<strong>What we are <em>not</em> doing:</strong> dual-regime <em>selection</em> (Luo/Mulvey-style classify current regime → allocate); reopening Spectral RP / Regime-Aware dual / vol-cond-factor-corr / FT-MED; modifying live books (static core + vol-target backbone stay as-is); claiming LOIM OOS numbers on our panel; Forma; production trading or WRDS dumps; building #6 skewness on this ticket.
 </div>
 
 <h2 id="ourdata">4. What we will do on the USA ETF panel</h2>
@@ -142,7 +142,7 @@ w*_t ← ERC(Σ̂_resilient,t)                             # still ERC — only 
   <li>Sharpe_rf0 (rf=0); NW t and <strong>DSR + trial_count</strong> mandatory.</li>
   <li>Thin-history flags (<code>thin_lt5y</code>+); publish with/without thin names / thin sleeves.</li>
   <li>Cash: on-list BIL (fallbacks SGOV, GBIL, SHV).</li>
-  <li><strong>Live shortlist:</strong> static core + VT × gate-first skew overlay (Justina #6) — unchanged by this research ticket. Unconditional Book-2 VT is the audit/Archive null only.</li>
+  <li><strong>Live shortlist:</strong> static core + vol-target backbone × gate-first skew overlay (Justina #6) — unchanged by this research ticket. Unconditional vol-target backbone is the audit/Archive null only.</li>
 </ul>
 
 <h3>Inputs</h3>
@@ -188,11 +188,11 @@ w*_t ← ERC(Σ̂_resilient,t)                             # still ERC — only 
   <li>Does <strong>not</strong> silently win via current-regime selection, peeking labels, dropping stress months from OOS, or fishing knobs after seeing outcomes.</li>
 </ol>
 
-<p><strong>Failure is informative:</strong> If resilient-ERC construction fails vs unconditional ERC (and EW / LW MinVar) after DSR, archive with a one-line null result (parity with Justina round-1 / #13 / #4). Live shortlist remains <strong>static core + VT × gate-first skew overlay</strong> (Justina #6). Unconditional Book-2 VT is the audit/Archive null only.</p>
+<p><strong>Failure is informative:</strong> If resilient-ERC construction fails vs unconditional ERC (and EW / LW MinVar) after DSR, archive with a one-line null result (parity with Justina round-1 / #13 / #4). Live shortlist remains <strong>static core + vol-target backbone × gate-first skew overlay</strong> (Justina #6). Unconditional vol-target backbone is the audit/Archive null only.</p>
 
 <table>
   <tr><th>Metric</th><th>Compare to</th></tr>
-  <tr><td>AnnReturn, AnnVol, MaxDD, Sharpe_rf0</td><td><strong>Uncond ERC (primary)</strong>; EW; LW MinVar; optional Book-2 VT</td></tr>
+  <tr><td>AnnReturn, AnnVol, MaxDD, Sharpe_rf0</td><td><strong>Uncond ERC (primary)</strong>; EW; LW MinVar; optional Backbone</td></tr>
   <tr><td>Newey–West t on monthly excess</td><td>0 vs each null (esp. vs uncond ERC)</td></tr>
   <tr><td>DSR + trial_count</td><td>Mandatory on every OOS claim</td></tr>
   <tr><td>Block-bootstrap Sharpe 95% CI</td><td>Overlap vs nulls</td></tr>
@@ -215,7 +215,7 @@ w*_t ← ERC(Σ̂_resilient,t)                             # still ERC — only 
 
 <footer>
 USA Research-Panel ETF Portfolios workstream · Quant → Engineering · Justina shortlist #3 · 2026-09-22 ET<br/>
-Not personalized investment advice. Confirm policy list before trading. No empirical success claimed. Live books: static core + Book-2 VT only.
+Not personalized investment advice. Confirm policy list before trading. No empirical success claimed. Live books: static core + vol-target backbone only.
 </footer>
 
 <!-- lab:start --><footer class="site-footer"><p>Research only; not investment advice; experimental panel; no performance guarantees.</p></footer><!-- lab:end --></body>

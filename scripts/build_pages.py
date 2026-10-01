@@ -44,6 +44,13 @@ NAV = [
 ]
 
 
+import sys  # noqa: E402
+
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from build_notes import build_notes, notes_list_html  # noqa: E402
+from labels import relabel_archive  # noqa: E402
+
+
 def read_csv(name: str) -> list[dict]:
     path = DATA / name
     if not path.exists():
@@ -62,6 +69,80 @@ def copy_cio_inputs() -> None:
     for src, dest_name in CIO_COPIES:
         if src.is_file():
             shutil.copy2(src, DATA / dest_name)
+    # Refresh the published slices from run_latest; the older external shortlist
+    # exports are fallback inputs only and are not modified by this build.
+    comparison = read_csv('strategy_comparison.csv')
+    suggested = read_csv('suggested_weights.csv')
+    slices = {}
+    if comparison:
+        slices['shortlist_comparison.csv'] = [r for r in comparison if r['strategy_id'] in
+                                             {'static_option_a', 'vol_target_option_a', 'score_rotate_xsd'}]
+    if suggested:
+        for sid, name in [('static_option_a', 'book1_static_option_a_weights.csv'),
+                          ('vol_target_option_a', 'book2_vol_target_option_a_weights.csv')]:
+            slices[name] = [r for r in suggested if r['strategy_id'] == sid]
+    for name, rows in slices.items():
+        if rows:
+            with (DATA / name).open('w', newline='', encoding='utf-8') as f:
+                writer = csv.DictWriter(f, fieldnames=list(rows[0]), lineterminator='\n')
+                writer.writeheader()
+                writer.writerows(rows)
+    # Keep the existing nested download snapshots in sync with the flat inputs.
+    nested = DATA / 'cio_book_shortlist'
+    for name in slices:
+        if (DATA / name).exists():
+            nested.mkdir(parents=True, exist_ok=True)
+            shutil.copy2(DATA / name, nested / name)
+    for name in ('strategy_comparison.csv', 'suggested_weights.csv',
+                 'strategy_diagnostics.csv', 'strategy_registry_used.csv'):
+        src = CIO / 'run_latest' / name
+        if src.is_file():
+            (nested / 'run_latest').mkdir(parents=True, exist_ok=True)
+            shutil.copy2(src, nested / 'run_latest' / name)
+
+
+LIVE = ROOT / 'data' / 'processed' / 'live'
+LIVE_SOURCES = {
+    # book key: (live CSV, return column, site_sharpe.json books key)
+    'book1': ('vol_target_oos_returns.csv', 'r_option_a', 'book1_static_core'),
+    'book2': ('skew_managed_gatefirst_returns.csv', 'r_method', 'book2_vt_x_gatefirst'),
+    'vt': ('vol_target_oos_returns.csv', 'r_vt', 'uncond_vt_audit_null'),
+}
+
+
+def live_book_stats(returns: list[float]) -> dict:
+    """CAGR, sample vol x sqrt(12), monthly-wealth max drawdown (peak starts at 1)."""
+    n = len(returns)
+    wealth, peak, max_dd = 1.0, 1.0, 0.0
+    for r in returns:
+        wealth *= 1.0 + r
+        peak = max(peak, wealth)
+        max_dd = min(max_dd, wealth / peak - 1.0)
+    mean = sum(returns) / n
+    vol = (sum((r - mean) ** 2 for r in returns) / (n - 1)) ** 0.5 * 12 ** 0.5
+    return {'ann_return': wealth ** (12.0 / n) - 1.0, 'ann_vol': vol, 'max_dd': max_dd}
+
+
+def build_live_figures() -> None:
+    """docs/data/live_figures.json: figures the Books/Home/Runs prose renders."""
+    site = json.loads((ROOT / 'data/processed/cash_null_audit/site_sharpe.json').read_text(encoding='utf-8'))
+    books, months = {}, None
+    for key, (name, col, site_key) in LIVE_SOURCES.items():
+        with (LIVE / name).open(newline='', encoding='utf-8') as f:
+            rows = list(csv.DictReader(f))
+        dates = [r['date'][:7] for r in rows]
+        months = months or (len(rows), dates[0], dates[-1], rows[-1]['date'][:10])
+        stats = live_book_stats([float(r[col]) for r in rows])
+        stats['sharpe_exbil'] = site['books'][site_key]['exbil']
+        stats['sharpe_rf0'] = site['books'][site_key]['rf0_legacy']
+        stats['source'] = f'data/processed/live/{name}:{col}; site_sharpe.json books.{site_key}'
+        books[key] = stats
+    write_json('live_figures.json', {
+        'asof': months[3],
+        'n_months': months[0],
+        'window': f'{months[1]}..{months[2]}',
+        'books': books,
+    })
 
 
 def cumprod_wealth(returns: list[float]) -> list[float]:
@@ -219,13 +300,14 @@ def build_viz() -> None:
         short = comparison
     labels = {
         'static_option_a': 'Book 1 — Static Option A',
-        'vol_target_option_a': 'Unconditional Book-2 VT (audit null)',
+        'vol_target_option_a': 'Backbone (unconditional, audit null)',
         'score_rotate_xsd': 'Optional gated sleeve — XSD',
         'm3_p2_core_rotate': 'M3 P2 (held off)',
     }
     stances = {
         'static_option_a': 'Benchmark policy baseline',
-        'vol_target_option_a': 'Audit null for the live Book-2 VT × gate-first overlay (0.97 excess of BIL)',
+        'vol_target_option_a': 'Audit null for the live vol-target backbone × gate-first overlay '
+        f"({site_sharpe()['books']['book2_vt_x_gatefirst']['exbil']:.2f} excess of BIL)",
         'score_rotate_xsd': 'Optional gated sleeve',
         'm3_p2_core_rotate': 'Held off the shortlist',
     }
@@ -379,6 +461,7 @@ def page_shell(
 <title>{escape(title)} | USA ETF Lab</title>
 {fonts}
 <link rel="stylesheet" href="{prefix}assets/style.css">
+<link rel="icon" type="image/svg+xml" href="{prefix}favicon.svg">
 {extra_head}
 </head>
 <body>
@@ -560,13 +643,13 @@ def build_books() -> None:
         <span class="badge">Book 2 · Vol-target</span>
         <h3>Default research path</h3>
         <p><strong>What it is:</strong> Same Option A core, scaled by estimated volatility (scale-down only in v1); cash residual in <strong>BIL</strong> when risk is high. Strategy id <code>vol_target_option_a</code>.</p>
-        <p><strong>Why it&rsquo;s on the shortlist:</strong> It is the drawdown-controlled version of the same stock core: about 1 point a year less return than the VT backbone for shallower drawdowns (−10.1% vs −20.1%; Book 1 −25.6%) and lower volatility. Its Sharpe above BIL is 0.97 vs 0.84 for VT; that difference is not statistically significant. A <strong>drawdown-control</strong> book, not a “beat the market” story.</p>
+        <p><strong>Why it&rsquo;s on the shortlist:</strong> It is the drawdown-controlled version of the same stock core: about 1 point a year less return than the vol-target backbone for shallower drawdowns (−10.1% vs −20.1%; Book 1 −25.6%) and lower volatility. Its Sharpe above BIL is 0.97 vs 0.84 for the vol-target backbone; that difference is not statistically significant. A <strong>drawdown-control</strong> book, not a “beat the market” story.</p>
         <p><strong>What it is not:</strong> Not the archived conditional factor-corr overlay (#13), which <strong>failed</strong> vs this unconditional Book 2 on Sharpe.</p>
         <p class="metric-sub">OOS snapshot (panel; rf=0 Sharpe): ~14.7% ann. return · ~13.9% vol · MaxDD ~−20.1% · Sharpe ~1.06 · same window. Modest turnover from scaling.</p>
       </article>
     </div>
     <div class="callout" style="margin-top:1.5rem">
-      <strong>Not on the shortlist:</strong> Spectral risk parity (null: Ledoit–Wolf MinVar), Regime-aware dual-regime (null: Unconditional ERC), Vol-cond factor corr #13 (null: Unconditional Book-2 VT) — all <strong>FAIL — archive</strong>.
+      <strong>Not on the shortlist:</strong> Spectral risk parity (null: Ledoit–Wolf MinVar), Regime-aware dual-regime (null: Unconditional ERC), Vol-cond factor corr #13 (null: Unconditional vol-target backbone) — all <strong>FAIL — archive</strong>.
       Full table: <a href="methods/justina_round1_scoreboard.html">Methods → Archive / Justina round-1 scoreboard</a>.
     </div>
   </div>
@@ -709,7 +792,8 @@ def build_runs() -> None:
 
 
 def load_archive_cards() -> dict:
-    return json.loads(ARCHIVE_JSON.read_text(encoding='utf-8'))
+    # Frozen record on disk; display labels relabelled here (VT -> vol-target backbone / Backbone).
+    return relabel_archive(json.loads(ARCHIVE_JSON.read_text(encoding='utf-8')))
 
 
 def verdict_card_html(card, prefix) -> str:
@@ -756,7 +840,7 @@ def build_archive_scoreboard() -> None:
     subtitle = (
         'Archived methods: Justina round-1 (Spectral RP, Regime-Aware), #13 VCFC, #4 FT-MED, #3 RR-ERC, '
         'Bet 1 NLS GMV v3 (VOID) · '
-        'plus the unconditional Book-2 VT audit null · USA ETF experimental panel · '
+        'plus the unconditional vol-target backbone audit null · USA ETF experimental panel · '
         f'updated {archive["updated"]} (ET)'
     )
     content = (
@@ -768,11 +852,11 @@ def build_archive_scoreboard() -> None:
         'Negative / null results documented on purpose. The five failed methods are '
         '<strong>FAIL / ARCHIVE</strong> — not promoted to Books, not a showcase, not part of the live shortlist. '
         'Bet 1 NLS GMV v3 is VOID (concentrated holdings) and the minimum-variance line is closed. '
-        'Unconditional Book-2 VT is an AUDIT NULL (not live, not a FAIL).</div>'
+        'Unconditional vol-target backbone is an AUDIT NULL (not live, not a FAIL).</div>'
         '<div class="callout"><strong>CIO frame:</strong> '
         '<p><em>None of the five archived methods cleared its binding null, and NLS GMV v3 is VOID.</em> <strong>No book cut.</strong></p>'
-        '<p>Live shortlist: <strong>static core + VT × gate-first skew overlay</strong> (Justina #6, PR #29). '
-        'Unconditional Book-2 VT is the audit null that overlay was measured against — not live, not a FAIL.</p>'
+        '<p>Live shortlist: <strong>static core + vol-target backbone × gate-first skew overlay</strong> (Justina #6, PR #29). '
+        'Unconditional vol-target backbone is the audit null that overlay was measured against — not live, not a FAIL.</p>'
         '<p>Further candidates must clear the same leakage · null · DSR · empirical gate. '
         '<a href="../index.html#/">Back to live shortlist →</a></p></div>'
         '<h2>Verdict cards</h2>'
@@ -797,6 +881,9 @@ def build_methods_index() -> None:
     methods = [
         ('allocation_alpha_vol_target.html', 'Allocation alpha: volatility-managed Option A'),
         ('skewness_managed_stub.html', 'Skewness-Managed Book-2 Overlay (Justina #6 · gate-first PASS)'),
+        ('allocation_alpha_epo.html', 'Enhanced Portfolio Optimization (EPO) with a 12-1 trend signal (Bet 1 · pre-gate)'),
+        ('spectral_risk_parity_adia.html', 'Spectral Risk Parity (ADIA Lab): teaching note (archived)'),
+        ('regime_aware_dual_regime_allocation.html', 'Regime-Aware Dual-Regime Allocation: teaching note (archived)'),
         ('ot_short_term_forecasting.html', 'Optimal transport: short-term forecasting'),
         ('ts_explorer_metric_menu.html', 'Time Series Explorer: quant metric menu'),
     ]
@@ -812,10 +899,12 @@ def build_methods_index() -> None:
             f'<li><a href="{name}">{escape(title)}</a></li>' for name, title in methods
         )
         + '</ul>'
-        '<h2 id="archive">Archive / failed nulls</h2>'
+        '<h2 id="notes">Notes for Jared</h2>'
+        + notes_list_html('../notes/')
+        + '<h2 id="archive">Archive / failed nulls</h2>'
         '<p class="lede archive-lede">5 FAIL / ARCHIVE methods + 1 VOID (NLS GMV v3) + 1 AUDIT NULL — research record only; <strong>not live books</strong>. '
-        'Live shortlist: static core + VT × gate-first skew overlay (Justina #6). '
-        'Unconditional Book-2 VT is the audit null, not a FAIL.</p>'
+        'Live shortlist: static core + vol-target backbone × gate-first skew overlay (Justina #6). '
+        'Unconditional vol-target backbone is the audit null, not a FAIL.</p>'
         + ''.join(verdict_card_html(card, '') for card in archive['cards'])
         + '<p class="cta-inline"><a href="justina_round1_scoreboard.html">Archive scoreboard page →</a></p>'
         '</div></section>'
@@ -843,6 +932,7 @@ def restyle_methods_shell() -> None:
             '<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>'
             '<link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,wght@0,400;0,500;0,600;1,400;1,600&family=Playfair+Display:wght@700;900&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">'
             '<link rel="stylesheet" href="../assets/style.css">'
+            '<link rel="icon" type="image/svg+xml" href="../favicon.svg">'
             '<!-- lab:end -->'
         )
         s = s.replace('</head>', inject_head + '</head>')
@@ -865,6 +955,7 @@ def main() -> None:
     copy_cio_inputs()
     refresh_weights_snapshot()
     build_viz()
+    build_live_figures()
     # Pages v2 React SPA owns Home/Books/Runs via HashRouter on docs/index.html.
     # Do not emit leftover books.html / runs.html (or overwrite SPA index.html).
     for leftover in ('books.html', 'runs.html'):
@@ -875,6 +966,7 @@ def main() -> None:
     build_methods_index()
     build_archive_scoreboard()
     restyle_methods_shell()
+    build_notes(page_shell, write_page)
     print('Built docs viz JSON + methods under', DOCS)
 
 

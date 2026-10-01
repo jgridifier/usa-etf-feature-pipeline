@@ -115,8 +115,8 @@ def test_committed_panel_compatibility():
     from usa_etf_features.spectral_risk_parity import read_returns
 
     plain = pd.read_csv(PANEL, index_col=0, parse_dates=True).sort_index()
-    assert partial_final_month(plain.index, coverage=COVERAGE) == pd.Period("2026-09")
-    assert all(date == last_session(date) for date in plain.index[:-1])
+    assert partial_final_month(plain.index, coverage=COVERAGE) is None
+    assert all(date == last_session(date) for date in plain.index)
     last = plain.index[-1]
     old = plain.iloc[:-1] if last < last + pd.offsets.BMonthEnd(0) else plain
     assert_frame_equal(read_returns(PANEL), old)
@@ -134,13 +134,15 @@ def test_legacy_bil_and_rotation():
 
 
 # Pinned before policy validation; never regenerate published artifacts in this test.
+# Re-pinned 2026-10-01: data refresh through 2026-09-30 close
 PUBLISHED_SHA256 = {
     'data/processed/skewness_managed/skew_managed_gatefirst_returns.csv': '68ad0748fc3af670d7eb2e6d665ccf40131ab0b8e4469779ade3fc6891aab0f3',
     'data/processed/vol_target_oos_returns.csv': '3434b1a569a77d2e8f17fd6b465267ab9e2c898317755cca70b63468c1fae358',
-    'docs/data/vol_target_oos_returns.csv': '79601675dfc5684623e0cd67f60b75d3392f1b750946432d8909ad15c7379299',
-    'docs/data/viz_metrics.json': '3076f571dfc7db07997675ce727e4266611b905a9e6fcf7b5f61eba0dbb877f8',
-    'docs/data/viz_comparison.json': 'af3eb118f01e0b0fb5265e44abaa19bf36151a08623fe47e2b33d8dbee3ad222',
-    'data/processed/cash_null_audit/site_sharpe.json': '8202e853718caecaba7535742b0ccb963f9fd61aea85abc88f213f89240bd9f1',
+    'docs/data/vol_target_oos_returns.csv': '4ce54896def952eb352ea97d1041684a47f4ad91d6393aa0f7de0e4ffe78028f',
+    'docs/data/viz_metrics.json': 'b5c57b5ac88147cfd8fd5168c630fd3c412f0f9b8649a685c596cc199ec09b30',
+    # Re-pinned 2026-10-01: audit-null stance quotes the live Book 2 Sharpe (1.00); label 'VT' -> 'Backbone'.
+    'docs/data/viz_comparison.json': 'e5296b80fa12bd149ab8b3d6d6e1222d3622b5ec950d79caf47d10da586cb52f',
+    'data/processed/cash_null_audit/site_sharpe.json': '1e72c3055233e40cc2407c97c631fe561cad01678f27a0acd019548cc3f52fde',
     'data/processed/nonlinear_shrinkage_gmv_v3/composition_tripwire.csv': '672e1661f238d4699574cc94bec50be44fbe5677bae3c8286316b771ccecbf66',
     'data/processed/nonlinear_shrinkage_gmv_v3/coverage_gaps.csv': 'a4d825ec2855d73d02c2b1ce22fa278c17fe35e06d55cee7b3a5eb719f9e9346',
     'data/processed/nonlinear_shrinkage_gmv_v3/final_month_unpriced.csv': '0c20686dc1794a0e4a08650c9914589a09da7a1f20ac0bf6e84271dbad935068',
@@ -151,6 +153,41 @@ PUBLISHED_SHA256 = {
     'data/processed/nonlinear_shrinkage_gmv_v3/trial_registry.csv': '76bd29d3e63a7febb267d09ac15f235e0384f06b679efca1f7b46e97baed04cd',
     'data/processed/nonlinear_shrinkage_gmv_v3/variance_tests.csv': '957b13d432b9d512a3265db8bdd444ddd2b6abc90c3c6e377532fc65b422ed5c',
     'data/processed/nonlinear_shrinkage_gmv_v3/weights.csv': 'd23fe0ba9655e0da05945940cea45dbd2f5b5b04e9a58a8ef24418710dc3b060',
+    'data/processed/live/skew_managed_gatefirst_registry.csv': '66e244bb744397665e837d60654974d2e221f65be26eb3c10c289abe3b4e5d78',
+    'data/processed/live/skew_managed_gatefirst_returns.csv': 'ecf474471bf45d87d9bf9f88d8907c93bbfef57ed7ca66e90dd9351812ff089d',
+    'data/processed/live/skew_managed_gatefirst_state.csv': 'd1f3eeb9f469bc94b8de9b3c7b572a3f25421a285ef06def43ffc2e12b4feac1',
+    'data/processed/live/skew_managed_gatefirst_summary.csv': '858ac46252d66a4a265e69aad69db3525c60c5fb191d78119a3c8e9881f11f56',
+    'data/processed/live/skew_managed_gatefirst_weights.csv': 'cd66db8cd45f12d17ab10a199275d5249b401f637e4d1e2a31172cd447368a92',
+    'data/processed/live/strategy_returns.csv': '1894fa3a0c1b419cbe85c05c6d4ec76ac7e4a71711f507e8c65e8118969f0d71',
+    'data/processed/live/vol_target_monthly_weights.csv': '1b54802c6feeedf8ea42d2609202a456fede2b46f70431081801d1bc2bc44f2a',
+    'data/processed/live/vol_target_oos_returns.csv': '4ce54896def952eb352ea97d1041684a47f4ad91d6393aa0f7de0e4ffe78028f',
+    'data/processed/live/vol_target_oos_summary.csv': 'b3b5bc6990e295bed399b572eae85df54257f6527c26ec752788c20f70d4a2bb',
+    'data/processed/live/vol_target_regime_table.csv': 'fe2a8ef21f7043463a970bdd51151d91fc08f9e1586d94b1d108a001ff24a2cd',
+    'data/processed/live/vol_target_trial_registry.csv': 'f98634cd626f932dd4957de94b88371c9ff7c65eea5152998d5eaa3662ab305d',
+    'docs/data/viz_weights.json': '148c7452df4d685a2e5d309f740e9f959c8c953824378c74e97509cdafc1b5dd',
+    'docs/data/viz_ft_history.json': '48528ed030c0005beac4fe526755551b298e58aca0c3d013ec6b3bdfe6184fce',
+    'docs/data/viz_xsd_timeline.json': '5b1acb8b21533d6d09c020040b5bb13038f1de43f00bb32ec80f1511730a913d',
+    'docs/data/viz_equity_drawdown.json': 'e43d5737f9388e8396a3043693ae043a48d57261f664e3a3d6b1ded4957f84ed',
+    'docs/data/vol_target_trial_registry.csv': 'f98634cd626f932dd4957de94b88371c9ff7c65eea5152998d5eaa3662ab305d',
+    'docs/data/vol_target_oos_summary.csv': 'b3b5bc6990e295bed399b572eae85df54257f6527c26ec752788c20f70d4a2bb',
+    'docs/data/vol_target_monthly_weights.csv': '1b54802c6feeedf8ea42d2609202a456fede2b46f70431081801d1bc2bc44f2a',
+    'docs/data/vol_target_regime_table.csv': 'fe2a8ef21f7043463a970bdd51151d91fc08f9e1586d94b1d108a001ff24a2cd',
+    'docs/data/cio_book_shortlist/book1_static_option_a_weights.csv': 'a1ca1d9eb0cacc221868463affe6aacf678083d2ee538218c491dc8e2d829878',
+    'docs/data/cio_book_shortlist/shortlist_comparison.csv': '457557e41109a239066d16479c147279ae00e453a2c67db818379896cf820514',
+    'docs/data/cio_book_shortlist/book2_vol_target_option_a_weights.csv': '0a98eb83ec3acd5167669fc4cf89d3572e53ff8c2cf6ab1f21afa30435926b27',
+    'docs/data/cio_book_shortlist/run_latest/strategy_registry_used.csv': 'fa8cf2898b5ab45fb4e9578f0cade53e93bba43d04e13ffe9c10eed543bb030d',
+    'docs/data/cio_book_shortlist/run_latest/strategy_diagnostics.csv': 'adaf7de3b3e266c3b1b30ca4935ead92b9447a2276dd856f0e9d004a4e288f21',
+    'docs/data/cio_book_shortlist/run_latest/suggested_weights.csv': '708152bca4373923f7ab198b70fc1b5c8f57b7a0d99994102b6bfd6b6154b544',
+    'docs/data/cio_book_shortlist/run_latest/strategy_comparison.csv': '7e5a42c40f6391ada3e8cbc8b0325a4795abdf2141c293786aa62fd84b6e1d19',
+    'docs/data/growth_alpha_adj_close.csv': '6af174a5a0f9096e68e22a9a25695ba770c9877e1c761abe121432835b7c6d5c',
+    'docs/data/growth_panel_history_coverage.csv': '01fc48143a73a22a0a8fea0464bcf969fa2b07d1703a40548579d48ade36a7d4',
+    'docs/data/strategy_comparison.csv': '7e5a42c40f6391ada3e8cbc8b0325a4795abdf2141c293786aa62fd84b6e1d19',
+    'docs/data/strategy_diagnostics.csv': 'adaf7de3b3e266c3b1b30ca4935ead92b9447a2276dd856f0e9d004a4e288f21',
+    'docs/data/suggested_weights.csv': '708152bca4373923f7ab198b70fc1b5c8f57b7a0d99994102b6bfd6b6154b544',
+    'docs/data/shortlist_comparison.csv': '457557e41109a239066d16479c147279ae00e453a2c67db818379896cf820514',
+    'docs/data/book1_static_option_a_weights.csv': 'a1ca1d9eb0cacc221868463affe6aacf678083d2ee538218c491dc8e2d829878',
+    'docs/data/book2_vol_target_option_a_weights.csv': '0a98eb83ec3acd5167669fc4cf89d3572e53ff8c2cf6ab1f21afa30435926b27',
+    'docs/data/latest_weights_snapshot.csv': '08df3c1ce3c9658de5a84112452d883d01491740fe48d2888ed59ce67b7b7bf3',
 }
 
 
@@ -159,12 +196,15 @@ def test_published_books_and_v3_byte_identical():
         assert hashlib.sha256((ROOT / name).read_bytes()).hexdigest() == expected, name
 
 
-def test_books_page_says_data_ends_in_a_partial_month():
-    """Books copy: 'Data through <panel's last date> (<month> is a partial month)', derived from the panel."""
+def test_books_page_data_through_last_complete_month():
+    """Books date equals the panel's last complete calendar month."""
     from usa_etf_features.monthly_panel import partial_final_month
     panel = pd.read_csv(ROOT / 'data/raw/usa_universe_panel_monthly_returns.csv', index_col=0, parse_dates=True)
     last = panel.index.max()
     month = partial_final_month(panel.index, coverage=ROOT / 'data/raw/usa_universe_panel_history_coverage.csv')
-    assert month == last.to_period('M')
+    assert month is None
+    assert last == last_session(last)
+    assert load_monthly_panel(PANEL).index.max() == last
     books = (ROOT / 'apps/pages/src/pages/Books.tsx').read_text(encoding='utf-8')
-    assert f"Data through {last.day} {last:%b %Y} ({last:%B} is a partial month)." in books
+    assert f"Data through {last.day} {last:%b %Y}." in books
+    assert "September is a partial month" not in books

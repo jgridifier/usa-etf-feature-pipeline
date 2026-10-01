@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>Allocation Alpha — Enhanced Portfolio Optimization (EPO) with a 12-1 trend signal (Bet 1)</title>
+<style>
+  :root { --fg:#1a1a1a; --muted:#555; --border:#ddd; --bg:#fafafa; --accent:#0b5fff; --ok:#0a7a3e; --warn:#1c2d6b; }
+  * { box-sizing: border-box; }
+  body { font-family: Georgia, "Times New Roman", serif; color: var(--fg); line-height: 1.55; max-width: 42rem; margin: 2rem auto; padding: 0 1.25rem; background: #fff; }
+  h1,h2,h3 { font-family: system-ui, -apple-system, Segoe UI, sans-serif; line-height: 1.25; }
+  h1 { font-size: 1.65rem; margin-bottom: 0.25rem; }
+  h2 { font-size: 1.25rem; margin-top: 2rem; border-bottom: 1px solid var(--border); padding-bottom: 0.3rem; }
+  h3 { font-size: 1.05rem; margin-top: 1.4rem; color: #222; }
+  .meta { color: var(--muted); font-family: system-ui, sans-serif; font-size: 0.9rem; margin-bottom: 1.5rem; }
+  .disclaimer { background: #f1f3f9; border: 1px solid #b8c0d6; padding: 0.75rem 1rem; border-radius: 6px; font-size: 0.92rem; margin: 1rem 0 1.5rem; }
+  .callout { background: var(--bg); border-left: 4px solid var(--accent); padding: 0.75rem 1rem; margin: 1rem 0; }
+  .ok { border-left-color: var(--ok); }
+  .warn { border-left-color: var(--warn); }
+  table { border-collapse: collapse; width: 100%; font-size: 0.92rem; margin: 0.75rem 0 1rem; }
+  th, td { border: 1px solid var(--border); padding: 0.4rem 0.55rem; text-align: left; vertical-align: top; }
+  th { background: var(--bg); font-family: system-ui, sans-serif; }
+  td.n { text-align: right; font-variant-numeric: tabular-nums; }
+  code, .math { font-family: "JetBrains Mono", Menlo, Consolas, monospace; font-size: 0.9em; background: #f3f3f3; padding: 0 0.2em; border-radius: 3px; }
+  pre.math { display: block; padding: 0.7rem 0.9rem; overflow-x: auto; line-height: 1.5; }
+  a { color: var(--accent); }
+  .small { font-size: 0.88rem; color: var(--muted); }
+</style>
+<!-- lab:start --><link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,wght@0,400;0,500;0,600;1,400;1,600&family=Playfair+Display:wght@700;900&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet"><link rel="stylesheet" href="../assets/style.css"><link rel="icon" type="image/svg+xml" href="../favicon.svg"><!-- lab:end --></head>
+<body><!-- lab:start --><header class="site-header"><div class="site-header-inner"><a class="brand" href="../index.html">USA ETF Lab</a><button type="button" class="nav-toggle" aria-expanded="false" aria-controls="site-nav" aria-label="Open menu"><span class="nav-toggle-bars" aria-hidden="true"></span></button><nav class="site-nav" id="site-nav" aria-label="Main"><a href="../index.html">Home</a><a href="../index.html#/books">Books</a><a href="../index.html#/runs">Runs</a><a href="../explorer/index.html">Explorer</a><a href="../methods/index.html" class="is-active">Methods</a></nav></div></header><!-- lab:end -->
+<h1>Enhanced Portfolio Optimization (EPO) with a 12-1 trend signal</h1>
+<div class="meta">Bet 1: a name-scale allocator across 100+ ETFs · Quant teaching note · 2026-09-30 · status: pre-gate (registry <code>enabled:false</code>) · ticket: <code>justina_shortlist/ENGINEERING_TICKET_epo_allocator.md</code></div>
+
+<div class="disclaimer">Research only. This is a methodology experiment on an arbitrary research panel of ETFs. It is not personalized investment advice and carries no approval status. Nothing here touches the two live books.</div>
+
+<div class="callout">
+<strong>One-sentence version.</strong> Start from an inverse-volatility portfolio of about 100 to 130 ETFs (the "anchor"). Tilt it toward funds whose 12-1 month trend is positive and away from funds whose trend is negative. Do the tilting with a mean–variance optimizer whose correlations have been shrunk hard toward zero (by a fraction <em>w</em>), so the optimizer can't make the huge, noise-driven long–short bets that sink plain Markowitz. The method is Pedersen, Babu &amp; Levine (2021), <em>Financial Analysts Journal</em> 77(2). It is the "anchored EPO" from the paper, with the anchor they used in their "Equity 7" test.
+</div>
+
+<h2>1. Why this paper</h2>
+<p>Three minimum-variance runs on this panel have now been voided. v1 was mostly cash, v2 was mostly short Treasuries (84% SHY/SPTS), and v3, on stocks only, sat in 4 or 5 low-volatility funds (effective N 2.6, 64–74% in USMV + EFAV). The lesson isn't that the covariance estimator was bad. A long-only allocator that looks only at risk will always pile into whatever is least volatile, and the long-only constraint already does most of the shrinking (Jagannathan &amp; Ma 2003). If the goal is a higher Sharpe ratio than minimum variance, the method needs <em>some</em> information about expected returns, and it has to use that information without the error-maximizing behaviour of textbook Markowitz.</p>
+<p>EPO does exactly that. It is peer-reviewed and was published in 2021, which meets Jared's 2020-or-later rule. It uses a return signal (momentum), and it fixes Markowitz with one parameter. The paper shows that the same parameter also nests Black–Litterman, a robust-optimization solution and ridge regression, so we test one well-understood knob rather than a new zoo of settings. The anchored version starts at a diversified, fully invested, long-only portfolio, so the concentration failure of v3 isn't built in. Quant's check of the anchor's weights on this universe (volatilities only, no returns) gives an effective N of about 54 to 90 across 2016–2026.</p>
+<p>The CIO proposed three candidates. The other two are ruled out in the box below.</p>
+
+<div class="callout warn">
+<strong>Why not Schur complementary allocation or Kan–Wang–Zhou?</strong> (Both were checked against the papers themselves.)
+<ul>
+<li><strong>Cotton (2024), arXiv:2411.05807</strong>, "Schur Complementary Allocation: A Unification of Hierarchical Risk Parity and Minimum Variance Portfolios". The id and title are correct. It is a single-author working paper: one version (v1, submitted 29 Oct 2024), no journal reference on arXiv, and no published version found in Crossref as of 2026-09-30. The CIO's summary is right in outline: γ = 0 gives the usual hierarchical (HRP-style) allocation and γ = 1 recovers the minimum-variance portfolio. The paper adds two caveats: "rank permitting", and it is the <em>long–short</em> minimum-variance portfolio Σ<sup>−1</sup>1. In the author's code, γ is scaled relative to the largest value that keeps the Schur complement positive definite. <em>Why not:</em> it uses risk only. There are no expected returns anywhere ("imagine we zero out excess stock returns"), so it belongs to the same family we just voided three times. Its only evidence is a simulation of out-of-sample <em>variance</em> on synthetic 500-asset covariance matrices. It reports no Sharpe ratios and no empirical backtest.</li>
+<li><strong>Kan, Wang &amp; Zhou (2022), <em>Management Science</em> 68(3), 2047–2068.</strong> The citation is correct. The CIO's description needs a correction: the rule is not a mix of the sample GMV and sample <em>tangency</em> portfolios. It is 100% of the sample GMV portfolio plus a scaled sample <em>zero-investment</em> efficient portfolio, w<sub>z</sub> = Σ̂<sup>−1</sup>(μ̂ − 1μ̂<sub>g</sub>). The scale c̃ is chosen to maximize expected out-of-sample mean–variance utility, assuming i.i.d. normal returns and an estimation window h &gt; N. <em>Why not:</em> (i) the only return input is the sample mean, so there is no signal. (ii) The authors show that the useful range of c̃ collapses when N is large relative to h. At h = 120 and N = 100 it is 0 &lt; c̃ &lt; 0.048, so on our 100–130 names the rule is essentially sample GMV, which is the line we just closed. (iii) It needs more months of complete monthly history than we have names (h &gt; N ≈ 130). (iv) It is unconstrained, and the authors report that the gains shrink or reverse at 20 bp transaction costs.</li>
+</ul>
+</div>
+
+<h2>2. What the original work found</h2>
+<h3>Pedersen, Babu &amp; Levine (2021), "Enhanced Portfolio Optimization", <em>Financial Analysts Journal</em> 77(2), 124–151</h3>
+<p class="small">Verified against the open-access published article (DOI 10.1080/0015198X.2020.1854543), including its Tables 1–6. The publisher and CBS repository PDF links were blocked to automated fetching. The full text was read from the Internet Archive's 2023-12-14 capture of the publisher's full-text HTML page. The SSRN working paper is 3530390, dated 2 Jan 2020.</p>
+<ul>
+<li><strong>Diagnosis ("problem portfolios").</strong> Rotate the problem into the principal components of the correlation matrix. The least important components (the smallest eigenvalues) are the ones that break Markowitz. Their risk is <em>under</em>-estimated, their expected returns are <em>over</em>-estimated, so their ex-ante Sharpe ratios look high, but their realized Sharpe ratios are low. MVO puts large, leveraged risk into them (Figure 1, using 55 global futures, 1985–2018).</li>
+<li><strong>Fix.</strong> Raise the estimated risk of those components. That turns out to be exactly the same as multiplying every pairwise correlation by (1 − w). They also show that noise in <em>expected returns</em> alone produces the same correlation shrinkage, even when correlations are known perfectly. That is why the best w (around 75% "in several applications") is far larger than the 5–10% needed to fix the correlation matrix by itself.</li>
+<li><strong>Setup.</strong> There are 11 samples. Global 1–3 are 55 futures and forwards (equity indices, bonds, commodities, USD FX), with backtests from 1985 to 2018 and a TSMOM signal. Equity 1–8 are the 49 Fama–French industries (98 half-industries in Equity 8), with backtests from 1942 to 2018 and a cross-sectional 12-month momentum signal. The signal is always the past 12-month return, <em>without</em> skipping a month. Most samples use simple EPO. Equity 6 uses anchored EPO with a 1/N anchor, and Equity 7 uses anchored EPO with a 1/σ anchor. The equity covariance is the equal-weighted sample over 60 months, 40 days or 120 days, with correlations shrunk 5% toward zero.</li>
+<li><strong>How w is chosen.</strong> Out of sample, on an expanding window: at each date they pick the w from a finite grid that had the highest Sharpe ratio up to that date, and use it next period. This needs "at least 15 years of data" before the first choice. They also report in-sample results for fixed w.</li>
+</ul>
+<table>
+<tr><th>Gross Sharpe ratios (paper Tables 2 and 5)</th><th>1/N</th><th>Benchmark momentum</th><th>Naive MVO</th><th>EPO, out of sample</th><th>Fixed w = 0.50 / 0.75 / 0.90</th></tr>
+<tr><td>Global 2, TSMOM, 1985–2018</td><td class="n">0.44</td><td class="n">1.09 (equal-vol TSMOM)</td><td class="n">1.08</td><td class="n">1.24</td><td class="n">1.31 / 1.31 / 1.26</td></tr>
+<tr><td>Equity 6, anchored, 1/N anchor</td><td class="n">0.59</td><td class="n">0.63 (INDMOM)</td><td class="n">0.21</td><td class="n">0.83</td><td class="n">0.72 / 0.85 / 0.83</td></tr>
+<tr><td>Equity 7, anchored, 1/σ anchor (our template)</td><td class="n">0.59</td><td class="n">0.63 (INDMOM)</td><td class="n">0.21</td><td class="n">0.90</td><td class="n">0.75 / 0.91 / 0.90</td></tr>
+</table>
+<ul>
+<li><strong>Alpha.</strong> Out-of-sample EPO TSMOM (Global 2) has an annual alpha of 2.48% (t = 3.36) over equal-vol TSMOM, and 2.11% (t = 2.93) after also controlling for the four asset-class TSMOM factors. Equity alphas over INDMOM plus the Fama–French five factors range from 1.07% to 8.09% (t 1.80 to 6.68). The two anchored runs are the weakest: 1.07% (t 1.80) and 1.31% (t 2.49), with market betas of 0.85 and 0.91.</li>
+<li><strong>Limitations the authors state.</strong> Results are gross of transaction costs ("the EPO method shown here abstracts from transaction costs"). The portfolios are long–short and levered: out-of-sample EPO in Global 2 runs 457% gross leverage per 10% volatility with 254% annual turnover. The out-of-sample choice of w takes time to settle and trails the in-sample best. The 1/N-anchored version trades off stabilizing the optimizer against sliding toward a long-only portfolio that "does not exploit signals". The empirics cover momentum only. Long-horizon returns (for example 5 years) are a faulty signal.</li>
+<li><strong>What we should expect.</strong> Our version is long-only, fully invested, net of costs, uses ETFs and has about ten years of out-of-sample data. The paper's own weakest results are its long-only-anchored runs. Huang, Li, Wang &amp; Zhou (2020, <em>JFE</em> 135(3)) also find that the statistical evidence for time-series momentum is weak once you test asset by asset. So a much smaller edge than the paper's is the honest prior.</li>
+</ul>
+
+<h2>3. Core math and intuition</h2>
+<h3>Why plain Markowitz fails on a noisy covariance matrix</h3>
+<p>With a signal s (expected excess returns) and covariance Σ, mean–variance optimization gives (paper eq. 3):</p>
+<pre class="math">x_MVO = (1/γ) Σ⁻¹ s</pre>
+<p>Write Σ = σΩσ, where σ is the diagonal matrix of volatilities and Ω = PDP′ is the correlation matrix with principal components P and eigenvalues D. In principal-component coordinates z = P′σx, the positions separate (eq. 8):</p>
+<pre class="math">z_i = (1/γ) · (s_i^P / √D_i) · (1/√D_i)
+            [PC Sharpe ratio]  [leverage to reach unit vol]</pre>
+<p>For the smallest eigenvalues D<sub>i</sub>, both factors blow up. Estimation noise makes D<sub>i</sub> too small, and noise in s gives these near-riskless long–short combinations spuriously large Sharpe ratios. MVO then levers into them. With 100+ correlated ETFs (SPY, IVV, VOO and SPYM are near-copies), the smallest eigenvalues are almost pure noise, which is why unregularized MVO on this panel would be meaningless.</p>
+
+<h3>The fix: shrink correlations toward zero</h3>
+<p>Shrinking the PC variances toward their average (1, for a correlation matrix) is the same as shrinking the correlation matrix toward the identity (eqs. 9–10):</p>
+<pre class="math">D̃ = (1−θ)D + θI   ⇔   Ω̃ = (1−θ)Ω + θI</pre>
+<p>Starting from a base risk estimate Σ̃ = σΩ̃σ (the paper applies a 5% base shrink to Ω), the <strong>EPO-shrunk covariance</strong> is (eq. 19):</p>
+<pre class="math">Σ_w = (1−w) Σ̃ + w V = σ [ (1−w) Ω̃ + w I ] σ ,   V = σ² (diagonal variances)</pre>
+<p>Only correlations shrink. Every asset keeps its own volatility.</p>
+
+<h3>Simple EPO (eq. 20)</h3>
+<pre class="math">EPO_s(w) = (1/γ) Σ_w⁻¹ s</pre>
+<p>At w = 0 this is standard MVO. At w = 1 it is V⁻¹s/γ, which means each asset is sized by its own signal divided by its own variance and no correlations are used. That is the "signal-weighted, risk-scaled" portfolio: with the paper's TSMOM signal it is exactly the Moskowitz–Ooi–Pedersen TSMOM factor. Sharpe doesn't depend on γ.</p>
+
+<h3>General and anchored EPO (eqs. 18, 21, 22)</h3>
+<p>The Bayesian / robust-optimization derivation adds an <strong>anchor</strong> portfolio a. If signal noise is independent across assets (Λ = λV), then w = λ/(λ+τ) and (eq. 18):</p>
+<pre class="math">EPO(w) = Σ_w⁻¹ [ (1−w)(1/γ) s + w V a ]</pre>
+<p>Here w controls both the shrinkage of correlations <em>and</em> the shrinkage of expected returns toward the anchor. At w = 0 this is MVO. At w = 1 it is the anchor itself. When the signal's scale is unknown (as with momentum), the paper sets γ so that the signal portfolio has the same risk as the anchor (eq. 21):</p>
+<pre class="math">γ = √( s′ Σ_w⁻¹ Σ̃ Σ_w⁻¹ s ) / √( a′ Σ̃ a )</pre>
+<p>which gives the <strong>anchored EPO</strong> (eq. 22):</p>
+<pre class="math">EPO_a(w) = Σ_w⁻¹ [ (1−w) · √(a′Σ̃a) / √(s′Σ_w⁻¹Σ̃Σ_w⁻¹s) · s  +  w V a ]</pre>
+<p>This is scale-free in s. The CIO's summary merged the two variants. The anchor in anchored EPO can be anything (a benchmark, 1/N, or 1/σ). "Risk-balanced" (1/σ) is one choice, the Equity 7 one. In anchored EPO, w = 1 gives the anchor. It is only in simple EPO that w = 1 gives the signal-weighted, risk-scaled portfolio.</p>
+
+<h3>The paper's signal (eq. 23)</h3>
+<pre class="math">s_i,t = 0.1 × σ_i,t × sign( r_i, t−12→t )     (past 12-month excess return, no skip)</pre>
+
+<h2>4. What we will do on the 100+ ETF panel</h2>
+<h3>Inputs</h3>
+<ul>
+<li><strong>Panel.</strong> <code>data/raw/usa_universe_panel_monthly_returns.csv</code> in <code>jgridifier/usa-etf-feature-pipeline</code>. On <code>origin/main</code> as of 2026-09-30 it has 339 tickers and 405 monthly rows (1993-01 to 2026-09). The last row is a partial month (data through 2026-09-16), which <code>load_monthly_panel</code> drops, leaving <strong>404 complete months</strong> (1993-01 to 2026-08). The weekly panel has the same 339 tickers and runs 1993-01-29 to 2026-09-18. There is no return panel in <code>data/processed/</code>, only gate outputs. The run waits for the September 2026 refresh PR and uses whatever window the loader reports.</li>
+<li><strong>Universe.</strong> A new stored, hand-reviewed tag, <code>epo_universe</code>, with 135 tickers: the 96 <code>equity_only</code> names plus 39 bond and commodity funds whose exposure is named in the universe file. It excludes every <code>cash_like</code>, <code>short_duration</code> and <code>near_cash</code> name, all buffer and defined-outcome products (including the Innovator overlays filed under other categories), crypto, VIXY, the unnamed "ETF XXXX" rows, and TRTY (a fund of funds that can't be looked through). A name is eligible at a rebalance once it has 156 complete weekly returns, the 12-1 signal months, and at least 60 monthly returns. Quant's count from the current panel is 101 to 130 eligible names per month from 2016-10 onward. 2016-10 is the first month-end with at least 100.</li>
+<li><strong>Covariance window.</strong> 156 weekly returns, ending at the last weekly row on or before month-end t−1. That is the same window the primary null has used since v2. The paper's equity samples use 60 months, 40 days or 120 days. 156 weeks sits inside that range and gives T &gt; N for 100–130 names. Σ̃ = σΩ̃σ with Ω̃ = 0.95·Ω̂ + 0.05·I (the paper's 5% base shrink). Then Σ<sub>w</sub> comes from eq. 19.</li>
+<li><strong>Anchor.</strong> a<sub>i</sub> = σ<sub>i</sub><sup>−1</sup> / Σ<sub>j</sub> σ<sub>j</sub><sup>−1</sup> (inverse volatility, long-only, sums to 1), as in the paper's Equity 7.</li>
+</ul>
+<h3>The trend signal (12-1)</h3>
+<p>For the holding month t, momentum is the compounded excess-of-BIL return over months t−12 to t−2. That is 11 months, skipping the most recent month t−1. The risk-free rate uses BIL, with TB3MS before BIL's first full month (<code>risk_free_monthly</code>). The signal takes the paper's TSMOM form, s<sub>i</sub> = 0.1·σ<sub>i</sub>·sign(mom<sub>i</sub>). The 0.1 cancels in eq. 21. The 12-1 definition follows Baltussen, Swinkels &amp; van Vliet (2021, <em>JFE</em> 142(3)), who define both trend and momentum across equity indices, bonds, commodities and currencies as the "12-month-minus-1-month excess return". <em>Note:</em> the EPO paper itself uses 12-0, without skipping t−1. We picked 12-1 because the brief asked for it and because it guards against short-term reversal in the narrow sector ETFs (XBI, KRE, XSD). This is final and pre-registered (2026-09-30). 12-0 is not a sensitivity and will not be run.</p>
+<h3>Walk-forward, no same-month leakage</h3>
+<p>Weights are set at month-end t−1 using only data dated on or before that month-end, and they earn month t returns. They are rebalanced monthly. No weekly row that falls after month-end t−1 enters the covariance. The OOS window runs from 2016-11 to the last complete month: 118 months on the current panel, or 119 if the refresh completes 2026-09. A test perturbs month t (and the t−1 return inside the signal) and checks that the weights for month t don't move.</p>
+<h3>The long-only projection (this changes the method)</h3>
+<p>The paper's closed forms assume <strong>no constraints</strong>: they are long–short, levered, and don't sum to 1. Our books are long-only and fully invested, so we <strong>solve the constrained quadratic program</strong> whose unconstrained solution is exactly eq. 18/22:</p>
+<pre class="math">max_x   x′μ̃ − (γ/2) x′ Σ_w x ,    μ̃ = (1−w) s + γ w V a ,  γ from eq. 21
+s.t.    1′x = 1 ,   0 ≤ x_i ≤ 1       (same bounds as the LW MinVar null)</pre>
+<p>Without the constraints, the maximizer is Σ<sub>w</sub><sup>−1</sup>μ̃/γ, which is eq. 18. At w = 1 the anchor is feasible, so the QP returns the anchor exactly. Here is what the constraints change:</p>
+<ul>
+<li>Negative trend can only take a fund's weight down to zero. It can't short it. Half of the paper's TSMOM payoff (the short side in down-trends) is gone.</li>
+<li>The budget constraint forces full investment. Cash-like funds are excluded, so in a broad sell-off the book rotates into the least-bad trends (for example Treasuries or gold) instead of stepping aside.</li>
+<li>Like Jagannathan &amp; Ma's result for minimum variance, the long-only constraint is itself a form of shrinkage. So the gap between w values, and between EPO and its anchor, will probably be smaller than in the paper.</li>
+<li>γ from eq. 21 is computed on the unconstrained problem and then held fixed. Its scale doesn't affect the answer, because s → k·s multiplies γ and μ̃ by k and leaves the argmax unchanged.</li>
+</ul>
+<p>We will report the distance between the QP weights and the normalized closed-form weights, and the number of names sitting at zero, so the effect of the projection is visible.</p>
+<h3>Choice of w (pre-registered, not tuned)</h3>
+<p>The paper's expanding-window choice of w needs 15 years before its first pick. We have about 10 years at 100+ names, so we fix w in advance. The <strong>primary is w = 0.75</strong>, the value the paper says "worked well" in several applications, and the in-sample peak or plateau for both anchored samples (Equity 6: 0.85, Equity 7: 0.91) and for Global (1.31). The sensitivities are w = 0.50 and w = 0.90, the two neighbours reported in Tables 2 and 5. That is three configurations, so <strong>trial_count goes from 8 to 11</strong>.</p>
+<h3>Nulls (same names, eligibility, rebalance dates, bounds and costs)</h3>
+<ul>
+<li><strong>Primary:</strong> weekly Ledoit–Wolf (2004) linear-shrinkage minimum variance, 156 weeks. This is the null used since v2.</li>
+<li><strong>Anchor</strong> (EPO at w = 1, inverse volatility): does the signal add anything beyond the anchor?</li>
+<li><strong>trend_ivol</strong>: the positive-trend names at inverse-vol weights, renormalized. This is the long-only analogue of equal-volatility TSMOM. Does the optimizer add anything beyond the signal?</li>
+<li><strong>EW (1/N)</strong> and <strong>ERC</strong> on the LW covariance. These are the standard hurdles (DeMiguel, Garlappi &amp; Uppal 2009).</li>
+<li><strong>Book 1</strong> (static 70/20/10 VOO/QQQM/IJR) is a reference only, used for the book-eligibility rule.</li>
+</ul>
+
+<h2>5. How we'll know it worked</h2>
+<div class="callout ok">
+<strong>PASS (on the w = 0.75 primary, net of 5 bp costs) requires all six:</strong>
+<ol>
+<li>Higher Sharpe in excess of BIL than LW MinVar, with a one-sided p ≤ 0.05 on the Ledoit–Wolf (2008) Sharpe-difference test, using <em>both</em> HAC and the studentized circular block bootstrap.</li>
+<li>Sharpe ex-BIL at least equal to the anchor's (the signal has to earn its keep).</li>
+<li>Sharpe ex-BIL at least equal to EW's and trend_ivol's (the optimizer has to earn its keep).</li>
+<li>A deflated Sharpe ratio of at least 0.95 at N = 11.</li>
+<li>The w = 0.50 and w = 0.90 runs both beat LW MinVar on Sharpe ex-BIL.</li>
+<li>The tripwires hold. The composition tripwire must be computable and at or below 50% for both the method and the null; by construction it should read 0.00%. The method's average ticker-level effective N must be at least 5. A failure here makes the run VOID.</li>
+</ol>
+</div>
+<p>Label order is the repo standard (<code>final_gate_label</code>): VOID wins, FAIL stays FAIL, and a composition result that can't be computed turns a would-be PASS into INCOMPLETE. <strong>Book-eligible</strong> is a separate question. It requires a PASS <em>and</em> beating Book 1 on either Sharpe ex-BIL or maximum drawdown, over the months where Book 1 exists (QQQM's first full month onward). Otherwise the result is research-only.</p>
+<div class="callout warn">
+<strong>Power warning.</strong> With about 118 months of data and two strategies that are only moderately correlated, Quant's back-of-envelope estimate is that the Sharpe-difference test only detects gaps of roughly half an annualized Sharpe unit or more. Criterion 1 is a high bar on purpose. A FAIL on criterion 1 with a positive point estimate means "not shown", not "shown not to work".
+</div>
+<p>We will also report diagnostics that don't change the label: turnover, cost stress at 10 and 25 bp, maximum drawdown against every null, average weight by category and by equity/non-equity, the share in untagged short-maturity bond funds (ISTB, VCSH, SJNK), effective N by category, the 2021-02 onward sub-period, and the projection distance.</p>
+
+<h2>6. Citations and links</h2>
+<ul>
+<li>Pedersen, L. H., Babu, A. &amp; Levine, A. (2021). Enhanced Portfolio Optimization. <em>Financial Analysts Journal</em>, 77(2), 124–151. <a href="https://doi.org/10.1080/0015198X.2020.1854543">doi:10.1080/0015198X.2020.1854543</a> (open access; published online 19 Feb 2021). Working paper: <a href="https://ssrn.com/abstract=3530390">SSRN 3530390</a> (2 Jan 2020). Full text read via the <a href="http://web.archive.org/web/20231214024933/https://www.tandfonline.com/doi/full/10.1080/0015198X.2020.1854543">Internet Archive capture of the publisher HTML</a>.</li>
+<li>Baltussen, G., Swinkels, L. &amp; van Vliet, P. (2021). Global Factor Premiums. <em>Journal of Financial Economics</em>, 142(3), 1128–1154. <a href="https://doi.org/10.1016/j.jfineco.2021.06.030">doi:10.1016/j.jfineco.2021.06.030</a>. Peer-reviewed. The 12-1 definition was checked in the working-paper text (<a href="https://ssrn.com/abstract=3325720">SSRN 3325720</a>, January 2019 version, Appendix A.I); the published version's metadata was checked via Crossref.</li>
+<li>Cotton, P. (2024). Schur Complementary Allocation: A Unification of Hierarchical Risk Parity and Minimum Variance Portfolios. <a href="https://arxiv.org/abs/2411.05807">arXiv:2411.05807</a> (v1, 29 Oct 2024; not peer-reviewed; no published version found).</li>
+<li>Kan, R., Wang, X. &amp; Zhou, G. (2022). Optimal Portfolio Choice with Estimation Risk: No Risk-Free Asset Case. <em>Management Science</em>, 68(3), 2047–2068. <a href="https://doi.org/10.1287/mnsc.2021.3989">doi:10.1287/mnsc.2021.3989</a>; <a href="https://ssrn.com/abstract=2819254">SSRN 2819254</a>.</li>
+<li>Moskowitz, T. J., Ooi, Y. H. &amp; Pedersen, L. H. (2012). Time Series Momentum. <em>Journal of Financial Economics</em>, 104(2), 228–250. <a href="https://doi.org/10.1016/j.jfineco.2011.11.003">doi:10.1016/j.jfineco.2011.11.003</a>.</li>
+<li>Huang, D., Li, J., Wang, L. &amp; Zhou, G. (2020). Time Series Momentum: Is It There? <em>Journal of Financial Economics</em>, 135(3), 774–794. <a href="https://doi.org/10.1016/j.jfineco.2019.08.004">doi:10.1016/j.jfineco.2019.08.004</a>.</li>
+<li>Ledoit, O. &amp; Wolf, M. (2004). A Well-Conditioned Estimator for Large-Dimensional Covariance Matrices. <em>Journal of Multivariate Analysis</em>, 88(2), 365–411 (primary null).</li>
+<li>Ledoit, O. &amp; Wolf, M. (2008). Robust Performance Hypothesis Testing with the Sharpe Ratio. <em>Journal of Empirical Finance</em>, 15(5), 850–859. <a href="https://doi.org/10.1016/j.jempfin.2008.03.002">doi:10.1016/j.jempfin.2008.03.002</a>.</li>
+<li>Bailey, D. H. &amp; López de Prado, M. (2014). The Deflated Sharpe Ratio. <em>Journal of Portfolio Management</em>, 40(5), 94–107. <a href="https://doi.org/10.3905/jpm.2014.40.5.094">doi:10.3905/jpm.2014.40.5.094</a>.</li>
+<li>Jagannathan, R. &amp; Ma, T. (2003). Risk Reduction in Large Portfolios: Why Imposing the Wrong Constraints Helps. <em>Journal of Finance</em>, 58(4), 1651–1683. <a href="https://doi.org/10.1111/1540-6261.00580">doi:10.1111/1540-6261.00580</a>.</li>
+<li>DeMiguel, V., Garlappi, L. &amp; Uppal, R. (2009). Optimal Versus Naive Diversification: How Inefficient Is the 1/N Portfolio Strategy? <em>Review of Financial Studies</em>, 22(5), 1915–1953. <a href="https://doi.org/10.1093/rfs/hhm075">doi:10.1093/rfs/hhm075</a>.</li>
+</ul>
+<!-- lab:start --><footer class="site-footer"><p>Research only; not investment advice; experimental panel; no performance guarantees.</p></footer><!-- lab:end --></body>
+</html>

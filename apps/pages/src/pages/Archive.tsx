@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom'
 import { Card } from '../components/ui/card'
 import { Badge } from '../components/ui/badge'
 import archive from '../data/archive_verdicts.json'
+import { relabelArchive } from '../lib/labels'
 
 interface ArchiveCard {
   id: string
@@ -28,7 +29,7 @@ interface ArchiveData {
   cards: ArchiveCard[]
 }
 
-const archiveData: ArchiveData = archive
+const archiveData: ArchiveData = relabelArchive(archive as ArchiveData)
 
 const linkClass = 'text-muted hover:text-body underline underline-offset-2 decoration-border'
 
@@ -68,14 +69,14 @@ export default function Archive() {
           </h2>
           <p className="text-base text-body max-w-2xl mb-5 leading-relaxed">
             Archived methods: Justina round-1 (Spectral RP, Regime-Aware), #13 VCFC, #4 FT-MED, #3 RR-ERC,
-            Bet 1 NLS GMV v3 (VOID) · plus the unconditional Book-2 VT audit null · USA ETF experimental panel · updated {archiveData.updated} (ET)
+            Bet 1 NLS GMV v3 (VOID) · plus the unconditional vol-target backbone audit null · USA ETF experimental panel · updated {archiveData.updated} (ET)
           </p>
           <div className="inline-block border border-down/20 bg-down/5 px-4 py-3 text-xs text-muted max-w-2xl">
             <strong className="text-ink">Research only — not investment advice.</strong>{' '}
             Negative / null results documented on purpose. The five failed methods are{' '}
             <strong className="text-down">FAIL / ARCHIVE</strong> — not promoted to Books, not a
             showcase, not part of the live shortlist. Bet 1 NLS GMV v3 is VOID (concentrated holdings) and the
-            minimum-variance line is closed. Unconditional Book-2 VT is an AUDIT NULL (not live, not a FAIL).
+            minimum-variance line is closed. Unconditional vol-target backbone is an AUDIT NULL (not live, not a FAIL).
           </div>
         </div>
       </section>
@@ -93,8 +94,8 @@ export default function Archive() {
               <strong className="not-italic">No book cut.</strong>
             </p>
             <p className="text-sm text-body leading-relaxed">
-              Live shortlist: <strong className="text-ink">static core + VT × gate-first skew overlay</strong> (Justina #6, PR #29).
-              Unconditional Book-2 VT is the audit null that overlay was measured against — not live, not a FAIL.
+              Live shortlist: <strong className="text-ink">static core + vol-target backbone × gate-first skew overlay</strong> (Justina #6, PR #29).
+              Unconditional vol-target backbone is the audit null that overlay was measured against — not live, not a FAIL.
             </p>
             <p className="text-sm text-body leading-relaxed">
               Further candidates must clear the same leakage · null · DSR · empirical gate.{' '}
