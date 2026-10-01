@@ -2,6 +2,7 @@ import { Link } from 'react-router-dom'
 import { useJsonData } from '../hooks/useJsonData'
 import { pct, num } from '../lib/utils'
 import { LiveFig } from '../lib/liveFigures'
+import { failCount, voidCount, numberWord } from '../lib/archiveCounts'
 
 interface MetricsPayload {
   AnnReturn_vt: number
@@ -407,7 +408,7 @@ export default function Home() {
             All methods scored on the experimental USA ETF panel via walk-forward OOS.
             Binding-null gates on Sharpe; DSR / trial counts pre-declared. Sharpe shown in excess of BIL,
             legacy rf = 0 in parentheses (the basis of the archived verdicts, which do not change).
-            Five FAILs and one VOID (NLS GMV v3, concentrated holdings) documented as the rigour record. #6 skewness overlay cleared the
+            {numberWord(failCount, true)} FAILs and {numberWord(voidCount)} VOID (NLS GMV v3, concentrated holdings) documented as the rigour record. #6 skewness overlay cleared the
             gate as a Book-2 path — not a third book.
           </p>
 

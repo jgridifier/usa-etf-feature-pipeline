@@ -4,6 +4,7 @@ import { Card } from '../components/ui/card'
 import { Badge } from '../components/ui/badge'
 import archive from '../data/archive_verdicts.json'
 import { relabelArchive } from '../lib/labels'
+import { failCount, numberWord } from '../lib/archiveCounts'
 
 interface ArchiveCard {
   id: string
@@ -32,9 +33,7 @@ interface ArchiveData {
 const archiveData: ArchiveData = relabelArchive(archive as ArchiveData)
 
 // Counts in the copy follow the cards (the file is append-only as gates are archived).
-const NUMBER_WORDS = ['zero', 'one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight', 'nine']
-const failCount = archiveData.cards.filter(card => card.badge === 'FAIL').length
-const failWord = NUMBER_WORDS[failCount] ?? String(failCount)
+const failWord = numberWord(failCount)
 
 const linkClass = 'text-muted hover:text-body underline underline-offset-2 decoration-border'
 

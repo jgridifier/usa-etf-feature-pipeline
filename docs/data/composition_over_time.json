@@ -808,6 +808,19 @@
    "avg_cash_like": 0.0,
    "void_composition": null,
    "void_composition_label": null,
+   "void_kind": null,
+   "tag_shares": {
+    "cash_like": 0.0,
+    "short_duration": 0.0,
+    "near_cash": 0.0,
+    "union": 0.0,
+    "near_cash_tickers": [
+     "FTSL",
+     "SRLN"
+    ]
+   },
+   "books_source": "data/processed/live/vol_target_oos_returns.csv",
+   "source_note": "EPO-gate rebuild of the 70/20/10 mix, from Nov 2020",
    "latest": {
     "month": "2026-09",
     "rows": [
@@ -1654,6 +1667,19 @@
    "avg_cash_like": 0.242728340907736,
    "void_composition": null,
    "void_composition_label": null,
+   "void_kind": null,
+   "tag_shares": {
+    "cash_like": 0.242728340907736,
+    "short_duration": 0.0,
+    "near_cash": 0.0,
+    "union": 0.242728340907736,
+    "near_cash_tickers": [
+     "FTSL",
+     "SRLN"
+    ]
+   },
+   "books_source": "data/processed/live/skew_managed_gatefirst_returns.csv",
+   "source_note": null,
    "latest": {
     "month": "2026-09",
     "rows": [
@@ -2472,6 +2498,19 @@
    "avg_cash_like": 0.06960011814423131,
    "void_composition": null,
    "void_composition_label": null,
+   "void_kind": null,
+   "tag_shares": {
+    "cash_like": 0.06960011814423131,
+    "short_duration": 0.0,
+    "near_cash": 0.0,
+    "union": 0.06960011814423131,
+    "near_cash_tickers": [
+     "FTSL",
+     "SRLN"
+    ]
+   },
+   "books_source": "data/processed/live/vol_target_oos_returns.csv",
+   "source_note": null,
    "latest": {
     "month": "2026-09",
     "rows": [
@@ -5062,6 +5101,19 @@
    "avg_cash_like": 0.0,
    "void_composition": null,
    "void_composition_label": null,
+   "void_kind": null,
+   "tag_shares": {
+    "cash_like": 0.0,
+    "short_duration": 0.0,
+    "near_cash": 0.0,
+    "union": 0.0,
+    "near_cash_tickers": [
+     "FTSL",
+     "SRLN"
+    ]
+   },
+   "books_source": null,
+   "source_note": null,
    "latest": {
     "month": "2026-09",
     "rows": [
@@ -7888,6 +7940,19 @@
    "avg_cash_like": 0.0,
    "void_composition": null,
    "void_composition_label": null,
+   "void_kind": null,
+   "tag_shares": {
+    "cash_like": 0.0,
+    "short_duration": 0.0,
+    "near_cash": 0.0,
+    "union": 0.0,
+    "near_cash_tickers": [
+     "FTSL",
+     "SRLN"
+    ]
+   },
+   "books_source": null,
+   "source_note": null,
    "latest": {
     "month": "2026-09",
     "rows": [
@@ -10986,6 +11051,19 @@
    "avg_cash_like": 0.0,
    "void_composition": null,
    "void_composition_label": null,
+   "void_kind": null,
+   "tag_shares": {
+    "cash_like": 0.0,
+    "short_duration": 0.0,
+    "near_cash": 0.0,
+    "union": 0.0,
+    "near_cash_tickers": [
+     "FTSL",
+     "SRLN"
+    ]
+   },
+   "books_source": null,
+   "source_note": null,
    "latest": {
     "month": "2026-09",
     "rows": [
@@ -13644,6 +13722,19 @@
    "avg_cash_like": 0.0,
    "void_composition": null,
    "void_composition_label": null,
+   "void_kind": null,
+   "tag_shares": {
+    "cash_like": 0.0,
+    "short_duration": 0.0,
+    "near_cash": 0.0,
+    "union": 0.0,
+    "near_cash_tickers": [
+     "FTSL",
+     "SRLN"
+    ]
+   },
+   "books_source": null,
+   "source_note": null,
    "latest": {
     "month": "2026-09",
     "rows": [
@@ -16742,6 +16833,19 @@
    "avg_cash_like": 0.0,
    "void_composition": null,
    "void_composition_label": null,
+   "void_kind": null,
+   "tag_shares": {
+    "cash_like": 0.0,
+    "short_duration": 0.0,
+    "near_cash": 0.0,
+    "union": 0.0,
+    "near_cash_tickers": [
+     "FTSL",
+     "SRLN"
+    ]
+   },
+   "books_source": null,
+   "source_note": null,
    "latest": {
     "month": "2026-09",
     "rows": [
@@ -19764,6 +19868,19 @@
    "avg_cash_like": 0.0,
    "void_composition": null,
    "void_composition_label": null,
+   "void_kind": null,
+   "tag_shares": {
+    "cash_like": 0.0,
+    "short_duration": 0.0,
+    "near_cash": 0.0,
+    "union": 0.0,
+    "near_cash_tickers": [
+     "FTSL",
+     "SRLN"
+    ]
+   },
+   "books_source": null,
+   "source_note": null,
    "latest": {
     "month": "2026-09",
     "rows": [
@@ -22470,6 +22587,19 @@
    "avg_cash_like": 0.0,
    "void_composition": null,
    "void_composition_label": null,
+   "void_kind": null,
+   "tag_shares": {
+    "cash_like": 0.0,
+    "short_duration": 0.0,
+    "near_cash": 0.0,
+    "union": 0.0,
+    "near_cash_tickers": [
+     "FTSL",
+     "SRLN"
+    ]
+   },
+   "books_source": null,
+   "source_note": null,
    "latest": {
     "month": "2026-09",
     "rows": [
@@ -25476,6 +25606,19 @@
    "avg_cash_like": 0.0,
    "void_composition": null,
    "void_composition_label": null,
+   "void_kind": null,
+   "tag_shares": {
+    "cash_like": 0.0,
+    "short_duration": 0.0,
+    "near_cash": 0.0,
+    "union": 0.0,
+    "near_cash_tickers": [
+     "FTSL",
+     "SRLN"
+    ]
+   },
+   "books_source": null,
+   "source_note": null,
    "latest": {
     "month": "2026-09",
     "rows": [
@@ -27502,6 +27645,19 @@
    "avg_cash_like": 0.5157222718824878,
    "void_composition": null,
    "void_composition_label": null,
+   "void_kind": null,
+   "tag_shares": {
+    "cash_like": 0.2840428889316783,
+    "short_duration": 0.23044737626526968,
+    "near_cash": 0.0012320066855397212,
+    "union": 0.5157222718824878,
+    "near_cash_tickers": [
+     "FTSL",
+     "SRLN"
+    ]
+   },
+   "books_source": null,
+   "source_note": null,
    "latest": {
     "month": "2026-08",
     "rows": [
@@ -33222,6 +33378,19 @@
    "avg_cash_like": 0.2448858227319554,
    "void_composition": null,
    "void_composition_label": null,
+   "void_kind": null,
+   "tag_shares": {
+    "cash_like": 0.16080723721846546,
+    "short_duration": 0.062250586524416715,
+    "near_cash": 0.02182799898907321,
+    "union": 0.2448858227319554,
+    "near_cash_tickers": [
+     "FTSL",
+     "SRLN"
+    ]
+   },
+   "books_source": null,
+   "source_note": null,
    "latest": {
     "month": "2026-08",
     "rows": [
@@ -34762,6 +34931,19 @@
    "avg_cash_like": 0.29008517870697786,
    "void_composition": null,
    "void_composition_label": null,
+   "void_kind": null,
+   "tag_shares": {
+    "cash_like": 0.29008517870697786,
+    "short_duration": 0.0,
+    "near_cash": 0.0,
+    "union": 0.29008517870697786,
+    "near_cash_tickers": [
+     "FTSL",
+     "SRLN"
+    ]
+   },
+   "books_source": null,
+   "source_note": null,
    "latest": {
     "month": "2026-09",
     "rows": [
@@ -39825,6 +40007,19 @@
    "avg_cash_like": 0.033626957819555985,
    "void_composition": null,
    "void_composition_label": null,
+   "void_kind": null,
+   "tag_shares": {
+    "cash_like": 0.033626957819555985,
+    "short_duration": 0.0,
+    "near_cash": 0.0,
+    "union": 0.033626957819555985,
+    "near_cash_tickers": [
+     "FTSL",
+     "SRLN"
+    ]
+   },
+   "books_source": null,
+   "source_note": null,
    "latest": {
     "month": "2026-09",
     "rows": [
@@ -44690,6 +44885,19 @@
    "avg_cash_like": 0.0,
    "void_composition": null,
    "void_composition_label": null,
+   "void_kind": null,
+   "tag_shares": {
+    "cash_like": 0.0,
+    "short_duration": 0.0,
+    "near_cash": 0.0,
+    "union": 0.0,
+    "near_cash_tickers": [
+     "FTSL",
+     "SRLN"
+    ]
+   },
+   "books_source": null,
+   "source_note": null,
    "latest": {
     "month": "2026-09",
     "rows": [
@@ -49631,6 +49839,19 @@
    "avg_cash_like": 0.0,
    "void_composition": null,
    "void_composition_label": null,
+   "void_kind": null,
+   "tag_shares": {
+    "cash_like": 0.0,
+    "short_duration": 0.0,
+    "near_cash": 0.0,
+    "union": 0.0,
+    "near_cash_tickers": [
+     "FTSL",
+     "SRLN"
+    ]
+   },
+   "books_source": null,
+   "source_note": null,
    "latest": {
     "month": "2026-09",
     "rows": [
@@ -51223,6 +51444,19 @@
     "source": "data/processed/nonlinear_shrinkage_gmv/composition.csv:cash_like_category_weight"
    },
    "void_composition_label": "cash-like category share",
+   "void_kind": "v1",
+   "tag_shares": {
+    "cash_like": 0.988558583187283,
+    "short_duration": 0.006895110748286902,
+    "near_cash": 0.0021774124860366837,
+    "union": 0.9976311064216064,
+    "near_cash_tickers": [
+     "FTSL",
+     "SRLN"
+    ]
+   },
+   "books_source": null,
+   "source_note": null,
    "latest": {
     "month": "2026-08",
     "rows": [
@@ -52757,6 +52991,19 @@
     "source": "data/processed/nonlinear_shrinkage_gmv_v2/summary.csv:short_duration_share_mean"
    },
    "void_composition_label": "short-duration share",
+   "void_kind": "v2",
+   "tag_shares": {
+    "cash_like": 0.0,
+    "short_duration": 0.8412357736076712,
+    "near_cash": 0.12456472422139384,
+    "union": 0.9658004978290651,
+    "near_cash_tickers": [
+     "FTSL",
+     "SRLN"
+    ]
+   },
+   "books_source": null,
+   "source_note": null,
    "latest": {
     "month": "2026-08",
     "rows": [
@@ -55444,6 +55691,19 @@
    "avg_cash_like": 0.0,
    "void_composition": null,
    "void_composition_label": null,
+   "void_kind": null,
+   "tag_shares": {
+    "cash_like": 0.0,
+    "short_duration": 0.0,
+    "near_cash": 0.0,
+    "union": 0.0,
+    "near_cash_tickers": [
+     "FTSL",
+     "SRLN"
+    ]
+   },
+   "books_source": null,
+   "source_note": null,
    "latest": {
     "month": "2026-09",
     "rows": [
@@ -56969,6 +57229,19 @@
    "avg_cash_like": 0.9974758626658439,
    "void_composition": null,
    "void_composition_label": null,
+   "void_kind": null,
+   "tag_shares": {
+    "cash_like": 0.9846058119873888,
+    "short_duration": 0.01057241607731152,
+    "near_cash": 0.0022976346011436247,
+    "union": 0.9974758626658439,
+    "near_cash_tickers": [
+     "FTSL",
+     "SRLN"
+    ]
+   },
+   "books_source": null,
+   "source_note": null,
    "latest": {
     "month": "2026-08",
     "rows": [
@@ -58504,6 +58777,19 @@
    "avg_cash_like": 0.9643638862506558,
    "void_composition": null,
    "void_composition_label": null,
+   "void_kind": null,
+   "tag_shares": {
+    "cash_like": 0.0,
+    "short_duration": 0.908383000668908,
+    "near_cash": 0.05598088558174798,
+    "union": 0.9643638862506558,
+    "near_cash_tickers": [
+     "FTSL",
+     "SRLN"
+    ]
+   },
+   "books_source": null,
+   "source_note": null,
    "latest": {
     "month": "2026-08",
     "rows": [
@@ -61160,6 +61446,19 @@
    "avg_cash_like": 0.0,
    "void_composition": null,
    "void_composition_label": null,
+   "void_kind": null,
+   "tag_shares": {
+    "cash_like": 0.0,
+    "short_duration": 0.0,
+    "near_cash": 0.0,
+    "union": 0.0,
+    "near_cash_tickers": [
+     "FTSL",
+     "SRLN"
+    ]
+   },
+   "books_source": null,
+   "source_note": null,
    "latest": {
     "month": "2026-09",
     "rows": [

@@ -234,7 +234,6 @@ def test_void_runs_show_why():
     v2 = CHARTS['nls_gmv_v2_156w']['void_composition']['value']
     assert v2 == pytest.approx(float(s['short_duration_share_mean'].iloc[0]))
     assert 0.83 < v2 < 0.85
-    assert f'short-duration share {100 * v2:.1f}%' in card('nls_gmv_v2_156w')
     assert 'Why VOID:' in card('nls_gmv_v1_156w')
     for cid in ('nls_gmv_v1_156w', 'nls_gmv_v2_156w'):
         assert CHARTS[cid]['avg_cash_like'] > bc.CASH_LIMIT
@@ -258,3 +257,120 @@ def test_linked_from_methods_and_books():
     assert 'composition_over_time.html' in (DOCS / 'methods/index.html').read_text(encoding='utf-8')
     books = (ROOT / 'apps/pages/src/pages/Books.tsx').read_text(encoding='utf-8')
     assert './methods/composition_over_time.html' in books
+
+
+# ------------------------------------------------------------- Books sources (CIO)
+def _books_page_sources():
+    import build_pages as bp
+    return {'book1': bp.LIVE_SOURCES['book1'][0], 'book2': bp.LIVE_SOURCES['book2'][0], 'backbone': bp.LIVE_SOURCES['vt'][0]}
+
+
+def test_books_chart_sources_match_books_page():
+    page = _books_page_sources()
+    for cid in ('book1', 'book2', 'backbone'):
+        assert CHARTS[cid]['books_source'] == f'data/processed/live/{page[cid]}', cid
+    for cid in ('book2', 'backbone'):
+        c = CHARTS[cid]
+        assert c['source'].startswith('data/processed/live/') and not c.get('source_note')
+        w = pd.read_csv(ROOT / c['source'])
+        r = pd.read_csv(ROOT / c['books_source'])
+        assert set(w['trial_id']) == set(r['trial_id']), cid
+        assert c['months'] == list(pd.to_datetime(r['date']).dt.to_period('M').astype(str)), cid
+        assert c['months'][0] == '2021-02'
+
+
+def test_book1_rebuild_only_without_live_weights():
+    c = CHARTS['book1']
+    assert bc.live_book1_weights() is None          # the live run publishes Book 1 returns only
+    assert c['source'] == 'data/processed/epo_allocator/weights.csv'
+    assert c['source_note'] == 'EPO-gate rebuild of the 70/20/10 mix, from Nov 2020'
+    assert '<p class="cot-source-note">EPO-gate rebuild of the 70/20/10 mix, from Nov 2020</p>' in card('book1')
+    assert c['months'][0] == '2020-11'
+    for t, w in (('VOO', .7), ('QQQM', .2), ('IJR', .1)):     # the Books page's fixed mix
+        np.testing.assert_allclose(c['ticker_series'][t], w, atol=1e-12)
+
+
+def test_category_sleeves_kept_as_sleeves():
+    for cid in ('ft_med', 'rr_erc_b', 'rr_erc_a'):
+        c = CHARTS[cid]
+        names = set(c['ticker_series']) - {'Other', 'BIL'}
+        assert names and all(' ' in n for n in names), (cid, names)       # category sleeve keys, not tickers
+        assert sum(c['class_series']['Equity']) == sum(c['class_series']['Bond']) == 0
+
+
+# ------------------------------------------------------------- GMV windows (Quant)
+GMV = {'nls_gmv_v1': 'nonlinear_shrinkage_gmv', 'nls_gmv_v2': 'nonlinear_shrinkage_gmv_v2',
+       'nls_gmv_v3': 'nonlinear_shrinkage_gmv_v3'}
+
+
+@pytest.mark.parametrize('prefix', sorted(GMV))
+@pytest.mark.parametrize('window', [156, 260])
+def test_gmv_sum_to_100pct_per_window_chart_month(prefix, window):
+    raw = pd.read_csv(ROOT / 'data/processed' / GMV[prefix] / 'weights.csv', low_memory=False)
+    raw = raw[(raw.strategy_id == 'nonlinear_shrinkage_gmv') & (raw.window_weeks == window)]
+    assert len(raw)
+    sums = raw.groupby('date')['weight'].sum()
+    np.testing.assert_allclose(sums.to_numpy(), 1.0, atol=bc.SUM_TOL)
+    c = CHARTS[f'{prefix}_{window}w']
+    assert c['source'] == f'data/processed/{GMV[prefix]}/weights.csv'
+    assert c['months'] == sorted(pd.to_datetime(raw['date']).dt.to_period('M').astype(str).unique())
+    np.testing.assert_allclose(np.sum(list(c['ticker_series'].values()), axis=0), 1.0, atol=bc.SUM_TOL)
+
+
+def test_every_window_file_is_filtered_on_window():
+    for s in bc.specs():
+        cols = pd.read_csv(ROOT / s['source'], nrows=0).columns
+        if 'window_weeks' in cols:
+            w = s['load']()
+            assert not w.duplicated(['month', 'ticker']).any(), s['id']
+            assert s['id'].endswith(('_156w', '_260w')), s['id']
+
+
+def test_mixing_windows_fails_regression():
+    spec = next(s for s in bc.specs() if s['id'] == 'nls_gmv_v2_156w')
+    mixed = dict(spec, load=lambda: bc.long_weights('nonlinear_shrinkage_gmv_v2/weights.csv',
+                                                    filters={'strategy_id': 'nonlinear_shrinkage_gmv'}))
+    with pytest.raises(ValueError, match='duplicate'):
+        bc.build_chart(mixed, bc.band_map(UNIVERSE), None, UNIVERSE)
+
+
+def _raw_tag_shares(run: str, window: int = 156) -> dict:
+    raw = pd.read_csv(ROOT / 'data/processed' / run / 'weights.csv', low_memory=False)
+    raw = raw[(raw.strategy_id == 'nonlinear_shrinkage_gmv') & (raw.window_weeks == window)]
+    p = raw.pivot_table(index='date', columns='ticker', values='weight', aggfunc='sum').fillna(0.0)
+    out = {}
+    for col in gm.COMPOSITION_TAG_COLUMNS:
+        tk = gm.tagged_tickers(UNIVERSE, col)
+        out[col] = float(p[[t for t in p.columns if t in tk]].sum(axis=1).mean())
+    out['union'] = sum(out.values())                       # the three tags are disjoint
+    return out
+
+
+def test_gmv_tags_disjoint():
+    a, b, c = (gm.tagged_tickers(UNIVERSE, x) for x in gm.COMPOSITION_TAG_COLUMNS)
+    assert not (a & b or a & c or b & c)
+
+
+def test_gmv_void_lines_come_from_the_weights():
+    v1, v2 = _raw_tag_shares('nonlinear_shrinkage_gmv'), _raw_tag_shares('nonlinear_shrinkage_gmv_v2')
+    rec1 = pd.read_csv(ROOT / 'data/processed/nonlinear_shrinkage_gmv/composition.csv')
+    rec1 = rec1[(rec1.strategy_id == 'nonlinear_shrinkage_gmv') & (rec1.window_weeks == 156)]['cash_like_category_weight']
+    rec2 = pd.read_csv(ROOT / 'data/processed/nonlinear_shrinkage_gmv_v2/summary.csv')
+    rec2 = rec2[(rec2.strategy_id == 'nonlinear_shrinkage_gmv') & (rec2.window_weeks == 156)]['short_duration_share_mean']
+    p = lambda x: f'{100 * x:.1f}%'  # noqa: E731
+    line1 = (f"{p(v1['union'])} cash-like under today's tags ({p(v1['cash_like'])} BIL-type cash). "
+             f"The {p(float(rec1.iloc[0]))} recorded at the time used the old Category labels.")
+    line2 = (f"{p(v2['union'])} under today's tags: {p(v2['short_duration'])} short-duration plus "
+             f"{p(v2['near_cash'])} near-cash (FTSL/SRLN). "
+             f"The {p(float(rec2.iloc[0]))} recorded at the time came before the near-cash tag existed.")
+    both = 'Above 50% either way; the VOID verdict is unchanged.'
+    for cid, line in (('nls_gmv_v1_156w', line1), ('nls_gmv_v2_156w', line2)):
+        html = card(cid)
+        assert f'<p>{line}</p>'.replace("'", '&#x27;') in html, (cid, line)
+        assert f'<p>{both}</p>' in html
+        assert bc.void_lines(CHARTS[cid]) == [line, both]
+    assert v1['union'] > .5 and v2['union'] > .5 and float(rec1.iloc[0]) > .5 and float(rec2.iloc[0]) > .5
+    # Pinned to the current files (Quant's ruling, 156-week window only).
+    assert (p(v1['union']), p(v1['cash_like']), p(float(rec1.iloc[0]))) == ('99.8%', '98.9%', '81.0%')
+    assert (p(v2['union']), p(v2['short_duration']), p(v2['near_cash']), p(float(rec2.iloc[0]))) == \
+        ('96.6%', '84.1%', '12.5%', '84.1%')

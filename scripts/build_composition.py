@@ -38,6 +38,25 @@ TOP_N = 10
 CASH_LIMIT = gm.COMPOSITION_MAX_SHARE
 SUM_TOL = 1e-6
 TARGET_LABEL = 'target weights at rebalance, source: {}'
+LIVE = P / 'live'
+# The published outputs the Books page reads (scripts/build_pages.py LIVE_SOURCES), per Books chart.
+BOOKS_PAGE_SOURCES = {
+    'book1': 'data/processed/live/vol_target_oos_returns.csv',
+    'book2': 'data/processed/live/skew_managed_gatefirst_returns.csv',
+    'backbone': 'data/processed/live/vol_target_oos_returns.csv',
+}
+BOOK1_REBUILD_NOTE = 'EPO-gate rebuild of the 70/20/10 mix, from Nov 2020'
+
+
+def live_book1_weights() -> str | None:
+    """A per-month Book 1 (static Option A) weights file in the published live outputs, if one exists."""
+    for f in sorted(LIVE.glob('*weights*.csv')):
+        cols = pd.read_csv(f, nrows=0).columns
+        ids = pd.read_csv(f, usecols=[c for c in ('strategy_id', 'trial_id') if c in cols]) if \
+            {'strategy_id', 'trial_id'} & set(cols) else pd.DataFrame()
+        if any(ids[c].astype(str).str.fullmatch(r'(book1_)?static_option_a').any() for c in ids.columns):
+            return f.name
+    return None
 
 
 # ------------------------------------------------------------------ bands
@@ -126,6 +145,22 @@ def specs() -> list[dict]:
                                  eff_n=metric('epo_allocator/summary.csv', 'eff_N_mean', strategy_id=sid, period_role='full window'),
                                  turnover=metric('epo_allocator/summary.csv', 'turnover_per_year', strategy_id=sid, period_role='full window')))
 
+    def book1_spec():
+        # CIO: Books charts read the published live outputs the Books page uses. The live run publishes
+        # Book 1 as returns only (vol_target_oos_returns.csv:r_option_a), with no per-month weights, so the
+        # chart keeps the EPO-gate rebuild of the same fixed mix and says so.
+        live = live_book1_weights()
+        if live is not None:
+            return dict(id='book1', group='books', name='Book 1 (static core: VOO / QQQM / IJR)', badge='LIVE BOOK',
+                        default_view='ticker', optional=False, source=f'data/processed/live/{live}',
+                        books_source=BOOKS_PAGE_SOURCES['book1'],
+                        load=lambda: wide_weights(f'live/{live}', filters={}),
+                        metrics=dict(equity=None, eff_n=None, turnover=None))
+        s = epo_spec('book1_static_option_a', 'Book 1 (static core: VOO / QQQM / IJR)', 'LIVE BOOK', group='books',
+                     default='ticker', cid='book1')
+        s.update(source_note=BOOK1_REBUILD_NOTE, books_source=BOOKS_PAGE_SOURCES['book1'])
+        return s
+
     def nls(version, rel_dir, badge, window, *, optional=False):
         rel = f'{rel_dir}/weights.csv'
         flt = {'strategy_id': 'nonlinear_shrinkage_gmv', 'window_weeks': window}
@@ -144,16 +179,17 @@ def specs() -> list[dict]:
     vcfc = 'VCFC_option_a_vt_L21_C12_g0p5_mkt_vol'
     out = [
         # Books: open on tickers, BIL its own band/line.
-        epo_spec('book1_static_option_a', 'Book 1 (static core: VOO / QQQM / IJR)', 'LIVE BOOK', group='books',
-                 default='ticker', cid='book1'),
+        book1_spec(),
         dict(id='book2', group='books', name='Book 2 (backbone × gate-first skew overlay)', badge='LIVE BOOK',
              default_view='ticker', optional=False, source='data/processed/live/skew_managed_gatefirst_weights.csv',
              load=lambda: wide_weights('live/skew_managed_gatefirst_weights.csv', filters={}), gate=True,
+             books_source=BOOKS_PAGE_SOURCES['book2'],
              metrics=dict(equity=None, eff_n=None,
                           turnover=metric('live/skew_managed_gatefirst_summary.csv', 'turnover_per_year'))),
         dict(id='backbone', group='books', name='Backbone (unconditional vol-target)', badge=badges['uncond_book2_vt'],
              default_view='ticker', optional=False, source='data/processed/live/vol_target_monthly_weights.csv',
              load=lambda: wide_weights('live/vol_target_monthly_weights.csv', filters={}),
+             books_source=BOOKS_PAGE_SOURCES['backbone'],
              metrics=dict(equity=None, eff_n=None,
                           turnover=metric('live/vol_target_oos_summary.csv', 'turnover_per_year'))),
         # EPO and its baselines: open on asset classes.
@@ -212,10 +248,12 @@ def specs() -> list[dict]:
             s['void_composition'] = metric('nonlinear_shrinkage_gmv_v2/summary.csv', 'short_duration_share_mean',
                                            strategy_id='nonlinear_shrinkage_gmv', window_weeks=156)
             s['void_composition_label'] = 'short-duration share'
+            s['void_kind'] = 'v2'
         if s['id'] == 'nls_gmv_v1_156w':
             s['void_composition'] = metric('nonlinear_shrinkage_gmv/composition.csv', 'cash_like_category_weight',
                                            strategy_id='nonlinear_shrinkage_gmv', window_weeks=156)
             s['void_composition_label'] = 'cash-like category share'
+            s['void_kind'] = 'v1'
     return out
 
 
@@ -229,9 +267,41 @@ def not_saved() -> list[dict]:
 
 
 # ------------------------------------------------------------------ series
-def build_chart(spec: dict, bands: dict, gate_months: list[str] | None) -> dict:
+def tag_shares(pivot: pd.DataFrame, universe: pd.DataFrame) -> dict:
+    """Average share of each tripwire tag (and their union) over the chart's months, from the weights."""
+    sets = {c: gm.tagged_tickers(universe, c) for c in gm.COMPOSITION_TAG_COLUMNS}
+    union = frozenset().union(*sets.values())
+    out = {c: float(pivot[[t for t in pivot.columns if t in tk]].sum(axis=1).mean()) for c, tk in sets.items()}
+    out['union'] = float(pivot[[t for t in pivot.columns if t in union]].sum(axis=1).mean())
+    out['near_cash_tickers'] = sorted(sets[gm.NEAR_CASH_COLUMN])
+    return out
+
+
+def pct1(x: float) -> str:
+    return f'{100 * x:.1f}%'
+
+
+def void_lines(c: dict) -> list[str]:
+    """Quant's wording for the GMV v1 / v2 VOID cards; every figure is read from the weights / run output."""
+    t, rec = c['tag_shares'], c['void_composition']['value']
+    if c['void_kind'] == 'v1':
+        first = (f"{pct1(t['union'])} cash-like under today's tags ({pct1(t[gm.CASH_LIKE_COLUMN])} BIL-type cash). "
+                 f"The {pct1(rec)} recorded at the time used the old Category labels.")
+    else:
+        first = (f"{pct1(t['union'])} under today's tags: {pct1(t[gm.SHORT_DURATION_COLUMN])} short-duration plus "
+                 f"{pct1(t[gm.NEAR_CASH_COLUMN])} near-cash ({'/'.join(t['near_cash_tickers'])}). "
+                 f"The {pct1(rec)} recorded at the time came before the near-cash tag existed.")
+    if not (t['union'] > CASH_LIMIT and rec > CASH_LIMIT):
+        raise ValueError(f"{c['id']}: 'above 50% either way' no longer holds")
+    return [first, 'Above 50% either way; the VOID verdict is unchanged.']
+
+
+def build_chart(spec: dict, bands: dict, gate_months: list[str] | None, universe: pd.DataFrame | None = None) -> dict:
     w = spec['load']()
-    w = w.groupby(['month', 'ticker'], as_index=False)['weight'].sum()
+    dup = w.duplicated(['month', 'ticker'])
+    if dup.any():   # e.g. 156w and 260w GMV windows on the same dates: never stack two runs in one chart
+        raise ValueError(f"{spec['id']}: {int(dup.sum())} duplicate (month, ticker) rows; filter the run "
+                         f"(window_weeks / strategy / trial) before charting")
     months = sorted(w['month'].unique())
     pivot = w.pivot(index='month', columns='ticker', values='weight').reindex(months).fillna(0.0)
     sums = pivot.sum(axis=1)
@@ -262,6 +332,9 @@ def build_chart(spec: dict, bands: dict, gate_months: list[str] | None) -> dict:
         metrics={k: (None if v is None else v) for k, v in m.items()},
         avg_cash_like=float(np.mean(cls['Cash-like'])),
         void_composition=spec.get('void_composition'), void_composition_label=spec.get('void_composition_label'),
+        void_kind=spec.get('void_kind'),
+        tag_shares=tag_shares(pivot, universe) if universe is not None else None,
+        books_source=spec.get('books_source'), source_note=spec.get('source_note'),
         latest=dict(month=months[-1], rows=latest),
     )
 
@@ -277,7 +350,7 @@ def build_data() -> dict:
     universe = pd.read_csv(UNIVERSE)
     bands = band_map(universe)
     gates = gate_on_months()
-    charts = [build_chart(s, bands, gates) for s in specs()]
+    charts = [build_chart(s, bands, gates, universe) for s in specs()]
     return dict(
         note=('Saved target weights at each rebalance, plotted on the holding month. Bands: cash-like = tripwire tags '
               '(cash_like, short_duration, near_cash); otherwise epo_asset_class; otherwise Untagged (Category never used).'),
@@ -385,10 +458,9 @@ def chart_html(c: dict, gate_label: str) -> str:
     line = (f"Average equity share: {fmt_metric(m['equity'], 'pct')} · effective N: {fmt_metric(m['eff_n'], 'num')} · "
             f"turnover per year: {fmt_metric(m['turnover'], 'num')} (from the run output)")
     void = ''
-    if c.get('void_composition'):
-        void = (f'<p class="cot-void"><strong>Why {escape(c["badge"])}:</strong> {escape(c["void_composition_label"])} '
-                f'{100 * c["void_composition"]["value"]:.1f}% (run output); cash-like band in this chart averages '
-                f'{100 * c["avg_cash_like"]:.1f}%, against the {int(100 * CASH_LIMIT)}% limit.</p>')
+    if c.get('void_kind'):
+        void = (f'<div class="cot-void"><p><strong>Why {escape(c["badge"])}:</strong></p>'
+                + ''.join(f'<p>{escape(x)}</p>' for x in void_lines(c)) + '</div>')
     gate = ''
     if c['gate_on_months']:
         gate = f'<p class="muted cot-gate">Shaded: months the skew gate was on ({escape(gate_label)}), read from the gate output.</p>'
@@ -407,7 +479,8 @@ def chart_html(c: dict, gate_label: str) -> str:
         f'<span class="{badge_cls}">{escape(c["badge"])}</span>'
         f'<h3>{escape(c["name"])}</h3>'
         f'<p class="metric-sub cot-label">{escape(c["label"])}</p>'
-        f'<div class="cot-toggle" role="radiogroup" aria-label="View">'
+        + (f'<p class="cot-source-note">{escape(c["source_note"])}</p>' if c.get('source_note') else '')
+        + f'<div class="cot-toggle" role="radiogroup" aria-label="View">'
         f'<input type="radio" id="{rid}-class" name="{rid}" value="class"{cls_checked}>'
         f'<label for="{rid}-class">Asset classes</label>'
         f'<input type="radio" id="{rid}-tick" name="{rid}" value="ticker"{tick_checked}>'
@@ -449,6 +522,9 @@ STYLE = """<style>
 .cot-sw{display:inline-block;width:.8rem;height:.8rem;border:1px solid #1f3a5f;margin-right:.3rem;vertical-align:-1px}
 .cot-card p{font-size:.85rem;line-height:1.45}
 .cot-metrics{font-size:.85rem}
+.cot-source-note{font-weight:600;color:#0b1f3a}
+.cot-void{border-left:3px solid #000000;padding-left:.6rem;margin:.5rem 0}
+.cot-void p{margin:.2rem 0}
 .cot-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(300px,100%),1fr));gap:1rem}
 .cot-grid>*{min-width:0}
 .cot-card{overflow-wrap:anywhere}
