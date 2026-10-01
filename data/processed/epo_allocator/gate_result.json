@@ -1,0 +1,157 @@
+{
+  "gate_id": "epo_anchored_trend",
+  "label": "FAIL",
+  "mechanical": "FAIL",
+  "composition": {
+    "status": "PASS",
+    "max_share": 0.5,
+    "computable": true,
+    "method": "epo_a_w075",
+    "primary_null": "lw_minvar_156w",
+    "method_share": 0.0,
+    "null_share": 0.0,
+    "void_method": false,
+    "void_null": false,
+    "opt_out": false,
+    "opt_out_reason": null,
+    "not_computable_reason": ""
+  },
+  "monthly_panel": {
+    "source": "usa_universe_panel_monthly_returns.csv",
+    "complete_months_only": true,
+    "dropped_partial_month": null,
+    "source_asof": "2026-09-30",
+    "partial_month_reason": null
+  },
+  "fields": {
+    "book_eligible": {
+      "eligible": false,
+      "reason": "gate label is FAIL, not PASS; full OOS Sharpe_exBIL is not strictly greater than anchor_ivol; growth-mandate fit: equity share under 50% or not computable",
+      "label": "FAIL",
+      "sharpe_exbil_method": 0.2683587476472725,
+      "sharpe_exbil_anchor": 0.6083100944273679,
+      "beats_anchor": false,
+      "book1_window_sharpe_method": 0.1230939782188429,
+      "book1_window_sharpe_book1": 0.8865806870299144,
+      "maxdd_method": -0.09413108335733,
+      "maxdd_book1": -0.25564187805103256,
+      "beats_on_sharpe": false,
+      "beats_on_maxdd": true,
+      "method_equity_share": 0.08987634724722368,
+      "growth_mandate_fit": false,
+      "lw2008_p_vs_book1": 0.9795418222730002,
+      "lw2008_p_vs_anchor": 0.9703079237148852
+    },
+    "trial_count": 11,
+    "asset_class_mix": [
+      {
+        "strategy_id": "anchor_ivol",
+        "computable": true,
+        "equity": 0.5007114908796604,
+        "bond": 0.42364599299687306,
+        "commodity": 0.07564251612346652
+      },
+      {
+        "strategy_id": "book1_static_option_a",
+        "computable": true,
+        "equity": 1.0000000000000004,
+        "bond": 0.0,
+        "commodity": 0.0
+      },
+      {
+        "strategy_id": "epo_a_w050",
+        "computable": true,
+        "equity": 0.10010279942336173,
+        "bond": 0.7936706492104735,
+        "commodity": 0.10622655136616485
+      },
+      {
+        "strategy_id": "epo_a_w075",
+        "computable": true,
+        "equity": 0.08987634724722368,
+        "bond": 0.8379508838656331,
+        "commodity": 0.07217276888714332
+      },
+      {
+        "strategy_id": "epo_a_w090",
+        "computable": true,
+        "equity": 0.10757143596357774,
+        "bond": 0.8329970270993221,
+        "commodity": 0.059431536937100155
+      },
+      {
+        "strategy_id": "equal_weight",
+        "computable": true,
+        "equity": 0.6943509443333145,
+        "bond": 0.16916192026414179,
+        "commodity": 0.13648713540254387
+      },
+      {
+        "strategy_id": "erc_lw",
+        "computable": true,
+        "equity": 0.32861968010042053,
+        "bond": 0.53514933812146,
+        "commodity": 0.13623098177811938
+      },
+      {
+        "strategy_id": "lw_minvar_156w",
+        "computable": true,
+        "equity": 0.04187504216192978,
+        "bond": 0.9009223287199228,
+        "commodity": 0.05720262911814749
+      },
+      {
+        "strategy_id": "trend_ivol",
+        "computable": true,
+        "equity": 0.5799533771246123,
+        "bond": 0.316738390109816,
+        "commodity": 0.10330823276557176
+      }
+    ],
+    "preregistration": {
+      "sha256": "9c4ebc4ab0760a2862e1827fe224102b5a75e1e5298c6533cbf5a9390432d67a",
+      "head_commit": "c32b55d24094832b11144f6f5fe13a6a8af0897c",
+      "path": "preregistration/epo_allocator.yaml",
+      "verified": true
+    },
+    "book1_comparison": {
+      "full_oos_months": 119,
+      "full_start": "2016-11-30",
+      "full_end": "2026-09-30",
+      "overlap_months": 71,
+      "overlap_start": "2020-11-30",
+      "overlap_end": "2026-09-30",
+      "anchor_window": "full OOS",
+      "book1_window": "overlap months only; method restricted to the same months; net vs net"
+    },
+    "book1_published_reference": {
+      "available": true,
+      "source": "data/processed/vol_target_oos_returns.csv r_option_a (published, gross)",
+      "n_months": 68,
+      "start": "2021-02-26",
+      "end": "2026-09-16",
+      "CAGR": 0.14684146033897338,
+      "Sharpe_exBIL": 0.7491453687557603,
+      "MaxDD": -0.25562713849928154,
+      "used_for_eligibility": false
+    }
+  },
+  "report": {
+    "criteria": {
+      "c1": true,
+      "c2": false,
+      "c3": false,
+      "c4": false,
+      "c5": true,
+      "c6": true
+    },
+    "mechanical": "FAIL",
+    "failing_criteria": [
+      "c2",
+      "c3",
+      "c4"
+    ],
+    "effN_method": 6.64880442838787,
+    "effN_primary_diagnostic": 6.972376305795735
+  }
+}
