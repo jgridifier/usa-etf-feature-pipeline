@@ -199,10 +199,11 @@ def verdict_text(d: dict) -> str:
 def drawdown_note(d: dict) -> str:
     """CIO note under the eligibility table: why the MaxDD leg passes."""
     be = d['gate']['fields']['book_eligible']
-    if not be['beats_on_maxdd'] or BOOK1 not in d['full']:
+    book1 = d['book1']   # the Book 1 comparison window (overlapping months), same window as the MaxDD row
+    if not be['beats_on_maxdd'] or METHOD not in book1 or BOOK1 not in book1:
         return ''
-    return (f"The shallower drawdown comes from holding mostly bonds ({pct(d['full'][METHOD]['CAGR'])} CAGR vs Book 1's "
-            f"{pct(d['full'][BOOK1]['CAGR'])}), not from better equity risk control.")
+    return (f"The shallower drawdown comes from holding mostly bonds ({pct(book1[METHOD]['CAGR'])} CAGR vs Book 1's "
+            f"{pct(book1[BOOK1]['CAGR'])}), not from better equity risk control.")
 
 
 def lessons_text(d: dict) -> str:
@@ -268,10 +269,10 @@ def archive_card() -> dict | None:
         dsr=f"{num(full[METHOD]['DSR_exBIL'], 3)} on Sharpe ex-BIL, not legacy (trial_count={trials})",
         gate=dict(label='gate_result.json', href=REPO_BLOB + 'gate_result.json'),
         method_page='methods/allocation_alpha_epo.html',
-        results_page=PAGE,
         artifact=dict(label='epo_allocator/summary.csv', href=REPO_BLOB + 'summary.csv'),
         archived=v['verdict_date'],
         archived_via=f"{v['verdict_by']} verdict; the results page is the published record",
+        nw_t_links=[dict(label='Results page', href=PAGE)],
     )
 
 

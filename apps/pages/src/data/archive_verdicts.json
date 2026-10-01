@@ -310,6 +310,53 @@
         "label": "#6 skew overlay measured against it",
         "text": "0.966 excess of BIL (legacy rf = 0: 1.280) / −10.1%, NW t −0.80. Cash-null audit (Quant, 2026-09-26): About 40% of the rf=0 Sharpe gap was cash carry. In excess of BIL it is 0.97 vs 0.84 and the drawdown cut is unchanged, so the PASS as a risk overlay stands."
       }
+    },
+    {
+      "id": "epo_anchored_trend",
+      "name": "Bet 1 anchored EPO (12-1 trend signal)",
+      "detail": "Pedersen, Babu & Levine 2021 anchored EPO · w = 0.75 primary, 0.50 / 0.90 sensitivities · 119m OOS (2016-11 → 2026-09) · 5 bps · trial_count=11 (final)",
+      "badge": "FAIL",
+      "verdict": "Quant: FAIL / ARCHIVE, not book-eligible, no follow-up run. Sharpe ex-BIL 0.27 vs 0.61 for the 1/σ anchor it is built on; book-eligible: no.",
+      "null": "Weekly LW MinVar on the same names (primary); the 1/σ anchor is the book-eligibility bar",
+      "rows": [
+        {
+          "role": "method",
+          "label": "Anchored EPO, w = 0.75 (method)",
+          "sharpe": "0.27 (legacy 0.85)",
+          "maxdd": "−9.4%"
+        },
+        {
+          "role": "reference",
+          "label": "1/σ anchor (EPO at w = 1)",
+          "sharpe": "0.61 (legacy 0.84)",
+          "maxdd": "−16.9%"
+        },
+        {
+          "role": "null",
+          "label": "Weekly LW MinVar (primary null)",
+          "sharpe": "0.04 (legacy 0.69)",
+          "maxdd": "−10.0%"
+        }
+      ],
+      "nw_t": "n/a · LW2008 HAC z 2.15 vs LW MinVar (p 0.016), −1.89 vs the 1/σ anchor",
+      "dsr": "0.125 on Sharpe ex-BIL, not legacy (trial_count=11)",
+      "gate": {
+        "label": "gate_result.json",
+        "href": "https://github.com/jgridifier/usa-etf-feature-pipeline/blob/main/data/processed/epo_allocator/gate_result.json"
+      },
+      "method_page": "methods/allocation_alpha_epo.html",
+      "artifact": {
+        "label": "epo_allocator/summary.csv",
+        "href": "https://github.com/jgridifier/usa-etf-feature-pipeline/blob/main/data/processed/epo_allocator/summary.csv"
+      },
+      "archived": "2026-10-01",
+      "archived_via": "Quant verdict; the results page is the published record",
+      "nw_t_links": [
+        {
+          "label": "Results page",
+          "href": "methods/allocation_alpha_epo_results.html"
+        }
+      ]
     }
   ]
 }

@@ -31,6 +31,11 @@ interface ArchiveData {
 
 const archiveData: ArchiveData = relabelArchive(archive as ArchiveData)
 
+// Counts in the copy follow the cards (the file is append-only as gates are archived).
+const NUMBER_WORDS = ['zero', 'one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight', 'nine']
+const failCount = archiveData.cards.filter(card => card.badge === 'FAIL').length
+const failWord = NUMBER_WORDS[failCount] ?? String(failCount)
+
 const linkClass = 'text-muted hover:text-body underline underline-offset-2 decoration-border'
 
 function resolveHref(href: string) {
@@ -73,7 +78,7 @@ export default function Archive() {
           </p>
           <div className="inline-block border border-down/20 bg-down/5 px-4 py-3 text-xs text-muted max-w-2xl">
             <strong className="text-ink">Research only — not investment advice.</strong>{' '}
-            Negative / null results documented on purpose. The five failed methods are{' '}
+            Negative / null results documented on purpose. The {failWord} failed methods are{' '}
             <strong className="text-down">FAIL / ARCHIVE</strong> — not promoted to Books, not a
             showcase, not part of the live shortlist. Bet 1 NLS GMV v3 is VOID (concentrated holdings) and the
             minimum-variance line is closed. Unconditional vol-target backbone is an AUDIT NULL (not live, not a FAIL).
@@ -90,7 +95,7 @@ export default function Archive() {
               <span className="text-2xs font-medium uppercase tracking-label text-muted">CIO frame</span>
             </div>
             <p className="font-serif text-base italic text-ink leading-snug mb-3">
-              None of the five archived methods cleared its binding null, and NLS GMV v3 is VOID.{' '}
+              None of the {failWord} archived methods cleared its binding null, and NLS GMV v3 is VOID.{' '}
               <strong className="not-italic">No book cut.</strong>
             </p>
             <p className="text-sm text-body leading-relaxed">

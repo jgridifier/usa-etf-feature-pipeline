@@ -795,12 +795,6 @@ def build_runs() -> None:
 def load_archive_cards() -> dict:
     # Frozen record on disk; display labels relabelled here (VT -> vol-target backbone / Backbone).
     archive = relabel_archive(json.loads(ARCHIVE_JSON.read_text(encoding='utf-8')))
-    # Gates archived after the frozen record: cards built from their committed run output + verdict record.
-    epo_card = epo_results.archive_card()
-    if epo_card:
-        cards = archive['cards']
-        at = next((i for i, c in enumerate(cards) if c['badge'] not in ('FAIL', 'VOID')), len(cards))
-        cards.insert(at, epo_card)
     return archive
 
 
@@ -878,7 +872,7 @@ def build_archive_scoreboard() -> None:
         'Bet 1 NLS GMV v3 is VOID (concentrated holdings) and the minimum-variance line is closed. '
         'Unconditional vol-target backbone is an AUDIT NULL (not live, not a FAIL).</div>'
         '<div class="callout"><strong>CIO frame:</strong> '
-        '<p><em>None of the five archived methods cleared its binding null, and NLS GMV v3 is VOID.</em> <strong>No book cut.</strong></p>'
+        f'<p><em>None of the {NUMBER_WORDS.get(n_fail, n_fail)} archived methods cleared its binding null, and NLS GMV v3 is VOID.</em> <strong>No book cut.</strong></p>'
         '<p>Live shortlist: <strong>static core + vol-target backbone × gate-first skew overlay</strong> (Justina #6, PR #29). '
         'Unconditional vol-target backbone is the audit null that overlay was measured against — not live, not a FAIL.</p>'
         '<p>Further candidates must clear the same leakage · null · DSR · empirical gate. '

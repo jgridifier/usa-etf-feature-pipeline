@@ -254,6 +254,26 @@ ARCHIVE_ROWS = {
                    "USMV buy-and-hold (in-sample reference only)": ("nlsv3:buy_hold_usmv", "return")},
 }
 NLS_V3_RETURNS = "nonlinear_shrinkage_gmv_v3/oos_returns.csv"
+# Anchored EPO (archived 2026-10-01): figures are the gate run's own summary.csv (full window), not re-scored.
+EPO_SUMMARY = "epo_allocator/summary.csv"
+EPO_ARCHIVE_ROWS = {"Anchored EPO, w = 0.75 (method)": "epo_a_w075",
+                    "1/σ anchor (EPO at w = 1)": "anchor_ivol",
+                    "Weekly LW MinVar (primary null)": "lw_minvar_156w"}
+
+
+def epo_archive_figures(processed: Path = PROCESSED) -> dict:
+    path = processed / EPO_SUMMARY
+    if not path.exists():
+        return {}
+    s = pd.read_csv(path)
+    s = s.loc[s["period_role"].eq("full window")].set_index("strategy_id")
+    out = {}
+    for label, sid in EPO_ARCHIVE_ROWS.items():
+        r = s.loc[sid]
+        out[label] = {"exbil": round(float(r["Sharpe_exBIL"]), 4), "rf0_legacy": round(float(r["Sharpe_rf0_legacy"]), 4),
+                      "n_months": int(r["n_months"]), "window": f"{str(r['start'])[:10]}..{str(r['end'])[:10]}",
+                      "source": f"{EPO_SUMMARY} (gate run, full window)"}
+    return {"epo_anchored_trend": out}
 
 
 def site_sharpe_figures(processed: Path = PROCESSED, rf: pd.DataFrame | None = None,
@@ -320,7 +340,7 @@ def site_sharpe_figures(processed: Path = PROCESSED, rf: pd.DataFrame | None = N
             "score_rotate_xsd": _pair(short["score_rotate_xsd"], rf),
             "m3_p2_core_rotate": _pair(short["m3_p2_core_rotate"], rf),
         },
-        "archive": {cid: {label: _pair(series(*src), rf) for label, src in rows.items()}
-                    for cid, rows in ARCHIVE_ROWS.items()},
+        "archive": {**{cid: {label: _pair(series(*src), rf) for label, src in rows.items()}
+                       for cid, rows in ARCHIVE_ROWS.items()}, **epo_archive_figures(processed)},
         "skew_nulls": {k: _pair(six[k], rf) for k in ("EW", "MinVar", "ERC")},
     }
