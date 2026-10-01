@@ -127,3 +127,18 @@ def test_site_data_display_strings_have_no_bare_vt():
 def test_checker_examples():
     assert bare_vt('Book 2 tracked VT.') and bare_vt('VT backbone −20.1%')
     assert not bare_vt('vt.exbil VTI VTV VTEB r_vt Backbone vol-target backbone')
+
+
+def test_chart_legends_and_titles_label_the_backbone():
+    """ECharts text is drawn on canvas, so check the chart sources: the vol_target_option_a
+    series (the unconditional backbone) is labelled "Backbone", never "Book 2" or a bare vt/VT."""
+    charts = ROOT / 'apps' / 'pages' / 'src' / 'components' / 'charts'
+    eq = (charts / 'EquityDrawdownChart.tsx').read_text(encoding='utf-8')
+    assert eq.count("name: 'Backbone'") == 2          # equity + drawdown series
+    assert 'MaxDD Backbone' in eq
+    for path in sorted(charts.glob('*.tsx')):
+        src = path.read_text(encoding='utf-8')
+        labels = re.findall(r"""(?:name|text):\s*[`'"]([^`'"]*)[`'"]""", src)
+        for label in labels:
+            assert 'Book 2' not in label and 'Book-2' not in label, (path.name, label)
+            assert not re.search(r'(?<![A-Za-z0-9_.?])(vt|VT)(?![A-Za-z0-9_])', label), (path.name, label)
