@@ -1,0 +1,232 @@
+strategy_id,grouping,group,average_weight
+anchor_ivol,Category (known mislabels),Commodities / Metals,0.060586731062565326
+anchor_ivol,Category (known mislabels),Core / Aggregate Bonds,0.04714934339833032
+anchor_ivol,Category (known mislabels),EM Debt,0.02191908766634579
+anchor_ivol,Category (known mislabels),Global Equity (incl US),0.006944531390476447
+anchor_ivol,Category (known mislabels),High Yield Credit,0.0353703416503131
+anchor_ivol,Category (known mislabels),International Developed Equity,0.1214506874112461
+anchor_ivol,Category (known mislabels),International EM Equity,0.00583488540400557
+anchor_ivol,Category (known mislabels),Investment Grade Credit,0.057423967508742936
+anchor_ivol,Category (known mislabels),Municipal Bonds,0.06742832374343105
+anchor_ivol,Category (known mislabels),Other Fixed Income,0.009713507325899151
+anchor_ivol,Category (known mislabels),REITs / Real Estate,0.0006837853338788816
+anchor_ivol,Category (known mislabels),Sector / Factor / Thematic,0.013500867303049655
+anchor_ivol,Category (known mislabels),Specialty / Other,0.20984031839115133
+anchor_ivol,Category (known mislabels),TIPS / Inflation-Linked,0.040899839711626466
+anchor_ivol,Category (known mislabels),US Large / Broad Blend,0.061048448286429864
+anchor_ivol,Category (known mislabels),US Large Growth / Tech-tilt,0.006084471365941168
+anchor_ivol,Category (known mislabels),US Large Value,0.04655018645188274
+anchor_ivol,Category (known mislabels),US Mid Blend,0.03514310603475095
+anchor_ivol,Category (known mislabels),US Mid Growth,0.011485431101294597
+anchor_ivol,Category (known mislabels),US Mid Value,0.011653459363140148
+anchor_ivol,Category (known mislabels),US Small Blend,0.022781153207610674
+anchor_ivol,Category (known mislabels),US Small Growth,0.015288394965281947
+anchor_ivol,Category (known mislabels),US Small Value,0.01003836162677762
+anchor_ivol,Category (known mislabels),US Treasuries / Govt / Cash-like,0.08118077029582817
+anchor_ivol,exposure diagnostic,equity_only,0.48769042636608295
+anchor_ivol,exposure diagnostic,rest,0.512309573633917
+anchor_ivol,exposure diagnostic,commodity,0.07564251612346652
+anchor_ivol,exposure diagnostic,ISTB/VCSH/SJNK,0.09751390570706907
+book1_static_option_a,Category (known mislabels),US Large / Broad Blend,0.7
+book1_static_option_a,Category (known mislabels),US Large Growth / Tech-tilt,0.2
+book1_static_option_a,Category (known mislabels),US Small Blend,0.1
+book1_static_option_a,exposure diagnostic,equity_only,1.0000000000000004
+book1_static_option_a,exposure diagnostic,rest,0.0
+book1_static_option_a,exposure diagnostic,commodity,0.0
+book1_static_option_a,exposure diagnostic,ISTB/VCSH/SJNK,0.0
+epo_a_w050,Category (known mislabels),Commodities / Metals,0.08436779638977174
+epo_a_w050,Category (known mislabels),Core / Aggregate Bonds,0.024940038713469337
+epo_a_w050,Category (known mislabels),EM Debt,0.005430757913529294
+epo_a_w050,Category (known mislabels),Global Equity (incl US),1.9498241131466483e-17
+epo_a_w050,Category (known mislabels),High Yield Credit,0.02975193073213092
+epo_a_w050,Category (known mislabels),International Developed Equity,0.034226961843176994
+epo_a_w050,Category (known mislabels),International EM Equity,0.00019262442520867452
+epo_a_w050,Category (known mislabels),Investment Grade Credit,0.19112654473342952
+epo_a_w050,Category (known mislabels),Municipal Bonds,0.09789355698202781
+epo_a_w050,Category (known mislabels),Other Fixed Income,0.00233263756955356
+epo_a_w050,Category (known mislabels),REITs / Real Estate,1.409031352076292e-18
+epo_a_w050,Category (known mislabels),Sector / Factor / Thematic,0.001359500418932095
+epo_a_w050,Category (known mislabels),Specialty / Other,0.3012214220972388
+epo_a_w050,Category (known mislabels),TIPS / Inflation-Linked,0.04417994202700482
+epo_a_w050,Category (known mislabels),US Large / Broad Blend,0.002187124793123801
+epo_a_w050,Category (known mislabels),US Large Growth / Tech-tilt,0.0024180856353807384
+epo_a_w050,Category (known mislabels),US Large Value,0.004075196322635468
+epo_a_w050,Category (known mislabels),US Mid Blend,0.00013968575331346948
+epo_a_w050,Category (known mislabels),US Mid Growth,3.270836677285071e-05
+epo_a_w050,Category (known mislabels),US Mid Value,0.0002483589136198453
+epo_a_w050,Category (known mislabels),US Small Blend,0.0009055620771362179
+epo_a_w050,Category (known mislabels),US Small Growth,0.001500012571733134
+epo_a_w050,Category (known mislabels),US Small Value,0.0004440482121634722
+epo_a_w050,Category (known mislabels),US Treasuries / Govt / Cash-like,0.17102550350864745
+epo_a_w050,exposure diagnostic,equity_only,0.09971087310958776
+epo_a_w050,exposure diagnostic,rest,0.9002891268904122
+epo_a_w050,exposure diagnostic,commodity,0.10622655136616485
+epo_a_w050,exposure diagnostic,ISTB/VCSH/SJNK,0.3918167234853726
+epo_a_w075,Category (known mislabels),Commodities / Metals,0.05837880147133484
+epo_a_w075,Category (known mislabels),Core / Aggregate Bonds,0.03244467316779666
+epo_a_w075,Category (known mislabels),EM Debt,0.009166756660344517
+epo_a_w075,Category (known mislabels),Global Equity (incl US),6.45415006495562e-05
+epo_a_w075,Category (known mislabels),High Yield Credit,0.03804814745364051
+epo_a_w075,Category (known mislabels),International Developed Equity,0.024227904780312018
+epo_a_w075,Category (known mislabels),International EM Equity,0.00045344913571959965
+epo_a_w075,Category (known mislabels),Investment Grade Credit,0.20075951999664676
+epo_a_w075,Category (known mislabels),Municipal Bonds,0.08578903072737629
+epo_a_w075,Category (known mislabels),Other Fixed Income,0.001461835082977968
+epo_a_w075,Category (known mislabels),REITs / Real Estate,3.747463313146714e-19
+epo_a_w075,Category (known mislabels),Sector / Factor / Thematic,0.002905266828170402
+epo_a_w075,Category (known mislabels),Specialty / Other,0.32876584627713107
+epo_a_w075,Category (known mislabels),TIPS / Inflation-Linked,0.042540471736076016
+epo_a_w075,Category (known mislabels),US Large / Broad Blend,0.006725137663789734
+epo_a_w075,Category (known mislabels),US Large Growth / Tech-tilt,0.0024599465410251324
+epo_a_w075,Category (known mislabels),US Large Value,0.008358406001540013
+epo_a_w075,Category (known mislabels),US Mid Blend,0.0005545499500115348
+epo_a_w075,Category (known mislabels),US Mid Growth,0.00027827503972897724
+epo_a_w075,Category (known mislabels),US Mid Value,0.0003933766566786824
+epo_a_w075,Category (known mislabels),US Small Blend,0.0019496165573749124
+epo_a_w075,Category (known mislabels),US Small Growth,0.0023248640535884885
+epo_a_w075,Category (known mislabels),US Small Value,0.0012520077245878971
+epo_a_w075,Category (known mislabels),US Treasuries / Govt / Cash-like,0.1506975749934985
+epo_a_w075,exposure diagnostic,equity_only,0.08885909929303906
+epo_a_w075,exposure diagnostic,rest,0.9111409007069609
+epo_a_w075,exposure diagnostic,commodity,0.07217276888714332
+epo_a_w075,exposure diagnostic,ISTB/VCSH/SJNK,0.4214934162903144
+epo_a_w090,Category (known mislabels),Commodities / Metals,0.04993168597238338
+epo_a_w090,Category (known mislabels),Core / Aggregate Bonds,0.059174769309537696
+epo_a_w090,Category (known mislabels),EM Debt,0.011104839009021518
+epo_a_w090,Category (known mislabels),Global Equity (incl US),0.0006740962135814555
+epo_a_w090,Category (known mislabels),High Yield Credit,0.034838182054774104
+epo_a_w090,Category (known mislabels),International Developed Equity,0.024486274091931375
+epo_a_w090,Category (known mislabels),International EM Equity,0.0010895576100080455
+epo_a_w090,Category (known mislabels),Investment Grade Credit,0.15899042106202824
+epo_a_w090,Category (known mislabels),Municipal Bonds,0.09555197187235379
+epo_a_w090,Category (known mislabels),Other Fixed Income,0.0016940202883987795
+epo_a_w090,Category (known mislabels),REITs / Real Estate,1.59044914490862e-05
+epo_a_w090,Category (known mislabels),Sector / Factor / Thematic,0.003719126983481519
+epo_a_w090,Category (known mislabels),Specialty / Other,0.2989680542718856
+epo_a_w090,Category (known mislabels),TIPS / Inflation-Linked,0.052932210823879874
+epo_a_w090,Category (known mislabels),US Large / Broad Blend,0.01473232240091432
+epo_a_w090,Category (known mislabels),US Large Growth / Tech-tilt,0.002066001045730321
+epo_a_w090,Category (known mislabels),US Large Value,0.012934369641078237
+epo_a_w090,Category (known mislabels),US Mid Blend,0.003145546616185781
+epo_a_w090,Category (known mislabels),US Mid Growth,0.001450144034278905
+epo_a_w090,Category (known mislabels),US Mid Value,0.0011845654115180916
+epo_a_w090,Category (known mislabels),US Small Blend,0.002737033101698979
+epo_a_w090,Category (known mislabels),US Small Growth,0.002418586509325181
+epo_a_w090,Category (known mislabels),US Small Value,0.00153531306092334
+epo_a_w090,Category (known mislabels),US Treasuries / Govt / Cash-like,0.1646250041236324
+epo_a_w090,exposure diagnostic,equity_only,0.10563327017403176
+epo_a_w090,exposure diagnostic,rest,0.8943667298259682
+epo_a_w090,exposure diagnostic,commodity,0.059431536937100155
+epo_a_w090,exposure diagnostic,ISTB/VCSH/SJNK,0.3329093160943633
+equal_weight,Category (known mislabels),Commodities / Metals,0.09374580873295818
+equal_weight,Category (known mislabels),Core / Aggregate Bonds,0.017096530667834266
+equal_weight,Category (known mislabels),EM Debt,0.017096530667834266
+equal_weight,Category (known mislabels),Global Equity (incl US),0.008548265333917133
+equal_weight,Category (known mislabels),High Yield Credit,0.024174215977433237
+equal_weight,Category (known mislabels),International Developed Equity,0.15410653140719524
+equal_weight,Category (known mislabels),International EM Equity,0.008548265333917133
+equal_weight,Category (known mislabels),Investment Grade Credit,0.017096530667834266
+equal_weight,Category (known mislabels),Municipal Bonds,0.03419306133566853
+equal_weight,Category (known mislabels),Other Fixed Income,0.008548265333917133
+equal_weight,Category (known mislabels),REITs / Real Estate,0.0007858031018247311
+equal_weight,Category (known mislabels),Sector / Factor / Thematic,0.015423006034609634
+equal_weight,Category (known mislabels),Specialty / Other,0.239210760986351
+equal_weight,Category (known mislabels),TIPS / Inflation-Linked,0.017096530667834266
+equal_weight,Category (known mislabels),US Large / Broad Blend,0.07700338648279483
+equal_weight,Category (known mislabels),US Large Growth / Tech-tilt,0.009267900236178574
+equal_weight,Category (known mislabels),US Large Value,0.05839561787881561
+equal_weight,Category (known mislabels),US Mid Blend,0.0512895920035028
+equal_weight,Category (known mislabels),US Mid Growth,0.017096530667834266
+equal_weight,Category (known mislabels),US Mid Value,0.017096530667834266
+equal_weight,Category (known mislabels),US Small Blend,0.03757875419853916
+equal_weight,Category (known mislabels),US Small Growth,0.0256447960017514
+equal_weight,Category (known mislabels),US Small Value,0.017096530667834266
+equal_weight,Category (known mislabels),US Treasuries / Govt / Cash-like,0.033860254945785845
+equal_weight,exposure diagnostic,equity_only,0.6782297997160545
+equal_weight,exposure diagnostic,rest,0.3217702002839455
+equal_weight,exposure diagnostic,commodity,0.13648713540254387
+equal_weight,exposure diagnostic,ISTB/VCSH/SJNK,0.024174215977433237
+erc_lw,Category (known mislabels),Commodities / Metals,0.10982185443624104
+erc_lw,Category (known mislabels),Core / Aggregate Bonds,0.05235672599199883
+erc_lw,Category (known mislabels),EM Debt,0.01707333194715021
+erc_lw,Category (known mislabels),Global Equity (incl US),0.004049630318885834
+erc_lw,Category (known mislabels),High Yield Credit,0.02337396380333561
+erc_lw,Category (known mislabels),International Developed Equity,0.0788680981420516
+erc_lw,Category (known mislabels),International EM Equity,0.0040889322800852085
+erc_lw,Category (known mislabels),Investment Grade Credit,0.05252339334981778
+erc_lw,Category (known mislabels),Municipal Bonds,0.08177581136996294
+erc_lw,Category (known mislabels),Other Fixed Income,0.010345608103950455
+erc_lw,Category (known mislabels),REITs / Real Estate,0.0004945680054212947
+erc_lw,Category (known mislabels),Sector / Factor / Thematic,0.008581405575842638
+erc_lw,Category (known mislabels),Specialty / Other,0.18796604742863376
+erc_lw,Category (known mislabels),TIPS / Inflation-Linked,0.04368086176747946
+erc_lw,Category (known mislabels),US Large / Broad Blend,0.03774483350485369
+erc_lw,Category (known mislabels),US Large Growth / Tech-tilt,0.004269335598688937
+erc_lw,Category (known mislabels),US Large Value,0.028999989132676443
+erc_lw,Category (known mislabels),US Mid Blend,0.02110214315405523
+erc_lw,Category (known mislabels),US Mid Growth,0.0071161987759730955
+erc_lw,Category (known mislabels),US Mid Value,0.007070508384888951
+erc_lw,Category (known mislabels),US Small Blend,0.014739649244897799
+erc_lw,Category (known mislabels),US Small Growth,0.01004775730987444
+erc_lw,Category (known mislabels),US Small Value,0.006679798241568939
+erc_lw,Category (known mislabels),US Treasuries / Govt / Cash-like,0.1872295541316658
+erc_lw,exposure diagnostic,equity_only,0.32052115763457095
+erc_lw,exposure diagnostic,rest,0.679478842365429
+erc_lw,exposure diagnostic,commodity,0.13623098177811938
+erc_lw,exposure diagnostic,ISTB/VCSH/SJNK,0.08463625547019056
+lw_minvar_156w,Category (known mislabels),Commodities / Metals,0.04991219113268413
+lw_minvar_156w,Category (known mislabels),Core / Aggregate Bonds,0.03749494367194153
+lw_minvar_156w,Category (known mislabels),EM Debt,0.00048188295048353486
+lw_minvar_156w,Category (known mislabels),Global Equity (incl US),8.967868479552814e-18
+lw_minvar_156w,Category (known mislabels),High Yield Credit,0.036464814600935765
+lw_minvar_156w,Category (known mislabels),International Developed Equity,0.029080441724790795
+lw_minvar_156w,Category (known mislabels),International EM Equity,6.9251901724065086e-18
+lw_minvar_156w,Category (known mislabels),Investment Grade Credit,0.18044757690396998
+lw_minvar_156w,Category (known mislabels),Municipal Bonds,0.12139473215735538
+lw_minvar_156w,Category (known mislabels),Other Fixed Income,6.960301295170972e-18
+lw_minvar_156w,Category (known mislabels),REITs / Real Estate,6.287509111061265e-19
+lw_minvar_156w,Category (known mislabels),Sector / Factor / Thematic,8.713689031143773e-18
+lw_minvar_156w,Category (known mislabels),Specialty / Other,0.32012033860518513
+lw_minvar_156w,Category (known mislabels),TIPS / Inflation-Linked,0.018745441217587176
+lw_minvar_156w,Category (known mislabels),US Large / Broad Blend,4.467580471608508e-17
+lw_minvar_156w,Category (known mislabels),US Large Growth / Tech-tilt,5.654180049171832e-18
+lw_minvar_156w,Category (known mislabels),US Large Value,3.0557172357522675e-17
+lw_minvar_156w,Category (known mislabels),US Mid Blend,3.3276840192717367e-17
+lw_minvar_156w,Category (known mislabels),US Mid Growth,1.2492201058925595e-17
+lw_minvar_156w,Category (known mislabels),US Mid Value,1.0648348304406107e-17
+lw_minvar_156w,Category (known mislabels),US Small Blend,2.718300338017454e-17
+lw_minvar_156w,Category (known mislabels),US Small Growth,1.6641740113580053e-17
+lw_minvar_156w,Category (known mislabels),US Small Value,1.1642763448665412e-17
+lw_minvar_156w,Category (known mislabels),US Treasuries / Govt / Cash-like,0.2058576370350664
+lw_minvar_156w,exposure diagnostic,equity_only,0.04187504216192977
+lw_minvar_156w,exposure diagnostic,rest,0.9581249578380702
+lw_minvar_156w,exposure diagnostic,commodity,0.05720262911814749
+lw_minvar_156w,exposure diagnostic,ISTB/VCSH/SJNK,0.42204924804318156
+trend_ivol,Category (known mislabels),Commodities / Metals,0.07918027092658018
+trend_ivol,Category (known mislabels),Core / Aggregate Bonds,0.031522898096784616
+trend_ivol,Category (known mislabels),EM Debt,0.01774313491255358
+trend_ivol,Category (known mislabels),Global Equity (incl US),0.008000923608535668
+trend_ivol,Category (known mislabels),High Yield Credit,0.04521308234146496
+trend_ivol,Category (known mislabels),International Developed Equity,0.14208555668283737
+trend_ivol,Category (known mislabels),International EM Equity,0.0048930920881631165
+trend_ivol,Category (known mislabels),Investment Grade Credit,0.051116370417563485
+trend_ivol,Category (known mislabels),Municipal Bonds,0.052516924934311246
+trend_ivol,Category (known mislabels),Other Fixed Income,0.0067536943775556866
+trend_ivol,Category (known mislabels),REITs / Real Estate,0.0006678347913540205
+trend_ivol,Category (known mislabels),Sector / Factor / Thematic,0.01824735881518241
+trend_ivol,Category (known mislabels),Specialty / Other,0.21294748051846504
+trend_ivol,Category (known mislabels),TIPS / Inflation-Linked,0.03348855148552111
+trend_ivol,Category (known mislabels),US Large / Broad Blend,0.08020349772861106
+trend_ivol,Category (known mislabels),US Large Growth / Tech-tilt,0.008553940910386191
+trend_ivol,Category (known mislabels),US Large Value,0.05873883886410102
+trend_ivol,Category (known mislabels),US Mid Blend,0.03725845797879256
+trend_ivol,Category (known mislabels),US Mid Growth,0.012909715904770188
+trend_ivol,Category (known mislabels),US Mid Value,0.012147527145690038
+trend_ivol,Category (known mislabels),US Small Blend,0.019738465958458462
+trend_ivol,Category (known mislabels),US Small Growth,0.01464373714746505
+trend_ivol,Category (known mislabels),US Small Value,0.008179136677871289
+trend_ivol,Category (known mislabels),US Treasuries / Govt / Cash-like,0.04324950768698164
+trend_ivol,exposure diagnostic,equity_only,0.5634487555516421
+trend_ivol,exposure diagnostic,rest,0.436551244448358
+trend_ivol,exposure diagnostic,commodity,0.10330823276557176
+trend_ivol,exposure diagnostic,ISTB/VCSH/SJNK,0.08729337338176003

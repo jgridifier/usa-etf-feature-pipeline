@@ -235,3 +235,14 @@ strategies:
       min_names: 65
       cost_bps: 5.0
     enabled: false
+
+  - id: epo_anchored_trend
+    display_name: "Anchored EPO allocator (research/pre-gate)"
+    method_citation_id: pedersen_babu_levine_2021_epo
+    method_citation: "Pedersen, Babu & Levine (2021), FAJ 77(2) 124–151, doi:10.1080/0015198X.2020.1854543; Baltussen, Swinkels & van Vliet (2021), JFE 142(3) 1128–1154, doi:10.1016/j.jfineco.2021.06.030; Ledoit & Wolf (2004), JMVA 88(2) 365–411 (LW2004); Ledoit & Wolf (2008), JEF 15(5) 850–859 (LW2008); Bailey & López de Prado (2014), JPM 40(5) 94–107."
+    entrypoint: usa_etf_features.strategy_registry:epo_anchored_trend
+    default_params:
+      weekly_csv: data/raw/usa_universe_panel_weekly_returns.csv
+      monthly_csv: data/raw/usa_universe_panel_monthly_returns.csv
+      coverage_csv: data/raw/usa_universe_panel_history_coverage.csv
+    enabled: false

@@ -48,6 +48,23 @@ IWB IWC IWD IWM IWN IWO IWP IWR IWS IWV IYY JPXN JUST KBE KRE LOUP MDY PID PRF Q
 SCHF SCHM SCHX SCZ SDIV SDY SPY SPYM SPYV SUSA TMDV USMV VEA VEU VGK VIOG VLUE VO VOO VOOV VTI VTV
 VTWO VV VXF VYM XBI XRT XSD
 """.split())
+EPO_UNIVERSE_COLUMN = "epo_universe"
+EPO_ASSET_CLASS_COLUMN = "epo_asset_class"
+EPO_BOND = frozenset("AGG BND EMLC GOVT HYD IEF IEI ILTB ISTB JNK LEMB MBB MUB NYF SCHP SJNK TIP TLT VCIT VCSH".split())
+EPO_COMMODITY = frozenset("BNO CANE CORN GLD GSG IAU IAUM PALL PPLT SLV SOYB TAGS UGA UNG USL USO WEAT".split())
+EPO_UNIVERSE = EQUITY_ONLY | EPO_BOND | EPO_COMMODITY | frozenset({"VT", "SPHD"})
+assert len(EPO_UNIVERSE) == 135
+
+
+def epo_universe_tickers(universe):
+    return tagged_tickers(universe, EPO_UNIVERSE_COLUMN)
+
+
+def epo_asset_class(universe) -> pd.Series:
+    """Explicit exposure tags indexed by ticker; Category is never consulted."""
+    return universe.set_index("Ticker")[EPO_ASSET_CLASS_COLUMN].fillna("")
+
+
 CASH_LIKE_COLUMN = "cash_like"
 SHORT_DURATION_COLUMN = "short_duration"
 NEAR_CASH_COLUMN = "near_cash"

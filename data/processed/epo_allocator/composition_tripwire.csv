@@ -1,0 +1,3 @@
+strategy_id,cash_like_share_mean,short_duration_share_mean,near_cash_share_mean,cash_duration_share_mean,computable,not_computable_reason
+epo_a_w075,0.0,0.0,0.0,0.0,True,
+lw_minvar_156w,0.0,0.0,0.0,0.0,True,

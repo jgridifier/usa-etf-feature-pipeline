@@ -49,6 +49,7 @@ import sys  # noqa: E402
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from build_notes import build_notes, notes_list_html  # noqa: E402
 from labels import relabel_archive  # noqa: E402
+import build_epo_results as epo_results  # noqa: E402
 
 
 def read_csv(name: str) -> list[dict]:
@@ -793,13 +794,32 @@ def build_runs() -> None:
 
 def load_archive_cards() -> dict:
     # Frozen record on disk; display labels relabelled here (VT -> vol-target backbone / Backbone).
-    return relabel_archive(json.loads(ARCHIVE_JSON.read_text(encoding='utf-8')))
+    archive = relabel_archive(json.loads(ARCHIVE_JSON.read_text(encoding='utf-8')))
+    # Gates archived after the frozen record: cards built from their committed run output + verdict record.
+    epo_card = epo_results.archive_card()
+    if epo_card:
+        cards = archive['cards']
+        at = next((i for i, c in enumerate(cards) if c['badge'] not in ('FAIL', 'VOID')), len(cards))
+        cards.insert(at, epo_card)
+    return archive
+
+
+def archive_counts(archive: dict) -> dict:
+    counts: dict = {}
+    for card in archive['cards']:
+        counts[card['badge']] = counts.get(card['badge'], 0) + 1
+    return counts
+
+
+NUMBER_WORDS = {1: 'one', 2: 'two', 3: 'three', 4: 'four', 5: 'five', 6: 'six', 7: 'seven', 8: 'eight', 9: 'nine'}
 
 
 def verdict_card_html(card, prefix) -> str:
     method_page = card['method_page']
+    results_page = card.get('results_page', '')
     if not prefix:
         method_page = method_page.removeprefix('methods/')
+        results_page = results_page.removeprefix('methods/')
     badge_class = 'badge badge-fail' if card['badge'] == 'FAIL' else 'badge'
     rows = [[row['label'], row['sharpe'], row['maxdd']] for row in card['rows']]
 
@@ -829,7 +849,8 @@ def verdict_card_html(card, prefix) -> str:
         + f'<p><strong>NW t:</strong> {escape(card["nw_t"])}{nw_links} · <strong>DSR (legacy rf = 0 Sharpe, vs zero):</strong> {escape(card["dsr"])}</p>'
         '<p class="muted">Gate memo / PR: '
         f'<a href="{escape(card["gate"]["href"])}" target="_blank" rel="noreferrer">{escape(card["gate"]["label"])}</a> · '
-        f'<a href="{escape(prefix + method_page)}">Method page</a> · OOS artifact: '
+        + (f'<a href="{escape(prefix + results_page)}">Results page</a> · ' if results_page else '')
+        + f'<a href="{escape(prefix + method_page)}">Method page</a> · OOS artifact: '
         f'<a href="{escape(card["artifact"]["href"])}" target="_blank" rel="noreferrer">{escape(card["artifact"]["label"])}</a> · '
         f'Archived {escape(card["archived"])} ({escape(card["archived_via"])})</p></article>'
     )
@@ -837,10 +858,13 @@ def verdict_card_html(card, prefix) -> str:
 
 def build_archive_scoreboard() -> None:
     archive = load_archive_cards()
+    n_fail = archive_counts(archive).get('FAIL', 0)
+    has_epo = any(c['id'] == 'epo_anchored_trend' for c in archive['cards'])
     subtitle = (
         'Archived methods: Justina round-1 (Spectral RP, Regime-Aware), #13 VCFC, #4 FT-MED, #3 RR-ERC, '
         'Bet 1 NLS GMV v3 (VOID) · '
-        'plus the unconditional vol-target backbone audit null · USA ETF experimental panel · '
+        + ('Bet 1 anchored EPO (FAIL) · ' if has_epo else '')
+        + 'plus the unconditional vol-target backbone audit null · USA ETF experimental panel · '
         f'updated {archive["updated"]} (ET)'
     )
     content = (
@@ -849,7 +873,7 @@ def build_archive_scoreboard() -> None:
         '<h1>Methods Archive scoreboard</h1>'
         f'<p class="muted">{escape(subtitle)}</p>'
         '<div class="callout"><strong>Research only — not investment advice.</strong> '
-        'Negative / null results documented on purpose. The five failed methods are '
+        f'Negative / null results documented on purpose. The {NUMBER_WORDS.get(n_fail, n_fail)} failed methods are '
         '<strong>FAIL / ARCHIVE</strong> — not promoted to Books, not a showcase, not part of the live shortlist. '
         'Bet 1 NLS GMV v3 is VOID (concentrated holdings) and the minimum-variance line is closed. '
         'Unconditional vol-target backbone is an AUDIT NULL (not live, not a FAIL).</div>'
@@ -859,7 +883,7 @@ def build_archive_scoreboard() -> None:
         'Unconditional vol-target backbone is the audit null that overlay was measured against — not live, not a FAIL.</p>'
         '<p>Further candidates must clear the same leakage · null · DSR · empirical gate. '
         '<a href="../index.html#/">Back to live shortlist →</a></p></div>'
-        '<h2>Verdict cards</h2>'
+        + '<h2>Verdict cards</h2>'
         + ''.join(verdict_card_html(card, '') for card in archive['cards'])
         + '<h2>What cleared the process (not the nulls)</h2><ul>'
         '<li>Walk-forward leakage gates + unit tests (decision / feature_end ≤ t; labels next month).</li>'
@@ -881,13 +905,18 @@ def build_methods_index() -> None:
     methods = [
         ('allocation_alpha_vol_target.html', 'Allocation alpha: volatility-managed Option A'),
         ('skewness_managed_stub.html', 'Skewness-Managed Book-2 Overlay (Justina #6 · gate-first PASS)'),
-        ('allocation_alpha_epo.html', 'Enhanced Portfolio Optimization (EPO) with a 12-1 trend signal (Bet 1 · pre-gate)'),
+        ('allocation_alpha_epo.html', 'Enhanced Portfolio Optimization (EPO) with a 12-1 trend signal (Bet 1'
+         + (')' if epo_results.available() else ' · pre-gate)')),
+        *([(epo_results.PAGE.removeprefix('methods/'),
+            'EPO gate results: ' + (epo_results.load_verdict().get('verdict_label') or f'{epo_results.label()} · pending Quant review'))]
+          if epo_results.available() else []),
         ('spectral_risk_parity_adia.html', 'Spectral Risk Parity (ADIA Lab): teaching note (archived)'),
         ('regime_aware_dual_regime_allocation.html', 'Regime-Aware Dual-Regime Allocation: teaching note (archived)'),
         ('ot_short_term_forecasting.html', 'Optimal transport: short-term forecasting'),
         ('ts_explorer_metric_menu.html', 'Time Series Explorer: quant metric menu'),
     ]
     archive = load_archive_cards()
+    counts = archive_counts(archive)
     content = (
         '<section class="hero hero-compact"><div class="hero-inner">'
         '<span class="badge">Teaching notes</span><h1>Methods</h1>'
@@ -902,7 +931,7 @@ def build_methods_index() -> None:
         '<h2 id="notes">Notes for Jared</h2>'
         + notes_list_html('../notes/')
         + '<h2 id="archive">Archive / failed nulls</h2>'
-        '<p class="lede archive-lede">5 FAIL / ARCHIVE methods + 1 VOID (NLS GMV v3) + 1 AUDIT NULL — research record only; <strong>not live books</strong>. '
+        f'<p class="lede archive-lede">{counts.get("FAIL", 0)} FAIL / ARCHIVE methods + {counts.get("VOID", 0)} VOID (NLS GMV v3) + {counts.get("AUDIT NULL", 0)} AUDIT NULL — research record only; <strong>not live books</strong>. '
         'Live shortlist: static core + vol-target backbone × gate-first skew overlay (Justina #6). '
         'Unconditional vol-target backbone is the audit null, not a FAIL.</p>'
         + ''.join(verdict_card_html(card, '') for card in archive['cards'])
@@ -916,7 +945,7 @@ def build_methods_index() -> None:
 
 def restyle_methods_shell() -> None:
     methods = sorted(
-        p.name for p in (DOCS / 'methods').glob('*.html') if p.name not in {'index.html', 'justina_round1_scoreboard.html'}
+        p.name for p in (DOCS / 'methods').glob('*.html') if p.name not in {'index.html', 'justina_round1_scoreboard.html', epo_results.PAGE.removeprefix('methods/')}
     )
     for name in methods:
         p = DOCS / 'methods' / name
@@ -963,6 +992,7 @@ def main() -> None:
         if path.exists():
             path.unlink()
             print('Removed leftover', leftover)
+    epo_results.build_epo_results(page_shell, write_page)
     build_methods_index()
     build_archive_scoreboard()
     restyle_methods_shell()

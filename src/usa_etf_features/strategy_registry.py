@@ -827,6 +827,32 @@ def nonlinear_shrinkage_gmv_v3_equity_only(prices, spec, *, universe_csv, asof=N
     return StrategyResult(formatted, diagnostics, returns)
 
 
+def epo_anchored_trend(prices, spec, *, universe_csv, asof=None) -> StrategyResult:
+    """Disabled research adapter; latest evaluated primary weights, complete months."""
+    from .epo_allocator import METHOD, run_epo_backtest
+    from .monthly_panel import load_monthly_panel
+    from .gate_metrics import risk_free_monthly
+    params = dict(spec.default_params)
+    weekly = pd.read_csv(params.pop("weekly_csv"), index_col=0, parse_dates=True)
+    monthly = load_monthly_panel(params.pop("monthly_csv"), coverage=params.pop("coverage_csv", None))
+    if asof is not None:
+        cutoff = pd.Timestamp(asof)
+        monthly = monthly.loc[:cutoff]
+        if cutoff < cutoff + pd.offsets.BMonthEnd(0):
+            monthly = monthly.loc[monthly.index.to_period("M") < cutoff.to_period("M")]
+        weekly = weekly.loc[:cutoff]
+    universe = pd.read_csv(universe_csv)
+    result = run_epo_backtest(weekly, monthly, universe, rf=risk_free_monthly(), **params)
+    weights = result["weights"].query("strategy_id == @METHOD")
+    latest = weights.loc[weights.decision_date.eq(weights.decision_date.max())]
+    formatted = _format_weights(latest[["ticker", "weight"]], strategy_id=spec.id,
+                                date=latest.decision_date.iloc[0])
+    diagnostics = result["projection_diagnostics"].query("strategy_id == @METHOD").copy()
+    returns = result["oos_returns"].query("strategy_id == @METHOD").copy()
+    diagnostics["strategy_id"] = returns["strategy_id"] = spec.id
+    return StrategyResult(formatted, diagnostics, returns)
+
+
 def spectral_risk_parity(prices, spec, *, universe_csv, asof=None) -> StrategyResult:
     """Run full panel or derive monthly returns from the supplied daily prices."""
     from .spectral_risk_parity import SpectralTrial, read_returns, run_spectral_trial
@@ -899,6 +925,8 @@ def _strategy_current_result(
 ) -> StrategyResult:
     if spec.entrypoint == "usa_etf_features.strategy_registry:nonlinear_shrinkage_gmv":
         return nonlinear_shrinkage_gmv(prices, spec, universe_csv=universe_csv, asof=asof)
+    if spec.entrypoint == "usa_etf_features.strategy_registry:epo_anchored_trend":
+        return epo_anchored_trend(prices, spec, universe_csv=universe_csv, asof=asof)
     if spec.entrypoint == "usa_etf_features.strategy_registry:nonlinear_shrinkage_gmv_v3_equity_only":
         return nonlinear_shrinkage_gmv_v3_equity_only(prices, spec, universe_csv=universe_csv, asof=asof)
     if spec.entrypoint == "usa_etf_features.strategy_registry:nonlinear_shrinkage_gmv_v2_excash":

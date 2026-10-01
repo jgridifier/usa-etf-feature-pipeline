@@ -1,0 +1,12 @@
+trial_id,line,window_weeks,status,Sharpe_exBIL_annual,Sharpe_rf0_legacy_recorded,source,preregistered,trial_count,w
+v1_invalid_w156,v1,156,"invalid (numerical bug), counted",,0.796,invalidated v1 legacy record,True,11,
+v1_invalid_w260,v1,260,"invalid (numerical bug), counted",,0.733,invalidated v1 legacy record,True,11,
+v1_w156,v1,156,valid,0.09335655756172109,,data/processed/nonlinear_shrinkage_gmv/oos_returns.csv,True,11,
+v1_w260,v1,260,valid,0.03836411353745967,,data/processed/nonlinear_shrinkage_gmv/oos_returns.csv,True,11,
+v2_w156,v2,156,valid,-0.4893806276166144,,data/processed/nonlinear_shrinkage_gmv_v2/summary.csv,True,11,
+v2_w260,v2,260,valid,-0.5267547832148654,,data/processed/nonlinear_shrinkage_gmv_v2/summary.csv,True,11,
+v3_w156,v3,156,valid,0.5282293945809092,,HEAD:data/processed/nonlinear_shrinkage_gmv_v3/summary.csv,True,11,
+v3_w260,v3,260,valid,0.6115398362811979,,HEAD:data/processed/nonlinear_shrinkage_gmv_v3/summary.csv,True,11,
+epo_a_w075,epo,156,valid,0.2683587476472725,,current EPO full-window method,True,11,0.75
+epo_a_w050,epo,156,valid,0.35394567145119255,,current EPO full-window method,True,11,0.5
+epo_a_w090,epo,156,valid,0.196715936056583,,current EPO full-window method,True,11,0.9
