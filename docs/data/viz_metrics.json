@@ -1,19 +1,19 @@
 {
   "trial_id": "VT_option_a_L63_sigexpanding_fmax1p0",
-  "AnnReturn_vt": 0.14725536694852637,
-  "AnnVol_vt": 0.13903843066788696,
+  "AnnReturn_vt": 0.15073070287175083,
+  "AnnVol_vt": 0.1386311754124008,
   "MaxDD_vt": -0.201285918526651,
-  "Sharpe_vt": 1.0590983100224047,
-  "AnnReturn_a": 0.1468414603389736,
-  "AnnVol_a": 0.15886906598980804,
+  "Sharpe_vt": 1.0872785462819332,
+  "AnnReturn_a": 0.15031554243105405,
+  "AnnVol_a": 0.15850858549167818,
   "MaxDD_a": -0.25562713849928165,
-  "Sharpe_a": 0.9242923373666334,
+  "Sharpe_a": 0.9483116763977792,
   "NW_t": -0.2236410579342544,
   "n_months": 68,
   "start_date": "2021-02-26",
-  "end_date": "2026-09-16",
+  "end_date": "2026-09-30",
   "mean_f": 0.9303998818557687,
   "pct_months_f_lt_1": 0.2647058823529412,
-  "Sharpe_exbil_vt": 0.8394,
-  "Sharpe_exbil_a": 0.7509
+  "Sharpe_exbil_vt": 0.8615,
+  "Sharpe_exbil_a": 0.7699
 }

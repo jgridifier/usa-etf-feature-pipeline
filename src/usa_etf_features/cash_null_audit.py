@@ -17,11 +17,21 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 
-from .gate_metrics import gate_sharpe_table, risk_free_monthly, window_rf_coverage
+from .gate_metrics import gate_sharpe_table, load_bil_monthly, risk_free_monthly, window_rf_coverage
 from .vol_target import newey_west_tstat
 
 _REPO = Path(__file__).resolve().parents[2]
 PROCESSED = _REPO / "data" / "processed"
+
+
+def frozen_audit_rf(processed: Path = PROCESSED) -> pd.DataFrame:
+    """Risk-free series at the frozen gate evidence's 2026-09-16 close.
+
+    The BIL column is preserved verbatim from that committed monthly panel;
+    the shared helper still supplies TB3MS before BIL's first full month.
+    """
+    return risk_free_monthly(load_bil_monthly(
+        processed / "cash_null_audit" / "bil_monthly_asof_20260916.csv"))
 
 # The memo's VCFC row is trial L126_C12_g0p25 (65 months): the first trial alphabetically, NOT the
 # headline trial. The Archive card / Methods table headline is the best Sharpe trial L21_C12_g0p5 (70 months).
@@ -246,9 +256,32 @@ ARCHIVE_ROWS = {
 NLS_V3_RETURNS = "nonlinear_shrinkage_gmv_v3/oos_returns.csv"
 
 
-def site_sharpe_figures(processed: Path = PROCESSED, rf: pd.DataFrame | None = None) -> dict:
-    """Every Sharpe the Pages site shows: excess of BIL (headline) + legacy rf = 0."""
+def site_sharpe_figures(processed: Path = PROCESSED, rf: pd.DataFrame | None = None,
+                       *, live_dir: Path | None = None) -> dict:
+    """Site Sharpe; opt into refreshed live paths without re-scoring gate evidence.
+
+    Without live_dir, retain the original audit calculation on processed and rf.
+    With live_dir, the archive, cash0 evidence and auxiliary gate nulls use the
+    frozen as-of risk-free snapshot; only the live books/run/comparison refresh.
+    """
     rf = risk_free_monthly() if rf is None else rf
+    if live_dir is not None:
+        result = site_sharpe_figures(processed, frozen_audit_rf(processed))
+        live_dir = Path(live_dir)
+        six = _read("skew_managed_gatefirst_returns.csv", live_dir).set_index("date")
+        vt = _read("vol_target_oos_returns.csv", live_dir).set_index("date")
+        short = _read("strategy_returns.csv", live_dir)
+        # The registry comparison uses the intersection of strategy months.
+        short["month"] = short["date"].dt.to_period("M")
+        short = short.pivot(index="month", columns="strategy_id", values="return").dropna()
+        for key, col in (("book1_static_core", "r_null_b"),
+                         ("book2_vt_x_gatefirst", "r_method"),
+                         ("uncond_vt_audit_null", "r_null_a")):
+            result["books"][key] = _pair(six[col], rf)
+        result["vol_target_run"] = {"vt": _pair(vt["r_vt"], rf),
+                                    "option_a": _pair(vt["r_option_a"], rf)}
+        result["comparison"] = {sid: _pair(short[sid], rf) for sid in short.columns}
+        return result
     frames = gate_frames(processed)
     six = frames["#6 skew gate-first (live Book 2)"]
     vc = _read("vol_cond_factor_corr/vol_cfc_oos_returns.csv", processed)

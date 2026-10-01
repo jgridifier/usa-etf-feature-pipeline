@@ -1,0 +1,84 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CIO note: candidates for the 100+ ETF allocator (30 Sep 2026) | USA ETF Lab</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,wght@0,400;0,500;0,600;1,400;1,600&family=Playfair+Display:wght@700;900&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/style.css">
+
+</head>
+<body>
+<header class="site-header"><div class="site-header-inner"><a class="brand" href="../index.html">USA ETF Lab</a><button type="button" class="nav-toggle" aria-expanded="false" aria-controls="site-nav" aria-label="Open menu"><span class="nav-toggle-bars" aria-hidden="true"></span></button><nav class="site-nav" id="site-nav" aria-label="Main"><a href="../index.html">Home</a><a href="../index.html#/books">Books</a><a href="../index.html#/runs">Runs</a><a href="../explorer/index.html">Explorer</a><a href="../methods/index.html" class="is-active">Methods</a></nav></div></header>
+<main class="page">
+<section class="band"><div class="band-inner note-body"><p><span class="badge">Note for Jared</span></p><h1>CIO note: candidates for the 100+ ETF allocator (2026-09-30)</h1>
+<p>Research on an experimental ETF panel for Jared's own decisions. Not investment advice.</p>
+<h2>Requirements (from Jared)</h2>
+<ul><li>
+Every method must come from a peer-reviewed or working paper published in 2020 or later.
+</li><li>
+Statistical or classical ML methods only. No large pretrained models.
+</li><li>
+Gate (unchanged): beat LW min-variance on Sharpe above BIL, using complete-month panels, with the composition tripwire on.
+</li></ul>
+<h2>Why risk-only allocators keep failing here</h2>
+<p>Nonlinear-shrinkage GMV failed three times (v1–v3). Long-only, risk-only allocators collapse into the lowest-volatility funds: first cash, then short bonds, then USMV/EFAV. The no-short constraint already does most of the shrinking (Jagannathan &amp; Ma 2003). To beat min-variance on Sharpe, a method probably needs return information.</p>
+<h2>Candidates (CIO ranking; citations checked by Quant)</h2>
+<ol><li>
+<strong>Anchored EPO.</strong> Pedersen, Babu &amp; Levine (2021), <em>Financial Analysts Journal</em> 77(2), 124–151, doi:10.1080/0015198X.2020.1854543.
+<ul><li>
+Mechanism: shrinks correlations toward the identity by w, around an anchor portfolio. At w=1 it returns the anchor itself.
+</li><li>
+Uses a return signal: 12-1 excess-of-BIL trend (Baltussen, Swinkels &amp; van Vliet 2021, <em>JFE</em> 142(3)).
+</li><li>
+Failure modes: a weak signal falls back toward min-var, and a strong one concentrates in recent winners.
+</li><li>
+Quant's caveat: the paper's gains are gross of costs and come from long-short books. Long-only runs are its weakest.
+</li><li>
+<strong>Selected by Quant.</strong>
+</li></ul>
+</li><li>
+<strong>Schur complementary allocation.</strong> Cotton (2024), arXiv 2411.05807. This is a working paper with no journal publication.
+<ul><li>
+Mechanism: interpolates between HRP and min-variance via γ. It uses risk only.
+</li><li>
+Failure modes: at low γ it is HRP, which on a mixed universe drifts into cash and short bonds. At high γ it is just min-var.
+</li></ul>
+</li><li>
+<strong>GMV plus a scaled tilt under estimation risk.</strong> Kan, Wang &amp; Zhou (2022), <em>Management Science</em> 68(3).
+<ul><li>
+Mechanism: 100% sample GMV plus a scaled zero-investment tilt.
+</li><li>
+At our size (about 100+ assets over about 119 months) the scale is roughly 0–0.05, so it is effectively GMV. Diagnostic only.
+</li></ul>
+</li></ol>
+<h2>Pre-registered EPO conditions</h2>
+<div class="table-scroll" tabindex="0" role="region" aria-label="table"><table><thead><tr><th scope="col">Setting</th><th scope="col">Value</th></tr></thead><tbody><tr><td>Primary w</td><td>0.75</td></tr><tr><td>Sensitivities</td><td>w = 0.50, 0.90</td></tr><tr><td>trial_count</td><td>11</td></tr><tr><td>Anchor</td><td>1/σ</td></tr><tr><td>Signal</td><td>12-1 is final</td></tr></tbody></table></div>
+<p><strong>Universe:</strong> the EPO universe has 135 names: 98 equity, 20 bond and 17 commodity. Cash-like, short-duration and near-cash funds are excluded.</p>
+<p><strong>Gate:</strong></p>
+<ul><li>
+Null: LW min-variance on the same names. Test: LW2008 Sharpe-difference test on Sharpe above BIL.
+</li><li>
+Composition tripwire: limit ≤50%.
+</li><li>
+Effective N ≥ 5 applies to the method only. The null's effective N is a diagnostic.
+</li></ul>
+<p><strong>Book eligibility (CIO):</strong> a PASS counts toward a book only if all three of these hold:</p>
+<ol><li>
+The w=0.75 point estimate of Sharpe above BIL is higher than the 1/σ anchor's, on the full OOS window.
+</li><li>
+EPO beats Book 1 on Sharpe above BIL or MaxDD. Both are net of costs and measured on the overlapping months from 2020-11. The published gross series is printed as a reference.
+</li><li>
+The average OOS equity share is at least 50%. Asset class comes from the EPO universe's asset-class tags.
+</li></ol>
+<p>If any of these fails, the result is research-only.</p>
+<p><strong>Power caveat:</strong> with about 119 months, a Sharpe gap of about 0.5 is needed for p≤0.05. A modest real edge may read "not significant", and it will be recorded that way, with no reruns.</p><p class="dl"><a href="allocator_candidates.md">Markdown source</a> · <a href="../methods/index.html#notes">All notes</a></p></div></section>
+</main>
+<footer class="site-footer">
+<p>Research only; not investment advice; experimental panel; no performance guarantees.</p>
+<p class="muted">Static GitHub Pages · Research only</p>
+</footer>
+
+<script src="../assets/nav.js" defer></script>
+</body>
+</html>

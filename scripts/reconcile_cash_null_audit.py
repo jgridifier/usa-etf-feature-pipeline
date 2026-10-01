@@ -10,6 +10,7 @@ Input committed alongside: shortlist_strategy_returns.csv (see data/processed/ca
 from __future__ import annotations
 
 import json
+import argparse
 import sys
 from pathlib import Path
 
@@ -30,10 +31,23 @@ def _fmt(x, nd=4):
 
 
 def main() -> None:
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--site-only", action="store_true", help="Leave frozen audit tables untouched")
+    parser.add_argument("--live-dir", type=Path, help="Refreshed live returns; requires --site-only")
+    args = parser.parse_args()
+    if args.live_dir is not None and not args.site_only:
+        parser.error("--live-dir requires --site-only; archived audit tables are frozen")
+    if args.site_only:
+        figures = cna.site_sharpe_figures(live_dir=args.live_dir,
+                                        rf=None if args.live_dir else cna.frozen_audit_rf())
+        (OUT / "site_sharpe.json").write_text(json.dumps(figures, indent=2) + "\n", encoding="utf-8")
+        print(f"wrote {OUT / 'site_sharpe.json'}")
+        return
     OUT.mkdir(parents=True, exist_ok=True)
-    rec = cna.reconciliation_table()
-    fb = cna.fallback_shares()
-    counts = cna.trial_counts()
+    rf = cna.frozen_audit_rf()
+    rec = cna.reconciliation_table(rf=rf)
+    fb = cna.fallback_shares(rf=rf)
+    counts = cna.trial_counts(rf=rf)
     rec.to_csv(OUT / "reconciliation.csv", index=False, float_format="%.6f", lineterminator="\n")
     fb.to_csv(OUT / "rf_fallback_share.csv", index=False, float_format="%.6f", lineterminator="\n")
     (OUT / "trial_counts.json").write_text(json.dumps(
@@ -64,7 +78,7 @@ def main() -> None:
         lines.append(f"| {r.gate} | {r.start}..{r.end} | {r.n_months} | {r.fallback_months} | "
                      f"{r.fallback_share:.1%} | {r.bil_share:.1%} | {r.memo_bil_share_pct}% |")
     (OUT / "reconciliation.md").write_text("\n".join(lines) + "\n", encoding="utf-8")
-    (OUT / "site_sharpe.json").write_text(json.dumps(cna.site_sharpe_figures(), indent=2) + "\n", encoding="utf-8")
+    (OUT / "site_sharpe.json").write_text(json.dumps(cna.site_sharpe_figures(rf=rf), indent=2) + "\n", encoding="utf-8")
     print(f"wrote {OUT}")
 
 

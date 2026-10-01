@@ -306,17 +306,19 @@ New gate runs use `monthly_panel.load_monthly_panel`, whose
 month. Detection uses the panel's own daily source dates: an explicit `asof` wins,
 otherwise the maximum coverage `end` (DataFrame or CSV path), otherwise the last
 panel date. The US equity trading calendar includes full-day holidays and special
-closures; the cutoff has no hard-coded dates. A dropped month emits a WARNING,
+closures. The cutoff is computed from the trading calendar, but
+`SPECIAL_FULL_DAY_CLOSURES` is a hand-maintained list of exceptional NYSE closures
+that must be updated when one occurs. A dropped month emits a WARNING,
 for example: `monthly panel panel.csv: dropped partial final month 2026-09 (source data through 2026-09-16; last session 2026-09-30)`.
 The loader records `dropped_partial_month`, `source_asof`, and
 `complete_months_only` in frame attrs; in-memory panels can use
 `drop_partial_final_month`.
 
 - Spectral RP's `read_returns` uses the shared complete-month rule, replacing its
-  business-month-end heuristic. Both exclude the same final row on the committed
-  panel, preserving archived spectral RP and NLS GMV v1/v2 results.
+  business-month-end heuristic. The refreshed committed
+  panel now ends in a complete September; archived spectral RP and NLS GMV v1/v2 outputs remain unchanged.
 - `gate_metrics.load_bil_monthly` explicitly uses `complete_months_only=False`:
-  published Book 2 / VT Sharpe uses 68 months through 2026-09-16.
+  published Book 2 / VT Sharpe uses 68 complete months through 2026-09-30.
 - Archived NLS GMV v3 CLI and registry adapters explicitly use False, retaining
   PR #40's preregistered 129-month window including the partial September row and
   its `final_month_unpriced` workaround. New gates must not copy that workaround.
@@ -324,7 +326,8 @@ The loader records `dropped_partial_month`, `source_asof`, and
   monthly CSVs directly retain their legacy behavior.
 - `rotation.month_end_trading_dates` offers `complete_months_only=True` and `asof`,
   but defaults to False. Existing vol_target, skewness_managed, walkforward, and
-  strategy_registry `run-strategies` book callers retain the final partial month.
+  strategy_registry `run-strategies` book callers retain that compatibility default;
+  this refresh supplies data through month-end, so the books now use complete months.
 - **Enforced in the shared gate-results writer** (`gate_results.write_gate_results`),
   like the composition tripwire: `load_monthly_panel` attaches a `PanelProvenance`
   (`complete_months_only`, `dropped_partial_month`, `source_asof`, `source`) and the
@@ -334,10 +337,14 @@ The loader records `dropped_partial_month`, `source_asof`, and
   passes "archived PR #40, preregistered 129-month window". Archived gates that
   don't use this writer keep their current path.
 
-Archived outputs and published Book 1 / Book 2 / VT statistics and returns CSVs
-are not regenerated and remain byte-identical. **Books adopt the complete-month
-cutoff at the next data refresh**. Until then the Books page says the window ends in a partial month ("Data through 16 Sep 2026 (September is a partial month)", the panel's last date). This policy is documented here only; the raw
-data README and data files are unchanged.
+Archived gate outputs remain byte-identical, including the parent-directory VT and
+gate-first files pinned by `tests/data/archived_csv_sha256.json`. Refreshed Book 1 /
+Book 2 / VT artifacts live separately in `data/processed/live/` (same registered
+specs, not a new gate), with 68 complete months (2021-02 → 2026-09). The site Sharpe
+generator uses `--site-only --live-dir data/processed/live` to refresh live figures
+while preserving the frozen audit against its 2026-09-16 BIL snapshot. The Books page now says
+"Data through 30 Sep 2026." The source snapshot includes the September 30 close;
+`partial_final_month` is None. See `data/raw/README.md` for the spliced-refresh provenance.
 
 ## Shared gate helper: cash-like tag and excess-of-BIL Sharpe
 
@@ -709,6 +716,18 @@ branding tokens. Run before committing rebuilt pages:
 ```bash
 pytest tests/test_no_brand_tokens.py
 ```
+
+### Notes for Jared (`docs/notes/`)
+
+Only notes written for Jared are published. Copy a cleaned version into
+`docs/notes/<slug>.md` (no PR numbers, commit hashes or repo paths), register it in
+`scripts/build_notes.py` `NOTES`, and the build renders `docs/notes/<slug>.html`
+and lists it under Methods → Notes. Working files (QUANT_*, CIO_NOTE_*, engineering
+tickets, run folders) are never copied or linked. Notes still being written are
+registered as `pending`. They show as unlinked markers (`data-pending-note`) until
+their `.md` lands. Then flip the status to `published` in a later commit.
+`tests/test_notes_links.py` (in the CI `test` job) fails if any page links to a note
+outside `docs/notes/` or to a missing note.
 
 ### IA
 

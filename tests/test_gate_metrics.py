@@ -34,6 +34,11 @@ def rf():
     return risk_free_monthly()
 
 
+@pytest.fixture(scope="module")
+def frozen_rf():
+    return cna.frozen_audit_rf()
+
+
 # ------------------------------------------------------------------ tags
 def test_tag_coverage(universe):
     assert universe["cash_like"].dtype == bool and universe["short_duration"].dtype == bool
@@ -144,7 +149,7 @@ def test_tb3ms_file_and_fallback_rule(rf):
         window_rf_coverage(pd.date_range("1920-01-31", periods=3, freq="ME"), rf)
 
 
-def test_bil_priced_return_is_used_not_zero_proxy(rf):
+def test_bil_priced_return_is_used_not_zero_proxy(rf, frozen_rf):
     bil = load_bil_monthly()
     window = rf.loc[pd.Period("2021-02", "M"):pd.Period("2026-09", "M")]
     assert (window.source == "BIL").all()
@@ -153,8 +158,12 @@ def test_bil_priced_return_is_used_not_zero_proxy(rf):
     # A zero-rf proxy would give the arithmetic rf=0 Sharpe, not the audited 0.966.
     sk = pd.read_csv(ROOT / "data/processed/skewness_managed/skew_managed_gatefirst_returns.csv",
                      parse_dates=["date"]).set_index("date")["r_method"]
-    assert sharpe_exbil(sk, rf) == pytest.approx(0.9664, abs=1e-4)
+    assert sharpe_exbil(sk, frozen_rf) == pytest.approx(0.9664, abs=1e-4)
     assert sharpe_excess(sk, np.zeros(len(sk))) > 1.2
+    live = pd.read_csv(ROOT / "data/processed/live/skew_managed_gatefirst_returns.csv",
+                       parse_dates=["date"]).set_index("date")["r_method"]
+    # Re-pinned 2026-10-01: data refresh through 2026-09-30 close
+    assert sharpe_exbil(live, rf) == pytest.approx(0.9967, abs=1e-4)
 
 
 def test_sharpe_formulas(rf):
@@ -181,7 +190,8 @@ def test_all_bil_portfolio_scores_zero(rf):
 
 
 # ------------------------------------------------------- reconciliation
-def test_reconciles_to_quant_cash_null_audit(rf):
+def test_reconciles_to_quant_cash_null_audit(frozen_rf):
+    rf = frozen_rf
     rec = cna.reconciliation_table(rf=rf)
     memo = rec[rec.in_memo]
     assert len(memo) == len(cna.MEMO)
@@ -208,7 +218,8 @@ def test_reconciles_to_quant_cash_null_audit(rf):
     assert (np.round(fb.bil_share * 100) == fb.memo_bil_share_pct).all()
 
 
-def test_reconciliation_artifact_is_current(rf):
+def test_reconciliation_artifact_is_current(frozen_rf):
+    rf = frozen_rf
     committed = pd.read_csv(AUDIT_DIR / "reconciliation.csv")
     fresh = cna.reconciliation_table(rf=rf)
     for col in ("Sharpe_exBIL", "Sharpe_rf0_legacy", "rf_fallback_share"):
@@ -233,14 +244,18 @@ def _fmt(x, nd):
     return f"{x:.{nd}f}".replace("-", "−")
 
 
-def test_site_sharpe_artifact_and_pages_figures(rf):
+def test_site_sharpe_artifact_and_pages_figures(rf, frozen_rf):
     site = json.loads((AUDIT_DIR / "site_sharpe.json").read_text())
-    fresh = cna.site_sharpe_figures(rf=rf)
+    fresh = cna.site_sharpe_figures(rf=rf, live_dir=ROOT / "data/processed/live")
     assert json.loads(json.dumps(fresh)) == site
+    frozen = cna.site_sharpe_figures(rf=frozen_rf)
+    assert site["archive"] == frozen["archive"]
+    assert site["books"]["uncond_vt_committed_cash0"] == frozen["books"]["uncond_vt_committed_cash0"]
     books = site["books"]
-    assert round(books["book1_static_core"]["exbil"], 2) == 0.75
-    assert round(books["book2_vt_x_gatefirst"]["exbil"], 2) == 0.97
-    assert round(books["uncond_vt_audit_null"]["exbil"], 2) == 0.84
+    # Re-pinned 2026-10-01: data refresh through 2026-09-30 close
+    assert round(books["book1_static_core"]["exbil"], 2) == 0.77
+    assert round(books["book2_vt_x_gatefirst"]["exbil"], 2) == 1.00
+    assert round(books["uncond_vt_audit_null"]["exbil"], 2) == 0.86
     # Archive cards: "<excess of BIL> (legacy <rf = 0>)" at the card's own precision.
     cards = json.loads((ROOT / "apps/pages/src/data/archive_verdicts.json").read_text(encoding="utf-8"))["cards"]
     for card in cards:

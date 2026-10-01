@@ -44,6 +44,12 @@ NAV = [
 ]
 
 
+import sys  # noqa: E402
+
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from build_notes import build_notes, notes_list_html  # noqa: E402
+
+
 def read_csv(name: str) -> list[dict]:
     path = DATA / name
     if not path.exists():
@@ -62,6 +68,36 @@ def copy_cio_inputs() -> None:
     for src, dest_name in CIO_COPIES:
         if src.is_file():
             shutil.copy2(src, DATA / dest_name)
+    # Refresh the published slices from run_latest; the older external shortlist
+    # exports are fallback inputs only and are not modified by this build.
+    comparison = read_csv('strategy_comparison.csv')
+    suggested = read_csv('suggested_weights.csv')
+    slices = {}
+    if comparison:
+        slices['shortlist_comparison.csv'] = [r for r in comparison if r['strategy_id'] in
+                                             {'static_option_a', 'vol_target_option_a', 'score_rotate_xsd'}]
+    if suggested:
+        for sid, name in [('static_option_a', 'book1_static_option_a_weights.csv'),
+                          ('vol_target_option_a', 'book2_vol_target_option_a_weights.csv')]:
+            slices[name] = [r for r in suggested if r['strategy_id'] == sid]
+    for name, rows in slices.items():
+        if rows:
+            with (DATA / name).open('w', newline='', encoding='utf-8') as f:
+                writer = csv.DictWriter(f, fieldnames=list(rows[0]), lineterminator='\n')
+                writer.writeheader()
+                writer.writerows(rows)
+    # Keep the existing nested download snapshots in sync with the flat inputs.
+    nested = DATA / 'cio_book_shortlist'
+    for name in slices:
+        if (DATA / name).exists():
+            nested.mkdir(parents=True, exist_ok=True)
+            shutil.copy2(DATA / name, nested / name)
+    for name in ('strategy_comparison.csv', 'suggested_weights.csv',
+                 'strategy_diagnostics.csv', 'strategy_registry_used.csv'):
+        src = CIO / 'run_latest' / name
+        if src.is_file():
+            (nested / 'run_latest').mkdir(parents=True, exist_ok=True)
+            shutil.copy2(src, nested / 'run_latest' / name)
 
 
 def cumprod_wealth(returns: list[float]) -> list[float]:
@@ -797,6 +833,9 @@ def build_methods_index() -> None:
     methods = [
         ('allocation_alpha_vol_target.html', 'Allocation alpha: volatility-managed Option A'),
         ('skewness_managed_stub.html', 'Skewness-Managed Book-2 Overlay (Justina #6 · gate-first PASS)'),
+        ('allocation_alpha_epo.html', 'Enhanced Portfolio Optimization (EPO) with a 12-1 trend signal (Bet 1 · pre-gate)'),
+        ('spectral_risk_parity_adia.html', 'Spectral Risk Parity (ADIA Lab): teaching note (archived)'),
+        ('regime_aware_dual_regime_allocation.html', 'Regime-Aware Dual-Regime Allocation: teaching note (archived)'),
         ('ot_short_term_forecasting.html', 'Optimal transport: short-term forecasting'),
         ('ts_explorer_metric_menu.html', 'Time Series Explorer: quant metric menu'),
     ]
@@ -812,7 +851,9 @@ def build_methods_index() -> None:
             f'<li><a href="{name}">{escape(title)}</a></li>' for name, title in methods
         )
         + '</ul>'
-        '<h2 id="archive">Archive / failed nulls</h2>'
+        '<h2 id="notes">Notes for Jared</h2>'
+        + notes_list_html('../notes/')
+        + '<h2 id="archive">Archive / failed nulls</h2>'
         '<p class="lede archive-lede">5 FAIL / ARCHIVE methods + 1 VOID (NLS GMV v3) + 1 AUDIT NULL — research record only; <strong>not live books</strong>. '
         'Live shortlist: static core + VT × gate-first skew overlay (Justina #6). '
         'Unconditional Book-2 VT is the audit null, not a FAIL.</p>'
@@ -875,6 +916,7 @@ def main() -> None:
     build_methods_index()
     build_archive_scoreboard()
     restyle_methods_shell()
+    build_notes(page_shell, write_page)
     print('Built docs viz JSON + methods under', DOCS)
 
 

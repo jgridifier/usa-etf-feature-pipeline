@@ -255,7 +255,7 @@ export default function Books() {
 
           <div className="inline-block border border-border px-3 py-2 text-xs text-muted bg-surface">
             Research only — not investment advice. Panel is an arbitrary experimental USA ETF set
-            for methodology work. Data through 16 Sep 2026 (September is a partial month).
+            for methodology work. Data through 30 Sep 2026.
           </div>
         </div>
       </section>

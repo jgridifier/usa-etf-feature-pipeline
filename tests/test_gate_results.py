@@ -81,17 +81,17 @@ def test_archived_refusal_changes_nothing():
     assert hashes() == before
 
 
-def test_default_load_records_dropped_partial_month(tmp_path):
+def test_default_load_records_complete_final_month(tmp_path):
     prov = panel_provenance(PANEL)
-    assert prov.complete_months_only and prov.dropped_partial_month == '2026-09' and prov.source_asof == '2026-09-16'
-    assert PANEL.index.max() < pd.Timestamp('2026-09-01')
+    assert prov.complete_months_only and prov.dropped_partial_month is None and prov.source_asof == '2026-09-30'
+    assert PANEL.index.max() == pd.Timestamp('2026-09-30')
     write(tmp_path, label='FAIL', mechanical='FAIL')
     r = json.loads((tmp_path / 'gate_result.json').read_text())
     assert r['monthly_panel'] == dict(source=PANEL_CSV.name, complete_months_only=True,
-                                      dropped_partial_month='2026-09', source_asof='2026-09-16',
+                                      dropped_partial_month=None, source_asof='2026-09-30',
                                       partial_month_reason=None)
     report = (tmp_path / 'gate_report.md').read_text()
-    assert '- dropped_partial_month: 2026-09' in report and '- source_asof: 2026-09-16' in report
+    assert '- dropped_partial_month: none' in report and '- source_asof: 2026-09-30' in report
 
 
 @pytest.mark.parametrize('panel', [pd.read_csv(PANEL_CSV, index_col=0, parse_dates=True), None,
@@ -124,6 +124,6 @@ def test_legacy_panel_with_reason_recorded_and_printed(tmp_path, caplog):
     write(tmp_path, label='FAIL', mechanical='FAIL', monthly_panel=LEGACY, partial_month_reason='  ticket 12  ')
     r = json.loads((tmp_path / 'gate_result.json').read_text())
     assert r['monthly_panel'] == dict(source=PANEL_CSV.name, complete_months_only=False, dropped_partial_month=None,
-                                      source_asof='2026-09-16', partial_month_reason='ticket 12')
+                                      source_asof='2026-09-30', partial_month_reason='ticket 12')
     assert '- partial-month opt-out reason: ticket 12' in (tmp_path / 'gate_report.md').read_text()
     assert 'ticket 12' in caplog.text

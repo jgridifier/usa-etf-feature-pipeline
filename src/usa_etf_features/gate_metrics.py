@@ -301,8 +301,8 @@ def load_tb3ms(path: str | Path = DEFAULT_TB3MS) -> pd.Series:
 def load_bil_monthly(panel_path: str | Path = DEFAULT_PANEL) -> pd.Series:
     from .monthly_panel import load_monthly_panel
 
-    # Legacy: published Book 2 / VT Sharpe uses 68 months through the partial
-    # September 2026 row (2026-09-16); preserve site_sharpe.json reproduction.
+    # Preserve the supplied snapshot's final month, including the frozen audit's
+    # partial 2026-09-16 row. The current live panel ends at a complete month.
     panel = load_monthly_panel(panel_path, complete_months_only=False)
     s = panel[RF_TICKER].astype(float)
     s.index = pd.PeriodIndex(s.index, freq="M")

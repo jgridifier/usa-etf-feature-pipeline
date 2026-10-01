@@ -496,3 +496,17 @@ tr:hover td { background: var(--surface); }
 .text-down { color: var(--down); }
 .font-mono { font-family: var(--font-mono); }
 .font-sans { font-family: var(--font-sans); }
+
+/* ── Mobile (≤640px): tables scroll inside themselves; long code wraps.
+   Desktop is unchanged. Covers teaching pages whose raw tables have no
+   .table-scroll wrapper. */
+@media (max-width: 640px) {
+  table:not(.table-scroll table) {
+    display: block;
+    max-width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  :not(pre) > code { overflow-wrap: anywhere; word-break: break-word; }
+  pre, .math-block { max-width: 100%; overflow-x: auto; }
+}
