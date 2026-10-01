@@ -36,6 +36,12 @@ ORDER = [METHOD, *SENSITIVITIES, PRIMARY, ANCHOR, TREND, EW, ERC, BOOK1]
 Z95, Z80 = 1.6449, 0.8416   # one-sided 5% test, 80% power (normal approximation)
 
 
+def load_verdict() -> dict:
+    """Quant's verdict record beside the committed run (written after review; the run artifacts are unchanged)."""
+    path = EPO_DIR / 'verdict.json'
+    return json.loads(path.read_text(encoding='utf-8')) if path.exists() else {}
+
+
 def available() -> bool:
     return (EPO_DIR / 'gate_result.json').exists()
 
@@ -106,7 +112,7 @@ def gather() -> dict:
     mix = {r['strategy_id']: r for r in _rows('asset_class_mix.csv')}
     book1 = {r['strategy_id']: r for r in _rows('book1_window_summary.csv')}
     stress = _rows('cost_stress.csv')
-    return dict(gate=gate, full=full, sub=sub, sub_role=sub_role, test=test, mix=mix, book1=book1, stress=stress)
+    return dict(gate=gate, verdict=load_verdict(), full=full, sub=sub, sub_role=sub_role, test=test, mix=mix, book1=book1, stress=stress)
 
 
 def label(d: dict | None = None) -> str:
@@ -141,45 +147,69 @@ def criteria_rows(d: dict) -> list[list[str]]:
     return rows
 
 
+def _sharpe(full, sid):
+    return _f(full[sid]['Sharpe_exBIL']) if sid in full else None
+
+
 def verdict_text(d: dict) -> str:
-    g, full = d['gate'], d['full']
+    g, full, mix = d['gate'], d['full'], d['mix']
     lab = g['label']
     crit = g['report']['criteria']
     be = g['fields']['book_eligible']
-    parts = []
-    if lab == 'PASS':
+    ms, sa = _sharpe(full, METHOD), _sharpe(full, ANCHOR)
+    parts = [f'{lab}.']
+    trailed_anchor = ms is not None and sa is not None and ms < sa
+    if trailed_anchor:
+        parts.append(f"EPO trailed the 1/σ anchor it is built on ({num(ms)} vs {num(sa)}). Any weight on correlations pulled it "
+                     f"to about {pct(mix[METHOD]['bond'], 0)} bonds, and the trend signal didn't make up for it "
+                     f"(plain trend: {num(_sharpe(full, TREND))}).")
+    elif lab == 'PASS':
         parts.append('Anchored EPO passed every pre-registered gate criterion.')
     elif lab == 'VOID':
         parts.append('The run is VOID: a pre-registered tripwire fired, so the comparison does not count.')
     elif lab == 'INCOMPLETE':
         parts.append('The run is INCOMPLETE: the composition check could not be computed.')
     else:
-        parts.append(f'Anchored EPO did not pass its pre-registered gate ({lab}).')
-    if crit['c1']:
-        parts.append('It did beat its primary null, weekly Ledoit-Wolf minimum variance, by a statistically significant margin.')
-    else:
-        parts.append('It did not beat its primary null, weekly Ledoit-Wolf minimum variance, by a statistically significant margin.')
-    ms = _f(full[METHOD]['Sharpe_exBIL'])
-    trailed = [f"{desc} ({num(full[sid]['Sharpe_exBIL'])})" for sid, desc in (
-        (ANCHOR, 'the simple 1/σ anchor it is built around'), (EW, 'equal weight'), (TREND, 'the trend-at-inverse-vol portfolio'))
-        if sid in full and ms is not None and _f(full[sid]['Sharpe_exBIL']) is not None and _f(full[sid]['Sharpe_exBIL']) > ms]
+        parts.append('Anchored EPO did not pass its pre-registered gate.')
+    others = [(EW, 'equal weight')]
+    if not trailed_anchor:
+        others = [(ANCHOR, 'the 1/σ anchor'), (EW, 'equal weight'), (TREND, 'the trend-at-inverse-vol portfolio')]
+    trailed = [f"{desc} ({num(_sharpe(full, sid))})" for sid, desc in others
+               if ms is not None and _sharpe(full, sid) is not None and _sharpe(full, sid) > ms]
     if trailed:
         joined = trailed[0] if len(trailed) == 1 else ', '.join(trailed[:-1]) + ' and ' + trailed[-1]
-        parts.append(f"But on Sharpe ex-BIL ({num(ms)}) it trailed {joined}.")
+        parts.append(f"On Sharpe ex-BIL it also trailed {joined}.")
     if not crit['c4']:
         parts.append(f"Its deflated Sharpe ratio ({num(full[METHOD]['DSR_exBIL'], 3)}) is below the 0.95 bar once all "
                      f"{g['fields']['trial_count']} trials are counted.")
     if not crit['c5']:
         parts.append('At least one sensitivity did not beat the primary null.')
-    mix = d['mix'].get(METHOD, {})
-    shares = {c: _f(mix.get(c)) for c in ('equity', 'bond', 'commodity')}
-    top = max((c for c in shares if shares[c] is not None), key=lambda c: shares[c], default=None)
-    if top:
-        parts.append(f"Its largest asset class on average was {top} ({pct(shares[top])}); "
-                     f"the average equity share was {pct(be['method_equity_share'])}.")
+    parts.append(f"Its average equity share was {pct(be['method_equity_share'])}.")
     parts.append('Not book-eligible.' if not be['eligible'] else 'Book-eligible on the pre-registered conditions; mapping it to a book is the CIO’s call.')
-    parts.append('This is the mechanical reading, pending Quant and CIO review. No book changes.')
+    parts.append('No book changes.' if d.get('verdict') else 'This is the mechanical reading, pending Quant and CIO review. No book changes.')
+    null_desc = (f"weekly Ledoit-Wolf minimum variance ({num(_sharpe(full, PRIMARY))} Sharpe ex-BIL, "
+                 f"about {pct(mix[PRIMARY]['bond'], 0)} bonds)")
+    if crit['c1']:
+        parts.append(f"It did beat its primary null, {null_desc}, by a statistically significant margin, but that is a low bar.")
+    else:
+        parts.append(f"It did not beat its primary null, {null_desc}, by a statistically significant margin.")
     return ' '.join(parts)
+
+
+def drawdown_note(d: dict) -> str:
+    """CIO note under the eligibility table: why the MaxDD leg passes."""
+    be = d['gate']['fields']['book_eligible']
+    if not be['beats_on_maxdd'] or BOOK1 not in d['full']:
+        return ''
+    return (f"The shallower drawdown comes from holding mostly bonds ({pct(d['full'][METHOD]['CAGR'])} CAGR vs Book 1's "
+            f"{pct(d['full'][BOOK1]['CAGR'])}), not from better equity risk control.")
+
+
+def lessons_text(d: dict) -> str:
+    full, mix = d['full'], d['mix']
+    return (f"Starting from a 1/σ anchor with about {pct(mix[ANCHOR]['equity'], 0)} equity, the mean-variance step moved weight "
+            f"into low-vol bonds, the same pull that undid the GMV runs. Plain equal weight ({num(full[EW]['Sharpe_exBIL'])}) "
+            "did better than every allocator tested here. It is an in-sample reference only, not a candidate.")
 
 
 def power_rows(d: dict) -> list[list[str]]:
@@ -196,24 +226,52 @@ def power_rows(d: dict) -> list[list[str]]:
     return rows
 
 
-def pending_card_html(prefix: str = '') -> str:
-    """Card for the Methods index and the archive scoreboard; label and figures read from the gate output."""
+REPO_BLOB = 'https://github.com/jgridifier/usa-etf-feature-pipeline/blob/main/data/processed/epo_allocator/'
+
+
+def archive_card() -> dict | None:
+    """Archived-gate card (same schema as archive_verdicts.json cards), built from the run output and the
+    Quant verdict record. None until Quant has given a verdict."""
     if not available():
-        return ''
+        return None
     d = gather()
-    g, full = d['gate'], d['full']
+    v = d['verdict']
+    if not v:
+        return None
+    g, full, test = d['gate'], d['full'], d['test']
+    bc = g['fields']['book1_comparison']
+    trials = g['fields']['trial_count']
+    if v.get('final_trial_count') != trials or v.get('verdict') != g['label']:
+        raise ValueError('EPO verdict record disagrees with the gate output')
     be = g['fields']['book_eligible']
-    lab = g['label']
-    badge = 'badge' if lab == 'PASS' else 'badge badge-fail'
-    rows = [[name(s), num(full[s]['Sharpe_exBIL']), pct(full[s]['MaxDD'])] for s in (METHOD, PRIMARY, ANCHOR) if s in full]
-    return (
-        '<article class="feature-card archive-card" id="card-epo-gate">'
-        f'<span class="{badge}">{escape(lab)} · pending Quant review</span>'
-        '<p><strong>Bet 1 anchored EPO with a 12-1 trend signal</strong></p>'
-        f'<p class="metric-sub">Single pre-registered run · {g["fields"]["book1_comparison"]["full_oos_months"]} OOS months · '
-        f'{g["fields"]["trial_count"]} trials · book-eligible: {escape(yes(be["eligible"]).lower())}</p>'
-        + table(['', 'Sharpe ex-BIL', 'MaxDD'], rows, 'Anchored EPO vs primary null and anchor')
-        + f'<p><a href="{prefix}{PAGE.removeprefix("methods/")}">Full EPO gate results →</a></p></article>'
+    ms, sa = _sharpe(full, METHOD), _sharpe(full, ANCHOR)
+
+    def row(sid, role, label_):
+        r = full[sid]
+        return dict(role=role, label=label_, sharpe=f"{num(r['Sharpe_exBIL'])} (legacy {num(r['Sharpe_rf0_legacy'])})",
+                    maxdd=pct(r['MaxDD']))
+    tp, ta = test.get(('full window', METHOD, PRIMARY), {}), test.get(('full window', METHOD, ANCHOR), {})
+    return dict(
+        id='epo_anchored_trend',
+        name='Bet 1 anchored EPO (12-1 trend signal)',
+        detail=(f"Pedersen, Babu & Levine 2021 anchored EPO · w = 0.75 primary, 0.50 / 0.90 sensitivities · "
+                f"{bc['full_oos_months']}m OOS ({month(bc['full_start'])} → {month(bc['full_end'])}) · 5 bps · "
+                f"trial_count={trials} (final)"),
+        badge=v['verdict'],
+        verdict=(f"{v['verdict_line']}. Sharpe ex-BIL {num(ms)} vs {num(sa)} for the 1/σ anchor it is built on; "
+                 f"book-eligible: {'yes' if be['eligible'] else 'no'}."),
+        null='Weekly LW MinVar on the same names (primary); the 1/σ anchor is the book-eligibility bar',
+        rows=[row(METHOD, 'method', 'Anchored EPO, w = 0.75 (method)'), row(ANCHOR, 'reference', '1/σ anchor (EPO at w = 1)'),
+              row(PRIMARY, 'null', 'Weekly LW MinVar (primary null)')],
+        nw_t=(f"n/a · LW2008 HAC z {num(tp.get('z_hac'))} vs LW MinVar (p {pval(tp.get('p_one_sided_hac'))}), "
+              f"{num(ta.get('z_hac'))} vs the 1/σ anchor"),
+        dsr=f"{num(full[METHOD]['DSR_exBIL'], 3)} on Sharpe ex-BIL, not legacy (trial_count={trials})",
+        gate=dict(label='gate_result.json', href=REPO_BLOB + 'gate_result.json'),
+        method_page='methods/allocation_alpha_epo.html',
+        results_page=PAGE,
+        artifact=dict(label='epo_allocator/summary.csv', href=REPO_BLOB + 'summary.csv'),
+        archived=v['verdict_date'],
+        archived_via=f"{v['verdict_by']} verdict; the results page is the published record",
     )
 
 
@@ -309,9 +367,11 @@ def build_epo_results(page_shell, write_page) -> str | None:
 
     content = (
         '<section class="band"><div class="band-inner">'
-        f'<p><span class="{badge}">{escape(lab)} · pending Quant review</span> '
-        f'<span class="badge">Book-eligible: {escape(yes(be["eligible"]).lower())}</span></p>'
-        '<h1>EPO gate results: anchored EPO with a 12-1 trend signal</h1>'
+        + (f'<p class="verdict-line"><span class="{badge}">{escape(d["verdict"]["verdict_label"])}</span> '
+           f'<strong>{escape(d["verdict"]["verdict_line"])}</strong></p>' if d['verdict'] else
+           f'<p><span class="{badge}">{escape(lab)} · pending Quant review</span> '
+           f'<span class="badge">Book-eligible: {escape(yes(be["eligible"]).lower())}</span></p>')
+        + '<h1>EPO gate results: anchored EPO with a 12-1 trend signal</h1>'
         f'<p class="muted">Single pre-registered run · {bc["full_oos_months"]} out-of-sample months ({escape(window)}) · '
         f'net of 5 bp · {g["fields"]["trial_count"]} trials counted · complete months through {escape(month(g["monthly_panel"]["source_asof"]))}</p>'
         f'<div class="callout"><strong>Verdict.</strong> {escape(verdict_text(d))}</div>'
@@ -332,7 +392,9 @@ def build_epo_results(page_shell, write_page) -> str | None:
         'The method is restricted to exactly those months.</p>' + book1_tbl + pub_line
         + '<h2>Composition</h2>' + comp_tbl + mix_tbl
         + '<h2>Book eligibility</h2>' + elig_tbl
+        + (f'<p class="drawdown-note"><strong>Note on the MaxDD row:</strong> {escape(note)}</p>' if (note := drawdown_note(d)) else '')
         + '<p class="muted">Book eligibility is separate from the gate label. Mapping any PASS to a book is the CIO’s decision; there is no third book.</p>'
+        + f'<h2 id="lessons">What we learned</h2><p>{escape(lessons_text(d))}</p>'
         + '<h2>Power caveat</h2>'
         f'<p>With {bc["full_oos_months"]} months of data ({bc["overlap_months"]} against Book 1), a Sharpe-difference test can only detect large gaps. The table shows, for each comparison, '
         'the smallest Sharpe gap the test would detect four times in five at the one-sided 5% level. A failed significance test with a positive '

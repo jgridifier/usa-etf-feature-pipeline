@@ -1,0 +1,11 @@
+{
+  "verdict": "FAIL",
+  "verdict_label": "FAIL / ARCHIVE",
+  "verdict_line": "Quant: FAIL / ARCHIVE, not book-eligible, no follow-up run",
+  "verdict_by": "Quant",
+  "verdict_date": "2026-10-01",
+  "copy_signed_off_by": "CIO",
+  "book_eligible": false,
+  "follow_up_run": false,
+  "final_trial_count": 11
+}
