@@ -56,7 +56,7 @@ function RunsCioStrip() {
       <div className="flex flex-wrap gap-0 divide-y md:divide-y-0 md:divide-x divide-border">
         <div className="flex items-center gap-2 px-4 py-2.5 min-w-0">
           <span className="font-sans text-2xs font-bold uppercase tracking-label text-up whitespace-nowrap">HOLD</span>
-          <span className="font-sans text-2xs text-body">Static core + Book-2 VT — both on live shortlist.</span>
+          <span className="font-sans text-2xs text-body">Static core + vol-target backbone — both on live shortlist.</span>
         </div>
         <div className="flex items-center gap-2 px-4 py-2.5 min-w-0">
           <span className="font-sans text-2xs font-bold uppercase tracking-label text-down whitespace-nowrap">DO NOT PROMOTE</span>
@@ -88,7 +88,7 @@ function RiskPathFigure({ m }: { m: MetricsPayload }) {
       {/* Figure header — the story sentence */}
       <div className="px-4 py-3 border-b border-border bg-raised">
         <p className="font-serif text-base md:text-lg text-ink leading-snug">
-          <strong>HOLD</strong> — Book-2&rsquo;s VT backbone (no skew gate) delivers the same return as Book 1 static with{' '}
+          <strong>HOLD</strong> — Book 2&rsquo;s vol-target backbone (no skew gate) delivers the same return as Book 1 static with{' '}
           <span className="text-up font-semibold">+{ddPp.toFixed(1)}pp milder</span> peak drawdown.
           Live Book 2 adds the skew gate: the drawdown-controlled version of the same stock core, not return alpha.
         </p>
@@ -109,7 +109,7 @@ function RiskPathFigure({ m }: { m: MetricsPayload }) {
             <div className="flex items-center justify-between mb-1">
               <div className="flex items-center gap-2">
                 <span className="font-sans text-2xs font-bold text-up uppercase tracking-label">HOLD</span>
-                <span className="font-sans text-xs text-muted">Book-2 VT backbone (no skew gate)</span>
+                <span className="font-sans text-xs text-muted">Backbone (no skew gate)</span>
               </div>
               <span className="font-mono text-sm font-bold text-ink">{pct(m.MaxDD_vt)}</span>
             </div>
@@ -164,7 +164,7 @@ function RiskPathFigure({ m }: { m: MetricsPayload }) {
               <p className="font-sans text-2xs text-muted leading-relaxed">
                 NW t vs static A: <strong className="font-mono text-body">{num(m.NW_t, 2)}</strong>{' '}
                 ≈ 0 — return parity confirmed. The backbone&rsquo;s gain is milder drawdown, not
-                alpha. Ann. return: {pct(m.AnnReturn_vt)} (VT) vs{' '}
+                alpha. Ann. return: {pct(m.AnnReturn_vt)} (Backbone) vs{' '}
                 {pct(m.AnnReturn_a)} (static).
               </p>
             </div>
@@ -212,7 +212,7 @@ export default function Runs() {
           <div className="mx-auto max-w-6xl px-4 md:px-6">
             <ThickRule label="OOS snapshot" />
             <div className="mt-6">
-              <Eyebrow>Book-2 VT backbone (no skew gate) — key metrics</Eyebrow>
+              <Eyebrow>Backbone (no skew gate) — key metrics</Eyebrow>
               <p className="font-sans text-sm text-body mt-1 mb-5 max-w-2xl">
                 Moreira &amp; Muir (2017) · mean f = {m.mean_f.toFixed(2)} · months with f&lt;1:{' '}
                 {(100 * m.pct_months_f_lt_1).toFixed(0)}% · Sharpe in excess of BIL (legacy rf = 0 kept).

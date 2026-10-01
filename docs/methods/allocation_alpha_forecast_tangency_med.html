@@ -15,7 +15,7 @@
   .meta { color: var(--muted, #555); font-size: 0.9rem; }
   .badge-pending { display: inline-block; background: #f1f3f9; border: 1px solid #b8c0d6; border-radius: 6px; padding: 0.2rem 0.6rem; font-size: 0.82rem; font-weight: 600; }
 </style>
-<!-- lab:start --><link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,wght@0,400;0,500;0,600;1,400;1,600&family=Playfair+Display:wght@700;900&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet"><link rel="stylesheet" href="../assets/style.css"><!-- lab:end --></head>
+<!-- lab:start --><link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,wght@0,400;0,500;0,600;1,400;1,600&family=Playfair+Display:wght@700;900&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet"><link rel="stylesheet" href="../assets/style.css"><link rel="icon" type="image/svg+xml" href="../favicon.svg"><!-- lab:end --></head>
 <body><!-- lab:start --><header class="site-header"><div class="site-header-inner"><a class="brand" href="../index.html">USA ETF Lab</a><button type="button" class="nav-toggle" aria-expanded="false" aria-controls="site-nav" aria-label="Open menu"><span class="nav-toggle-bars" aria-hidden="true"></span></button><nav class="site-nav" id="site-nav" aria-label="Main"><a href="../index.html">Home</a><a href="../index.html#/books">Books</a><a href="../index.html#/runs">Runs</a><a href="../explorer/index.html">Explorer</a><a href="../methods/index.html" class="is-active">Methods</a></nav></div></header><!-- lab:end -->
 
 <main class="page">
@@ -30,7 +30,7 @@
 (<code>allocation_alpha_forecast_tangency_med.html</code>) and documents the OOS acceptance criteria
 for the Forecast Tangency + MED method. <strong>No empirical OOS tables are shown here —
 Archived FAIL (PR #24).</strong>
-Live shortlist remains <strong>static core + VT × gate-first skew overlay</strong> (Justina #6). Unconditional Book-2 VT is the audit/Archive null only — this note does not change live books.
+Live shortlist remains <strong>static core + vol-target backbone × gate-first skew overlay</strong> (Justina #6). Unconditional vol-target backbone is the audit/Archive null only — this note does not change live books.
 Do not cut books on merge of tooling alone.
 </div>
 
@@ -151,7 +151,7 @@ Residual (1 − Σwᵢ) → BIL (Appendix 3 approved cash)</div>
 <h2>Books implication</h2>
 <p>
   <strong>No book cut on tooling merge alone.</strong>
-  Live shortlist remains <strong>static core + VT × gate-first skew overlay</strong> (Justina #6); unconditional Book-2 VT is the audit/Archive null only. This candidate is Archived FAIL (PR #24). Archived FAIL (PR #24).
+  Live shortlist remains <strong>static core + vol-target backbone × gate-first skew overlay</strong> (Justina #6); unconditional vol-target backbone is the audit/Archive null only. This candidate is Archived FAIL (PR #24). Archived FAIL (PR #24).
 </p>
 
 <h2>Citations</h2>

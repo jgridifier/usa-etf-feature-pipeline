@@ -140,8 +140,8 @@ PUBLISHED_SHA256 = {
     'data/processed/vol_target_oos_returns.csv': '3434b1a569a77d2e8f17fd6b465267ab9e2c898317755cca70b63468c1fae358',
     'docs/data/vol_target_oos_returns.csv': '4ce54896def952eb352ea97d1041684a47f4ad91d6393aa0f7de0e4ffe78028f',
     'docs/data/viz_metrics.json': 'b5c57b5ac88147cfd8fd5168c630fd3c412f0f9b8649a685c596cc199ec09b30',
-    # Re-pinned 2026-10-01: VT audit-null stance now quotes the live Book 2 Sharpe (1.00) from site_sharpe.json.
-    'docs/data/viz_comparison.json': '95a8c9377a6512e4aa8e6d5ff5a5192b8a4e2c98bb04a34d5e3386adcfbd93e7',
+    # Re-pinned 2026-10-01: audit-null stance quotes the live Book 2 Sharpe (1.00); label 'VT' -> 'Backbone'.
+    'docs/data/viz_comparison.json': 'e5296b80fa12bd149ab8b3d6d6e1222d3622b5ec950d79caf47d10da586cb52f',
     'data/processed/cash_null_audit/site_sharpe.json': '1e72c3055233e40cc2407c97c631fe561cad01678f27a0acd019548cc3f52fde',
     'data/processed/nonlinear_shrinkage_gmv_v3/composition_tripwire.csv': '672e1661f238d4699574cc94bec50be44fbe5677bae3c8286316b771ccecbf66',
     'data/processed/nonlinear_shrinkage_gmv_v3/coverage_gaps.csv': 'a4d825ec2855d73d02c2b1ce22fa278c17fe35e06d55cee7b3a5eb719f9e9346',

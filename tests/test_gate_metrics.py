@@ -285,17 +285,18 @@ def test_site_sharpe_artifact_and_pages_figures(rf, frozen_rf):
         assert stale not in books_tsx
 
 
-# Re-pinned 2026-10-01: data refresh through the 2026-09-30 close. Return / Sharpe figures in the
+# Re-pinned 2026-10-01: data refresh through the 2026-09-30 close; "VT" display label renamed to
+# "vol-target backbone" (CoS ruling). Return / Sharpe figures in the
 # prose now render from live outputs via <LiveFig> (see tests/test_live_figures.py for the rendered values).
-BOOK2_STAT_LINE = ("Max drawdown −10.1% (VT backbone −20.1%, Book 1 −25.6%) · volatility ~10.6% (~13.9%, ~15.9%) · "
+BOOK2_STAT_LINE = ("Max drawdown −10.1% (vol-target backbone −20.1%, Book 1 −25.6%) · volatility ~10.6% (~13.9%, ~15.9%) · "
                    'return ~<LiveFig k="book2.return" /> (~<LiveFig k="vt.return" />, ~<LiveFig k="book1.return" />) · '
                    'Sharpe above BIL <LiveFig k="book2.exbil" /> (<LiveFig k="vt.exbil" />, <LiveFig k="book1.exbil" />)')
 BOOK2_BODY = (
-    'Book 2 gives up about <LiveFig k="gap.points" /> a year of return versus the VT backbone in exchange for shallower drawdowns '
+    'Book 2 gives up about <LiveFig k="gap.points" /> a year of return versus the vol-target backbone in exchange for shallower drawdowns '
     "and lower volatility. Its protection has been seen in one bear market: in 2022 its drawdown was about half "
-    "of VT's (−10.1% vs −20.1%), and it also cushioned the autumn 2023 pullback (−3.9% vs −9.0%). The skew gate "
-    "has not switched on since January 2024, so through the 2024–2026 pullbacks Book 2 tracked VT. Its Sharpe "
-    'above BIL is <LiveFig k="book2.exbil" /> vs <LiveFig k="vt.exbil" /> for VT; that difference is not statistically significant.')
+    "of the vol-target backbone's (−10.1% vs −20.1%), and it also cushioned the autumn 2023 pullback (−3.9% vs −9.0%). The skew gate "
+    "has not switched on since January 2024, so through the 2024–2026 pullbacks Book 2 tracked the vol-target backbone. Its Sharpe "
+    'above BIL is <LiveFig k="book2.exbil" /> vs <LiveFig k="vt.exbil" /> for the vol-target backbone; that difference is not statistically significant.')
 
 
 def _site_text(rel: str) -> str:

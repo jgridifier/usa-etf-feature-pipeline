@@ -153,7 +153,7 @@ def test_rendered_prose_figures_equal_live_outputs(rendered, route):
 def test_rendered_drawdown_vol_and_order_match_live(rendered, route):
     b = expected_books()
     text = _text(rendered[route])
-    stat = (f"Max drawdown {neg_pct(b['book2']['max_dd'])} (VT backbone {neg_pct(b['vt']['max_dd'])}, "
+    stat = (f"Max drawdown {neg_pct(b['book2']['max_dd'])} (vol-target backbone {neg_pct(b['vt']['max_dd'])}, "
             f"Book 1 {neg_pct(b['book1']['max_dd'])}) · volatility ~{b['book2']['ann_vol'] * 100:.1f}% "
             f"(~{b['vt']['ann_vol'] * 100:.1f}%, ~{b['book1']['ann_vol'] * 100:.1f}%) · "
             f"return ~{fmt('book2.return', b)} (~{fmt('vt.return', b)}, ~{fmt('book1.return', b)}) · "

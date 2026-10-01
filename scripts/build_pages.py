@@ -48,6 +48,7 @@ import sys  # noqa: E402
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from build_notes import build_notes, notes_list_html  # noqa: E402
+from labels import relabel_archive  # noqa: E402
 
 
 def read_csv(name: str) -> list[dict]:
@@ -299,13 +300,13 @@ def build_viz() -> None:
         short = comparison
     labels = {
         'static_option_a': 'Book 1 — Static Option A',
-        'vol_target_option_a': 'Unconditional Book-2 VT (audit null)',
+        'vol_target_option_a': 'Backbone (unconditional, audit null)',
         'score_rotate_xsd': 'Optional gated sleeve — XSD',
         'm3_p2_core_rotate': 'M3 P2 (held off)',
     }
     stances = {
         'static_option_a': 'Benchmark policy baseline',
-        'vol_target_option_a': 'Audit null for the live Book-2 VT × gate-first overlay '
+        'vol_target_option_a': 'Audit null for the live vol-target backbone × gate-first overlay '
         f"({site_sharpe()['books']['book2_vt_x_gatefirst']['exbil']:.2f} excess of BIL)",
         'score_rotate_xsd': 'Optional gated sleeve',
         'm3_p2_core_rotate': 'Held off the shortlist',
@@ -460,6 +461,7 @@ def page_shell(
 <title>{escape(title)} | USA ETF Lab</title>
 {fonts}
 <link rel="stylesheet" href="{prefix}assets/style.css">
+<link rel="icon" type="image/svg+xml" href="{prefix}favicon.svg">
 {extra_head}
 </head>
 <body>
@@ -641,13 +643,13 @@ def build_books() -> None:
         <span class="badge">Book 2 · Vol-target</span>
         <h3>Default research path</h3>
         <p><strong>What it is:</strong> Same Option A core, scaled by estimated volatility (scale-down only in v1); cash residual in <strong>BIL</strong> when risk is high. Strategy id <code>vol_target_option_a</code>.</p>
-        <p><strong>Why it&rsquo;s on the shortlist:</strong> It is the drawdown-controlled version of the same stock core: about 1 point a year less return than the VT backbone for shallower drawdowns (−10.1% vs −20.1%; Book 1 −25.6%) and lower volatility. Its Sharpe above BIL is 0.97 vs 0.84 for VT; that difference is not statistically significant. A <strong>drawdown-control</strong> book, not a “beat the market” story.</p>
+        <p><strong>Why it&rsquo;s on the shortlist:</strong> It is the drawdown-controlled version of the same stock core: about 1 point a year less return than the vol-target backbone for shallower drawdowns (−10.1% vs −20.1%; Book 1 −25.6%) and lower volatility. Its Sharpe above BIL is 0.97 vs 0.84 for the vol-target backbone; that difference is not statistically significant. A <strong>drawdown-control</strong> book, not a “beat the market” story.</p>
         <p><strong>What it is not:</strong> Not the archived conditional factor-corr overlay (#13), which <strong>failed</strong> vs this unconditional Book 2 on Sharpe.</p>
         <p class="metric-sub">OOS snapshot (panel; rf=0 Sharpe): ~14.7% ann. return · ~13.9% vol · MaxDD ~−20.1% · Sharpe ~1.06 · same window. Modest turnover from scaling.</p>
       </article>
     </div>
     <div class="callout" style="margin-top:1.5rem">
-      <strong>Not on the shortlist:</strong> Spectral risk parity (null: Ledoit–Wolf MinVar), Regime-aware dual-regime (null: Unconditional ERC), Vol-cond factor corr #13 (null: Unconditional Book-2 VT) — all <strong>FAIL — archive</strong>.
+      <strong>Not on the shortlist:</strong> Spectral risk parity (null: Ledoit–Wolf MinVar), Regime-aware dual-regime (null: Unconditional ERC), Vol-cond factor corr #13 (null: Unconditional vol-target backbone) — all <strong>FAIL — archive</strong>.
       Full table: <a href="methods/justina_round1_scoreboard.html">Methods → Archive / Justina round-1 scoreboard</a>.
     </div>
   </div>
@@ -790,7 +792,8 @@ def build_runs() -> None:
 
 
 def load_archive_cards() -> dict:
-    return json.loads(ARCHIVE_JSON.read_text(encoding='utf-8'))
+    # Frozen record on disk; display labels relabelled here (VT -> vol-target backbone / Backbone).
+    return relabel_archive(json.loads(ARCHIVE_JSON.read_text(encoding='utf-8')))
 
 
 def verdict_card_html(card, prefix) -> str:
@@ -837,7 +840,7 @@ def build_archive_scoreboard() -> None:
     subtitle = (
         'Archived methods: Justina round-1 (Spectral RP, Regime-Aware), #13 VCFC, #4 FT-MED, #3 RR-ERC, '
         'Bet 1 NLS GMV v3 (VOID) · '
-        'plus the unconditional Book-2 VT audit null · USA ETF experimental panel · '
+        'plus the unconditional vol-target backbone audit null · USA ETF experimental panel · '
         f'updated {archive["updated"]} (ET)'
     )
     content = (
@@ -849,11 +852,11 @@ def build_archive_scoreboard() -> None:
         'Negative / null results documented on purpose. The five failed methods are '
         '<strong>FAIL / ARCHIVE</strong> — not promoted to Books, not a showcase, not part of the live shortlist. '
         'Bet 1 NLS GMV v3 is VOID (concentrated holdings) and the minimum-variance line is closed. '
-        'Unconditional Book-2 VT is an AUDIT NULL (not live, not a FAIL).</div>'
+        'Unconditional vol-target backbone is an AUDIT NULL (not live, not a FAIL).</div>'
         '<div class="callout"><strong>CIO frame:</strong> '
         '<p><em>None of the five archived methods cleared its binding null, and NLS GMV v3 is VOID.</em> <strong>No book cut.</strong></p>'
-        '<p>Live shortlist: <strong>static core + VT × gate-first skew overlay</strong> (Justina #6, PR #29). '
-        'Unconditional Book-2 VT is the audit null that overlay was measured against — not live, not a FAIL.</p>'
+        '<p>Live shortlist: <strong>static core + vol-target backbone × gate-first skew overlay</strong> (Justina #6, PR #29). '
+        'Unconditional vol-target backbone is the audit null that overlay was measured against — not live, not a FAIL.</p>'
         '<p>Further candidates must clear the same leakage · null · DSR · empirical gate. '
         '<a href="../index.html#/">Back to live shortlist →</a></p></div>'
         '<h2>Verdict cards</h2>'
@@ -900,8 +903,8 @@ def build_methods_index() -> None:
         + notes_list_html('../notes/')
         + '<h2 id="archive">Archive / failed nulls</h2>'
         '<p class="lede archive-lede">5 FAIL / ARCHIVE methods + 1 VOID (NLS GMV v3) + 1 AUDIT NULL — research record only; <strong>not live books</strong>. '
-        'Live shortlist: static core + VT × gate-first skew overlay (Justina #6). '
-        'Unconditional Book-2 VT is the audit null, not a FAIL.</p>'
+        'Live shortlist: static core + vol-target backbone × gate-first skew overlay (Justina #6). '
+        'Unconditional vol-target backbone is the audit null, not a FAIL.</p>'
         + ''.join(verdict_card_html(card, '') for card in archive['cards'])
         + '<p class="cta-inline"><a href="justina_round1_scoreboard.html">Archive scoreboard page →</a></p>'
         '</div></section>'
@@ -929,6 +932,7 @@ def restyle_methods_shell() -> None:
             '<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>'
             '<link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,wght@0,400;0,500;0,600;1,400;1,600&family=Playfair+Display:wght@700;900&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">'
             '<link rel="stylesheet" href="../assets/style.css">'
+            '<link rel="icon" type="image/svg+xml" href="../favicon.svg">'
             '<!-- lab:end -->'
         )
         s = s.replace('</head>', inject_head + '</head>')

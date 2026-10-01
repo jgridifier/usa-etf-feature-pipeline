@@ -33,7 +33,7 @@
     },
     {
       "strategy_id": "vol_target_option_a",
-      "label": "Unconditional Book-2 VT (audit null)",
+      "label": "Backbone (unconditional, audit null)",
       "AnnReturn": 0.15073070287175083,
       "AnnVol": 0.1386311754124008,
       "MaxDD": -0.201285918526651,
@@ -44,7 +44,7 @@
       "n_months": 68,
       "start_date": "2021-02-28",
       "end_date": "2026-09-30",
-      "stance": "Audit null for the live Book-2 VT \u00d7 gate-first overlay (1.00 excess of BIL)"
+      "stance": "Audit null for the live vol-target backbone \u00d7 gate-first overlay (1.00 excess of BIL)"
     }
   ]
 }

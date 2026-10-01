@@ -102,7 +102,7 @@ def test_pending_notes_are_marked_not_linked():
 
 
 # Quant's note is published byte-identical to /workspace/investments/published_notes/.
-LW2008_NOTE_SHA256 = 'a759b628e3b1d6fe6c47bc6159ab0892c55c7965906afce6aa720ff4ffb4b2bd'
+LW2008_NOTE_SHA256 = 'c82072257fdaa8d5c40f7a691ed92b7d890c7d86913c3129d91cd28b41f26ee4'  # re-pinned 2026-10-01: VT -> vol-target backbone wording
 
 
 def test_quant_lw2008_note_published_unchanged():
@@ -112,3 +112,16 @@ def test_quant_lw2008_note_published_unchanged():
     index = (DOCS / 'methods' / 'index.html').read_text(encoding='utf-8')
     assert 'href="../notes/book2_lw2008_drawdowns.html"' in index
     assert 'data-pending-note="notes/book2_lw2008_drawdowns.md"' not in index
+
+
+# CIO's reframe note is published byte-identical to /workspace/investments/published_notes/.
+REFRAME_NOTE_SHA256 = 'e32ea4f0b8c05d97bc5aefbf09cc423e388fe96a5c8384f8818b6429e971c7b3'  # re-pinned 2026-10-01: CIO revision (vol-target backbone)
+
+
+def test_cio_reframe_note_published_unchanged():
+    import hashlib
+    path = NOTES / 'book2_reframe.md'
+    assert hashlib.sha256(path.read_bytes()).hexdigest() == REFRAME_NOTE_SHA256
+    index = (DOCS / 'methods' / 'index.html').read_text(encoding='utf-8')
+    assert 'href="../notes/book2_reframe.html"' in index
+    assert 'data-pending-note="notes/book2_reframe.md"' not in index

@@ -78,7 +78,7 @@ function CioVerdictBand() {
             <p className="font-serif text-sm text-ink leading-snug font-medium md:mb-1">Book-2 = drawdown-controlled core</p>
             <p className="hidden md:block font-sans text-2xs text-body leading-relaxed">
               Book-2 is the drawdown-controlled version of the same stock core: about <LiveFig k="gap.points" /> a year less
-              return than the VT backbone (~<LiveFig k="book2.return" /> vs ~<LiveFig k="vt.return" />) for shallower drawdowns (−10.1% vs −20.1%)
+              return than the vol-target backbone (~<LiveFig k="book2.return" /> vs ~<LiveFig k="vt.return" />) for shallower drawdowns (−10.1% vs −20.1%)
               and lower volatility — not outperformance.
             </p>
           </div>
@@ -158,7 +158,7 @@ function MaxDdVisual({ m }: { m: MetricsPayload }) {
       <div className="p-4 space-y-3">
         <div>
           <div className="flex items-center justify-between mb-1">
-            <span className="font-sans text-2xs font-medium text-muted uppercase tracking-label">Book-2 VT backbone (no skew gate)</span>
+            <span className="font-sans text-2xs font-medium text-muted uppercase tracking-label">Backbone (no skew gate)</span>
             <span className="font-mono text-xs font-bold text-ink">{pct(m.MaxDD_vt)}</span>
           </div>
           <div className="relative h-8 bg-raised border border-border overflow-hidden">
@@ -360,7 +360,7 @@ export default function Home() {
               status="HOLD"
               statusColor="up"
               headline="Vol-target + skewness gate"
-              lede={<>Book 2 gives up about <LiveFig k="gap.points" /> a year of return versus the VT backbone in exchange for shallower drawdowns and lower volatility. Its protection has been seen in one bear market: in 2022 its drawdown was about half of VT's (−10.1% vs −20.1%), and it also cushioned the autumn 2023 pullback (−3.9% vs −9.0%). The skew gate has not switched on since January 2024, so through the 2024–2026 pullbacks Book 2 tracked VT. Its Sharpe above BIL is <LiveFig k="book2.exbil" /> vs <LiveFig k="vt.exbil" /> for VT; that difference is not statistically significant. Max drawdown −10.1% (VT backbone −20.1%, Book 1 −25.6%) · volatility ~10.6% (~13.9%, ~15.9%) · return ~<LiveFig k="book2.return" /> (~<LiveFig k="vt.return" />, ~<LiveFig k="book1.return" />) · Sharpe above BIL <LiveFig k="book2.exbil" /> (<LiveFig k="vt.exbil" />, <LiveFig k="book1.exbil" />)</>}
+              lede={<>Book 2 gives up about <LiveFig k="gap.points" /> a year of return versus the vol-target backbone in exchange for shallower drawdowns and lower volatility. Its protection has been seen in one bear market: in 2022 its drawdown was about half of the vol-target backbone's (−10.1% vs −20.1%), and it also cushioned the autumn 2023 pullback (−3.9% vs −9.0%). The skew gate has not switched on since January 2024, so through the 2024–2026 pullbacks Book 2 tracked the vol-target backbone. Its Sharpe above BIL is <LiveFig k="book2.exbil" /> vs <LiveFig k="vt.exbil" /> for the vol-target backbone; that difference is not statistically significant. Max drawdown −10.1% (vol-target backbone −20.1%, Book 1 −25.6%) · volatility ~10.6% (~13.9%, ~15.9%) · return ~<LiveFig k="book2.return" /> (~<LiveFig k="vt.return" />, ~<LiveFig k="book1.return" />) · Sharpe above BIL <LiveFig k="book2.exbil" /> (<LiveFig k="vt.exbil" />, <LiveFig k="book1.exbil" />)</>}
               link={{ label: 'See Book 2 path vs Book 1', to: '/books' }}
             />
           </div>
@@ -441,7 +441,7 @@ export default function Home() {
               {
                 method: 'Vol-cond-factor-corr (#13)',
                 note: 'Book-2 overlay · corr/vol gate · 12 trials',
-                bindingNull: 'Unconditional Book-2 VT',
+                bindingNull: 'Unconditional Backbone',
                 metrics: '0.75 (1.05) / −15.4%',
                 verdict: 'fail' as const,
                 href: './methods/allocation_alpha_vol_cond_factor_corr.html',
@@ -465,7 +465,7 @@ export default function Home() {
               {
                 method: 'Skewness-Managed (#6)',
                 note: 'Book-2 path overlay · gate-first · 68m OOS',
-                bindingNull: <>Unconditional Book-2 VT (<LiveFig k="vt.exbil" />, legacy <LiveFig k="vt.rf0" /> / −20.1%)</>,
+                bindingNull: <>Unconditional Backbone (<LiveFig k="vt.exbil" />, legacy <LiveFig k="vt.rf0" /> / −20.1%)</>,
                 metrics: <><LiveFig k="book2.exbil" /> (<LiveFig k="book2.rf0" />) / −10.1%</>,
                 verdict: 'pass' as const,
                 href: './methods/skewness_managed_stub.html',
@@ -512,7 +512,7 @@ export default function Home() {
               <strong className="text-ink">#6 Quant PASS note:</strong>{' '}
               Skewness-managed overlay cleared the gate as a Book-2 path (f̃_t = f_t · g_t, gate-first
               L63 / realized-Amaya / CVaR5 / g_min=0.5) as a drawdown control: MaxDD −10.1% vs −20.1% for the
-              unconditional Book-2 VT. Sharpe above BIL <LiveFig k="book2.exbil" /> vs <LiveFig k="vt.exbil" /> (legacy rf = 0: <LiveFig k="book2.rf0" /> vs <LiveFig k="vt.rf0" />); that difference
+              unconditional vol-target backbone. Sharpe above BIL <LiveFig k="book2.exbil" /> vs <LiveFig k="vt.exbil" /> (legacy rf = 0: <LiveFig k="book2.rf0" /> vs <LiveFig k="vt.rf0" />); that difference
               is not statistically significant. NW t vs Book-2 = −0.80. It is wired into live <strong className="text-ink">Book 2</strong> — not a
               separate third book. No book count change.
             </p>
@@ -540,7 +540,7 @@ export default function Home() {
           <div className="mt-6 grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-6">
             <div className="quote-block">
               <p className="font-serif text-base md:text-lg italic text-ink leading-snug">
-                "Static core + VT × gate-first skew overlay. Everything else failed binding nulls — research record only; unconditional Book-2 VT is the audit null."
+                "Static core + vol-target backbone × gate-first skew overlay. Everything else failed binding nulls — research record only; unconditional vol-target backbone is the audit null."
               </p>
               <cite className="text-2xs text-muted not-italic mt-2 block tracking-label uppercase font-sans">
                 Live shortlist rationale ·{' '}
@@ -549,7 +549,7 @@ export default function Home() {
             </div>
             <div className="quote-block">
               <p className="font-serif text-base md:text-lg italic text-ink leading-snug">
-                "Drawdown control, not return alpha. The unconditional VT backbone earns the same ~<LiveFig k="vt.return.whole" /> a year as Book-1; live Book-2 (with the skew gate) gives up about <LiveFig k="gap.points" /> a year (~<LiveFig k="book2.return" />) for shallower drawdowns and lower volatility. In the 2022 bear market its drawdown was about half of VT's (−10.1% vs −20.1%)."
+                "Drawdown control, not return alpha. The unconditional vol-target backbone earns the same ~<LiveFig k="vt.return.whole" /> a year as Book-1; live Book-2 (with the skew gate) gives up about <LiveFig k="gap.points" /> a year (~<LiveFig k="book2.return" />) for shallower drawdowns and lower volatility. In the 2022 bear market its drawdown was about half of the vol-target backbone's (−10.1% vs −20.1%)."
               </p>
               <cite className="text-2xs text-muted not-italic mt-2 block tracking-label uppercase font-sans">
                 Book-2 vol-target evidence ·{' '}
@@ -582,7 +582,7 @@ export default function Home() {
                 <div className="p-5">
                   <p className="font-serif text-sm text-body mb-4">
                     {m.n_months}-month OOS · {m.start_date} → {m.end_date} · real-BIL sample.
-                    Unconditional VT backbone of the live Book-2 sleeve (no skew gate) — not a separate promoted book.
+                    Unconditional vol-target backbone of the live Book-2 sleeve (no skew gate) — not a separate promoted book.
                     Sharpe in excess of BIL; legacy rf = 0 below.
                   </p>
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">
