@@ -898,6 +898,7 @@ def build_archive_scoreboard() -> None:
 def build_methods_index() -> None:
     methods = [
         ('allocation_alpha_vol_target.html', 'Allocation alpha: volatility-managed Option A'),
+        ('composition_over_time.html', 'Composition over time: month-by-month holdings (Books, EPO, archived methods)'),
         ('skewness_managed_stub.html', 'Skewness-Managed Book-2 Overlay (Justina #6 · gate-first PASS)'),
         ('allocation_alpha_epo.html', 'Enhanced Portfolio Optimization (EPO) with a 12-1 trend signal (Bet 1'
          + (')' if epo_results.available() else ' · pre-gate)')),
@@ -939,7 +940,8 @@ def build_methods_index() -> None:
 
 def restyle_methods_shell() -> None:
     methods = sorted(
-        p.name for p in (DOCS / 'methods').glob('*.html') if p.name not in {'index.html', 'justina_round1_scoreboard.html', epo_results.PAGE.removeprefix('methods/')}
+        p.name for p in (DOCS / 'methods').glob('*.html') if p.name not in {'index.html', 'justina_round1_scoreboard.html', epo_results.PAGE.removeprefix('methods/'),
+                          'composition_over_time.html'}
     )
     for name in methods:
         p = DOCS / 'methods' / name
@@ -987,6 +989,8 @@ def main() -> None:
             path.unlink()
             print('Removed leftover', leftover)
     epo_results.build_epo_results(page_shell, write_page)
+    import build_composition  # pandas: run with the repo venv (scripts/build_pages_v2.sh)
+    build_composition.write_data(DOCS, build_composition.build_page(page_shell, write_page))
     build_methods_index()
     build_archive_scoreboard()
     restyle_methods_shell()
