@@ -223,6 +223,29 @@
         "window": "2016-01..2026-09",
         "rf_fallback_share": 0.0
       }
+    },
+    "epo_anchored_trend": {
+      "Anchored EPO, w = 0.75 (method)": {
+        "exbil": 0.2684,
+        "rf0_legacy": 0.8542,
+        "n_months": 119,
+        "window": "2016-11-30..2026-09-30",
+        "source": "epo_allocator/summary.csv (gate run, full window)"
+      },
+      "1/\u03c3 anchor (EPO at w = 1)": {
+        "exbil": 0.6083,
+        "rf0_legacy": 0.8422,
+        "n_months": 119,
+        "window": "2016-11-30..2026-09-30",
+        "source": "epo_allocator/summary.csv (gate run, full window)"
+      },
+      "Weekly LW MinVar (primary null)": {
+        "exbil": 0.0405,
+        "rf0_legacy": 0.6872,
+        "n_months": 119,
+        "window": "2016-11-30..2026-09-30",
+        "source": "epo_allocator/summary.csv (gate run, full window)"
+      }
     }
   },
   "skew_nulls": {
