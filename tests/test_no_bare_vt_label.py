@@ -142,3 +142,14 @@ def test_chart_legends_and_titles_label_the_backbone():
         for label in labels:
             assert 'Book 2' not in label and 'Book-2' not in label, (path.name, label)
             assert not re.search(r'(?<![A-Za-z0-9_.?])(vt|VT)(?![A-Za-z0-9_])', label), (path.name, label)
+
+
+def test_no_vol_target_book2_mislabel_in_app_sources():
+    """The vol-target series/page is the backbone; "Vol-target (Book 2)" is the retired mislabel."""
+    src = ROOT / 'apps' / 'pages' / 'src'
+    hits = [p.relative_to(ROOT).as_posix() for p in src.rglob('*.ts*')
+            if 'Vol-target (Book 2)' in p.read_text(encoding='utf-8')]
+    legacy = ROOT / 'docs' / 'assets' / 'app.js'   # legacy static chart script, still served
+    if 'Vol-target (Book 2)' in legacy.read_text(encoding='utf-8'):
+        hits.append('docs/assets/app.js')
+    assert hits == []

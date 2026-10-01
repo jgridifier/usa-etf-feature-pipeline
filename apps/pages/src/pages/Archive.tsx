@@ -214,7 +214,7 @@ export default function Archive() {
               { label: 'FT-MED #4', href: './methods/allocation_alpha_forecast_tangency_med.html' },
               { label: 'RR-ERC #3', href: './methods/allocation_alpha_regime_resilient_erc.html' },
               { label: 'NLS GMV v3 (Bet 1)', href: './methods/allocation_alpha_nonlinear_shrinkage_gmv.html' },
-              { label: 'Vol-target (Book 2)', href: './methods/allocation_alpha_vol_target.html' },
+              { label: 'Vol-target backbone', href: './methods/allocation_alpha_vol_target.html' },
               { label: 'Skewness overlay #6', href: './methods/skewness_managed_stub.html' },
               { label: 'Archive scoreboard (static HTML)', href: './methods/justina_round1_scoreboard.html' },
             ].map(link => (
