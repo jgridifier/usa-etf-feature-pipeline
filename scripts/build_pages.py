@@ -49,6 +49,7 @@ import sys  # noqa: E402
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from build_notes import build_notes, notes_list_html  # noqa: E402
 from labels import relabel_archive  # noqa: E402
+import archive_void  # noqa: E402
 import build_epo_results as epo_results  # noqa: E402
 
 
@@ -798,14 +799,8 @@ def load_archive_cards() -> dict:
     return archive
 
 
-def archive_counts(archive: dict) -> dict:
-    counts: dict = {}
-    for card in archive['cards']:
-        counts[card['badge']] = counts.get(card['badge'], 0) + 1
-    return counts
-
-
-NUMBER_WORDS = {1: 'one', 2: 'two', 3: 'three', 4: 'four', 5: 'five', 6: 'six', 7: 'seven', 8: 'eight', 9: 'nine'}
+archive_counts = archive_void.counts      # one count per card and badge; FAIL and VOID separately
+NUMBER_WORDS = {n: archive_void.number_word(n) for n in range(1, 10)}
 
 
 def verdict_card_html(card, prefix) -> str:
@@ -816,6 +811,8 @@ def verdict_card_html(card, prefix) -> str:
         results_page = results_page.removeprefix('methods/')
     badge_class = 'badge badge-fail' if card['badge'] == 'FAIL' else 'badge'
     rows = [[row['label'], row['sharpe'], row['maxdd']] for row in card['rows']]
+    table = (table_html(['', 'Sharpe ex-BIL (legacy rf = 0)', 'MaxDD'], rows, f'{card["name"]} OOS vs null') if rows else
+             '<p class="muted">No Sharpe table for this VOID run; see the verdict and the OOS artifact.</p>')
 
     def href_for(href: str) -> str:
         if href.startswith('http'):
@@ -833,12 +830,12 @@ def verdict_card_html(card, prefix) -> str:
     )
     return (
         f'<article class="feature-card archive-card" id="card-{escape(card["id"])}">'
-        f'<span class="{badge_class}">{escape(card["badge"])}</span>'
+        f'<span class="{badge_class}">{escape(archive_void.badge_text(card))}</span>'
         f'<p><strong>{escape(card["name"])}</strong></p>'
         f'<p class="metric-sub">{escape(card["detail"])}</p>'
         f'<p><em>{escape(card["verdict"])}</em></p>'
         f'<p><strong>Binding null:</strong> {escape(card["null"])}</p>'
-        + table_html(['', 'Sharpe ex-BIL (legacy rf = 0)', 'MaxDD'], rows, f'{card["name"]} OOS vs null')
+        + table
         + measured_html
         + f'<p><strong>NW t:</strong> {escape(card["nw_t"])}{nw_links} · <strong>DSR (legacy rf = 0 Sharpe, vs zero):</strong> {escape(card["dsr"])}</p>'
         '<p class="muted">Gate memo / PR: '
@@ -856,7 +853,7 @@ def build_archive_scoreboard() -> None:
     has_epo = any(c['id'] == 'epo_anchored_trend' for c in archive['cards'])
     subtitle = (
         'Archived methods: Justina round-1 (Spectral RP, Regime-Aware), #13 VCFC, #4 FT-MED, #3 RR-ERC, '
-        'Bet 1 NLS GMV v3 (VOID) · '
+        f'Bet 1 {archive_void.void_runs(archive)} (VOID) · '
         + ('Bet 1 anchored EPO (FAIL) · ' if has_epo else '')
         + 'plus the unconditional vol-target backbone audit null · USA ETF experimental panel · '
         f'updated {archive["updated"]} (ET)'
@@ -869,10 +866,11 @@ def build_archive_scoreboard() -> None:
         '<div class="callout"><strong>Research only — not investment advice.</strong> '
         f'Negative / null results documented on purpose. The {NUMBER_WORDS.get(n_fail, n_fail)} failed methods are '
         '<strong>FAIL / ARCHIVE</strong> — not promoted to Books, not a showcase, not part of the live shortlist. '
-        'Bet 1 NLS GMV v3 is VOID (concentrated holdings) and the minimum-variance line is closed. '
+        f'Bet 1 {archive_void.void_runs(archive)} {archive_void.void_verb(archive)} VOID ({escape(archive_void.void_list(archive))}) '
+        'and the minimum-variance line is closed. '
         'Unconditional vol-target backbone is an AUDIT NULL (not live, not a FAIL).</div>'
         '<div class="callout"><strong>CIO frame:</strong> '
-        f'<p><em>None of the {NUMBER_WORDS.get(n_fail, n_fail)} archived methods cleared its binding null, and NLS GMV v3 is VOID.</em> <strong>No book cut.</strong></p>'
+        f'<p><em>None of the {NUMBER_WORDS.get(n_fail, n_fail)} archived methods cleared its binding null, and {archive_void.void_runs(archive)} {archive_void.void_verb(archive)} VOID.</em> <strong>No book cut.</strong></p>'
         '<p>Live shortlist: <strong>static core + vol-target backbone × gate-first skew overlay</strong> (Justina #6, PR #29). '
         'Unconditional vol-target backbone is the audit null that overlay was measured against — not live, not a FAIL.</p>'
         '<p>Further candidates must clear the same leakage · null · DSR · empirical gate. '
@@ -926,7 +924,7 @@ def build_methods_index() -> None:
         '<h2 id="notes">Notes for Jared</h2>'
         + notes_list_html('../notes/')
         + '<h2 id="archive">Archive / failed nulls</h2>'
-        f'<p class="lede archive-lede">{counts.get("FAIL", 0)} FAIL / ARCHIVE methods + {counts.get("VOID", 0)} VOID (NLS GMV v3) + {counts.get("AUDIT NULL", 0)} AUDIT NULL — research record only; <strong>not live books</strong>. '
+        f'<p class="lede archive-lede">{counts.get("FAIL", 0)} FAIL / ARCHIVE methods + {counts.get("VOID", 0)} VOID ({escape(archive_void.void_runs(archive))}) + {counts.get("AUDIT NULL", 0)} AUDIT NULL — research record only; <strong>not live books</strong>. '
         'Live shortlist: static core + vol-target backbone × gate-first skew overlay (Justina #6). '
         'Unconditional vol-target backbone is the audit null, not a FAIL.</p>'
         + ''.join(verdict_card_html(card, '') for card in archive['cards'])

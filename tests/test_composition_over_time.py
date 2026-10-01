@@ -7,6 +7,7 @@ from __future__ import annotations
 
 import json
 import re
+from html import escape
 import sys
 from pathlib import Path
 
@@ -16,6 +17,7 @@ import pytest
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / 'scripts'))
+import archive_void as av  # noqa: E402
 import build_composition as bc  # noqa: E402
 from usa_etf_features import gate_metrics as gm  # noqa: E402
 
@@ -206,26 +208,54 @@ def test_sleeve_keys_fall_in_untagged():
 
 def test_cash_limit_line_on_class_view():
     assert bc.CASH_LIMIT == gm.COMPOSITION_MAX_SHARE == 0.5
-    for cid in CHARTS:
+    for cid, c in CHARTS.items():
         view = card(cid).split('cot-view-class')[1].split('cot-view-ticker')[0]
+        if cid.startswith('nls_gmv_v3'):
+            continue
+        assert c['show_cash_limit'], cid
         assert view.count('stroke-dasharray="4 3"') == 1, cid
         assert 'stroke-dasharray' not in card(cid).split('cot-view-ticker')[1], cid
 
 
+def test_v3_card_never_references_the_cash_line():
+    for cid in ('nls_gmv_v3_156w', 'nls_gmv_v3_260w'):
+        html = card(cid)
+        assert not CHARTS[cid]['show_cash_limit']
+        assert 'stroke-dasharray' not in html and '50%' not in html.replace('>50%</text>', ''), cid
+        assert 'limit' not in html.lower(), cid
+
+
 # ------------------------------------------------------------- badges
 def test_badges_are_archive_verdicts():
-    arc = json.loads(bc.ARCHIVE_JSON.read_text(encoding='utf-8'))
-    for cid in ('nls_gmv_v1_156w', 'nls_gmv_v2_156w', 'nls_gmv_v1_260w', 'nls_gmv_v2_260w'):
-        run = 'nonlinear_shrinkage_gmv' if '_v1_' in cid else 'nonlinear_shrinkage_gmv_v2'
-        rep = json.loads((ROOT / 'data/processed' / run / 'gate_report.json').read_text(encoding='utf-8'))
-        v = rep['verdict']['verdict'] if isinstance(rep['verdict'], dict) else rep['verdict']
-        assert v == 'VOID'
-        assert CHARTS[cid]['badge'] == 'VOID'
-        assert '>VOID</span>' in card(cid) and '>FAIL</span>' not in card(cid)
+    arc = {c['id']: c for c in json.loads(bc.ARCHIVE_JSON.read_text(encoding='utf-8'))['cards']}
+    reports = {'v1': 'nonlinear_shrinkage_gmv/gate_report.json', 'v2': 'nonlinear_shrinkage_gmv_v2/gate_report.json',
+               'v3': 'nonlinear_shrinkage_gmv_v3/verdict.json'}
+    want = {'v1': 'VOID: cash-like 99.8% > 50%', 'v2': 'VOID: cash-like 96.6% > 50%', 'v3': 'VOID: effective N 2.6 < 5'}
+    for v, rel in reports.items():
+        rep = json.loads((ROOT / 'data/processed' / rel).read_text(encoding='utf-8'))
+        verdict = rep['verdict']['verdict'] if isinstance(rep['verdict'], dict) else rep['verdict']
+        assert verdict == 'VOID' == arc[f'nls_gmv_{v}']['badge']
+        for w in (156, 260):
+            cid = f'nls_gmv_{v}_{w}w'
+            assert CHARTS[cid]['badge'] == want[v] == av.badge_text(arc[f'nls_gmv_{v}'])
+            assert f'>{escape(want[v])}</span>' in card(cid) and 'FAIL' not in card(cid)
     epo = json.loads((ROOT / 'data/processed/epo_allocator/verdict.json').read_text(encoding='utf-8'))
     assert 'FAIL' in json.dumps(epo)
     assert CHARTS['epo_epo_a_w075']['badge'] == 'FAIL'
-    assert arc  # archive file readable
+
+
+def test_void_reasons_come_from_the_run_outputs():
+    arc = {c['id']: c for c in json.loads(bc.ARCHIVE_JSON.read_text(encoding='utf-8'))['cards']}
+    s3 = pd.read_csv(ROOT / 'data/processed/nonlinear_shrinkage_gmv_v3/summary.csv')
+    s3 = s3[(s3.window_weeks == 156) & s3.period.str.startswith('full') & (s3.strategy_id == 'nonlinear_shrinkage_gmv')]
+    r3 = arc['nls_gmv_v3']['void_reason']
+    assert (r3['kind'], r3['threshold']) == ('effective_n', 5)
+    assert r3['value'] == pytest.approx(float(s3['eff_N_mean'].iloc[0]), abs=1e-12)
+    for v, run in (('v1', 'nonlinear_shrinkage_gmv'), ('v2', 'nonlinear_shrinkage_gmv_v2')):
+        r = arc[f'nls_gmv_{v}']['void_reason']
+        assert (r['kind'], r['threshold']) == ('cash_like', gm.COMPOSITION_MAX_SHARE)
+        assert r['value'] == pytest.approx(_raw_tag_shares(run)['union'], abs=1e-12)
+        assert r['value'] == pytest.approx(CHARTS[f'nls_gmv_{v}_156w']['tag_shares']['union'], abs=1e-12)
 
 
 def test_void_runs_show_why():
@@ -360,15 +390,20 @@ def test_gmv_void_lines_come_from_the_weights():
     p = lambda x: f'{100 * x:.1f}%'  # noqa: E731
     line1 = (f"{p(v1['union'])} cash-like under today's tags ({p(v1['cash_like'])} BIL-type cash). "
              f"The {p(float(rec1.iloc[0]))} recorded at the time used the old Category labels.")
-    line2 = (f"{p(v2['union'])} under today's tags: {p(v2['short_duration'])} short-duration plus "
-             f"{p(v2['near_cash'])} near-cash (FTSL/SRLN). "
-             f"The {p(float(rec2.iloc[0]))} recorded at the time came before the near-cash tag existed.")
+    assert v2['cash_like'] == 0 and p(v2['short_duration']) == p(float(rec2.iloc[0]))
+    line2 = (f"{p(v2['union'])} under today's tags. The {p(float(rec2.iloc[0]))} short-duration share matches the figure "
+             "recorded at the time; the rest is FTSL, which was tagged near-cash later. "
+             "Above 50% either way; the VOID verdict is unchanged.")
     both = 'Above 50% either way; the VOID verdict is unchanged.'
-    for cid, line in (('nls_gmv_v1_156w', line1), ('nls_gmv_v2_156w', line2)):
-        html = card(cid)
-        assert f'<p>{line}</p>'.replace("'", '&#x27;') in html, (cid, line)
-        assert f'<p>{both}</p>' in html
-        assert bc.void_lines(CHARTS[cid]) == [line, both]
+    assert f'<p>{line1}</p>'.replace("'", '&#x27;') in card('nls_gmv_v1_156w')
+    assert f'<p>{both}</p>' in card('nls_gmv_v1_156w')
+    assert bc.void_lines(CHARTS['nls_gmv_v1_156w']) == [line1, both]
+    assert f'<p>{line2}</p>'.replace("'", '&#x27;') in card('nls_gmv_v2_156w')
+    assert bc.void_lines(CHARTS['nls_gmv_v2_156w']) == [line2]
+    assert line2 == ("96.6% under today's tags. The 84.1% short-duration share matches the figure recorded at the time; "
+                     "the rest is FTSL, which was tagged near-cash later. Above 50% either way; the VOID verdict is unchanged.")
+    assert 'SRLN' not in card('nls_gmv_v2_156w')
+    assert CHARTS['nls_gmv_v2_156w']['tag_shares']['near_cash_held'] == ['FTSL']
     assert v1['union'] > .5 and v2['union'] > .5 and float(rec1.iloc[0]) > .5 and float(rec2.iloc[0]) > .5
     # Pinned to the current files (Quant's ruling, 156-week window only).
     assert (p(v1['union']), p(v1['cash_like']), p(float(rec1.iloc[0]))) == ('99.8%', '98.9%', '81.0%')

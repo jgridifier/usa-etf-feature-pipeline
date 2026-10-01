@@ -20,6 +20,8 @@ import pandas as pd
 
 from usa_etf_features import gate_metrics as gm
 
+import archive_void
+
 ROOT = Path(__file__).resolve().parents[1]
 P = ROOT / 'data' / 'processed'
 UNIVERSE = ROOT / 'data' / 'raw' / 'usa_universe_categorized.csv'
@@ -122,9 +124,13 @@ def metric(rel, col, **match):
 
 
 # ------------------------------------------------------------------ verdicts
+def archive_cards() -> dict:
+    return {c['id']: c for c in json.loads(ARCHIVE_JSON.read_text(encoding='utf-8'))['cards']}
+
+
 def archive_badges() -> dict:
-    cards = json.loads(ARCHIVE_JSON.read_text(encoding='utf-8'))['cards']
-    return {c['id']: c['badge'] for c in cards}
+    """Badge text per archive card; a VOID card's badge reads its own void_reason (archive_void.badge_text)."""
+    return {cid: archive_void.badge_text(c) for cid, c in archive_cards().items()}
 
 
 def gate_report_verdict(rel) -> str:
@@ -135,6 +141,7 @@ def gate_report_verdict(rel) -> str:
 # ------------------------------------------------------------------ specs
 def specs() -> list[dict]:
     badges = archive_badges()
+    cards = archive_cards()
     epo_verdict = json.loads((P / 'epo_allocator/verdict.json').read_text(encoding='utf-8'))['verdict']
     epo = 'epo_allocator/weights.csv'
 
@@ -168,14 +175,17 @@ def specs() -> list[dict]:
         match = dict(strategy_id='nonlinear_shrinkage_gmv', window_weeks=window)
         if version == 'v3':
             match['period_role'] = pd.read_csv(P / summary).period_role.iloc[0]
+        reason = cards[f'nls_gmv_{version}'].get('void_reason') or {}
         return dict(id=f'nls_gmv_{version}_{window}w', group='archive', optional=optional, default_view='class',
+                    void_reason_kind=reason.get('kind'),
+                    # v3 is VOID for low effective N, not cash: its card never references the 50% cash line.
+                    show_cash_limit=reason.get('kind') != 'effective_n',
                     name=f'NLS GMV {version} ({window}w{", method" if not optional else ", sensitivity"})', badge=badge,
                     source=f'data/processed/{rel}', load=lambda: long_weights(rel, filters=flt),
                     metrics=dict(equity=None, eff_n=metric(summary, 'eff_N_mean', **match),
                                  turnover=metric(summary, 'turnover_per_year', **match)))
 
-    v1 = gate_report_verdict('nonlinear_shrinkage_gmv/gate_report.json')
-    v2 = gate_report_verdict('nonlinear_shrinkage_gmv_v2/gate_report.json')
+    v1, v2 = badges['nls_gmv_v1'], badges['nls_gmv_v2']     # archive cards, each run counted on its own
     vcfc = 'VCFC_option_a_vt_L21_C12_g0p5_mkt_vol'
     out = [
         # Books: open on tickers, BIL its own band/line.
@@ -274,6 +284,7 @@ def tag_shares(pivot: pd.DataFrame, universe: pd.DataFrame) -> dict:
     out = {c: float(pivot[[t for t in pivot.columns if t in tk]].sum(axis=1).mean()) for c, tk in sets.items()}
     out['union'] = float(pivot[[t for t in pivot.columns if t in union]].sum(axis=1).mean())
     out['near_cash_tickers'] = sorted(sets[gm.NEAR_CASH_COLUMN])
+    out['near_cash_held'] = sorted(t for t in pivot.columns if t in sets[gm.NEAR_CASH_COLUMN] and pivot[t].max() > 0)
     return out
 
 
@@ -287,13 +298,20 @@ def void_lines(c: dict) -> list[str]:
     if c['void_kind'] == 'v1':
         first = (f"{pct1(t['union'])} cash-like under today's tags ({pct1(t[gm.CASH_LIKE_COLUMN])} BIL-type cash). "
                  f"The {pct1(rec)} recorded at the time used the old Category labels.")
+        both = ['Above 50% either way; the VOID verdict is unchanged.']
     else:
-        first = (f"{pct1(t['union'])} under today's tags: {pct1(t[gm.SHORT_DURATION_COLUMN])} short-duration plus "
-                 f"{pct1(t[gm.NEAR_CASH_COLUMN])} near-cash ({'/'.join(t['near_cash_tickers'])}). "
-                 f"The {pct1(rec)} recorded at the time came before the near-cash tag existed.")
+        if pct1(t[gm.SHORT_DURATION_COLUMN]) != pct1(rec):
+            raise ValueError(f"{c['id']}: short-duration share no longer matches the recorded figure")
+        if t[gm.CASH_LIKE_COLUMN] > 0:
+            raise ValueError(f"{c['id']}: the rest is no longer only near-cash")
+        rest = '/'.join(t['near_cash_held'])
+        first = (f"{pct1(t['union'])} under today's tags. The {pct1(rec)} short-duration share matches the figure "
+                 f"recorded at the time; the rest is {rest}, which was tagged near-cash later. "
+                 'Above 50% either way; the VOID verdict is unchanged.')
+        both = []
     if not (t['union'] > CASH_LIMIT and rec > CASH_LIMIT):
         raise ValueError(f"{c['id']}: 'above 50% either way' no longer holds")
-    return [first, 'Above 50% either way; the VOID verdict is unchanged.']
+    return [first] + both
 
 
 def build_chart(spec: dict, bands: dict, gate_months: list[str] | None, universe: pd.DataFrame | None = None) -> dict:
@@ -335,6 +353,7 @@ def build_chart(spec: dict, bands: dict, gate_months: list[str] | None, universe
         void_kind=spec.get('void_kind'),
         tag_shares=tag_shares(pivot, universe) if universe is not None else None,
         books_source=spec.get('books_source'), source_note=spec.get('source_note'),
+        show_cash_limit=spec.get('show_cash_limit', True), void_reason_kind=spec.get('void_reason_kind'),
         latest=dict(month=months[-1], rows=latest),
     )
 
@@ -450,11 +469,12 @@ def fmt_metric(m, kind):
 def chart_html(c: dict, gate_label: str) -> str:
     tick_names = list(c['ticker_series'])
     tcol = ticker_colors(tick_names)
-    view_class = svg_stack(c['months'], c['class_series'], BAND_COLORS, gate=c['gate_on_months'], limit=CASH_LIMIT,
+    view_class = svg_stack(c['months'], c['class_series'], BAND_COLORS, gate=c['gate_on_months'],
+                           limit=CASH_LIMIT if c['show_cash_limit'] else None,
                            title=f"{c['name']}: asset-class bands")
     view_tick = svg_stack(c['months'], c['ticker_series'], tcol, gate=c['gate_on_months'],
                           title=f"{c['name']}: top holdings")
-    badge_cls = 'badge badge-fail' if c['badge'] in ('FAIL', 'VOID', 'INVALID') else 'badge'
+    badge_cls = 'badge badge-fail' if c['badge'].split(':')[0] in ('FAIL', 'VOID', 'INVALID') else 'badge'
     rid = f"cot-{c['id']}"
     cls_checked = ' checked' if c['default_view'] == 'class' else ''
     tick_checked = ' checked' if c['default_view'] == 'ticker' else ''
@@ -490,7 +510,8 @@ def chart_html(c: dict, gate_label: str) -> str:
         f'<input type="radio" id="{rid}-tick" name="{rid}" value="ticker"{tick_checked}>'
         f'<label for="{rid}-tick">Top holdings</label>'
         f'<div class="cot-view cot-view-class">{view_class}{legend(c["class_series"], BAND_COLORS)}'
-        f'<p class="muted cot-limit">Dashed line: {int(100 * CASH_LIMIT)}% limit on the cash-like band (bottom).</p></div>'
+        + (f'<p class="muted cot-limit">Dashed line: {int(100 * CASH_LIMIT)}% limit on the cash-like band (bottom).</p>'
+           if c['show_cash_limit'] else '') + '</div>'
         f'<div class="cot-view cot-view-ticker">{view_tick}{legend(c["ticker_series"], tcol)}'
         f'<p class="muted">Top {TOP_N} holdings by average weight; XSD always its own line'
         + ('; BIL its own band' if c['group'] == 'books' else '') + '; the rest is Other.</p></div>'

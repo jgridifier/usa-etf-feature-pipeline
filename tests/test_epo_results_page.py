@@ -86,7 +86,8 @@ def test_archived_fail_card_on_methods_and_archive_scoreboard():
     assert card['verdict'].startswith(d['verdict']['verdict_line'])
     assert card['nw_t_links'] == [{'label': 'Results page', 'href': 'methods/allocation_alpha_epo_results.html'}]
     # The frozen archive file carries exactly this generated card (appended 2026-10-01).
-    assert json.loads(ARCHIVE.read_text(encoding='utf-8'))['cards'][-1] == card
+    cards = {c['id']: c for c in json.loads(ARCHIVE.read_text(encoding='utf-8'))['cards']}
+    assert cards['epo_anchored_trend'] == card
     rows = {r['role']: r for r in card['rows']}
     assert rows['method']['sharpe'] == f"{b.num(m['Sharpe_exBIL'])} (legacy {b.num(m['Sharpe_rf0_legacy'])})" == '0.27 (legacy 0.85)'
     assert rows['reference']['sharpe'].startswith('0.61 ')
@@ -101,12 +102,12 @@ def test_archived_fail_card_on_methods_and_archive_scoreboard():
         # Appended to the archive record: listed after every pre-existing card.
         assert html.index('id="card-nls_gmv_v3"') < html.index('id="card-uncond_book2_vt"') < start, rel
     methods = (DOCS / 'methods' / 'index.html').read_text(encoding='utf-8')
-    assert '6 FAIL / ARCHIVE methods + 1 VOID' in methods
+    assert '6 FAIL / ARCHIVE methods + 3 VOID (NLS GMV v1, NLS GMV v2 and NLS GMV v3)' in methods
     assert 'EPO gate results: FAIL / ARCHIVE' in methods
     board = (DOCS / 'methods' / 'justina_round1_scoreboard.html').read_text(encoding='utf-8')
     assert 'The six failed methods are' in board
-    # CIO quote: only the count changes (derived from the FAIL cards).
-    assert ('<p><em>None of the six archived methods cleared its binding null, and NLS GMV v3 is VOID.</em> '
+    # CIO quote: only the counts change (FAIL cards; VOID runs from the VOID cards, 2026-10-01).
+    assert ('<p><em>None of the six archived methods cleared its binding null, and NLS GMV v1, NLS GMV v2 and NLS GMV v3 are VOID.</em> '
             '<strong>No book cut.</strong></p>') in board
     assert 'None of the five archived methods' not in board
 
@@ -142,15 +143,21 @@ def test_cio_copy_edits_present_and_in_order():
 
 
 def test_archive_file_pre_existing_entries_byte_identical():
+    """Pre-existing cards are byte-identical, apart from the per-run VOID reason (Quant, 2026-10-01)
+    inserted as the last key of the v3 card; the NLS GMV v1 / v2 VOID cards are appended after EPO."""
     import hashlib
+    import re as _re
     data = ARCHIVE.read_bytes()
+    stripped, n = _re.subn(rb',\n      "void_reason": \{\n(?:        [^\n]*\n)*?      \}(?=\n    \},\n    \{\n      "id": "uncond_book2_vt")',
+                           b'', data)
+    assert n == 1, 'v3 void_reason must be the last key of the v3 card'
     marker = b',\n    {\n      "id": "epo_anchored_trend"'
-    assert marker in data, 'EPO card must be appended after the pre-existing cards'
-    prefix = data[:data.index(marker)]
+    assert marker in stripped, 'EPO card must be appended after the pre-existing cards'
+    prefix = stripped[:stripped.index(marker)]
     assert len(prefix) == ARCHIVE_PREFIX_LEN
     assert hashlib.sha256(prefix).hexdigest() == ARCHIVE_PREFIX_SHA256
     assert data.endswith(b'\n  ]\n}\n')
-    assert [c['id'] for c in json.loads(data)['cards']] == PRE_EXISTING_IDS + ['epo_anchored_trend']
+    assert [c['id'] for c in json.loads(data)['cards']] == PRE_EXISTING_IDS + ['epo_anchored_trend', 'nls_gmv_v1', 'nls_gmv_v2']
 
 
 def test_archive_tab_has_epo_card():

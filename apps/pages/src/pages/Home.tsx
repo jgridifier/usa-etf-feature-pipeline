@@ -2,7 +2,7 @@ import { Link } from 'react-router-dom'
 import { useJsonData } from '../hooks/useJsonData'
 import { pct, num } from '../lib/utils'
 import { LiveFig } from '../lib/liveFigures'
-import { failCount, voidCount, numberWord } from '../lib/archiveCounts'
+import { failCount, voidCount, numberWord, failNames, voidNoun, voidList } from '../lib/archiveCounts'
 
 interface MetricsPayload {
   AnnReturn_vt: number
@@ -67,7 +67,7 @@ function CioVerdictBand() {
           <div>
             <p className="font-serif text-sm text-ink leading-snug font-medium md:mb-1">Archive failures + XSD sleeve</p>
             <p className="hidden md:block font-sans text-2xs text-body leading-relaxed">
-              Spectral RP, Regime-Aware, and #13 failed binding-null gates — archived only.
+              {failNames} failed binding-null gates — archived only.
               XSD is a gated sleeve, default <strong>OFF</strong>, never a live book.
             </p>
           </div>
@@ -312,7 +312,7 @@ export default function Home() {
               Static core +<br className="hidden sm:block" /> Book&#8209;2 vol&#8209;target
             </h2>
             <p className="font-serif text-sm md:text-base text-body leading-relaxed max-w-2xl mb-5">
-              Two live books on the experimental USA ETF panel. Three archived methods failed
+              Two live books on the experimental USA ETF panel. {numberWord(failCount, true)} archived methods failed
               binding nulls — research record only. Static GitHub Pages — no live trading.
             </p>
 
@@ -383,9 +383,7 @@ export default function Home() {
                 </div>
                 <h3 className="font-display font-bold text-xl text-ink leading-tight mb-2">Wide-panel FAILs — rigor signal</h3>
                 <p className="font-serif text-sm text-body leading-relaxed mb-3">
-                  Five methods failed binding nulls: Spectral RP, Regime-Aware Dual-Regime (#2),
-                  vol-cond-factor-corr (#13), Forecast Tangency + MED (#4), and Regime-Resilient
-                  ERC (#3). Documented on purpose — these failures are the trust signal, not a
+                  {numberWord(failCount, true)} methods failed binding nulls: {failNames}. Documented on purpose — these failures are the trust signal, not a
                   parallel product shelf. Research record only.
                 </p>
                 <Link
@@ -407,8 +405,8 @@ export default function Home() {
           <p className="font-sans text-xs text-muted mt-3 mb-5 max-w-2xl leading-relaxed">
             All methods scored on the experimental USA ETF panel via walk-forward OOS.
             Binding-null gates on Sharpe; DSR / trial counts pre-declared. Sharpe shown in excess of BIL,
-            legacy rf = 0 in parentheses (the basis of the archived verdicts, which do not change).
-            {numberWord(failCount, true)} FAILs and {numberWord(voidCount)} VOID (NLS GMV v3, concentrated holdings) documented as the rigour record. #6 skewness overlay cleared the
+            legacy rf = 0 in parentheses (the basis of the archived verdicts, which do not change).{' '}
+            {numberWord(failCount, true)} FAILs and {numberWord(voidCount)} {voidNoun} ({voidList}) documented as the rigour record. #6 skewness overlay cleared the
             gate as a Book-2 path — not a third book.
           </p>
 

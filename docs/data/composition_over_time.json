@@ -817,10 +817,13 @@
     "near_cash_tickers": [
      "FTSL",
      "SRLN"
-    ]
+    ],
+    "near_cash_held": []
    },
    "books_source": "data/processed/live/vol_target_oos_returns.csv",
    "source_note": "EPO-gate rebuild of the 70/20/10 mix, from Nov 2020",
+   "show_cash_limit": true,
+   "void_reason_kind": null,
    "latest": {
     "month": "2026-09",
     "rows": [
@@ -1676,10 +1679,13 @@
     "near_cash_tickers": [
      "FTSL",
      "SRLN"
-    ]
+    ],
+    "near_cash_held": []
    },
    "books_source": "data/processed/live/skew_managed_gatefirst_returns.csv",
    "source_note": null,
+   "show_cash_limit": true,
+   "void_reason_kind": null,
    "latest": {
     "month": "2026-09",
     "rows": [
@@ -2507,10 +2513,13 @@
     "near_cash_tickers": [
      "FTSL",
      "SRLN"
-    ]
+    ],
+    "near_cash_held": []
    },
    "books_source": "data/processed/live/vol_target_oos_returns.csv",
    "source_note": null,
+   "show_cash_limit": true,
+   "void_reason_kind": null,
    "latest": {
     "month": "2026-09",
     "rows": [
@@ -5110,10 +5119,13 @@
     "near_cash_tickers": [
      "FTSL",
      "SRLN"
-    ]
+    ],
+    "near_cash_held": []
    },
    "books_source": null,
    "source_note": null,
+   "show_cash_limit": true,
+   "void_reason_kind": null,
    "latest": {
     "month": "2026-09",
     "rows": [
@@ -7949,10 +7961,13 @@
     "near_cash_tickers": [
      "FTSL",
      "SRLN"
-    ]
+    ],
+    "near_cash_held": []
    },
    "books_source": null,
    "source_note": null,
+   "show_cash_limit": true,
+   "void_reason_kind": null,
    "latest": {
     "month": "2026-09",
     "rows": [
@@ -11060,10 +11075,13 @@
     "near_cash_tickers": [
      "FTSL",
      "SRLN"
-    ]
+    ],
+    "near_cash_held": []
    },
    "books_source": null,
    "source_note": null,
+   "show_cash_limit": true,
+   "void_reason_kind": null,
    "latest": {
     "month": "2026-09",
     "rows": [
@@ -13731,10 +13749,13 @@
     "near_cash_tickers": [
      "FTSL",
      "SRLN"
-    ]
+    ],
+    "near_cash_held": []
    },
    "books_source": null,
    "source_note": null,
+   "show_cash_limit": true,
+   "void_reason_kind": null,
    "latest": {
     "month": "2026-09",
     "rows": [
@@ -16842,10 +16863,13 @@
     "near_cash_tickers": [
      "FTSL",
      "SRLN"
-    ]
+    ],
+    "near_cash_held": []
    },
    "books_source": null,
    "source_note": null,
+   "show_cash_limit": true,
+   "void_reason_kind": null,
    "latest": {
     "month": "2026-09",
     "rows": [
@@ -19877,10 +19901,13 @@
     "near_cash_tickers": [
      "FTSL",
      "SRLN"
-    ]
+    ],
+    "near_cash_held": []
    },
    "books_source": null,
    "source_note": null,
+   "show_cash_limit": true,
+   "void_reason_kind": null,
    "latest": {
     "month": "2026-09",
     "rows": [
@@ -22596,10 +22623,13 @@
     "near_cash_tickers": [
      "FTSL",
      "SRLN"
-    ]
+    ],
+    "near_cash_held": []
    },
    "books_source": null,
    "source_note": null,
+   "show_cash_limit": true,
+   "void_reason_kind": null,
    "latest": {
     "month": "2026-09",
     "rows": [
@@ -25615,10 +25645,13 @@
     "near_cash_tickers": [
      "FTSL",
      "SRLN"
-    ]
+    ],
+    "near_cash_held": []
    },
    "books_source": null,
    "source_note": null,
+   "show_cash_limit": true,
+   "void_reason_kind": null,
    "latest": {
     "month": "2026-09",
     "rows": [
@@ -27654,10 +27687,15 @@
     "near_cash_tickers": [
      "FTSL",
      "SRLN"
+    ],
+    "near_cash_held": [
+     "FTSL"
     ]
    },
    "books_source": null,
    "source_note": null,
+   "show_cash_limit": true,
+   "void_reason_kind": null,
    "latest": {
     "month": "2026-08",
     "rows": [
@@ -33387,10 +33425,16 @@
     "near_cash_tickers": [
      "FTSL",
      "SRLN"
+    ],
+    "near_cash_held": [
+     "FTSL",
+     "SRLN"
     ]
    },
    "books_source": null,
    "source_note": null,
+   "show_cash_limit": true,
+   "void_reason_kind": null,
    "latest": {
     "month": "2026-08",
     "rows": [
@@ -34940,10 +34984,13 @@
     "near_cash_tickers": [
      "FTSL",
      "SRLN"
-    ]
+    ],
+    "near_cash_held": []
    },
    "books_source": null,
    "source_note": null,
+   "show_cash_limit": true,
+   "void_reason_kind": null,
    "latest": {
     "month": "2026-09",
     "rows": [
@@ -40016,10 +40063,13 @@
     "near_cash_tickers": [
      "FTSL",
      "SRLN"
-    ]
+    ],
+    "near_cash_held": []
    },
    "books_source": null,
    "source_note": null,
+   "show_cash_limit": true,
+   "void_reason_kind": null,
    "latest": {
     "month": "2026-09",
     "rows": [
@@ -44894,10 +44944,13 @@
     "near_cash_tickers": [
      "FTSL",
      "SRLN"
-    ]
+    ],
+    "near_cash_held": []
    },
    "books_source": null,
    "source_note": null,
+   "show_cash_limit": true,
+   "void_reason_kind": null,
    "latest": {
     "month": "2026-09",
     "rows": [
@@ -49848,10 +49901,13 @@
     "near_cash_tickers": [
      "FTSL",
      "SRLN"
-    ]
+    ],
+    "near_cash_held": []
    },
    "books_source": null,
    "source_note": null,
+   "show_cash_limit": true,
+   "void_reason_kind": null,
    "latest": {
     "month": "2026-09",
     "rows": [
@@ -49942,7 +49998,7 @@
    "id": "nls_gmv_v1_156w",
    "group": "archive",
    "name": "NLS GMV v1 (156w, method)",
-   "badge": "VOID",
+   "badge": "VOID: cash-like 99.8% > 50%",
    "optional": false,
    "default_view": "class",
    "source": "data/processed/nonlinear_shrinkage_gmv/weights.csv",
@@ -51453,10 +51509,15 @@
     "near_cash_tickers": [
      "FTSL",
      "SRLN"
+    ],
+    "near_cash_held": [
+     "FTSL"
     ]
    },
    "books_source": null,
    "source_note": null,
+   "show_cash_limit": true,
+   "void_reason_kind": "cash_like",
    "latest": {
     "month": "2026-08",
     "rows": [
@@ -51507,7 +51568,7 @@
    "id": "nls_gmv_v2_156w",
    "group": "archive",
    "name": "NLS GMV v2 (156w, method)",
-   "badge": "VOID",
+   "badge": "VOID: cash-like 96.6% > 50%",
    "optional": false,
    "default_view": "class",
    "source": "data/processed/nonlinear_shrinkage_gmv_v2/weights.csv",
@@ -53000,10 +53061,15 @@
     "near_cash_tickers": [
      "FTSL",
      "SRLN"
+    ],
+    "near_cash_held": [
+     "FTSL"
     ]
    },
    "books_source": null,
    "source_note": null,
+   "show_cash_limit": true,
+   "void_reason_kind": "cash_like",
    "latest": {
     "month": "2026-08",
     "rows": [
@@ -53054,7 +53120,7 @@
    "id": "nls_gmv_v3_156w",
    "group": "archive",
    "name": "NLS GMV v3 (156w, method)",
-   "badge": "VOID",
+   "badge": "VOID: effective N 2.6 < 5",
    "optional": false,
    "default_view": "class",
    "source": "data/processed/nonlinear_shrinkage_gmv_v3/weights.csv",
@@ -55700,10 +55766,13 @@
     "near_cash_tickers": [
      "FTSL",
      "SRLN"
-    ]
+    ],
+    "near_cash_held": []
    },
    "books_source": null,
    "source_note": null,
+   "show_cash_limit": false,
+   "void_reason_kind": "effective_n",
    "latest": {
     "month": "2026-09",
     "rows": [
@@ -55730,7 +55799,7 @@
    "id": "nls_gmv_v1_260w",
    "group": "archive",
    "name": "NLS GMV v1 (260w, sensitivity)",
-   "badge": "VOID",
+   "badge": "VOID: cash-like 99.8% > 50%",
    "optional": true,
    "default_view": "class",
    "source": "data/processed/nonlinear_shrinkage_gmv/weights.csv",
@@ -57238,10 +57307,15 @@
     "near_cash_tickers": [
      "FTSL",
      "SRLN"
+    ],
+    "near_cash_held": [
+     "FTSL"
     ]
    },
    "books_source": null,
    "source_note": null,
+   "show_cash_limit": true,
+   "void_reason_kind": "cash_like",
    "latest": {
     "month": "2026-08",
     "rows": [
@@ -57296,7 +57370,7 @@
    "id": "nls_gmv_v2_260w",
    "group": "archive",
    "name": "NLS GMV v2 (260w, sensitivity)",
-   "badge": "VOID",
+   "badge": "VOID: cash-like 96.6% > 50%",
    "optional": true,
    "default_view": "class",
    "source": "data/processed/nonlinear_shrinkage_gmv_v2/weights.csv",
@@ -58786,10 +58860,15 @@
     "near_cash_tickers": [
      "FTSL",
      "SRLN"
+    ],
+    "near_cash_held": [
+     "FTSL"
     ]
    },
    "books_source": null,
    "source_note": null,
+   "show_cash_limit": true,
+   "void_reason_kind": "cash_like",
    "latest": {
     "month": "2026-08",
     "rows": [
@@ -58836,7 +58915,7 @@
    "id": "nls_gmv_v3_260w",
    "group": "archive",
    "name": "NLS GMV v3 (260w, sensitivity)",
-   "badge": "VOID",
+   "badge": "VOID: effective N 2.6 < 5",
    "optional": true,
    "default_view": "class",
    "source": "data/processed/nonlinear_shrinkage_gmv_v3/weights.csv",
@@ -61455,10 +61534,13 @@
     "near_cash_tickers": [
      "FTSL",
      "SRLN"
-    ]
+    ],
+    "near_cash_held": []
    },
    "books_source": null,
    "source_note": null,
+   "show_cash_limit": false,
+   "void_reason_kind": "effective_n",
    "latest": {
     "month": "2026-09",
     "rows": [
