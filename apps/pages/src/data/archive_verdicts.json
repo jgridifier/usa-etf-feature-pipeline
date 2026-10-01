@@ -276,6 +276,13 @@
       "measured": {
         "label": "Quant lesson (2026-09-26)",
         "text": "On stocks the estimator's edge disappears: vol only 10.66% vs 10.83% (about 1.5% lower, LW2011 p ≈ 0.15), and the 260w run went the other way. With long-only caps the no-short constraint already does most of the shrinking (Jagannathan & Ma 2003). The minimum-variance line is closed for good — no v4. USMV buy-and-hold is an in-sample reference only, not a sleeve candidate."
+      },
+      "void_reason": {
+        "run": "NLS GMV v3",
+        "kind": "effective_n",
+        "value": 2.6283810790694653,
+        "threshold": 5,
+        "source": "nonlinear_shrinkage_gmv_v3/summary.csv: eff_N_mean, 156w full window, nonlinear_shrinkage_gmv"
       }
     },
     {
@@ -357,6 +364,72 @@
           "href": "methods/allocation_alpha_epo_results.html"
         }
       ]
+    },
+    {
+      "id": "nls_gmv_v1",
+      "name": "Bet 1 NLS GMV v1 (nonlinear shrinkage min-variance, mixed universe)",
+      "detail": "Ledoit & Wolf 2020 analytical NLS · mixed stock-and-bond panel · weekly 156w primary / 260w sensitivity · 65m OOS (2021-04 → 2026-08) · 5 bps",
+      "badge": "VOID",
+      "verdict": "VOID — cash-dominated, no evidence of estimator edge. All criteria passed mechanically, but the test design was broken: the primary null (weekly LW MinVar) was ~68% in the cash-like category and the method ~81%, and Sharpe_rf0 rewards whichever holds more T-bills. NW t vs the null was +0.48 (156w) / +0.76 (260w): no evidence of a return edge. DSR at a low trial_count is effectively PSR vs zero and carries no weight.",
+      "null": "Weekly LW MinVar on the same names (primary)",
+      "rows": [],
+      "nw_t": "+0.48 vs weekly LW MinVar (156w); +0.76 (260w)",
+      "dsr": "not decisive (low trial count; effectively PSR vs zero)",
+      "gate": {
+        "label": "PR #34",
+        "href": "https://github.com/jgridifier/usa-etf-feature-pipeline/pull/34"
+      },
+      "method_page": "methods/allocation_alpha_nonlinear_shrinkage_gmv.html",
+      "artifact": {
+        "label": "nonlinear_shrinkage_gmv/summary.csv",
+        "href": "https://github.com/jgridifier/usa-etf-feature-pipeline/blob/main/data/processed/nonlinear_shrinkage_gmv/summary.csv"
+      },
+      "archived": "2026-09-26",
+      "archived_via": "PR #34 merged (8d2cc89); re-specified as v2",
+      "measured": {
+        "label": "Quant cash-share caveat (2026-09-26)",
+        "text": "The 'US Treasuries / Govt / Cash-like' category used for the cash shares also contains duration (e.g. GOVT, IEF, TLT, SHY), while USFR sits in 'High Yield Credit'; quoted cash shares therefore mix in some duration and are not a pure T-bill share."
+      },
+      "void_reason": {
+        "run": "NLS GMV v1",
+        "kind": "cash_like",
+        "value": 0.9976311064216064,
+        "threshold": 0.5,
+        "source": "nonlinear_shrinkage_gmv/weights.csv, 156w nonlinear_shrinkage_gmv, mean over rebalances of the weight tagged cash_like / short_duration / near_cash (composition tripwire tags)"
+      }
+    },
+    {
+      "id": "nls_gmv_v2",
+      "name": "Bet 1 NLS GMV v2 (ex-cash nonlinear shrinkage min-variance)",
+      "detail": "Ledoit & Wolf 2020 analytical NLS · mixed panel, cash_like names excluded · weekly 156w primary / 260w sensitivity · 65m OOS (2021-04 → 2026-08) · 5 bps",
+      "badge": "VOID",
+      "verdict": "VOID: short-duration dominated (pre-registered tripwire) — Quant, 2026-09-26. Pre-registered criterion 5 tripwire: at 156w the method averages 84.1% short_duration weight (SHY 57.8%, SPTS 26.1%) with effective N 2.21, and the primary null (weekly LW MinVar) 67.1% short_duration; the 260w run trips the same three. Short_duration plus FTSL is 96.58% of the 156w method book (84.12% + 12.46%, average over the 65 committed rebalances); FTSL is not re-scored. Even without the tripwire it would FAIL: excess-of-BIL Sharpe −0.49 vs the null's −0.18 (and below ERC's 0.33), and 260w points the same way (−0.53 vs −0.30).",
+      "null": "Weekly LW MinVar on the same names (primary)",
+      "rows": [],
+      "nw_t": "−1.14 vs weekly LW MinVar (156w); −0.67 (260w)",
+      "dsr": "0.018 on Sharpe ex-BIL (156w); not decisive",
+      "gate": {
+        "label": "PR #37",
+        "href": "https://github.com/jgridifier/usa-etf-feature-pipeline/pull/37"
+      },
+      "method_page": "methods/allocation_alpha_nonlinear_shrinkage_gmv.html",
+      "artifact": {
+        "label": "nonlinear_shrinkage_gmv_v2/summary.csv",
+        "href": "https://github.com/jgridifier/usa-etf-feature-pipeline/blob/main/data/processed/nonlinear_shrinkage_gmv_v2/summary.csv"
+      },
+      "archived": "2026-09-26",
+      "archived_via": "PR #37 merged (380ff06); The GMV line on the mixed universe is closed. No v3.",
+      "measured": {
+        "label": "Quant estimator note (2026-09-26)",
+        "text": "The estimator did its job: it cut OOS vol by about a quarter vs linear LW (1.87% vs 2.48% at 156w, 1.89% vs 2.44% at 260w; LW2011 p < 0.001 in both windows), consistent with Ledoit & Wolf (2017). The failure comes from the min-variance objective on a mixed stock-and-bond universe, which concentrates in the lowest-vol bonds."
+      },
+      "void_reason": {
+        "run": "NLS GMV v2",
+        "kind": "cash_like",
+        "value": 0.9658004978290651,
+        "threshold": 0.5,
+        "source": "nonlinear_shrinkage_gmv_v2/weights.csv, 156w nonlinear_shrinkage_gmv, mean over rebalances of the weight tagged cash_like / short_duration / near_cash (composition tripwire tags)"
+      }
     }
   ]
 }

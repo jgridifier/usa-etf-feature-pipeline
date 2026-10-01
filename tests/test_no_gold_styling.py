@@ -19,7 +19,7 @@ GLOBS = [
     'apps/pages/src/**/*.css', 'apps/pages/src/**/*.ts', 'apps/pages/src/**/*.tsx',
     'apps/pages/public/*.svg',
     'docs/**/*.html', 'docs/**/*.css', 'docs/**/*.svg', 'docs/**/*.js',
-    'scripts/build_pages.py', 'scripts/build_notes.py',
+    'scripts/build_pages.py', 'scripts/build_notes.py', 'scripts/build_composition.py',
 ]
 EXCLUDE = re.compile(r'docs/assets/v2-echarts-[^/]+\.js$')
 HEX = re.compile(r'(?<![\w&])#([0-9a-fA-F]{6}|[0-9a-fA-F]{3})(?![0-9a-zA-Z])')

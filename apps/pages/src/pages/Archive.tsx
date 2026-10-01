@@ -4,6 +4,7 @@ import { Card } from '../components/ui/card'
 import { Badge } from '../components/ui/badge'
 import archive from '../data/archive_verdicts.json'
 import { relabelArchive } from '../lib/labels'
+import { failCount, numberWord, badgeText, voidRuns, voidVerb, voidList, type VoidReason } from '../lib/archiveCounts'
 
 interface ArchiveCard {
   id: string
@@ -22,6 +23,7 @@ interface ArchiveCard {
   artifact: { label: string; href: string }
   archived: string
   archived_via: string
+  void_reason?: VoidReason
 }
 
 interface ArchiveData {
@@ -32,9 +34,7 @@ interface ArchiveData {
 const archiveData: ArchiveData = relabelArchive(archive as ArchiveData)
 
 // Counts in the copy follow the cards (the file is append-only as gates are archived).
-const NUMBER_WORDS = ['zero', 'one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight', 'nine']
-const failCount = archiveData.cards.filter(card => card.badge === 'FAIL').length
-const failWord = NUMBER_WORDS[failCount] ?? String(failCount)
+const failWord = numberWord(failCount)
 
 const linkClass = 'text-muted hover:text-body underline underline-offset-2 decoration-border'
 
@@ -74,13 +74,13 @@ export default function Archive() {
           </h2>
           <p className="text-base text-body max-w-2xl mb-5 leading-relaxed">
             Archived methods: Justina round-1 (Spectral RP, Regime-Aware), #13 VCFC, #4 FT-MED, #3 RR-ERC,
-            Bet 1 NLS GMV v3 (VOID) · plus the unconditional vol-target backbone audit null · USA ETF experimental panel · updated {archiveData.updated} (ET)
+            Bet 1 {voidRuns} (VOID) · plus the unconditional vol-target backbone audit null · USA ETF experimental panel · updated {archiveData.updated} (ET)
           </p>
           <div className="inline-block border border-down/20 bg-down/5 px-4 py-3 text-xs text-muted max-w-2xl">
             <strong className="text-ink">Research only — not investment advice.</strong>{' '}
             Negative / null results documented on purpose. The {failWord} failed methods are{' '}
             <strong className="text-down">FAIL / ARCHIVE</strong> — not promoted to Books, not a
-            showcase, not part of the live shortlist. Bet 1 NLS GMV v3 is VOID (concentrated holdings) and the
+            showcase, not part of the live shortlist. Bet 1 {voidRuns} {voidVerb} VOID ({voidList}) and the
             minimum-variance line is closed. Unconditional vol-target backbone is an AUDIT NULL (not live, not a FAIL).
           </div>
         </div>
@@ -95,7 +95,7 @@ export default function Archive() {
               <span className="text-2xs font-medium uppercase tracking-label text-muted">CIO frame</span>
             </div>
             <p className="font-serif text-base italic text-ink leading-snug mb-3">
-              None of the {failWord} archived methods cleared its binding null, and NLS GMV v3 is VOID.{' '}
+              None of the {failWord} archived methods cleared its binding null, and {voidRuns} {voidVerb} VOID.{' '}
               <strong className="not-italic">No book cut.</strong>
             </p>
             <p className="text-sm text-body leading-relaxed">
@@ -121,11 +121,14 @@ export default function Archive() {
             <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-6">
               {archiveData.cards.map(card => (
                 <Card key={card.id} className="p-5">
-                  <Badge variant={card.badge === 'FAIL' ? 'archive' : 'quiet'}>{card.badge}</Badge>
+                  <Badge variant={card.badge === 'FAIL' ? 'archive' : 'quiet'}>{badgeText(card)}</Badge>
                   <h3 className="font-display text-xl text-ink mt-2">{card.name}</h3>
                   <p className="text-xs text-muted mb-3">{card.detail}</p>
                   <p className="font-serif text-base italic text-ink leading-snug mb-3">{card.verdict}</p>
                   <p className="text-sm text-body mb-3">Binding null: {card.null}</p>
+                  {card.rows.length === 0 ? (
+                    <p className="text-xs text-muted">No Sharpe table for this VOID run; see the verdict and the OOS artifact.</p>
+                  ) : (
                   <div className="overflow-x-auto">
                     <table className="w-full text-xs">
                       <thead>
@@ -146,6 +149,7 @@ export default function Archive() {
                       </tbody>
                     </table>
                   </div>
+                  )}
                   {card.measured && (
                     <p className="mt-3 text-sm text-body">
                       <span className="font-medium text-muted">{card.measured.label}:</span>{' '}

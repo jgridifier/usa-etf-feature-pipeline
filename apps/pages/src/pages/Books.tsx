@@ -603,6 +603,10 @@ function WeightSnapshotTable() {
         >
           Download CSV
         </a>
+        {' · '}
+        <a href="./methods/composition_over_time.html" className="text-accent hover:text-accent/80 no-underline">
+          Composition over time →
+        </a>
       </div>
     </div>
   )
