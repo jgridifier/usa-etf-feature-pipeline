@@ -977,7 +977,7 @@ def restyle_methods_shell() -> None:
             '</body>',
             '<!-- lab:start --><footer class="site-footer"><p>'
             + DISCLAIMER
-            + '</p></footer><!-- lab:end --></body>',
+            + '</p></footer><script src="../assets/nav.js" defer></script><!-- lab:end --></body>',
         )
         p.write_text(s, encoding='utf-8')
 
