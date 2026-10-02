@@ -1,0 +1,2 @@
+strategy_id,primary_null,p_one_sided_hac,p_two_sided_hac,p_one_sided_boot,p_two_sided_boot,z_hac,z_boot,se_nat,reps,block_size,seed
+schur_g050,lw_minvar_156w,0.13181752205800817,0.26363504411601635,0.08398320335932813,0.1929614077184563,1.1178406794769884,1.4631337043718882,0.022741728741375734,5000,4,20261002

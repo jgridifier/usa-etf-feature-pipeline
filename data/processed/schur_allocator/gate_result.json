@@ -1,0 +1,132 @@
+{
+  "gate_id": "schur_allocator",
+  "label": "FAIL",
+  "mechanical": "FAIL",
+  "composition": {
+    "status": "PASS",
+    "max_share": 0.5,
+    "computable": true,
+    "method": "schur_g050",
+    "primary_null": "lw_minvar_156w",
+    "method_share": 0.0,
+    "null_share": 0.0,
+    "void_method": false,
+    "void_null": false,
+    "opt_out": false,
+    "opt_out_reason": null,
+    "not_computable_reason": ""
+  },
+  "monthly_panel": {
+    "source": "usa_universe_panel_monthly_returns.csv",
+    "complete_months_only": true,
+    "dropped_partial_month": null,
+    "source_asof": "2026-09-30",
+    "partial_month_reason": null
+  },
+  "fields": {
+    "book_eligible": {
+      "eligible": false,
+      "criteria_met": false,
+      "comparison": "reported only",
+      "reason": "gate label is FAIL, not PASS; comparison reported only; Sharpe_exBIL not > Backbone",
+      "label": "FAIL",
+      "window": "2021-02..2026-09",
+      "n_months": 68,
+      "stats": {
+        "schur_g050": {
+          "n_months": 68,
+          "start": "2021-02-28",
+          "end": "2026-09-30",
+          "Sharpe_exBIL": 0.5687006311798865,
+          "MaxDD": -0.21967994703165317,
+          "CAGR": 0.09771423768023157
+        },
+        "book1_static_option_a": {
+          "n_months": 68,
+          "start": "2021-02-28",
+          "end": "2026-09-30",
+          "Sharpe_exBIL": 0.7655730238954345,
+          "MaxDD": -0.25564187805103267,
+          "CAGR": 0.1495717307043365
+        },
+        "backbone": {
+          "n_months": 68,
+          "start": "2021-02-28",
+          "end": "2026-09-30",
+          "Sharpe_exBIL": 0.861515938631069,
+          "MaxDD": -0.201285918526651,
+          "CAGR": 0.15073070287175083
+        },
+        "book2": {
+          "n_months": 68,
+          "start": "2021-02-28",
+          "end": "2026-09-30",
+          "Sharpe_exBIL": 0.9966514803641031,
+          "MaxDD": -0.10116624654920847,
+          "CAGR": 0.13924407813595652
+        }
+      },
+      "beats_backbone_sharpe": false,
+      "maxdd_no_worse_than_book1": true,
+      "book2": "reference only"
+    },
+    "trial_count": 12,
+    "preregistration": {
+      "sha256": "7f9ddae54a852281f0d127e584d43e48d49a85bfd95266ba523bb5ea1244b759",
+      "head_commit": "00df622699f774f128da36b5ca234b19f87a77d6",
+      "path": "preregistration/schur_allocator.yaml",
+      "verified": true
+    },
+    "tripwires": {
+      "status": "PASS",
+      "reasons": [],
+      "effective_n": {
+        "mean": 22.875366297408984,
+        "min": 13.514725595951047,
+        "share_below": 0.0,
+        "threshold": 5.0,
+        "ok": true
+      },
+      "low_vol": {
+        "max_target_by_strategy": {
+          "equal_weight": 0.041666666666666664,
+          "hrp_g000": 0.2585233653712902,
+          "lw_minvar_156w": 0.30000000000000004,
+          "schur_g050": 0.3
+        },
+        "max_drifted_month_end_by_strategy_diagnostic": {
+          "equal_weight": 0.0421991302727994,
+          "hrp_g000": 0.2561058974622133,
+          "lw_minvar_156w": 0.3253255046380826,
+          "schur_g050": 0.30744543018286324
+        },
+        "limit": 0.3,
+        "ok": true
+      }
+    },
+    "fallback_share": 0.3478454020435362,
+    "hrp_fallback_share": 0.000444247001332741,
+    "display_labels": {
+      "schur_g050": "Schur (\u03b3 = 0.5\u00b7\u03b3_max)",
+      "hrp_g000": "HRP (Schur \u03b3=0)",
+      "lw_minvar_156w": "LW MinVar (capped QP)",
+      "equal_weight": "Equal weight (capped)",
+      "book1_static_option_a": "Book 1 (net rebuild)"
+    },
+    "weekly_cutoff_note": "Weekly cutoff: covariance windows end at the last weekly row dated on or before CALENDAR month-end t-1. EPO (#43) sliced at the decision date, so for 2018-03 and 2024-03 (month ending on the Thursday before Good Friday) EPO dropped the complete weeks labelled 2018-03-30 and 2024-03-29; this gate includes them. Those weeks close on the Thursday decision date, so this is not look-ahead."
+  },
+  "report": {
+    "criteria": {
+      "c1": false,
+      "c2": true,
+      "c3": false,
+      "c4": false
+    },
+    "mechanical": "FAIL",
+    "failing_criteria": [
+      "c1",
+      "c3",
+      "c4"
+    ]
+  }
+}

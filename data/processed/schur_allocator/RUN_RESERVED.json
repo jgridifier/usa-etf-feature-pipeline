@@ -1,0 +1,10 @@
+{
+  "gate_id": "schur_allocator",
+  "reserved_at": "2026-10-02T13:50:32.193261+00:00",
+  "preregistration": {
+    "sha256": "7f9ddae54a852281f0d127e584d43e48d49a85bfd95266ba523bb5ea1244b759",
+    "head_commit": "00df622699f774f128da36b5ca234b19f87a77d6",
+    "path": "preregistration/schur_allocator.yaml",
+    "verified": true
+  }
+}
