@@ -20,7 +20,9 @@ import subprocess
 
 import numpy as np
 import pandas as pd
+import yaml
 from scipy.cluster.hierarchy import leaves_list, linkage
+from scipy.optimize import linprog, minimize
 from scipy.spatial.distance import squareform
 from scipy.stats import kurtosis, skew
 
@@ -40,6 +42,7 @@ EW = 'equal_weight'
 BOOK1 = epo.BOOK1
 CAPPED = (METHOD, PRIMARY, HRP, EW)
 LOW_VOL = ('USMV', 'EFAV', 'SPHD')
+DIVIDEND_INCOME = ('DVY', 'SDY', 'VYM', 'DGRO', 'TMDV', 'SDIV', 'PID')   # reported only (CIO 2026-10-02)
 EXCLUDED_TAGS = (gm.CASH_LIKE_COLUMN, gm.SHORT_DURATION_COLUMN, gm.NEAR_CASH_COLUMN)
 
 GAMMA_SCALE = 0.5
@@ -49,6 +52,7 @@ GAMMA_TOL, GAMMA_CAP, PD_REL_TOL = 1e-6, 1 - 1e-6, 1e-8
 TERMINAL_SIZE = 5
 LOW_VOL_CAP, NAME_CAP = 0.30, 0.20
 CAP_TOL, CAP_MAX_PASSES = 1e-10, 100
+QP_FTOL, QP_MAXITER, QP_FEAS_TOL, QP_KKT_TOL = 1e-12, 1000, 1e-9, 1e-8
 WINDOW_WEEKS, NAME_FLOOR, MIN_MONTHS = 156, 60, 60
 FIRST_DECISION, BOOK_WINDOW_START = '2016-10-31', '2021-02'
 COST_BPS = 5
@@ -57,7 +61,7 @@ TRIAL_COUNT = epo.TRIAL_COUNT + 1
 assert TRIAL_COUNT == 12
 BOOTSTRAP_REPS, BLOCK_SIZE, SEED = 5000, 4, 20261002
 PREREG_PATH = Path('preregistration/schur_allocator.yaml')
-PREREG_SHA256 = '7ebf8675b75b9fabc6906c4dabf995db36c6dc96eba962f5d036b0b4dc262ff3'
+PREREG_SHA256 = '93a402448ed6fcabfdc59d35637f6b3a7cce58f8b47e07cbfb552177c834219c'
 EPO_REGISTRY = 'data/processed/epo_allocator/trial_registry.csv'
 BACKBONE_PATH = Path('data/processed/live/vol_target_oos_returns.csv')         # r_vt, net
 BOOK2_PATH = Path('data/processed/live/skew_managed_gatefirst_returns.csv')    # r_method, net
@@ -67,6 +71,11 @@ drift_weights = epo.drift_weights
 lw2008_sharpe_test = epo.lw2008_sharpe_test
 lw2008_sharpe_bootstrap = epo.lw2008_sharpe_bootstrap
 deflated_sharpe_bailey_lp = epo.deflated_sharpe_bailey_lp
+
+
+def display_labels(root=ROOT, prereg_path=PREREG_PATH):
+    """Site/report labels, read from the pinned pre-registration (the results page reads the same field)."""
+    return dict(yaml.safe_load((Path(root) / prereg_path).read_text(encoding='utf-8'))['display_labels'])
 
 
 def verify_preregistration(root=ROOT, prereg_path=PREREG_PATH, sha256=None):
@@ -327,6 +336,107 @@ def effective_n(weights):
     return float(1 / np.sum(w * w))
 
 
+class MinVarQPError(ValueError):
+    """The capped MinVar QP is infeasible or did not converge; there is no fallback."""
+
+
+def _qp_constraints(tickers, low_vol, low_vol_cap, name_cap):
+    s_low = np.array([t in set(low_vol) for t in tickers], float)
+    bounds = [(0., name_cap)] * len(tickers)
+    return s_low, bounds
+
+
+def frank_wolfe_gap(cov, x, tickers, *, low_vol=LOW_VOL, low_vol_cap=LOW_VOL_CAP, name_cap=NAME_CAP):
+    """First-order (KKT) certificate: g'x - min_{y feasible} g'y, g = cov x; zero iff x is optimal.
+
+    The LP over the capped simplex is solved with HiGHS (scipy.optimize.linprog).
+    """
+    g = np.asarray(cov, float) @ np.asarray(x, float)
+    s_low, bounds = _qp_constraints(tickers, low_vol, low_vol_cap, name_cap)
+    lp = linprog(g, A_ub=s_low[None, :], b_ub=[low_vol_cap], A_eq=np.ones((1, len(g))), b_eq=[1.],
+                 bounds=bounds, method='highs')
+    if lp.status != 0:
+        raise MinVarQPError(f'capped MinVar LP certificate failed: {lp.message}')
+    return float(g @ x - lp.fun)
+
+
+def _active_set_polish(S, x, s_low, low_vol_cap, name_cap, active_tol=1e-7):
+    """Exact KKT solve of the equality-constrained QP on the SLSQP active set."""
+    n = len(x)
+    at_zero, at_cap = x <= active_tol, x >= name_cap - active_tol
+    free = ~(at_zero | at_cap)
+    if not free.any():
+        return None
+    fixed = np.where(at_cap, name_cap, 0.)
+    rows = [np.ones(n)]
+    rhs = [1.]
+    if abs(s_low @ x - low_vol_cap) <= active_tol:
+        rows.append(s_low); rhs.append(low_vol_cap)
+    Aeq = np.array(rows)[:, free]
+    b = np.array(rhs) - np.array(rows)[:, ~free] @ fixed[~free]
+    Sff = S[np.ix_(free, free)]
+    q = S[np.ix_(free, ~free)] @ fixed[~free]
+    m = len(rhs)
+    K = np.block([[Sff, Aeq.T], [Aeq, np.zeros((m, m))]])
+    try:
+        sol = np.linalg.solve(K, np.r_[-q, b])
+    except np.linalg.LinAlgError:
+        return None
+    y = fixed.copy(); y[free] = sol[:free.sum()]
+    return y
+
+
+def capped_minvar_qp(cov, tickers, *, low_vol=LOW_VOL, low_vol_cap=LOW_VOL_CAP, name_cap=NAME_CAP,
+                     ftol=QP_FTOL, maxiter=QP_MAXITER, feas_tol=QP_FEAS_TOL, kkt_tol=QP_KKT_TOL):
+    """Primary null: long-only min variance on the LW covariance as one QP (Quant ruling 2026-10-02).
+
+        min 0.5 w' S w   s.t.  sum w = 1,  0 <= w_i <= 0.20,  sum_{low-vol} w <= 0.30
+
+    S is the covariance divided by its mean diagonal. Solved by scipy SLSQP (ftol 1e-12, analytic
+    gradient and constraint Jacobians), then certified: primal feasibility within 1e-9 and a
+    Frank-Wolfe / KKT gap <= 1e-8 from an exact HiGHS LP over the feasible set. Infeasible caps,
+    solver failure, or a failed certificate raise MinVarQPError; there is no fallback.
+    """
+    tickers = list(tickers)
+    S = normalize_cov(np.asarray(cov, float))
+    n = len(S)
+    if n != len(tickers) or not np.isfinite(S).all():
+        raise MinVarQPError('covariance and tickers do not match or are not finite')
+    if not caps_feasible(tickers, low_vol, low_vol_cap, name_cap):
+        raise MinVarQPError('capped MinVar QP is infeasible for this name set')
+    s_low, bounds = _qp_constraints(tickers, low_vol, low_vol_cap, name_cap)
+    x0, _ = apply_caps(pd.Series(np.full(n, 1 / n), index=tickers), low_vol=low_vol,
+                       low_vol_cap=low_vol_cap, name_cap=name_cap)
+    constraints = [{'type': 'eq', 'fun': lambda x: x.sum() - 1, 'jac': lambda x: np.ones(n)},
+                   {'type': 'ineq', 'fun': lambda x: low_vol_cap - s_low @ x, 'jac': lambda x: -s_low}]
+    fit = minimize(lambda x: .5 * x @ S @ x, x0.to_numpy(), jac=lambda x: S @ x, bounds=bounds,
+                   constraints=constraints, method='SLSQP', options={'maxiter': maxiter, 'ftol': ftol})
+    if not fit.success:
+        raise MinVarQPError(f'capped MinVar QP did not converge: {fit.message}')
+    x = fit.x
+    violation = max(abs(x.sum() - 1), float(np.max(-x)), float(np.max(x - name_cap)), float(s_low @ x - low_vol_cap))
+    if violation > feas_tol:
+        raise MinVarQPError(f'capped MinVar QP solution infeasible by {violation:.3g}')
+    x = np.clip(x, 0, name_cap)
+    gap = frank_wolfe_gap(S, x, tickers, low_vol=low_vol, low_vol_cap=low_vol_cap, name_cap=name_cap)
+    polished = _active_set_polish(S, x, s_low, low_vol_cap, name_cap)
+    if polished is not None:
+        pv = max(abs(polished.sum() - 1), float(np.max(-polished)), float(np.max(polished - name_cap)),
+                 float(s_low @ polished - low_vol_cap))
+        if pv <= 1e-12:
+            pg = frank_wolfe_gap(S, np.clip(polished, 0, name_cap), tickers, low_vol=low_vol,
+                                 low_vol_cap=low_vol_cap, name_cap=name_cap)
+            if pg <= gap:
+                x, gap, violation = np.clip(polished, 0, name_cap), pg, pv
+    if gap > kkt_tol:
+        raise MinVarQPError(f'capped MinVar QP failed the KKT certificate (gap {gap:.3g})')
+    w = x / x.sum()
+    return w, dict(solver='scipy SLSQP + active-set KKT polish + HiGHS LP certificate', polished=bool(polished is not None and gap <= kkt_tol), status=int(fit.status), nit=int(fit.nit),
+                   kkt_gap=gap, max_violation=max(violation, 0.), objective=float(.5 * w @ S @ w),
+                   low_vol_binding=bool(s_low @ w >= low_vol_cap - 1e-7),
+                   name_cap_binding=sorted(t for t, v in zip(tickers, w) if v >= name_cap - 1e-7))
+
+
 # ----------------------------------------------------------------------------- backtest
 def _validate_panels(weekly, monthly):
     months = monthly.index.to_period('M')
@@ -354,7 +464,7 @@ def run_schur_backtest(weekly, monthly, universe, *, cost_bps=None, first_decisi
     _validate_panels(weekly, monthly)
     weekly = weekly.loc[:monthly.index[-1] + pd.offsets.MonthEnd(0)]
     names = sorted(schur_universe_tickers(universe) & set(weekly) & set(monthly))
-    rows, weights, counts, splits, caps, lowvol = [], [], [], [], [], []
+    rows, weights, counts, splits, caps, lowvol, qp_log = [], [], [], [], [], [], []
     previous, previous_i = {}, {}
     for i in range(len(monthly) - 1):
         decision, date = monthly.index[i:i + 2]
@@ -377,8 +487,10 @@ def run_schur_backtest(weekly, monthly, universe, *, cost_bps=None, first_decisi
         log = []
         raw = {METHOD: schur_weights(cov, order=order, log=log),
                HRP: hrp_weights(cov, order=order),
-               PRIMARY: long_only_minvar(cov),
                EW: np.full(len(live), 1 / len(live))}
+        qp_w, qp_diag = capped_minvar_qp(cov, live)
+        qp_log.append(dict(decision_date=decision, date=date, strategy_id=PRIMARY, n=len(live),
+                           **{k: (','.join(v) if isinstance(v, list) else v) for k, v in qp_diag.items()}))
         n_splits = len(log)
         splits.extend(dict(decision_date=decision, date=date, strategy_id=METHOD, split=k,
                            first=live[r.pop('first')], last=live[r.pop('last')], **r) for k, r in enumerate(log))
@@ -386,9 +498,17 @@ def run_schur_backtest(weekly, monthly, universe, *, cost_bps=None, first_decisi
         for sid, x in raw.items():
             target, rep = apply_caps(pd.Series(x, index=live))
             allocations[sid] = target
-            caps.append(dict(decision_date=decision, date=date, strategy_id=sid, eff_N=effective_n(target),
-                             n_splits=n_splits if sid == METHOD else np.nan,
+            caps.append(dict(decision_date=decision, date=date, strategy_id=sid, cap_mechanism='post-hoc pro rata',
+                             eff_N=effective_n(target), n_splits=n_splits if sid == METHOD else np.nan,
                              **{k: (','.join(v) if isinstance(v, list) else v) for k, v in rep.items()}))
+        target = pd.Series(qp_w, index=live)
+        allocations[PRIMARY] = target
+        caps.append(dict(decision_date=decision, date=date, strategy_id=PRIMARY, cap_mechanism='QP constraints',
+                         eff_N=effective_n(target), n_splits=np.nan,
+                         low_vol_cap_binding=qp_diag['low_vol_binding'],
+                         name_cap_binding=','.join(qp_diag['name_cap_binding']), passes=np.nan,
+                         low_vol_share_pre=np.nan, low_vol_share_post=float(target[target.index.isin(list(LOW_VOL))].sum()),
+                         max_weight_pre=np.nan, max_weight_post=float(target.max())))
         book = pd.Series({'VOO': .7, 'QQQM': .2, 'IJR': .1})
         if set(book.index) <= set(monthly) and monthly.loc[date, book.index].notna().all():
             allocations[BOOK1] = book
@@ -404,10 +524,12 @@ def run_schur_backtest(weekly, monthly, universe, *, cost_bps=None, first_decisi
             gross = float(target @ r)
             if sid in CAPPED:
                 lv = target.index.isin(list(LOW_VOL))
+                div = target.index.isin(list(DIVIDEND_INCOME))
                 end = target * (1 + r)
                 lowvol.append(dict(decision_date=decision, date=date, strategy_id=sid,
                                    low_vol_share_target=float(target[lv].sum()),
-                                   low_vol_share_drifted_month_end=float(end[lv].sum() / end.sum())))
+                                   low_vol_share_drifted_month_end=float(end[lv].sum() / end.sum()),
+                                   dividend_income_share_target=float(target[div].sum())))
             rows.append(dict(decision_date=decision, feature_end=win.index[-1], date=date, strategy_id=sid,
                              n_names=len(target), gross_return=gross, turnover=turnover,
                              turnover_target=target_turn, cost_return=turnover * cost_bps / 10000,
@@ -421,7 +543,7 @@ def run_schur_backtest(weekly, monthly, universe, *, cost_bps=None, first_decisi
                   'n_right', 'fallback', 'gamma_max', 'gamma_initial', 'gamma', 'n_halvings', 'reason', 'hrp_fallback']
     return dict(oos_returns=pd.DataFrame(rows), weights=pd.DataFrame(weights), name_counts=pd.DataFrame(counts),
                 split_log=pd.DataFrame(splits, columns=split_cols), cap_report=pd.DataFrame(caps),
-                low_vol_share=pd.DataFrame(lowvol))
+                low_vol_share=pd.DataFrame(lowvol), minvar_qp_log=pd.DataFrame(qp_log))
 
 
 # ----------------------------------------------------------------------------- tripwires
@@ -567,19 +689,29 @@ def run_schur_gate(weekly, monthly, universe, *, rf=None, bootstrap_reps=BOOTSTR
     result['label'] = gm.final_gate_label(result['mechanical'], result['composition'])
     result['book_eligible'] = book_eligibility(result['label'], result['oos_returns'], rf, root=root)
     result['trial_count'] = TRIAL_COUNT
+    result['display_labels'] = display_labels(root)
     result['preregistration'] = dict(path=str(PREREG_PATH), sha256=PREREG_SHA256, head_commit=None, verified=False)
     return result
 
 
 # ----------------------------------------------------------------------------- report / writer
+WEEKLY_CUTOFF_NOTE = ('Weekly cutoff: covariance windows end at the last weekly row dated on or before CALENDAR '
+                      'month-end t-1. EPO (#43) sliced at the decision date, so for 2018-03 and 2024-03 (month '
+                      'ending on the Thursday before Good Friday) EPO dropped the complete weeks labelled '
+                      '2018-03-30 and 2024-03-29; this gate includes them. Those weeks close on the Thursday '
+                      'decision date, so this is not look-ahead.')
+
+
 def gate_report_lines(result):
     trip, counts = result['tripwires'], result['name_counts']
+    labels = result.get('display_labels') or display_labels()
     eligible = counts.loc[~counts.skipped, 'n_eligible']
     caps = result['cap_report']
-    lines = ['# Schur complementary allocator (trial 12) — PENDING QUANT', '',
+    lines = ['# Schur complementary allocator (trial 12)', '',
              f"**Label (mechanical + composition): {result['label']}**",
              v3.book_eligible_line(result['book_eligible']), '']
     lines += gm.composition_report_lines(result['composition'])
+    lines += ['Strategies: ' + '; '.join(f'`{k}` = {v}' for k, v in labels.items()), '', WEEKLY_CUTOFF_NOTE, '']
     e = trip['effective_n']
     lines += ['## Tripwires (checked first)', '',
               f"- Effective N (method, post-cap targets): mean {e['mean']:.3f}, min {e['min']:.3f}, "
@@ -593,8 +725,18 @@ def gate_report_lines(result):
               'Skipped months: ' + (', '.join(counts.loc[counts.skipped, 'date'].astype(str)) or 'none')]
     for sid in CAPPED:
         c = caps.loc[caps.strategy_id.eq(sid)]
-        lines.append(f"- Caps binding `{sid}`: low-vol {int(c.low_vol_cap_binding.sum())} months, "
-                     f"single-name {int(c.name_cap_binding.astype(str).ne('').sum())} months.")
+        names = c.name_cap_binding.fillna('').astype(str)
+        lines.append(f"- Caps binding {labels.get(sid, sid)} ({c.cap_mechanism.iloc[0]}): low-vol "
+                     f"{int(c.low_vol_cap_binding.astype(bool).sum())} months, single-name {int(names.ne('').sum())} months.")
+    q = result['minvar_qp_log']
+    lines.append(f"- {labels.get(PRIMARY, PRIMARY)} QP: max KKT gap {q.kkt_gap.max():.2e}, max constraint violation "
+                 f"{q.max_violation.max():.2e}, {len(q)} solves, all certified.")
+    lv = result['low_vol_share']
+    div = lv.groupby('strategy_id').dividend_income_share_target.mean()
+    low = lv.groupby('strategy_id').low_vol_share_target.mean()
+    lines.append('- Average target share, low-vol (USMV/EFAV/SPHD) | dividend/income equity (DVY/SDY/VYM/DGRO/TMDV/SDIV/PID; '
+                 'reported only, no cap, no tripwire): ' + '; '.join(
+                     f'{labels.get(k, k)} {low[k]:.2%} | {div[k]:.2%}' for k in low.index))
     for key in ('summary', 'tests', 'trial_registry', 'name_counts'):
         if not result[key].empty:
             lines += ['', f'## {key}', '', epo._markdown_table(result[key])]
@@ -616,4 +758,5 @@ def write_schur_artifacts(result, out_dir='data/processed/schur_allocator'):
         fields=dict(book_eligible=result['book_eligible'], trial_count=TRIAL_COUNT,
                     preregistration=result['preregistration'],
                     tripwires={k: v for k, v in result['tripwires'].items() if k != 'composition'},
-                    fallback_share=result['fallback_share'], hrp_fallback_share=result['hrp_fallback_share']))
+                    fallback_share=result['fallback_share'], hrp_fallback_share=result['hrp_fallback_share'],
+                    display_labels=result['display_labels'], weekly_cutoff_note=WEEKLY_CUTOFF_NOTE))

@@ -14,7 +14,7 @@ from usa_etf_features import schur_allocator as s, gate_metrics as gm
 from usa_etf_features.monthly_panel import load_monthly_panel
 from usa_etf_features.spectral_risk_parity import long_only_minvar, normalize_cov
 
-PIN = '7ebf8675b75b9fabc6906c4dabf995db36c6dc96eba962f5d036b0b4dc262ff3'
+PIN = '93a402448ed6fcabfdc59d35637f6b3a7cce58f8b47e07cbfb552177c834219c'
 
 
 # ----------------------------------------------------------------------------- pre-registration
@@ -36,8 +36,16 @@ def test_preregistration_pin_and_parameters():
         (s.LOW_VOL_CAP, s.NAME_CAP, s.CAP_TOL, s.CAP_MAX_PASSES)
     assert str(p['rebalance']['first_decision']) == s.FIRST_DECISION
     assert 'floor(n/2)' in p['seriation']['odd_sizes']
-    assert p['engineering_defaults_pending_quant']['bootstrap_seed'] == s.SEED
-    assert {'b_descaling', 'gamma_max_analytic', 'hrp_null_definition', 'low_vol_realized'} <= set(p['engineering_defaults_pending_quant'])
+    assert 'engineering_defaults_pending_quant' not in p and 'pending' not in raw.decode().lower()
+    r = p['rulings']
+    assert str(r['approved']) == '2026-10-02' and r['by'] == 'Quant' and len(r['items']) == 20
+    assert r['items']['bootstrap_seed']['value'] == s.SEED
+    assert r['items']['caps_on_comparators_mechanism']['ruling'] == 'changed'
+    assert all(v['ruling'] == 'approved' for k, v in r['items'].items() if k != 'caps_on_comparators_mechanism')
+    assert 'true capped QP' in p['nulls']['primary']['rule'] and 'no fallback' in p['nulls']['primary']['rule']
+    assert '1e-12' in p['nulls']['primary']['rule'] and s.QP_FTOL == 1e-12 and s.QP_KKT_TOL == 1e-8
+    assert p['display_labels'] == s.display_labels() and p['display_labels'][s.HRP] == 'HRP (Schur γ=0)'
+    assert tuple(p['reported_only']['dividend_income_share']['tickers']) == s.DIVIDEND_INCOME
     assert 'One run' in p['no_reruns'] and 'no large pretrained' in p['method_constraint']['rule']
 
 
@@ -181,6 +189,87 @@ def test_caps_feasibility_and_binding_report():
     assert s.caps_feasible(['USMV', 'A', 'B', 'C', 'D'])
 
 
+# ----------------------------------------------------------------------------- capped MinVar QP
+QP_NAMES = ['USMV', 'EFAV', 'SPHD', 'A', 'B', 'C', 'D', 'E', 'F', 'G']
+
+
+def qp_cov(seed=7, low_vol_scale=.4):
+    """Low-vol names have much lower variance, so uncapped MinVar loads them heavily."""
+    rng = np.random.default_rng(seed)
+    n = len(QP_NAMES)
+    vol = np.r_[np.full(3, low_vol_scale), rng.uniform(.8, 1.4, n-3)]
+    R = np.full((n, n), .3) + .7*np.eye(n)
+    E = rng.normal(scale=.05, size=(n, n)); E = (E+E.T)/2; np.fill_diagonal(E, 0)
+    return (R+E)*np.outer(vol, vol)
+
+
+def feasible(w, names=QP_NAMES, tol=1e-9):
+    low = np.isin(names, s.LOW_VOL)
+    return abs(w.sum()-1) <= tol and w.min() >= -tol and w.max() <= .2+tol and w[low].sum() <= .3+tol
+
+
+def test_capped_qp_respects_caps_and_binds():
+    C = qp_cov()
+    w, d = s.capped_minvar_qp(C, QP_NAMES)
+    assert feasible(w) and d['low_vol_binding'] and d['kkt_gap'] <= 1e-8
+    assert np.isin(QP_NAMES, s.LOW_VOL) @ w == pytest.approx(.3, abs=1e-9)
+    unc = mv(C)
+    assert unc[:3].sum() > .3          # the caps genuinely bind here
+    for seed in range(5):
+        w, d = s.capped_minvar_qp(qp_cov(seed, .3), QP_NAMES)
+        assert feasible(w) and d['kkt_gap'] <= 1e-8
+
+
+def test_capped_qp_is_optimal_vs_feasible_perturbations_and_reference():
+    C = qp_cov()
+    S = normalize_cov(C)
+    w, _ = s.capped_minvar_qp(C, QP_NAMES)
+    f = lambda x: .5*x@S@x
+    rng = np.random.default_rng(0)
+    tried = 0
+    for _ in range(4000):
+        i, j = rng.choice(len(w), 2, replace=False)
+        y = w.copy(); t = rng.uniform(1e-6, .05); y[i] += t; y[j] -= t
+        if feasible(y):
+            tried += 1
+            assert f(y) >= f(w) - 1e-12
+    assert tried > 500
+    # Random feasible points (pro-rata-capped Dirichlet draws) never beat the QP.
+    for _ in range(300):
+        y, _ = s.apply_caps(pd.Series(rng.dirichlet(np.ones(len(w))), index=QP_NAMES))
+        assert f(y.to_numpy()) >= f(w) - 1e-12
+    # Independent reference solver (trust-constr, interior point) agrees.
+    from scipy.optimize import LinearConstraint, minimize
+    low = np.isin(QP_NAMES, s.LOW_VOL).astype(float)
+    ref = minimize(f, np.full(len(w), .1), jac=lambda x: S@x, hess=lambda x: S, method='trust-constr',
+                   bounds=[(0, .2)]*len(w), constraints=[LinearConstraint(np.ones((1, len(w))), 1, 1),
+                                                         LinearConstraint(low[None, :], -np.inf, .3)],
+                   options={'gtol': 1e-12, 'xtol': 1e-14, 'maxiter': 20000})
+    assert f(w) <= f(ref.x) + 1e-10 and np.abs(w-ref.x).max() < 1e-4
+
+
+def test_capped_qp_matches_closed_form_when_no_cap_binds():
+    C = cov_example(12)                  # interior MV, every weight < 0.2, no low-vol names
+    names = [f'N{i}' for i in range(12)]
+    target = mv(C)
+    assert target.min() > 0 and target.max() < .2
+    w, d = s.capped_minvar_qp(C, names)
+    np.testing.assert_allclose(w, target, atol=1e-7)
+    assert not d['low_vol_binding'] and d['name_cap_binding'] == []
+
+
+def test_capped_qp_raises_infeasible_and_nonconverged():
+    with pytest.raises(s.MinVarQPError, match='infeasible'):
+        s.capped_minvar_qp(np.eye(4), list('ABCD'))
+    with pytest.raises(s.MinVarQPError, match='infeasible'):
+        s.capped_minvar_qp(np.eye(5), ['USMV', 'EFAV', 'A', 'B', 'C'])
+    with pytest.raises(s.MinVarQPError, match='did not converge'):
+        s.capped_minvar_qp(qp_cov(), QP_NAMES, maxiter=1)
+    with pytest.raises(s.MinVarQPError, match='KKT'):
+        s.capped_minvar_qp(qp_cov(), QP_NAMES, kkt_tol=-1.)
+    assert issubclass(s.MinVarQPError, ValueError)
+
+
 def test_effective_n():
     assert s.effective_n(np.full(8, 1/8)) == pytest.approx(8)
     assert s.effective_n([1, 0, 0]) == 1
@@ -235,6 +324,11 @@ def test_backtest_universe_costs_and_logs(panels, monkeypatch):
     assert (lv.low_vol_share_target <= .3 + 1e-9).all()
     assert len(res['split_log']) and res['split_log'].gamma.between(0, .5).all()
     assert set(res['cap_report'].strategy_id) == set(s.CAPPED)
+    q = res['minvar_qp_log']
+    assert len(q) == res['oos_returns'].date.nunique() and (q.kkt_gap <= 1e-8).all()
+    mech = res['cap_report'].groupby('strategy_id').cap_mechanism.first()
+    assert mech[s.PRIMARY] == 'QP constraints' and (mech.drop(s.PRIMARY) == 'post-hoc pro rata').all()
+    assert 'dividend_income_share_target' in lv
 
 
 def test_weekly_cutoff_is_calendar_month_end(panels, monkeypatch):
@@ -311,6 +405,9 @@ def test_synthetic_gate_and_writer(panels, monkeypatch, tmp_path):
     assert payload['fields']['preregistration']['verified'] is False
     report = (tmp_path/'out/gate_report.md').read_text()
     assert 'Composition tripwire' in report and 'share of months < 5' in report and 'Caps binding' in report
+    assert 'HRP (Schur γ=0)' in report and '2018-03-30' in report and '2024-03-29' in report
+    assert 'dividend/income' in report and 'KKT gap' in report
+    assert payload['fields']['display_labels'][s.HRP] == 'HRP (Schur γ=0)'
     assert (tmp_path/'out/split_log.csv').exists() and (tmp_path/'out/cap_report.csv').exists()
 
 

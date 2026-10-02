@@ -6,8 +6,8 @@
 gate_id: schur_allocator
 spec: /workspace/investments/justina_shortlist/QUANT_SPEC_schur_allocator.md (2026-10-02, incl. build rulings)
 registered: 2026-10-02
-registered_by: Quant (spec and build rulings), Engineering (defaults listed under engineering_defaults_pending_quant)
-status: PENDING QUANT sign-off of engineering_defaults_pending_quant
+registered_by: Quant (spec, build rulings and the 2026-10-02 rulings on the PR #48 defaults), CIO (reported-only dividend/income share), Engineering (implementation)
+status: "all engineering defaults ruled by Quant 2026-10-02 (see rulings); awaiting Quant PASS of this re-pinned file before the single run"
 
 method_constraint:
   rule: "Statistical or classical methods only; no large pretrained models and no model downloads (Jared, standing rule)."
@@ -58,7 +58,7 @@ caps:
   redistribution: "excess pro rata (by current weight) to uncapped names; iterate until no breach (build ruling)"
   tolerance: 1.0e-10
   max_passes: 100         # error if not converged
-  comparators: "MinVar, HRP and equal weight get both the 30% low-vol and 20% per-name caps (build ruling)"
+  comparators: "MinVar, HRP and equal weight get both the 30% low-vol and 20% per-name caps (build ruling); MinVar as QP constraints, HRP and equal weight via the post-hoc pro-rata routine (ruling 2026-10-02)"
   report: "months each cap binds, per strategy"
 
 rebalance:
@@ -72,11 +72,22 @@ costs:
   diagnostic: "turnover_target = 0.5 * ||w_t - w_{t-1}||_1, reported only"
 
 nulls:
-  primary: {id: lw_minvar_156w, rule: "LW long-only MinVar (spectral_risk_parity.long_only_minvar), then the same caps"}
-  hrp: {id: hrp_g000, rule: "gamma = 0, same seriation, same LW covariance, same terminal rule, then the same caps"}
-  equal_weight: {id: equal_weight, rule: "1/N, then the same caps"}
+  primary: {id: lw_minvar_156w, rule: "true capped QP: min 0.5 w' S w on the LW covariance S (divided by its mean diagonal) s.t. sum w = 1, 0 <= w_i <= 0.20, sum(USMV, EFAV, SPHD) <= 0.30; scipy SLSQP (ftol 1e-12, maxiter 1000, analytic gradient/Jacobians), then an active-set KKT polish (exact linear KKT solve on the SLSQP active set, active tol 1e-7; kept only if feasible within 1e-12 and its gap is no larger); certified by primal feasibility <= 1e-9 and a KKT (Frank-Wolfe) gap <= 1e-8 from an exact HiGHS LP over the feasible set; infeasible, non-converged or uncertified raises (no fallback)"}
+  hrp: {id: hrp_g000, rule: "Cotton's gamma = 0 endpoint: same seriation, same LW covariance, same terminal rule, then the post-hoc pro-rata caps"}
+  equal_weight: {id: equal_weight, rule: "1/N, then the post-hoc pro-rata caps"}
   rule: "same eligible names, rebalance dates, caps and costs as the method"
   references: ["Backbone (data/processed/live/vol_target_oos_returns.csv r_vt, net)", "Book 1 (VOO/QQQM/IJR 70/20/10 rebuilt from the monthly panel, net of the same cost model)", "Book 2 (data/processed/live/skew_managed_gatefirst_returns.csv r_method, net)"]
+
+display_labels:   # site and report labels; the results page reads this field (also written to gate_result.json)
+  schur_g050: "Schur (γ = 0.5·γ_max)"
+  hrp_g000: "HRP (Schur γ=0)"
+  lw_minvar_156w: "LW MinVar (capped QP)"
+  equal_weight: "Equal weight (capped)"
+  book1_static_option_a: "Book 1 (net rebuild)"
+
+reported_only:
+  dividend_income_share: {tickers: [DVY, SDY, VYM, DGRO, TMDV, SDIV, PID], rule: "average target share shown beside the low-vol share on the results page and the Composition chart; no cap, no tripwire (CIO 2026-10-02: the universe holds no utilities, staples or healthcare sector funds)"}
+  weekly_cutoff_note: "the report states that the calendar month-end cutoff includes the complete weeks labelled 2018-03-30 and 2024-03-29, which EPO (#43) dropped by slicing at the decision date"
 
 trial_count: 12           # 11 committed (HEAD:data/processed/epo_allocator/trial_registry.csv) + this one
 
@@ -99,26 +110,30 @@ book_eligibility:   # CIO rule, computed only after PASS
   book2: "shown for reference"
   equity_share: "100% by construction"
 
-engineering_defaults_pending_quant:
-  b_descaling: "w(A'') is in the b-scaled coordinates of A''; the child's weights are divided elementwise by b_A (and b_D) before the group scale 1/nu(A') is applied. Literal eq. (4)/(9) without this step does not recover min variance at gamma = 1 (it fails the paper's own Appendix B 3x3 example); with it, gamma -> 1 recovers MV exactly. The b > 0.05 fallback keeps the division safe."
-  gamma_max_analytic: "For a PD covariance the exact Schur complement A - gamma B D^-1 C is PD for every gamma in [0, 1], so gamma_max hits the 1 - 1e-6 cap and gamma = 0.5 - 5e-7 unless numerics bind; footnote 2 targets the code's pseudo-Schur variant. Implemented exactly as ruled (bisection only if PD fails at the cap)."
-  gamma_halving_schedule: "gamma_k = 0.5 * gamma_max / 2^k, k = 0..10; first passing k is used; if k = 10 still fails, gamma = 0"
-  recursion_matrix: "children recurse on A'' and D'' (not on raw A, D); gamma_max and the fallback are re-evaluated at every split on that node's matrix"
-  seriation_once: "seriation is computed once per month on the full LW covariance and not recomputed inside the recursion or on augmented matrices"
-  hrp_null_definition: "HRP null = the same recursion at gamma = 0 (nu = MV variance 1/(1'A^-1 1), terminal long-only MV for blocks <= 5), i.e. Cotton's gamma = 0 endpoint, not De Prado's inverse-variance cluster variance with single-name leaves"
-  caps_on_comparators_mechanism: "comparators are capped with the same post-hoc pro-rata routine as the method (not a constrained optimisation)"
-  cap_receivers: "a name capped at 20% and, once the group cap binds, every low-vol name are frozen and receive no redistribution; if all receivers have zero weight the excess is split equally among them; infeasible name sets raise"
-  low_vol_realized: "the 30% low-vol tripwire is checked on post-cap target weights (holdings at the start of each month); the drifted month-end share is printed as a diagnostic, not a tripwire"
-  effective_n_scope: "the effective-N tripwire applies to the method; the nulls' effective N are diagnostics"
-  composition_scope: "composition tripwire on the method and the primary null (gate_metrics default)"
-  c1_tests: "LW2008 tests are run for the method vs the primary null only; C2 and C3 are point estimates"
-  dsr_registry: "the 11 committed rows of HEAD:data/processed/epo_allocator/trial_registry.csv plus this trial; cross-trial variance over finite ex-BIL Sharpes (excludes the two invalid v1 runs)"
-  backbone_series: "Backbone = live VT (data/processed/live/vol_target_oos_returns.csv r_vt, net, BIL-priced); Book 2 = live skew gate-first r_method; Book 1 = net rebuild from the panel"
-  maxdd_no_worse: "method MaxDD >= Book 1 MaxDD (ties count as no worse)"
-  book_comparison_when_not_pass: "not computed; book_eligible = no with reason 'gate label is X, not PASS'"
-  bootstrap_seed: 20261002
-  weekly_cutoff: "weekly rows dated on or before CALENDAR month-end t-1 (EPO sliced at the decision date, which drops a complete Good-Friday-labelled week: 2018-03-30, 2024-03-29 on the panel)"
-  run_reservation: "the gate script exclusive-creates data/processed/schur_allocator/RUN_RESERVED.json before loading data and keeps it on failure; any existing file blocks a rerun"
-  oos_return_missing: "an eligible name missing its month-t return raises (explicit data repair), as in EPO"
+rulings:   # Quant rulings on the PR #48 engineering defaults (yaml at 111fbf7); no open items
+  approved: 2026-10-02
+  by: Quant
+  source: "QUANT_SPEC_schur_allocator.md, Rulings on PR #48 engineering defaults (2026-10-02)"
+  items:
+    b_descaling: {ruling: approved, rule: "w(A'') is in the b-scaled coordinates of A''; the child's weights are divided elementwise by b_A (and b_D) before the group scale 1/nu(A') is applied. Literal eq. (4)/(9) without this step does not recover min variance at gamma = 1 (it fails the paper's own Appendix B 3x3 example); with it, gamma -> 1 recovers MV exactly. The b > 0.05 fallback keeps the division safe. Verified analytically by Quant: at gamma = 1 the A-block returns A_c^-1 b, the A-block of Sigma^-1 1."}
+    gamma_max_analytic: {ruling: approved, rule: "For a PD covariance the exact Schur complement A - gamma B D^-1 C is PD for every gamma in [0, 1], so gamma_max hits the 1 - 1e-6 cap and gamma = 0.5 - 5e-7 unless numerics bind; footnote 2 targets the code's pseudo-Schur variant. Implemented exactly as ruled (bisection only if PD fails at the cap)."}
+    gamma_halving_schedule: {ruling: approved, rule: "gamma_k = 0.5 * gamma_max / 2^k, k = 0..10; first passing k is used; if k = 10 still fails, gamma = 0"}
+    recursion_matrix: {ruling: approved, rule: "children recurse on A'' and D'' (not on raw A, D); gamma_max and the fallback are re-evaluated at every split on that node's matrix"}
+    seriation_once: {ruling: approved, rule: "seriation is computed once per month on the full LW covariance and not recomputed inside the recursion or on augmented matrices"}
+    hrp_null_definition: {ruling: approved, rule: "HRP null = the same recursion at gamma = 0 (nu = MV variance 1/(1'A^-1 1), terminal long-only MV for blocks <= 5), i.e. Cotton's gamma = 0 endpoint (the correct ablation for C2), not De Prado's inverse-variance HRP; labelled \"HRP (Schur γ=0)\""}
+    caps_on_comparators_mechanism: {ruling: changed, rule: "CHANGED by Quant: the MinVar null is a true capped QP (nulls.primary); HRP and equal weight keep the post-hoc pro-rata routine used by the method"}
+    cap_receivers: {ruling: approved, rule: "a name capped at 20% and, once the group cap binds, every low-vol name are frozen and receive no redistribution; if all receivers have zero weight the excess is split equally among them; infeasible name sets raise"}
+    low_vol_realized: {ruling: approved, rule: "the 30% low-vol tripwire is checked on post-cap target weights (holdings at the start of each month); the drifted month-end share is printed as a diagnostic, not a tripwire"}
+    effective_n_scope: {ruling: approved, rule: "the effective-N tripwire applies to the method; the nulls' effective N are diagnostics"}
+    composition_scope: {ruling: approved, rule: "composition tripwire on the method and the primary null (gate_metrics default)"}
+    c1_tests: {ruling: approved, rule: "LW2008 tests are run for the method vs the primary null only; C2 and C3 are point estimates"}
+    dsr_registry: {ruling: approved, rule: "the 11 committed rows of HEAD:data/processed/epo_allocator/trial_registry.csv plus this trial; cross-trial variance over finite ex-BIL Sharpes (excludes the two invalid v1 runs)"}
+    backbone_series: {ruling: approved, rule: "Backbone = live VT (data/processed/live/vol_target_oos_returns.csv r_vt, net, BIL-priced); Book 2 = live skew gate-first r_method; Book 1 = net rebuild from the panel"}
+    maxdd_no_worse: {ruling: approved, rule: "method MaxDD >= Book 1 MaxDD (ties count as no worse)"}
+    book_comparison_when_not_pass: {ruling: approved, rule: "not computed; book_eligible = no with reason 'gate label is X, not PASS'"}
+    bootstrap_seed: {ruling: approved, value: 20261002}
+    weekly_cutoff: {ruling: approved, rule: "weekly rows dated on or before CALENDAR month-end t-1 (EPO sliced at the decision date, which drops a complete Good-Friday-labelled week: 2018-03-30, 2024-03-29 on the panel)"}
+    run_reservation: {ruling: approved, rule: "the gate script exclusive-creates data/processed/schur_allocator/RUN_RESERVED.json before loading data and keeps it on failure; any existing file blocks a rerun"}
+    oos_return_missing: {ruling: approved, rule: "an eligible name missing its month-t return raises (explicit data repair), as in EPO"}
 
 no_reruns: "One run (scripts/run_schur_gate.py refuses before loading data if data/processed/schur_allocator holds any artifact; output directory and B = 5000 are fixed, no CLI options). No sensitivities, retuning or re-selection. A not-significant edge is recorded as not significant. Any preview or rerun adds a trial and needs a new ticket."
