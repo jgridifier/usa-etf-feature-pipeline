@@ -1,0 +1,44 @@
+{
+  "note": "Presentation only (CIO copy 2026-10-02). Not a gate output: does not change the label, criteria, book_eligible or trial count. Derived from the committed oos_returns.csv and the live reference series.",
+  "method": "LW2008 HAC (QS kernel, prewhitened) SE of the monthly Sharpe difference, Schur minus comparator, on excess-of-BIL returns; annualized x sqrt(12); detectable gap = (z_0.95 + z_0.80) x SE_ann.",
+  "alpha_one_sided": 0.05,
+  "power": 0.8,
+  "z_sum": 2.4864748605243863,
+  "method_id": "schur_g050",
+  "window": "2021-02..2026-09",
+  "n_months": 68,
+  "detectable_gap_min": 0.6421816003427059,
+  "detectable_gap_max": 0.860182932298488,
+  "comparisons": {
+    "backbone": {
+      "label": "Backbone",
+      "n_months": 68,
+      "se_hac_monthly": 0.08401173567063493,
+      "se_hac_annual": 0.2910251892271725,
+      "sharpe_gap_annual": -0.29499240290965756,
+      "detectable_gap_annual": 0.7236268167927169,
+      "z": -1.013631856723537,
+      "p_one_sided": 0.844620774601325
+    },
+    "book1_static_option_a": {
+      "label": "Book 1",
+      "n_months": 68,
+      "se_hac_monthly": 0.0745560966074464,
+      "se_hac_annual": 0.2582698946762215,
+      "sharpe_gap_annual": -0.19833614813124392,
+      "detectable_gap_annual": 0.6421816003427059,
+      "z": -0.7679414140772652,
+      "p_one_sided": 0.7787390041386105
+    },
+    "book2": {
+      "label": "Book 2",
+      "n_months": 68,
+      "se_hac_monthly": 0.09986564823143182,
+      "se_hac_annual": 0.3459447533352818,
+      "sharpe_gap_annual": -0.4311326836938914,
+      "detectable_gap_annual": 0.860182932298488,
+      "z": -1.246247210103075,
+      "p_one_sided": 0.89366317408479
+    }
+  }
+}

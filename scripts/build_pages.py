@@ -51,6 +51,7 @@ from build_notes import build_notes, notes_list_html  # noqa: E402
 from labels import relabel_archive  # noqa: E402
 import archive_void  # noqa: E402
 import build_epo_results as epo_results  # noqa: E402
+import build_schur_results as schur_results  # noqa: E402
 
 
 def read_csv(name: str) -> list[dict]:
@@ -812,7 +813,8 @@ def verdict_card_html(card, prefix) -> str:
     badge_class = 'badge badge-fail' if card['badge'] == 'FAIL' else 'badge'
     rows = [[row['label'], row['sharpe'], row['maxdd']] for row in card['rows']]
     table = (table_html(['', 'Sharpe ex-BIL (legacy rf = 0)', 'MaxDD'], rows, f'{card["name"]} OOS vs null') if rows else
-             '<p class="muted">No Sharpe table for this VOID run; see the verdict and the OOS artifact.</p>')
+             '<p class="muted">No Sharpe table for this VOID run; see the verdict and the OOS artifact.</p>' if card['badge'] == 'VOID' else
+             '<p class="muted">Sharpe table on the results page; see the verdict.</p>')
 
     def href_for(href: str) -> str:
         if href.startswith('http'):
@@ -851,10 +853,12 @@ def build_archive_scoreboard() -> None:
     archive = load_archive_cards()
     n_fail = archive_counts(archive).get('FAIL', 0)
     has_epo = any(c['id'] == 'epo_anchored_trend' for c in archive['cards'])
+    has_schur = any(c['id'] == 'schur_allocator' for c in archive['cards'])
     subtitle = (
         'Archived methods: Justina round-1 (Spectral RP, Regime-Aware), #13 VCFC, #4 FT-MED, #3 RR-ERC, '
         f'Bet 1 {archive_void.void_runs(archive)} (VOID) · '
         + ('Bet 1 anchored EPO (FAIL) · ' if has_epo else '')
+        + (f'Bet 1 Schur allocator ({schur_results.badge_line(schur_results.label())}) · ' if has_schur else '')
         + 'plus the unconditional vol-target backbone audit null · USA ETF experimental panel · '
         f'updated {archive["updated"]} (ET)'
     )
@@ -903,6 +907,11 @@ def build_methods_index() -> None:
         *([(epo_results.PAGE.removeprefix('methods/'),
             'EPO gate results: ' + (epo_results.load_verdict().get('verdict_label') or f'{epo_results.label()} · pending Quant review'))]
           if epo_results.available() else []),
+        *([(schur_results.TEACHING, 'Schur complementary allocation (Bet 1)')]
+          if (DOCS / 'methods' / schur_results.TEACHING).exists() else []),
+        *([(schur_results.PAGE.removeprefix('methods/'),
+            f'Schur allocator gate results: {schur_results.badge_line(schur_results.label())}')]
+          if schur_results.available() else []),
         ('spectral_risk_parity_adia.html', 'Spectral Risk Parity (ADIA Lab): teaching note (archived)'),
         ('regime_aware_dual_regime_allocation.html', 'Regime-Aware Dual-Regime Allocation: teaching note (archived)'),
         ('ot_short_term_forecasting.html', 'Optimal transport: short-term forecasting'),
@@ -939,7 +948,8 @@ def build_methods_index() -> None:
 def restyle_methods_shell() -> None:
     methods = sorted(
         p.name for p in (DOCS / 'methods').glob('*.html') if p.name not in {'index.html', 'justina_round1_scoreboard.html', epo_results.PAGE.removeprefix('methods/'),
-                          'composition_over_time.html'}
+                          schur_results.PAGE.removeprefix('methods/'), 'composition_over_time.html',
+                          schur_results.TEACHING}  # Quant's Schur note: published byte-for-byte, never restyled
     )
     for name in methods:
         p = DOCS / 'methods' / name
@@ -987,6 +997,7 @@ def main() -> None:
             path.unlink()
             print('Removed leftover', leftover)
     epo_results.build_epo_results(page_shell, write_page)
+    schur_results.build_schur_results(page_shell, write_page)
     import build_composition  # pandas: run with the repo venv (scripts/build_pages_v2.sh)
     build_composition.write_data(DOCS, build_composition.build_page(page_shell, write_page))
     build_methods_index()

@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>Allocation Alpha — Schur complementary allocation (trial 12)</title>
+<style>
+  :root { --navy:#0b1f3a; --fg:#111; --muted:#555; --border:#d6d9de; --bg:#f5f6f8; }
+  * { box-sizing: border-box; }
+  body { font-family: Georgia, "Times New Roman", serif; color: var(--fg); line-height: 1.55; max-width: 42rem; margin: 2rem auto; padding: 0 1.25rem; background: #fff; overflow-wrap: anywhere; }
+  h1,h2,h3 { font-family: system-ui, -apple-system, Segoe UI, sans-serif; line-height: 1.25; color: var(--navy); }
+  h1 { font-size: 1.6rem; margin-bottom: 0.25rem; }
+  h2 { font-size: 1.22rem; margin-top: 2rem; border-bottom: 1px solid var(--border); padding-bottom: 0.3rem; }
+  h3 { font-size: 1.04rem; margin-top: 1.4rem; }
+  .meta { color: var(--muted); font-family: system-ui, sans-serif; font-size: 0.9rem; margin-bottom: 1.5rem; }
+  .disclaimer { background: var(--bg); border: 1px solid var(--border); padding: 0.75rem 1rem; border-radius: 6px; font-size: 0.92rem; margin: 1rem 0 1.5rem; }
+  .callout { background: var(--bg); border-left: 4px solid var(--navy); padding: 0.75rem 1rem; margin: 1rem 0; }
+  .wrap { overflow-x: auto; }
+  table { border-collapse: collapse; width: 100%; font-size: 0.9rem; margin: 0.75rem 0 1rem; }
+  th, td { border: 1px solid var(--border); padding: 0.4rem 0.5rem; text-align: left; vertical-align: top; }
+  th { background: var(--navy); color: #fff; font-family: system-ui, sans-serif; font-weight: 600; }
+  td.n { text-align: right; font-variant-numeric: tabular-nums; }
+  code, .math { font-family: Menlo, Consolas, monospace; font-size: 0.88em; background: #eef0f3; padding: 0 0.2em; border-radius: 3px; }
+  pre.math { display: block; padding: 0.7rem 0.9rem; overflow-x: auto; line-height: 1.5; white-space: pre; }
+  a { color: var(--navy); text-decoration: underline; }
+  .small { font-size: 0.88rem; color: var(--muted); }
+</style>
+</head>
+<body>
+<h1>Schur complementary allocation</h1>
+<div class="meta">Third-book candidate, trial 12 · Quant teaching note · 2026-10-02 · gate verdict: <strong>FAIL / ARCHIVE</strong> · results: <a href="allocation_alpha_schur_results.html">Schur gate results</a> · pre-registration: <code>preregistration/schur_allocator.yaml</code> (sha256 <code>7f9ddae5…b759</code>)</div>
+
+<div class="disclaimer">Research only. This is a methodology experiment on an arbitrary research panel of ETFs. It is not personalized investment advice and carries no approval status. Nothing here changes Book 1, Book 2 or the vol-target backbone.</div>
+
+<div class="callout">
+<strong>One-sentence version.</strong> Sort the funds so similar ones sit next to each other, split the list in half again and again, and at each split decide how much goes to each half. Plain hierarchical risk parity (HRP) makes that decision while ignoring how the two halves move together. Schur allocation lets a dial, γ, bring part of that cross-half information back in. At γ = 0 you get HRP, at γ = 1 you get minimum variance, and we tested the midpoint.
+</div>
+
+<h2>1. Why this paper</h2>
+<p>The two allocators before this one failed at opposite ends. Minimum-variance runs collapsed into a handful of funds: cash and short Treasuries in v1 and v2, and USMV plus EFAV in v3, with an effective N of 2.6. EPO, which adds a return signal to a mean–variance step, ended up about 84% in bonds. Hierarchical methods go the other way. They stay diversified because they never invert the full covariance matrix, but they throw away the correlation information between clusters.</p>
+<p>Cotton's method sits on the line between those two failures and has one dial for where on the line you stand. That made it the natural next test. It meets Jared's rules: it's dated 2024, and it uses only linear algebra and clustering, with no pretrained models.</p>
+
+<h2>2. What the paper says, and what it doesn't</h2>
+<h3>Cotton, P. (2024). "Schur Complementary Allocation: A Unification of Hierarchical Risk Parity and Minimum Variance Portfolios." arXiv:2411.05807v1 [q-fin.PM], 29 Oct 2024.</h3>
+<ul>
+<li><strong>Status.</strong> One version, single author, not peer-reviewed. It passes the 2020-or-later rule by date only.</li>
+<li><strong>Evidence.</strong> A simulation on synthetic covariance matrices with 500 assets, correlation around 0.35 and 60 observations. Out-of-sample <em>variance</em> falls steadily as γ rises from 0 toward 1 (Figure 1). There's no real-data backtest and no Sharpe ratio anywhere in the paper.</li>
+<li><strong>Risk only.</strong> The method uses no expected returns. Like HRP and minimum variance, it's trying to lower risk, not to pick winners.</li>
+<li><strong>No recommended γ.</strong> The paper restricts γ to [0, 1] and says a choice of γ above 0 "seems almost invariably to help", but it doesn't name a value. Footnote 2 says the author's code scales γ against the largest value that keeps the Schur complement positive definite.</li>
+</ul>
+
+<h2>3. How it works</h2>
+<p>Write the covariance of the current list of funds as two blocks, A for the first half and D for the second, with B and C as the cross terms.</p>
+<pre class="math">Σ = [ A  B ]
+    [ C  D ]</pre>
+<p>HRP looks at A and D alone. Schur allocation replaces A with a partial Schur complement, which subtracts the part of A's risk that D can hedge, by an amount set by γ:</p>
+<pre class="math">A_c(γ) = A − γ·B·D⁻¹·C
+b_A(γ) = 1 − γ·B·D⁻¹·1</pre>
+<p>The same is done for D. Each half's share of the budget is set by its minimum-variance "fitness" on the augmented matrix, and the recursion continues inside each half on <span class="math">A_c / (b_A b_Aᵀ)</span> (element by element). When a cluster has five or fewer funds, it's solved directly as a long-only minimum-variance problem.</p>
+<p>Two facts from checking the algebra, both written into the pre-registration:</p>
+<ul>
+<li>At γ = 1 the A-half gets <span class="math">A_c⁻¹·b_A</span>, which is exactly the A-block of the minimum-variance weights <span class="math">Σ⁻¹·1</span>. That only holds if each half's weights are divided by b before the group weight is applied, so the build does that.</li>
+<li><span class="math">A − γBD⁻¹C = (1−γ)A + γ(A − BD⁻¹C)</span> is a blend of two positive-definite matrices, so it stays positive definite for every γ in [0, 1]. In practice γ_max is 1 and the pre-registered γ = 0.5·γ_max is just 0.5.</li>
+</ul>
+<p>The one place γ had to be cut back was the b vector. If any entry of b fell to 0.05 or below, dividing by it would blow up, so γ was halved at that split until it passed. In the run, 35% of splits (783 of 2,251) were halved, mostly small clusters deep in the tree, and usually only once, to 0.25. The top split never was. Weighted by cluster size, the average γ was 0.43.</p>
+
+<h2>4. What we pre-registered</h2>
+<div class="wrap"><table>
+<tr><th>Item</th><th>Setting</th></tr>
+<tr><td>Universe</td><td>The 98 funds tagged equity in the panel, with no cash-like, short-duration or near-cash funds. That's 69–93 eligible funds a month, with a floor of 60. Bond concentration is ruled out because there are no bonds.</td></tr>
+<tr><td>γ</td><td>0.5 × γ_max at every split, fixed before any data was seen. Both ends of the dial (HRP at 0, minimum variance at 1) are comparators, not alternatives.</td></tr>
+<tr><td>Covariance and ordering</td><td>Ledoit–Wolf shrinkage on 156 weekly returns. HRP single-linkage ordering on correlation distance.</td></tr>
+<tr><td>Caps</td><td>USMV, EFAV and SPHD at no more than 30% combined, and no single fund above 20%. Reported only: the dividend and income share (DVY, SDY, VYM, DGRO, TMDV, SDIV, PID), since the universe has no utilities, staples or healthcare funds.</td></tr>
+<tr><td>Tripwires (VOID if missed)</td><td>Average effective N (1/Σw² on target weights) of at least 5. Cash-like share of no more than 50%. Low-vol share of no more than 30% every month.</td></tr>
+<tr><td>Comparators</td><td>LW minimum variance solved as a true capped optimization, HRP (Schur γ=0), and equal weight. All of them had the same caps and the same 5 bp costs.</td></tr>
+<tr><td>Gate</td><td>C1: higher Sharpe above BIL than minimum variance, with one-sided p ≤ 0.05 on both the HAC test and the bootstrap. C2: at least HRP. C3: at least equal weight. C4: deflated Sharpe of at least 0.95 at 12 trials.</td></tr>
+<tr><td>Rules</td><td>One run, no sensitivities, trial count 11 → 12.</td></tr>
+</table></div>
+
+<h2>5. What happened</h2>
+<p>The tripwires all passed. Effective N averaged 22.9 (minimum 13.5), the low-vol share averaged 19% and touched the 30% cap in 4 months, and nothing was cash-like. So the method stayed diversified, which is what it was built to do. It just didn't earn more for it.</p>
+<div class="wrap"><table>
+<tr><th>Nov 2016 – Sep 2026, 119 months, net</th><th>Sharpe above BIL</th><th>Max drawdown</th></tr>
+<tr><td>Schur (γ = 0.5·γ_max)</td><td class="n">0.63</td><td class="n">−23.5%</td></tr>
+<tr><td>Equal weight (capped)</td><td class="n">0.65</td><td class="n">−25.5%</td></tr>
+<tr><td>HRP (Schur γ=0)</td><td class="n">0.62</td><td class="n">−24.2%</td></tr>
+<tr><td>LW minimum variance (capped)</td><td class="n">0.51</td><td class="n">−25.1%</td></tr>
+</table></div>
+<p>Schur beat capped minimum variance by 0.12, but not significantly: one-sided p was 0.08 to 0.13 depending on the test. It edged HRP by 0.01, which is noise, and trailed plain capped equal weight. The deflated Sharpe was 0.43 against a bar of 0.95. That's a FAIL on C1, C3 and C4.</p>
+<p>From Feb 2021 on, against the Books (reported only, not book-eligible, and about 68 months can only detect a Sharpe gap of roughly 0.6 to 0.9), Schur's Sharpe above BIL was 0.57, against 0.86 for the vol-target backbone, 0.77 for Book 1 and 1.00 for Book 2. Its drawdown was shallower than Book 1's, −22.0% against −25.6%.</p>
+
+<h2>6. What we learned</h2>
+<ul>
+<li>Shrinking HRP toward minimum variance barely moved the result. Once the collapse into low-vol funds is capped away, the cross-cluster correlation information that Schur adds back is worth very little on this equity panel.</li>
+<li>Equal weight across the same funds did as well as anything here. On a universe of fairly similar equity ETFs, a risk-only allocator has little to work with.</li>
+<li>The paper's own case was about lower variance, and that part held up: Schur's volatility (13.4%) sat between HRP's and minimum variance's, as expected. Lower variance just didn't turn into a better Sharpe.</li>
+<li>No follow-up run. Trying another γ would be a new trial, and the evidence doesn't justify one.</li>
+</ul>
+
+<p class="small">Sources: Cotton (2024) read in full; gate outputs at <code>data/processed/schur_allocator/</code> (commit <code>641c65b</code>), recomputed independently by Quant on 2026-10-02. Spec: <code>justina_shortlist/QUANT_SPEC_schur_allocator.md</code>.</p>
+</body>
+</html>
