@@ -14,7 +14,7 @@ from usa_etf_features import schur_allocator as s, gate_metrics as gm
 from usa_etf_features.monthly_panel import load_monthly_panel
 from usa_etf_features.spectral_risk_parity import long_only_minvar, normalize_cov
 
-PIN = '93a402448ed6fcabfdc59d35637f6b3a7cce58f8b47e07cbfb552177c834219c'
+PIN = '7f9ddae54a852281f0d127e584d43e48d49a85bfd95266ba523bb5ea1244b759'
 
 
 # ----------------------------------------------------------------------------- pre-registration
@@ -40,8 +40,10 @@ def test_preregistration_pin_and_parameters():
     r = p['rulings']
     assert str(r['approved']) == '2026-10-02' and r['by'] == 'Quant' and len(r['items']) == 20
     assert r['items']['bootstrap_seed']['value'] == s.SEED
-    assert r['items']['caps_on_comparators_mechanism']['ruling'] == 'changed'
-    assert all(v['ruling'] == 'approved' for k, v in r['items'].items() if k != 'caps_on_comparators_mechanism')
+    changed = {'caps_on_comparators_mechanism', 'book_comparison_when_not_pass'}
+    assert {k for k, v in r['items'].items() if v['ruling'] == 'changed'} == changed
+    assert all(v['ruling'] == 'approved' for k, v in r['items'].items() if k not in changed)
+    assert 'CIO request 2026-10-02' in r['items']['book_comparison_when_not_pass']['rule']
     assert 'true capped QP' in p['nulls']['primary']['rule'] and 'no fallback' in p['nulls']['primary']['rule']
     assert '1e-12' in p['nulls']['primary']['rule'] and s.QP_FTOL == 1e-12 and s.QP_KKT_TOL == 1e-8
     assert p['display_labels'] == s.display_labels() and p['display_labels'][s.HRP] == 'HRP (Schur γ=0)'
@@ -369,6 +371,7 @@ def test_tripwire_void_short_circuits_tests(panels, monkeypatch, tmp_path):
     assert res['tests'].empty and res['summary'].empty and res['reading']['criteria'] is None
     assert 'effective N' in res['tripwires']['reasons'][0]
     assert not res['book_eligible']['eligible'] and 'VOID' in res['book_eligible']['reason']
+    assert res['book_eligible']['comparison'] == 'not computed' and 'stats' not in res['book_eligible']
     s.write_schur_artifacts(res, tmp_path/'void')
     payload = json.loads((tmp_path/'void/gate_result.json').read_text())
     assert payload['label'] == 'VOID' and payload['report']['criteria'] is None
@@ -408,6 +411,10 @@ def test_synthetic_gate_and_writer(panels, monkeypatch, tmp_path):
     assert 'HRP (Schur γ=0)' in report and '2018-03-30' in report and '2024-03-29' in report
     assert 'dividend/income' in report and 'KKT gap' in report
     assert payload['fields']['display_labels'][s.HRP] == 'HRP (Schur γ=0)'
+    be = res['book_eligible']
+    if res['label'] == 'FAIL':
+        assert be['comparison'] in ('reported only', 'unavailable') and not be['eligible']
+    assert 'Book comparison' in report
     assert (tmp_path/'out/split_log.csv').exists() and (tmp_path/'out/cap_report.csv').exists()
 
 
@@ -423,10 +430,19 @@ def test_book_eligibility(panels, monkeypatch):
     rf = pd.DataFrame({'rf': .001, 'source': 'x'}, index=pd.period_range('2020-01', periods=40, freq='M'))
     be = s.book_eligibility('PASS', oos, rf, backbone=backbone, book2=backbone)
     assert be['eligible'] and be['n_months'] == 20 and be['window'].startswith('2021-02')
-    assert not s.book_eligibility('FAIL', oos, rf, backbone=backbone, book2=backbone)['eligible']
+    assert be['comparison'] == 'eligibility' and be['criteria_met'] and set(be['stats']) == {s.METHOD, s.BOOK1, 'backbone', 'book2'}
+    # FAIL: same comparison computed, reported only, never eligible even when the CIO criteria are met.
+    fail = s.book_eligibility('FAIL', oos, rf, backbone=backbone, book2=backbone)
+    assert not fail['eligible'] and fail['criteria_met'] and fail['comparison'] == 'reported only'
+    assert fail['stats'] == be['stats'] and fail['reason'].startswith('gate label is FAIL') and 'reported only' in fail['reason']
+    # VOID (and any other label): nothing computed, references never loaded.
+    monkeypatch.setattr(s, '_load_reference', lambda *a, **k: pytest.fail('reference loaded on VOID'))
+    for label in ('VOID', 'INCOMPLETE'):
+        void = s.book_eligibility(label, oos, rf)
+        assert not void['eligible'] and void['comparison'] == 'not computed' and 'stats' not in void
     worse = oos.copy(); worse.loc[worse.strategy_id.eq(s.METHOD) & worse.date.eq(pd.Timestamp('2022-01-31')), 'return'] = -.2
     be = s.book_eligibility('PASS', worse, rf, backbone=backbone, book2=backbone)
-    assert not be['eligible'] and 'MaxDD' in be['reason']
+    assert not be['eligible'] and not be['criteria_met'] and 'MaxDD' in be['reason'] and be['comparison'] == 'eligibility'
 
 
 # ----------------------------------------------------------------------------- guard

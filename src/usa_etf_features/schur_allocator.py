@@ -61,7 +61,7 @@ TRIAL_COUNT = epo.TRIAL_COUNT + 1
 assert TRIAL_COUNT == 12
 BOOTSTRAP_REPS, BLOCK_SIZE, SEED = 5000, 4, 20261002
 PREREG_PATH = Path('preregistration/schur_allocator.yaml')
-PREREG_SHA256 = '93a402448ed6fcabfdc59d35637f6b3a7cce58f8b47e07cbfb552177c834219c'
+PREREG_SHA256 = '7f9ddae54a852281f0d127e584d43e48d49a85bfd95266ba523bb5ea1244b759'
 EPO_REGISTRY = 'data/processed/epo_allocator/trial_registry.csv'
 BACKBONE_PATH = Path('data/processed/live/vol_target_oos_returns.csv')         # r_vt, net
 BOOK2_PATH = Path('data/processed/live/skew_managed_gatefirst_returns.csv')    # r_method, net
@@ -636,20 +636,27 @@ def _stats(r, rf):
 
 
 def book_eligibility(label, oos, rf, backbone=None, book2=None, root=ROOT):
-    """CIO rule, only after PASS: common window from 2021-02, net vs net."""
-    if label != 'PASS':
-        return dict(eligible=False, reason=f'gate label is {label}, not PASS; book comparison not computed', label=label)
+    """CIO rule: common window from 2021-02, net vs net, vs Book 1, Book 2 and the Backbone.
+
+    Computed for PASS and FAIL (CIO 2026-10-02). On FAIL the comparison is 'reported only' and
+    book_eligible = no; yes requires PASS and the CIO criteria. On VOID nothing is computed.
+    Does not affect the gate label, criteria or trial count.
+    """
+    if label not in ('PASS', 'FAIL'):
+        return dict(eligible=False, reason=f'gate label is {label}; book comparison not computed', label=label,
+                    comparison='not computed')
+    role = 'eligibility' if label == 'PASS' else 'reported only'
     backbone = _load_reference(Path(root) / BACKBONE_PATH, 'r_vt') if backbone is None else backbone
     book2 = _load_reference(Path(root) / BOOK2_PATH, 'r_method') if book2 is None else book2
     series = {sid: oos.loc[oos.strategy_id.eq(sid)].set_index('date')['return'] for sid in (METHOD, BOOK1)}
     if backbone is None or book2 is None or series[BOOK1].empty:
-        return dict(eligible=False, reason='reference series unavailable', label=label)
+        return dict(eligible=False, reason='reference series unavailable', label=label, comparison='unavailable')
     series.update(backbone=backbone, book2=book2)
     by_month = {k: s.set_axis(pd.DatetimeIndex(s.index).to_period('M')) for k, s in series.items()}
     common = sorted(set.intersection(*(set(s.index) for s in by_month.values())))
     common = [p for p in common if p >= pd.Period(BOOK_WINDOW_START, 'M')]
     if len(common) < 12:
-        return dict(eligible=False, reason='common window shorter than 12 months', label=label)
+        return dict(eligible=False, reason='common window shorter than 12 months', label=label, comparison='unavailable')
     stats = {}
     for k, s in by_month.items():
         r = s.loc[common]
@@ -658,7 +665,11 @@ def book_eligibility(label, oos, rf, backbone=None, book2=None, root=ROOT):
     sharpe_ok = stats[METHOD]['Sharpe_exBIL'] > stats['backbone']['Sharpe_exBIL']
     dd_ok = stats[METHOD]['MaxDD'] >= stats[BOOK1]['MaxDD']
     reasons = [r for r, ok in (('Sharpe_exBIL not > Backbone', sharpe_ok), ('MaxDD worse than Book 1', dd_ok)) if not ok]
-    return dict(eligible=not reasons, reason='; '.join(reasons) or 'PASS; beats Backbone on Sharpe_exBIL and MaxDD no worse than Book 1',
+    criteria_met = not reasons
+    if label != 'PASS':
+        reasons.insert(0, f'gate label is {label}, not PASS; comparison reported only')
+    return dict(eligible=label == 'PASS' and criteria_met, criteria_met=bool(criteria_met), comparison=role,
+                reason='; '.join(reasons) or 'PASS; beats Backbone on Sharpe_exBIL and MaxDD no worse than Book 1',
                 label=label, window=f'{common[0]}..{common[-1]}', n_months=len(common), stats=stats,
                 beats_backbone_sharpe=bool(sharpe_ok), maxdd_no_worse_than_book1=bool(dd_ok),
                 book2='reference only')
@@ -740,6 +751,12 @@ def gate_report_lines(result):
     for key in ('summary', 'tests', 'trial_registry', 'name_counts'):
         if not result[key].empty:
             lines += ['', f'## {key}', '', epo._markdown_table(result[key])]
+    be = result['book_eligible']
+    if be.get('stats'):
+        lines += ['', f"## Book comparison ({be['comparison']}; {be['window']}, {be['n_months']} months, net vs net)", '',
+                  epo._markdown_table(pd.DataFrame([dict(series=labels.get(k, k), **v) for k, v in be['stats'].items()]))]
+    else:
+        lines += ['', f"Book comparison: {be.get('comparison', 'not computed')} ({be['reason']})."]
     lines += ['', 'Criteria: ' + str(result['reading']),
               'DSR: Bailey–López de Prado (2014), N=12, registry cross-trial variance. One run; no sensitivities.']
     return lines

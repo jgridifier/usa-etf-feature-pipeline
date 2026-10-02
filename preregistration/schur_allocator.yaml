@@ -104,7 +104,7 @@ gate:   # gamma fixed, net of costs, full OOS window 2016-11 to the last complet
   c4: "DSR >= 0.95 at N = 12 with registry cross-trial variance (Bailey & Lopez de Prado 2014)"
   label: "VOID wins (tripwires or composition, gate_metrics.final_gate_label); else PASS if C1-C4 all pass; else FAIL"
 
-book_eligibility:   # CIO rule, computed only after PASS
+book_eligibility:   # CIO rule; comparison computed for PASS and FAIL (reported only on FAIL, book_eligible = no), nothing computed on VOID
   window: "common months of the method, Backbone, Book 1 and Book 2 from 2021-02 to the last complete month; net vs net"
   rule: "Sharpe_exBIL > Backbone (point estimate) AND MaxDD no worse than Book 1 (method MaxDD >= Book 1 MaxDD)"
   book2: "shown for reference"
@@ -130,7 +130,7 @@ rulings:   # Quant rulings on the PR #48 engineering defaults (yaml at 111fbf7);
     dsr_registry: {ruling: approved, rule: "the 11 committed rows of HEAD:data/processed/epo_allocator/trial_registry.csv plus this trial; cross-trial variance over finite ex-BIL Sharpes (excludes the two invalid v1 runs)"}
     backbone_series: {ruling: approved, rule: "Backbone = live VT (data/processed/live/vol_target_oos_returns.csv r_vt, net, BIL-priced); Book 2 = live skew gate-first r_method; Book 1 = net rebuild from the panel"}
     maxdd_no_worse: {ruling: approved, rule: "method MaxDD >= Book 1 MaxDD (ties count as no worse)"}
-    book_comparison_when_not_pass: {ruling: approved, rule: "not computed; book_eligible = no with reason 'gate label is X, not PASS'"}
+    book_comparison_when_not_pass: {ruling: changed, rule: "CIO request 2026-10-02: the comparison vs Book 1, Book 2 and the Backbone (from 2021-02, net vs net) is computed for PASS and FAIL; on FAIL it is labelled 'reported only' and book_eligible = no; book_eligible = yes only if the label is PASS and the CIO criteria are met; on VOID nothing is computed; gate criteria and trial count unchanged"}
     bootstrap_seed: {ruling: approved, value: 20261002}
     weekly_cutoff: {ruling: approved, rule: "weekly rows dated on or before CALENDAR month-end t-1 (EPO sliced at the decision date, which drops a complete Good-Friday-labelled week: 2018-03-30, 2024-03-29 on the panel)"}
     run_reservation: {ruling: approved, rule: "the gate script exclusive-creates data/processed/schur_allocator/RUN_RESERVED.json before loading data and keeps it on failure; any existing file blocks a rerun"}
