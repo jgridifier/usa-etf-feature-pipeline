@@ -126,7 +126,9 @@ export default function Archive() {
                   <p className="text-xs text-muted mb-3">{card.detail}</p>
                   <p className="font-serif text-base italic text-ink leading-snug mb-3">{card.verdict}</p>
                   <p className="text-sm text-body mb-3">Binding null: {card.null}</p>
-                  {card.rows.length === 0 ? (
+                  {card.rows.length === 0 && card.badge !== 'VOID' ? (
+                    <p className="text-xs text-muted">Sharpe table on the results page; see the verdict.</p>
+                  ) : card.rows.length === 0 ? (
                     <p className="text-xs text-muted">No Sharpe table for this VOID run; see the verdict and the OOS artifact.</p>
                   ) : (
                   <div className="overflow-x-auto">

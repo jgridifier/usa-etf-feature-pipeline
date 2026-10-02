@@ -246,36 +246,6 @@
         "window": "2016-11-30..2026-09-30",
         "source": "epo_allocator/summary.csv (gate run, full window)"
       }
-    },
-    "schur_allocator": {
-      "Schur (\u03b3 = 0.5\u00b7\u03b3_max) (method)": {
-        "exbil": 0.6257,
-        "rf0_legacy": 0.7641,
-        "n_months": 119,
-        "window": "2016-11-30..2026-09-30",
-        "source": "schur_allocator/summary.csv (gate run, full window)"
-      },
-      "LW MinVar (capped QP) (primary null)": {
-        "exbil": 0.5109,
-        "rf0_legacy": 0.6618,
-        "n_months": 119,
-        "window": "2016-11-30..2026-09-30",
-        "source": "schur_allocator/summary.csv (gate run, full window)"
-      },
-      "HRP (Schur \u03b3=0)": {
-        "exbil": 0.6179,
-        "rf0_legacy": 0.7504,
-        "n_months": 119,
-        "window": "2016-11-30..2026-09-30",
-        "source": "schur_allocator/summary.csv (gate run, full window)"
-      },
-      "Equal weight (capped)": {
-        "exbil": 0.645,
-        "rf0_legacy": 0.7511,
-        "n_months": 119,
-        "window": "2016-11-30..2026-09-30",
-        "source": "schur_allocator/summary.csv (gate run, full window)"
-      }
     }
   },
   "skew_nulls": {

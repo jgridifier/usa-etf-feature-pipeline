@@ -26182,7 +26182,7 @@
    "id": "schur_schur_g050",
    "group": "schur",
    "name": "Schur (γ = 0.5·γ_max) (method)",
-   "badge": "FAIL · PENDING QUANT RECOMPUTE",
+   "badge": "FAIL / ARCHIVE (Quant recompute confirmed)",
    "optional": false,
    "default_view": "class",
    "source": "data/processed/schur_allocator/weights.csv",

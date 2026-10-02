@@ -6,8 +6,8 @@ Every figure on the page is read from the committed gate output in data/processe
 from the committed returns by scripts/schur_book_power.py). Nothing is hard-coded except the
 pre-registered rule text. If the gate has not been run, no page is built.
 
-CIO copy (2026-10-02): the page opens with the gate verdict, which reads PENDING QUANT RECOMPUTE
-until Quant rules; every Book comparison carries the power caveat (month count and detectable gap
+CIO copy (2026-10-02): the page opens with the gate verdict (PENDING QUANT RECOMPUTE until Quant's
+verdict.json is committed beside the run, then Quant's verdict label); every Book comparison carries the power caveat (month count and detectable gap
 from data); on FAIL the Book table is headed 'Reported only, not book-eligible'; nothing on VOID.
 """
 from __future__ import annotations
@@ -21,6 +21,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 SCHUR_DIR = ROOT / 'data' / 'processed' / 'schur_allocator'
 PAGE = 'methods/allocation_alpha_schur_results.html'
+TEACHING = 'allocation_alpha_schur.html'   # Quant's teaching note (docs/methods/)
 PENDING = 'PENDING QUANT RECOMPUTE'
 REPORTED_ONLY = 'Reported only, not book-eligible'
 REPO_BLOB = 'https://github.com/jgridifier/usa-etf-feature-pipeline/blob/main/data/processed/schur_allocator/'
@@ -31,6 +32,18 @@ ORDER = [METHOD, HRP, PRIMARY, EW, BOOK1]
 ROLE = {METHOD: 'method', PRIMARY: 'primary null', HRP: 'null', EW: 'null', BOOK1: 'reference'}
 # Book comparison series (gate_result.json fields.book_eligible.stats keys) and their table labels.
 BOOK_ROWS = (('schur_g050', None), ('backbone', 'Backbone'), (BOOK1, 'Book 1'), ('book2', 'Book 2'))
+
+
+# CIO copy edits (2026-10-02). Wording lives here so it is easy to change; every figure is filled from data.
+EDGED_HRP_TEXT = 'It edged {hrp} by {diff}, which is within noise.'
+# Quant's wording (2026-10-02), replacing the CIO draft. {share} is a plain fraction word from split_log.csv;
+# {where} is only filled when the halved splits really are mostly deep in the tree.
+SMALLER_GAMMA_TEXT = ('About {share} of splits{where} ran with γ halved. Weighted by cluster size, the average γ was '
+                      '{weighted} instead of {initial}, so the method sat slightly closer to HRP than its label.')
+DEEP_SPLITS_TEXT = ', mostly small clusters deep in the tree,'
+MAXDD_CAVEAT = 'single path, no test'
+LESSONS_TEXT = ('What we learned: shrinking HRP toward MinVar barely moved the result, plain capped equal weight beat both, '
+                'and the shallower drawdown than Book 1 came with a much lower Sharpe than the backbone ({schur} vs {backbone}).')
 
 
 def available() -> bool:
@@ -50,8 +63,21 @@ def label() -> str:
     return load_gate()['label']
 
 
+def load_verdict() -> dict:
+    """Quant's verdict record beside the committed run (written after review; run artifacts unchanged)."""
+    path = SCHUR_DIR / 'verdict.json'
+    if not path.exists():
+        return {}
+    v = json.loads(path.read_text(encoding='utf-8'))
+    g = load_gate()
+    if v.get('verdict') != g['label'] or v.get('final_trial_count') != g['fields']['trial_count']:
+        raise ValueError('Schur verdict record disagrees with the gate output')
+    return v
+
+
 def badge_line(lab: str) -> str:
-    return f'{lab} · {PENDING}'
+    v = load_verdict()
+    return v['verdict_label'] if v else f'{lab} · {PENDING}'
 
 
 def _rows(name: str) -> list[dict]:
@@ -109,7 +135,7 @@ def gather() -> dict:
     return dict(gate=gate, full=full, tests=tests, power=load_power(),
                 labels=gate['fields'].get('display_labels', {}),
                 caps=_rows('cap_report.csv'), shares=_rows('low_vol_share.csv'),
-                names=_rows('name_counts.csv'), qp=_rows('minvar_qp_log.csv'))
+                names=_rows('name_counts.csv'), qp=_rows('minvar_qp_log.csv'), splits=_rows('split_log.csv'))
 
 
 def name(d: dict, sid: str) -> str:
@@ -164,7 +190,10 @@ def verdict_text(d: dict) -> str:
     failing = g['report'].get('failing_criteria', [])
     t = primary_test(d)
     ms = sharpe(d, METHOD)
-    parts = ["This is the mechanical reading; the label is not final until Quant’s recompute rules."]
+    v = load_verdict()
+    parts = ([f"Quant recomputed the run from the committed outputs and confirmed the label: not book-eligible, no follow-up "
+              f"run, trial count stays {v['final_trial_count']}."] if v else
+             ["This is the mechanical reading; the label is not final until Quant’s recompute rules."])
     if failing:
         parts.append(f"The Schur allocator failed {len(failing)} of {len(crit)} pre-registered criteria "
                      f"({_join([c.upper() for c in failing])}).")
@@ -174,10 +203,11 @@ def verdict_text(d: dict) -> str:
     parts.append(f"Its Sharpe ex-BIL of {num(ms)} was {above} the primary null, {name(d, PRIMARY)} ({num(sharpe(d, PRIMARY))}), "
                  + ('by a statistically significant margin' if crit['c1'] else 'but not by a statistically significant margin')
                  + f" (one-sided p = {pval(t.get('p_one_sided_hac'))} HAC, {pval(t.get('p_one_sided_boot'))} bootstrap).")
-    beat = [f"{name(d, s)} ({num(sharpe(d, s))})" for s in (HRP, EW) if ms >= sharpe(d, s)]
+    if ms >= sharpe(d, HRP):
+        parts.append(EDGED_HRP_TEXT.format(hrp=name(d, HRP), diff=num(ms - sharpe(d, HRP))))
     trail = [f"{name(d, s)} ({num(sharpe(d, s))})" for s in (HRP, EW) if ms < sharpe(d, s)]
-    if beat:
-        parts.append(f"It matched or beat {_join(beat)}.")
+    if ms >= sharpe(d, EW):
+        parts.append(f"It matched or beat {name(d, EW)} ({num(sharpe(d, EW))}).")
     if trail:
         parts.append(f"It trailed {_join(trail)}.")
     if not crit['c4']:
@@ -190,7 +220,56 @@ def verdict_text(d: dict) -> str:
     parts.append('Not book-eligible.' if not be.get('eligible') else
                  'Book-eligible on the pre-registered conditions; mapping it to a book is the CIO’s call.')
     parts.append('No book changes.')
+    lessons = lessons_text(d)
+    if lessons:
+        parts.append(lessons)
     return ' '.join(parts)
+
+
+
+
+def fraction_word(x: float) -> str:
+    for word, f in (('a quarter', 1 / 4), ('a third', 1 / 3), ('half', 1 / 2), ('two thirds', 2 / 3), ('three quarters', 3 / 4)):
+        if abs(x - f) <= 0.025:
+            return word
+    return pct(x, 0)
+
+
+def gamma_stats(d: dict) -> dict:
+    """Halved-γ splits and the cluster-size-weighted γ (as a multiple of γ_max), from split_log.csv."""
+    rows = [r for r in d['splits'] if r['strategy_id'] == METHOD]
+    halved = [r for r in rows if float(r['gamma']) < float(r['gamma_initial'])]
+    n = sum(float(r['n']) for r in rows)
+    weighted = sum(float(r['n']) * float(r['gamma']) / float(r['gamma_max']) for r in rows) / n
+    initial = sum(float(r['n']) * float(r['gamma_initial']) / float(r['gamma_max']) for r in rows) / n
+    deep = sum(int(r['depth']) >= 3 for r in halved) / len(halved) if halved else 0.0
+    small = sum(float(r['n']) <= 16 for r in halved) / len(halved) if halved else 0.0
+    return dict(n_splits=len(rows), n_halved=len(halved), share=len(halved) / len(rows), weighted=weighted,
+                initial=initial, deep_share=deep, small_share=small)
+
+
+def smaller_gamma_text(d: dict) -> str:
+    gs = gamma_stats(d)
+    where = DEEP_SPLITS_TEXT if gs['deep_share'] > 0.5 and gs['small_share'] > 0.5 else ''
+    return SMALLER_GAMMA_TEXT.format(share=fraction_word(gs['share']), where=where, weighted=num(gs['weighted']),
+                                     initial=num(gs['initial'], 1))
+
+
+def lessons_text(d: dict) -> str:
+    """CIO closing line, shown only when the data bear it out; Book figures carry the power caveat."""
+    be = d['gate']['fields']['book_eligible']
+    st = be.get('stats')
+    if not st:
+        return ''
+    ms, hrp, ew = sharpe(d, METHOD), sharpe(d, HRP), sharpe(d, EW)
+    m, bb = st[METHOD], st['backbone']
+    holds = (ew > ms and ew > hrp and not d['gate']['report']['criteria']['c1'] and be['maxdd_no_worse_than_book1']
+             and m['Sharpe_exBIL'] < bb['Sharpe_exBIL'] and abs(ms - hrp) < 0.05)
+    if not holds:
+        return ''
+    text = LESSONS_TEXT.format(schur=num(m['Sharpe_exBIL']), backbone=num(bb['Sharpe_exBIL']))
+    caveat = power_caveat(d, 'backbone')
+    return text + (f' Caveat: {caveat}; drawdown vs Book 1: {MAXDD_CAVEAT}.' if caveat else '')
 
 
 def power_caveat(d: dict, key: str | None = None) -> str:
@@ -232,7 +311,7 @@ def book_section(d: dict) -> str:
          ['Sharpe ex-BIL above the Backbone', f"{num(m['Sharpe_exBIL'])} vs {num(bb['Sharpe_exBIL'])}",
           yes(be['beats_backbone_sharpe']), power_caveat(d, 'backbone') or '—'],
          ['MaxDD no worse than Book 1', f"{pct(m['MaxDD'])} vs {pct(b1['MaxDD'])}",
-          yes(be['maxdd_no_worse_than_book1']), power_caveat(d, BOOK1) or '—'],
+          yes(be['maxdd_no_worse_than_book1']), MAXDD_CAVEAT],
          ['Book-eligible', '', yes(be['eligible']), '—']],
         f"{heading}: conditions (Book 2 is reference only)")
     caveat = power_caveat(d)
@@ -297,6 +376,8 @@ def diagnostics(d: dict) -> str:
         f"<li>Eligible names per rebalance: {min(n_elig)} / {sum(n_elig) / len(n_elig):.2f} / {max(n_elig)} (min / mean / max); "
         f"skipped months: {skipped or 'none'}.</li>"
         f"<li>γ fallback share of Schur splits: {pct(f['fallback_share'], 2)}; HRP fallback share: {pct(f['hrp_fallback_share'], 2)}.</li>"
+        f"<li>{escape(smaller_gamma_text(d))} Halved: {gamma_stats(d)['n_halved']:,} of {gamma_stats(d)['n_splits']:,} "
+        f"splits ({pct(gamma_stats(d)['share'])}).</li>"
         f"<li>{escape(name(d, PRIMARY))}: {certified} of {len(gaps)} solves certified by the LP gap check; "
         f"max KKT gap {max(gaps):.1e}.</li>"
         '</ul>'
@@ -305,7 +386,7 @@ def diagnostics(d: dict) -> str:
 
 
 def archive_card() -> dict | None:
-    """Archive card (archive_verdicts.json schema), built from the run output. Mechanical label, pending Quant."""
+    """Archive card (archive_verdicts.json schema), built from the run output and Quant's verdict record."""
     if not available():
         return None
     d = gather()
@@ -315,29 +396,29 @@ def archive_card() -> dict | None:
     trials = g['fields']['trial_count']
     first, last = full[METHOD]['start'], full[METHOD]['end']
 
-    def row(sid, role):
-        r = full[sid]
-        return dict(role=role, label=archive_label(d, sid),
-                    sharpe=f"{num(r['Sharpe_exBIL'])} (legacy {num(r['Sharpe_rf0_legacy'])})", maxdd=pct(r['MaxDD']))
     return dict(
         id='schur_allocator',
         name='Bet 1 Schur complementary allocator',
         detail=(f"Schur complementary allocation, γ = 0.5·γ_max · capped nulls (LW MinVar QP primary, HRP = Schur at γ = 0, "
                 f"equal weight) · {full[METHOD]['n_months']}m OOS ({month(first)} → {month(last)}) · 5 bps · trial_count={trials}"),
         badge=lab,
-        verdict=(f"{lab} (mechanical), {PENDING}. Sharpe ex-BIL {num(sharpe(d, METHOD))} vs {num(sharpe(d, PRIMARY))} "
+        verdict=(f"{badge_line(lab)}. Sharpe ex-BIL {num(sharpe(d, METHOD))} vs {num(sharpe(d, PRIMARY))} "
                  f"for the capped LW MinVar null (one-sided p {pval(t.get('p_one_sided_hac'))} HAC), "
-                 f"{num(sharpe(d, EW))} for equal weight; book-eligible: {'yes' if g['fields']['book_eligible'].get('eligible') else 'no'}."),
+                 f"{num(sharpe(d, EW))} for equal weight and {num(sharpe(d, HRP))} for HRP (Schur γ=0); "
+                 f"MaxDD {pct(full[METHOD]['MaxDD'])}; book-eligible: {'yes' if g['fields']['book_eligible'].get('eligible') else 'no'}."),
         null=f"{name(d, PRIMARY)} on the same names (primary); {name(d, HRP)} and {name(d, EW)} also binding",
-        rows=[row(METHOD, 'method'), row(PRIMARY, 'null'), row(HRP, 'null'), row(EW, 'null')],
+        # No Sharpe rows: card rows are validated against site_sharpe.json, which is hash-pinned and only
+        # changes in a data-refresh PR. The figures are in the verdict and on the results page.
+        rows=[],
         nw_t=(f"n/a · LW2008 HAC z {num(t.get('z_hac'))} vs {name(d, PRIMARY)} "
               f"(p {pval(t.get('p_one_sided_hac'))}; bootstrap p {pval(t.get('p_one_sided_boot'))})"),
         dsr=f"{num(full[METHOD]['DSR_exBIL'], 3)} on Sharpe ex-BIL, not legacy (trial_count={trials})",
         gate=dict(label='PR #48', href=GATE_PR),
-        method_page=PAGE,
+        method_page=f'methods/{TEACHING}' if (ROOT / 'docs' / 'methods' / TEACHING).exists() else PAGE,
         artifact=dict(label='schur_allocator/summary.csv', href=REPO_BLOB + 'summary.csv'),
         archived=run_date_et(),
-        archived_via='Single pre-registered gate run (trial 12); mechanical label, Quant recompute pending',
+        archived_via=(f"{v['verdict_by']} verdict ({v['verdict_date']}), recomputed from the committed run; the results page is the published record"
+                      if (v := load_verdict()) else 'Single pre-registered gate run (trial 12); mechanical label, Quant recompute pending'),
         nw_t_links=[dict(label='Results page', href=PAGE)],
     )
 
@@ -348,10 +429,6 @@ def run_date_et() -> str:
     from zoneinfo import ZoneInfo
     ts = json.loads((SCHUR_DIR / 'RUN_RESERVED.json').read_text(encoding='utf-8'))['reserved_at']
     return datetime.fromisoformat(ts).astimezone(ZoneInfo('America/New_York')).date().isoformat()
-
-
-def archive_label(d: dict, sid: str) -> str:
-    return {METHOD: f'{name(d, METHOD)} (method)', PRIMARY: f'{name(d, PRIMARY)} (primary null)'}.get(sid, name(d, sid))
 
 
 def build_schur_results(page_shell, write_page) -> str | None:
@@ -371,7 +448,8 @@ def build_schur_results(page_shell, write_page) -> str | None:
         f'<div class="callout"><strong>Gate verdict: {escape(badge_line(lab))}.</strong> {escape(verdict_text(d))}</div>'
         f'<p class="muted">Single pre-registered run · {escape(str(m.get("n_months", "—")))} out-of-sample months ({escape(window)}) · '
         f'net of 5 bp · {g["fields"]["trial_count"]} trials counted · complete months through {escape(month(g["monthly_panel"]["source_asof"]))}</p>'
-        '<p><a href="composition_over_time.html#schur">Composition over time</a> · '
+        + (f'<p><a href="{TEACHING}">How the method works (teaching page)</a> · ' if (ROOT / 'docs' / 'methods' / TEACHING).exists() else '<p>')
+        + '<a href="composition_over_time.html#schur">Composition over time</a> · '
         '<a href="justina_round1_scoreboard.html">Archive scoreboard</a> · <a href="index.html">Methods</a></p>'
     )
     if lab == 'VOID':
@@ -395,8 +473,7 @@ def build_schur_results(page_shell, write_page) -> str | None:
             + '<h2>Every pre-registered metric</h2>' + metrics
             + '<p class="muted">Sharpe ex-BIL is in excess of BIL (TB3MS before BIL’s first full month). The legacy rf = 0 Sharpe is '
               'shown for continuity only. Book 1 exists only on months where all its funds trade, so its row covers a shorter '
-              'window and is not a criterion. '
-              + escape(power_caveat(d)) + '</p>'
+              'window and is not a criterion.</p>'
             + tests_tbl
             + book_section(d)
             + diagnostics(d)

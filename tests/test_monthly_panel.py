@@ -144,8 +144,7 @@ PUBLISHED_SHA256 = {
     'docs/data/viz_comparison.json': 'e5296b80fa12bd149ab8b3d6d6e1222d3622b5ec950d79caf47d10da586cb52f',
     # Re-pinned 2026-10-01: archive.epo_anchored_trend appended (EPO card on the Archive tab); everything else
     # is unchanged, see test_site_sharpe_only_gains_epo_archive_rows (previous pin 1e72c305…3f52fde).
-    # Re-pinned 2026-10-02: archive.schur_allocator appended after EPO (Schur card); previous pin 43458815…1aff7e4.
-    'data/processed/cash_null_audit/site_sharpe.json': '0dc36c47b770da85d9543e6e966fc084740537e3c1678e2bfc3695a76500842e',
+    'data/processed/cash_null_audit/site_sharpe.json': '434588151765f3689d467ed468a9eadf4c3d3f6decd3b6353ef46665f1aff7e4',
     'data/processed/nonlinear_shrinkage_gmv_v3/composition_tripwire.csv': '672e1661f238d4699574cc94bec50be44fbe5677bae3c8286316b771ccecbf66',
     'data/processed/nonlinear_shrinkage_gmv_v3/coverage_gaps.csv': 'a4d825ec2855d73d02c2b1ce22fa278c17fe35e06d55cee7b3a5eb719f9e9346',
     'data/processed/nonlinear_shrinkage_gmv_v3/final_month_unpriced.csv': '0c20686dc1794a0e4a08650c9914589a09da7a1f20ac0bf6e84271dbad935068',
@@ -200,11 +199,11 @@ def test_published_books_and_v3_byte_identical():
 
 
 def test_site_sharpe_only_gains_epo_archive_rows():
-    """Without the appended EPO and Schur archive rows, site_sharpe.json is byte-identical to the previous pin."""
+    """Without the appended EPO archive rows, site_sharpe.json is byte-identical to the previous pin."""
     import json
     site = json.loads((ROOT / 'data/processed/cash_null_audit/site_sharpe.json').read_text(encoding='utf-8'))
-    assert list(site['archive'])[-2:] == ['epo_anchored_trend', 'schur_allocator']
-    del site['archive']['epo_anchored_trend'], site['archive']['schur_allocator']
+    assert list(site['archive'])[-1] == 'epo_anchored_trend'
+    del site['archive']['epo_anchored_trend']
     before = (json.dumps(site, indent=2) + '\n').encode()
     assert hashlib.sha256(before).hexdigest() == '1e72c3055233e40cc2407c97c631fe561cad01678f27a0acd019548cc3f52fde'
 

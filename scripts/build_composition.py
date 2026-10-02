@@ -201,7 +201,8 @@ def specs() -> list[dict]:
     schur_gate = P / 'schur_allocator/gate_result.json'
     schur_labels = (json.loads(schur_gate.read_text(encoding='utf-8'))['fields']['display_labels']
                     if schur_gate.exists() and 'schur_allocator' in badges else {})
-    schur_badge = f"{badges['schur_allocator']} · PENDING QUANT RECOMPUTE" if schur_labels else ''
+    import build_schur_results  # verdict label (Quant's verdict record once committed)
+    schur_badge = build_schur_results.badge_line(badges['schur_allocator']) if schur_labels else ''
     out = [
         # Books: open on tickers, BIL its own band/line.
         book1_spec(),
@@ -607,7 +608,7 @@ def build_page(page_shell, write_page, data: dict | None = None) -> dict:
         'The Books open on holdings; the allocators open on asset classes. Badges are each run’s archive verdict.</div>'
         + section('books', 'Books', 'The two live Books and the backbone they are measured against.')
         + section('epo', 'Anchored EPO and its baselines', 'The archived EPO gate run: the method and the baselines it was judged against.')
-        + (section('schur', 'Schur allocator and its nulls', 'The Schur gate run (mechanical FAIL, pending Quant recompute): '
+        + (section('schur', 'Schur allocator and its nulls', 'The archived Schur gate run: '
                    'the method and the capped nulls it was judged against.') if any(c['group'] == 'schur' for c in charts) else '')
         + section('archive', 'Archived methods', 'Every archived method with saved weights, at its headline configuration.')
         + ('<h2 id="not-saved">Weights not saved</h2><div class="cot-grid">'

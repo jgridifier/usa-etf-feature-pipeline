@@ -813,7 +813,8 @@ def verdict_card_html(card, prefix) -> str:
     badge_class = 'badge badge-fail' if card['badge'] == 'FAIL' else 'badge'
     rows = [[row['label'], row['sharpe'], row['maxdd']] for row in card['rows']]
     table = (table_html(['', 'Sharpe ex-BIL (legacy rf = 0)', 'MaxDD'], rows, f'{card["name"]} OOS vs null') if rows else
-             '<p class="muted">No Sharpe table for this VOID run; see the verdict and the OOS artifact.</p>')
+             '<p class="muted">No Sharpe table for this VOID run; see the verdict and the OOS artifact.</p>' if card['badge'] == 'VOID' else
+             '<p class="muted">Sharpe table on the results page; see the verdict.</p>')
 
     def href_for(href: str) -> str:
         if href.startswith('http'):
@@ -906,6 +907,8 @@ def build_methods_index() -> None:
         *([(epo_results.PAGE.removeprefix('methods/'),
             'EPO gate results: ' + (epo_results.load_verdict().get('verdict_label') or f'{epo_results.label()} · pending Quant review'))]
           if epo_results.available() else []),
+        *([(schur_results.TEACHING, 'Schur complementary allocation (Bet 1)')]
+          if (DOCS / 'methods' / schur_results.TEACHING).exists() else []),
         *([(schur_results.PAGE.removeprefix('methods/'),
             f'Schur allocator gate results: {schur_results.badge_line(schur_results.label())}')]
           if schur_results.available() else []),
@@ -945,7 +948,8 @@ def build_methods_index() -> None:
 def restyle_methods_shell() -> None:
     methods = sorted(
         p.name for p in (DOCS / 'methods').glob('*.html') if p.name not in {'index.html', 'justina_round1_scoreboard.html', epo_results.PAGE.removeprefix('methods/'),
-                          schur_results.PAGE.removeprefix('methods/'), 'composition_over_time.html'}
+                          schur_results.PAGE.removeprefix('methods/'), 'composition_over_time.html',
+                          schur_results.TEACHING}  # Quant's Schur note: published byte-for-byte, never restyled
     )
     for name in methods:
         p = DOCS / 'methods' / name
