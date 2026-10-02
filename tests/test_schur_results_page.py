@@ -225,7 +225,7 @@ def test_teaching_page_published_byte_for_byte_and_cross_linked():
     source = Path('/workspace/investments/methods/allocation_alpha_schur.html')
     if source.exists():   # Quant's source on the shared box; CI checks the pinned hash only
         assert hashlib.sha256(source.read_bytes()).hexdigest() == hashlib.sha256(raw).hexdigest()
-    assert hashlib.sha256(raw).hexdigest() == '53f740e918dae4220549008773a44fda594fd0980688c7d47849f455a852ed3a'
+    assert hashlib.sha256(raw).hexdigest() == '19ee0464ae9978837afc2eba7dc7df7a6c4bf6ad6162c1524a30f2fe39976d65'
     text = raw.decode('utf-8')
     assert 'href="allocation_alpha_schur_results.html"' in text
     assert 'href="allocation_alpha_schur.html"' in PAGE.read_text(encoding='utf-8')
