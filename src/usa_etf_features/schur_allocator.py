@@ -15,6 +15,7 @@ and a clean git tree.
 """
 from pathlib import Path
 import io
+import json
 import subprocess
 
 import numpy as np
@@ -56,7 +57,7 @@ TRIAL_COUNT = epo.TRIAL_COUNT + 1
 assert TRIAL_COUNT == 12
 BOOTSTRAP_REPS, BLOCK_SIZE, SEED = 5000, 4, 20261002
 PREREG_PATH = Path('preregistration/schur_allocator.yaml')
-PREREG_SHA256 = 'c490d81b12c21edb4b254456ad27ab5575871db4bce3763981f9b466d5ef75f7'
+PREREG_SHA256 = '7ebf8675b75b9fabc6906c4dabf995db36c6dc96eba962f5d036b0b4dc262ff3'
 EPO_REGISTRY = 'data/processed/epo_allocator/trial_registry.csv'
 BACKBONE_PATH = Path('data/processed/live/vol_target_oos_returns.csv')         # r_vt, net
 BOOK2_PATH = Path('data/processed/live/skew_managed_gatefirst_returns.csv')    # r_method, net
@@ -73,11 +74,28 @@ def verify_preregistration(root=ROOT, prereg_path=PREREG_PATH, sha256=None):
                                       sha256=PREREG_SHA256 if sha256 is None else sha256)
 
 
-def refuse_if_already_run(root=ROOT, out_dir=OUT_DIR):
-    """One run: any existing canonical artifact blocks the gate before data is loaded."""
+RUN_MARKER = 'RUN_RESERVED.json'
+
+
+def reserve_run(root=ROOT, out_dir=OUT_DIR, preregistration=None):
+    """One run: atomically reserve the canonical output before any data is loaded.
+
+    Refuses if the directory holds anything (a reservation or artifacts from an earlier,
+    possibly interrupted, run). The marker is exclusive-created (O_EXCL), so concurrent
+    invocations cannot both pass, and it is kept whether or not the run finishes.
+    """
     out = Path(root) / out_dir
-    if out.exists() and any(out.iterdir()):
-        raise PreregistrationError(f'gate already run: {out_dir} exists; a rerun needs a new ticket and adds a trial')
+    out.mkdir(parents=True, exist_ok=True)
+    if any(p.name != RUN_MARKER for p in out.iterdir()):
+        raise PreregistrationError(f'gate already run: {out_dir} holds artifacts; a rerun needs a new ticket and adds a trial')
+    try:
+        with open(out / RUN_MARKER, 'x') as fh:
+            json.dump(dict(gate_id=GATE_ID, reserved_at=pd.Timestamp.now(tz='UTC').isoformat(),
+                           preregistration=preregistration), fh, indent=2, default=str)
+    except FileExistsError as exc:
+        raise PreregistrationError(f'gate already run or running: {out_dir}/{RUN_MARKER} exists; '
+                                   'a rerun needs a new ticket and adds a trial') from exc
+    return out / RUN_MARKER
 
 
 # ----------------------------------------------------------------------------- universe
@@ -342,7 +360,9 @@ def run_schur_backtest(weekly, monthly, universe, *, cost_bps=None, first_decisi
         decision, date = monthly.index[i:i + 2]
         if decision.to_period('M') < pd.Timestamp(first_decision).to_period('M'):
             continue
-        win = weekly.loc[:decision, names].tail(window_weeks)
+        # Weekly rows dated on or before calendar month-end t-1 (a Good-Friday-labelled week
+        # closes on the Thursday decision date, so it is complete and not look-ahead).
+        win = weekly.loc[:decision + pd.offsets.MonthEnd(0), names].tail(window_weeks)
         live = [t for t in names if len(win) == window_weeks and win[t].notna().all()
                 and win[t].std() > 1e-10 and monthly[t].iloc[:i + 1].count() >= min_months]
         skip = len(live) < name_floor

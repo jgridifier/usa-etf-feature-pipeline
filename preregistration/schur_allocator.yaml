@@ -21,7 +21,7 @@ paper:
 universe:
   rule: "epo_asset_class == equity (stored column in data/raw/usa_universe_categorized.csv; never Category), minus every cash_like, short_duration and near_cash name"
   count: 98
-  eligibility: "at month-end t-1: 156 complete weekly returns ending at the last weekly row on or before month-end t-1 (non-zero variance), and >= 60 monthly returns through t-1"
+  eligibility: "at month-end t-1: 156 complete weekly returns ending at the last weekly row dated on or before calendar month-end t-1 (non-zero variance; a Friday-holiday week closes on the Thursday decision date), and >= 60 monthly returns through t-1"
   eligible_per_month_expected: "69-93 on the current panel"
   name_floor: 60          # months below the floor are skipped and listed
   low_vol_list: [USMV, EFAV, SPHD]   # fixed; SPLV, EEMV, ACWV are not in the universe
@@ -117,6 +117,8 @@ engineering_defaults_pending_quant:
   maxdd_no_worse: "method MaxDD >= Book 1 MaxDD (ties count as no worse)"
   book_comparison_when_not_pass: "not computed; book_eligible = no with reason 'gate label is X, not PASS'"
   bootstrap_seed: 20261002
+  weekly_cutoff: "weekly rows dated on or before CALENDAR month-end t-1 (EPO sliced at the decision date, which drops a complete Good-Friday-labelled week: 2018-03-30, 2024-03-29 on the panel)"
+  run_reservation: "the gate script exclusive-creates data/processed/schur_allocator/RUN_RESERVED.json before loading data and keeps it on failure; any existing file blocks a rerun"
   oos_return_missing: "an eligible name missing its month-t return raises (explicit data repair), as in EPO"
 
 no_reruns: "One run (scripts/run_schur_gate.py refuses before loading data if data/processed/schur_allocator holds any artifact; output directory and B = 5000 are fixed, no CLI options). No sensitivities, retuning or re-selection. A not-significant edge is recorded as not significant. Any preview or rerun adds a trial and needs a new ticket."

@@ -14,7 +14,7 @@ from usa_etf_features import schur_allocator as s, gate_metrics as gm
 from usa_etf_features.monthly_panel import load_monthly_panel
 from usa_etf_features.spectral_risk_parity import long_only_minvar, normalize_cov
 
-PIN = 'c490d81b12c21edb4b254456ad27ab5575871db4bce3763981f9b466d5ef75f7'
+PIN = '7ebf8675b75b9fabc6906c4dabf995db36c6dc96eba962f5d036b0b4dc262ff3'
 
 
 # ----------------------------------------------------------------------------- pre-registration
@@ -227,7 +227,7 @@ def test_backtest_universe_costs_and_logs(panels, monkeypatch):
     assert set(oos.strategy_id) == {*s.CAPPED, s.BOOK1}
     np.testing.assert_allclose(oos.cost_return, oos.turnover*5e-4)
     np.testing.assert_allclose(oos['return'], oos.gross_return-oos.cost_return)
-    assert (oos.feature_end <= oos.decision_date).all() and (oos.date > oos.decision_date).all()
+    assert (oos.feature_end <= oos.decision_date + pd.offsets.MonthEnd(0)).all() and (oos.date > oos.decision_date).all()
     capped = res['weights'].loc[res['weights'].strategy_id.isin(s.CAPPED)]
     for _, sub in capped.groupby(['date', 'strategy_id']).weight:
         assert np.isclose(sub.sum(), 1) and sub.max() <= .2 + 1e-9
@@ -235,6 +235,19 @@ def test_backtest_universe_costs_and_logs(panels, monkeypatch):
     assert (lv.low_vol_share_target <= .3 + 1e-9).all()
     assert len(res['split_log']) and res['split_log'].gamma.between(0, .5).all()
     assert set(res['cap_report'].strategy_id) == set(s.CAPPED)
+
+
+def test_weekly_cutoff_is_calendar_month_end(panels, monkeypatch):
+    """A Friday-holiday month ends on Thursday; the Friday-labelled week closes then and is used."""
+    small(monkeypatch)
+    weekly, monthly, u, rf = panels
+    m = monthly.copy()
+    m.index = [pd.Timestamp('2021-04-29') if d == pd.Timestamp('2021-04-30') else d for d in m.index]
+    res = s.run_schur_backtest(weekly, m, u)
+    row = res['oos_returns'].loc[lambda f: f.decision_date.eq(pd.Timestamp('2021-04-29'))]
+    assert (row.feature_end == pd.Timestamp('2021-04-30')).all() and len(row)
+    assert (res['oos_returns'].feature_end <= res['oos_returns'].decision_date + pd.offsets.MonthEnd(0)).all()
+    assert (res['oos_returns'].feature_end.dt.to_period('M') == res['oos_returns'].decision_date.dt.to_period('M')).all()
 
 
 def test_no_look_ahead(panels, monkeypatch):
@@ -381,6 +394,21 @@ def test_script_refuses_rerun_before_load(git_repo, monkeypatch):
         module.main([], root=root)
     with pytest.raises(SystemExit):
         module.main(['--out-dir', 'elsewhere'], root=root)
+
+
+def test_run_reservation_is_exclusive_and_kept(git_repo, monkeypatch):
+    root, _, _ = git_repo
+    spec = importlib.util.spec_from_file_location('run_schur_gate', s.ROOT/'scripts/run_schur_gate.py')
+    module = importlib.util.module_from_spec(spec); spec.loader.exec_module(module)
+    def crash(*a, **kw):
+        raise RuntimeError('interrupted')
+    monkeypatch.setattr(module, 'load_monthly_panel', crash)
+    with pytest.raises(RuntimeError, match='interrupted'):
+        module.main([], root=root)
+    marker = root/s.OUT_DIR/s.RUN_MARKER
+    assert marker.exists() and json.loads(marker.read_text())['preregistration']['verified']
+    with pytest.raises(s.PreregistrationError, match='already run or running'):
+        s.reserve_run(root)
 
 
 def test_script_refuses_wrong_pin(git_repo, monkeypatch):

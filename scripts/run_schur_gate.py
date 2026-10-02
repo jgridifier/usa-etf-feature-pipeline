@@ -6,7 +6,7 @@ from pathlib import Path
 import pandas as pd
 
 from usa_etf_features.schur_allocator import (
-    ROOT, BOOTSTRAP_REPS, OUT_DIR, verify_preregistration, refuse_if_already_run, run_schur_gate,
+    ROOT, BOOTSTRAP_REPS, OUT_DIR, verify_preregistration, reserve_run, run_schur_gate,
     write_schur_artifacts,
 )
 from usa_etf_features.monthly_panel import load_monthly_panel
@@ -17,8 +17,8 @@ def main(argv=None, *, root=ROOT):
     preregistration = verify_preregistration(root=root)
     argparse.ArgumentParser(description=__doc__).parse_args(argv)   # no options: fixed output, fixed reps
     root = Path(root)
-    # One run: refuse before any data load if the canonical artifacts already exist.
-    refuse_if_already_run(root)
+    # One run: atomically reserve the canonical output before any data load; kept on failure.
+    reserve_run(root, preregistration=preregistration)
     monthly = load_monthly_panel(root / 'data/raw/usa_universe_panel_monthly_returns.csv',
                                  coverage=root / 'data/raw/usa_universe_panel_history_coverage.csv')
     weekly = pd.read_csv(root / 'data/raw/usa_universe_panel_weekly_returns.csv', index_col=0, parse_dates=True)
