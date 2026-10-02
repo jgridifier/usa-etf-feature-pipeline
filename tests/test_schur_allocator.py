@@ -14,7 +14,7 @@ from usa_etf_features import schur_allocator as s, gate_metrics as gm
 from usa_etf_features.monthly_panel import load_monthly_panel
 from usa_etf_features.spectral_risk_parity import long_only_minvar, normalize_cov
 
-PIN = '6ca693727e6265706b7e4dd583ee49195e55886f283d8488ff7a4e6aa11e0d72'
+PIN = 'c490d81b12c21edb4b254456ad27ab5575871db4bce3763981f9b466d5ef75f7'
 
 
 # ----------------------------------------------------------------------------- pre-registration
@@ -249,7 +249,7 @@ def test_no_look_ahead(panels, monkeypatch):
     pd.testing.assert_frame_equal(pick(base), pick(changed))
 
 
-def test_tripwire_void_short_circuits_tests(panels, monkeypatch):
+def test_tripwire_void_short_circuits_tests(panels, monkeypatch, tmp_path):
     small(monkeypatch)
     w, m, u, rf = panels
     monkeypatch.setattr(s, 'EFF_N_MIN', 1000.)
@@ -262,6 +262,9 @@ def test_tripwire_void_short_circuits_tests(panels, monkeypatch):
     assert res['tests'].empty and res['summary'].empty and res['reading']['criteria'] is None
     assert 'effective N' in res['tripwires']['reasons'][0]
     assert not res['book_eligible']['eligible'] and 'VOID' in res['book_eligible']['reason']
+    s.write_schur_artifacts(res, tmp_path/'void')
+    payload = json.loads((tmp_path/'void/gate_result.json').read_text())
+    assert payload['label'] == 'VOID' and payload['report']['criteria'] is None
 
 
 def test_low_vol_tripwire(panels, monkeypatch):
@@ -362,6 +365,22 @@ def test_guard_and_script_before_load(git_repo, monkeypatch, change):
     monkeypatch.setattr(module, 'run_schur_gate', fail)
     with pytest.raises(s.PreregistrationError, match=match):
         module.main([], root=root)
+
+
+def test_script_refuses_rerun_before_load(git_repo, monkeypatch):
+    root, _, git = git_repo
+    out = root/s.OUT_DIR; out.mkdir(parents=True)
+    (out/'gate_result.json').write_text('{}')
+    git('add', '.'); git('commit', '-m', 'committed run')
+    spec = importlib.util.spec_from_file_location('run_schur_gate', s.ROOT/'scripts/run_schur_gate.py')
+    module = importlib.util.module_from_spec(spec); spec.loader.exec_module(module)
+    def fail(*a, **kw):
+        pytest.fail('data loaded before the one-run check')
+    monkeypatch.setattr(module, 'load_monthly_panel', fail)
+    with pytest.raises(s.PreregistrationError, match='already run'):
+        module.main([], root=root)
+    with pytest.raises(SystemExit):
+        module.main(['--out-dir', 'elsewhere'], root=root)
 
 
 def test_script_refuses_wrong_pin(git_repo, monkeypatch):

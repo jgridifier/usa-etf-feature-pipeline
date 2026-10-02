@@ -119,4 +119,4 @@ engineering_defaults_pending_quant:
   bootstrap_seed: 20261002
   oos_return_missing: "an eligible name missing its month-t return raises (explicit data repair), as in EPO"
 
-no_reruns: "One run. No sensitivities, retuning or re-selection. A not-significant edge is recorded as not significant. Any preview or rerun adds a trial and needs a new ticket."
+no_reruns: "One run (scripts/run_schur_gate.py refuses before loading data if data/processed/schur_allocator holds any artifact; output directory and B = 5000 are fixed, no CLI options). No sensitivities, retuning or re-selection. A not-significant edge is recorded as not significant. Any preview or rerun adds a trial and needs a new ticket."

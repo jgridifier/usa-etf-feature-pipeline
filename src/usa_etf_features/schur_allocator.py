@@ -56,10 +56,11 @@ TRIAL_COUNT = epo.TRIAL_COUNT + 1
 assert TRIAL_COUNT == 12
 BOOTSTRAP_REPS, BLOCK_SIZE, SEED = 5000, 4, 20261002
 PREREG_PATH = Path('preregistration/schur_allocator.yaml')
-PREREG_SHA256 = '6ca693727e6265706b7e4dd583ee49195e55886f283d8488ff7a4e6aa11e0d72'
+PREREG_SHA256 = 'c490d81b12c21edb4b254456ad27ab5575871db4bce3763981f9b466d5ef75f7'
 EPO_REGISTRY = 'data/processed/epo_allocator/trial_registry.csv'
 BACKBONE_PATH = Path('data/processed/live/vol_target_oos_returns.csv')         # r_vt, net
 BOOK2_PATH = Path('data/processed/live/skew_managed_gatefirst_returns.csv')    # r_method, net
+OUT_DIR = Path('data/processed/schur_allocator')                                # the one canonical run
 PreregistrationError = epo.PreregistrationError
 drift_weights = epo.drift_weights
 lw2008_sharpe_test = epo.lw2008_sharpe_test
@@ -70,6 +71,13 @@ deflated_sharpe_bailey_lp = epo.deflated_sharpe_bailey_lp
 def verify_preregistration(root=ROOT, prereg_path=PREREG_PATH, sha256=None):
     return epo.verify_preregistration(root=root, prereg_path=prereg_path,
                                       sha256=PREREG_SHA256 if sha256 is None else sha256)
+
+
+def refuse_if_already_run(root=ROOT, out_dir=OUT_DIR):
+    """One run: any existing canonical artifact blocks the gate before data is loaded."""
+    out = Path(root) / out_dir
+    if out.exists() and any(out.iterdir()):
+        raise PreregistrationError(f'gate already run: {out_dir} exists; a rerun needs a new ticket and adds a trial')
 
 
 # ----------------------------------------------------------------------------- universe
