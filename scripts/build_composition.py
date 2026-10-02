@@ -152,6 +152,17 @@ def specs() -> list[dict]:
                                  eff_n=metric('epo_allocator/summary.csv', 'eff_N_mean', strategy_id=sid, period_role='full window'),
                                  turnover=metric('epo_allocator/summary.csv', 'turnover_per_year', strategy_id=sid, period_role='full window')))
 
+    schur = 'schur_allocator/weights.csv'
+
+    def schur_spec(sid, name, badge, *, default='class'):
+        # Schur gate run (trial 12): saved target weights, same names and caps as its nulls.
+        return dict(id=f'schur_{sid}', group='schur', name=name, badge=badge, optional=False, default_view=default,
+                    source=f'data/processed/{schur}', load=lambda sid=sid: long_weights(schur, filters={'strategy_id': sid}),
+                    metrics=dict(equity=None,
+                                 eff_n=metric('schur_allocator/summary.csv', 'eff_N_mean', strategy_id=sid, period_role='full window'),
+                                 turnover=metric('schur_allocator/summary.csv', 'turnover_per_year', strategy_id=sid,
+                                                 period_role='full window')))
+
     def book1_spec():
         # CIO: Books charts read the published live outputs the Books page uses. The live run publishes
         # Book 1 as returns only (vol_target_oos_returns.csv:r_option_a), with no per-month weights, so the
@@ -187,6 +198,10 @@ def specs() -> list[dict]:
 
     v1, v2 = badges['nls_gmv_v1'], badges['nls_gmv_v2']     # archive cards, each run counted on its own
     vcfc = 'VCFC_option_a_vt_L21_C12_g0p5_mkt_vol'
+    schur_gate = P / 'schur_allocator/gate_result.json'
+    schur_labels = (json.loads(schur_gate.read_text(encoding='utf-8'))['fields']['display_labels']
+                    if schur_gate.exists() and 'schur_allocator' in badges else {})
+    schur_badge = f"{badges['schur_allocator']} · PENDING QUANT RECOMPUTE" if schur_labels else ''
     out = [
         # Books: open on tickers, BIL its own band/line.
         book1_spec(),
@@ -211,6 +226,11 @@ def specs() -> list[dict]:
         epo_spec('epo_a_w050', 'Anchored EPO, w = 0.50 (sensitivity)', epo_verdict, optional=True),
         epo_spec('epo_a_w090', 'Anchored EPO, w = 0.90 (sensitivity)', epo_verdict, optional=True),
         epo_spec('erc_lw', 'Equal risk contribution (LW)', 'BASELINE', optional=True),
+        # Schur allocator and its nulls (display labels from the gate output).
+        *([schur_spec('schur_g050', f"{schur_labels['schur_g050']} (method)", schur_badge),
+           schur_spec('hrp_g000', schur_labels['hrp_g000'], 'BASELINE'),
+           schur_spec('lw_minvar_156w', f"{schur_labels['lw_minvar_156w']} (primary null)", 'BASELINE'),
+           schur_spec('equal_weight', schur_labels['equal_weight'], 'BASELINE')] if schur_labels else []),
         # Archived methods with saved weights.
         dict(id='spectral_rp', group='archive', name='Spectral Risk Parity (name mode)', badge=badges['spectral_rp'],
              default_view='class', optional=False, source='data/processed/spectral_rp/name/weights.csv',
@@ -587,6 +607,8 @@ def build_page(page_shell, write_page, data: dict | None = None) -> dict:
         'The Books open on holdings; the allocators open on asset classes. Badges are each run’s archive verdict.</div>'
         + section('books', 'Books', 'The two live Books and the backbone they are measured against.')
         + section('epo', 'Anchored EPO and its baselines', 'The archived EPO gate run: the method and the baselines it was judged against.')
+        + (section('schur', 'Schur allocator and its nulls', 'The Schur gate run (mechanical FAIL, pending Quant recompute): '
+                   'the method and the capped nulls it was judged against.') if any(c['group'] == 'schur' for c in charts) else '')
         + section('archive', 'Archived methods', 'Every archived method with saved weights, at its headline configuration.')
         + ('<h2 id="not-saved">Weights not saved</h2><div class="cot-grid">'
            + ''.join(not_saved_html(n) for n in data['not_saved']) + '</div>' if data['not_saved'] else '')

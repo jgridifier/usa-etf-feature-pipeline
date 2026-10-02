@@ -276,6 +276,30 @@ def epo_archive_figures(processed: Path = PROCESSED) -> dict:
     return {"epo_anchored_trend": out}
 
 
+# Schur allocator (archived 2026-10-02, mechanical label pending Quant recompute): the gate run's own
+# summary.csv (full window), not re-scored. Labels are the archive card row labels.
+SCHUR_SUMMARY = "schur_allocator/summary.csv"
+SCHUR_ARCHIVE_ROWS = {"Schur (γ = 0.5·γ_max) (method)": "schur_g050",
+                      "LW MinVar (capped QP) (primary null)": "lw_minvar_156w",
+                      "HRP (Schur γ=0)": "hrp_g000",
+                      "Equal weight (capped)": "equal_weight"}
+
+
+def schur_archive_figures(processed: Path = PROCESSED) -> dict:
+    path = processed / SCHUR_SUMMARY
+    if not path.exists():
+        return {}
+    s = pd.read_csv(path)
+    s = s.loc[s["period_role"].eq("full window")].set_index("strategy_id")
+    out = {}
+    for label, sid in SCHUR_ARCHIVE_ROWS.items():
+        r = s.loc[sid]
+        out[label] = {"exbil": round(float(r["Sharpe_exBIL"]), 4), "rf0_legacy": round(float(r["Sharpe_rf0_legacy"]), 4),
+                      "n_months": int(r["n_months"]), "window": f"{str(r['start'])[:10]}..{str(r['end'])[:10]}",
+                      "source": f"{SCHUR_SUMMARY} (gate run, full window)"}
+    return {"schur_allocator": out}
+
+
 def site_sharpe_figures(processed: Path = PROCESSED, rf: pd.DataFrame | None = None,
                        *, live_dir: Path | None = None) -> dict:
     """Site Sharpe; opt into refreshed live paths without re-scoring gate evidence.
@@ -341,6 +365,7 @@ def site_sharpe_figures(processed: Path = PROCESSED, rf: pd.DataFrame | None = N
             "m3_p2_core_rotate": _pair(short["m3_p2_core_rotate"], rf),
         },
         "archive": {**{cid: {label: _pair(series(*src), rf) for label, src in rows.items()}
-                       for cid, rows in ARCHIVE_ROWS.items()}, **epo_archive_figures(processed)},
+                       for cid, rows in ARCHIVE_ROWS.items()}, **epo_archive_figures(processed),
+                    **schur_archive_figures(processed)},
         "skew_nulls": {k: _pair(six[k], rf) for k in ("EW", "MinVar", "ERC")},
     }

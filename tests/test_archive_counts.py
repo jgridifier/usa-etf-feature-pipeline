@@ -52,7 +52,8 @@ def test_each_quant_void_run_is_its_own_card():
         assert cards[cid]['gate']['label'] == pr
         assert cards[cid]['void_reason']['run'] == f"NLS GMV {cid.rsplit('_', 1)[1]}"
     assert COUNTS['VOID'] == len(QUANT_VOIDS) == 3
-    assert COUNTS['FAIL'] == 6 and COUNTS['AUDIT NULL'] == 1
+    # 7 FAILs since 2026-10-02: the Schur card (mechanical FAIL, pending Quant recompute).
+    assert COUNTS['FAIL'] == 7 and COUNTS['AUDIT NULL'] == 1
     assert av.counts(ARCHIVE) == dict(COUNTS)
 
 

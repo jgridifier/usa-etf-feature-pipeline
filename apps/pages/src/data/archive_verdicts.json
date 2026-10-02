@@ -430,6 +430,59 @@
         "threshold": 0.5,
         "source": "nonlinear_shrinkage_gmv_v2/weights.csv, 156w nonlinear_shrinkage_gmv, mean over rebalances of the weight tagged cash_like / short_duration / near_cash (composition tripwire tags)"
       }
+    },
+    {
+      "id": "schur_allocator",
+      "name": "Bet 1 Schur complementary allocator",
+      "detail": "Schur complementary allocation, γ = 0.5·γ_max · capped nulls (LW MinVar QP primary, HRP = Schur at γ = 0, equal weight) · 119m OOS (2016-11 → 2026-09) · 5 bps · trial_count=12",
+      "badge": "FAIL",
+      "verdict": "FAIL (mechanical), PENDING QUANT RECOMPUTE. Sharpe ex-BIL 0.63 vs 0.51 for the capped LW MinVar null (one-sided p 0.132 HAC), 0.65 for equal weight; book-eligible: no.",
+      "null": "LW MinVar (capped QP) on the same names (primary); HRP (Schur γ=0) and Equal weight (capped) also binding",
+      "rows": [
+        {
+          "role": "method",
+          "label": "Schur (γ = 0.5·γ_max) (method)",
+          "sharpe": "0.63 (legacy 0.76)",
+          "maxdd": "−23.5%"
+        },
+        {
+          "role": "null",
+          "label": "LW MinVar (capped QP) (primary null)",
+          "sharpe": "0.51 (legacy 0.66)",
+          "maxdd": "−25.1%"
+        },
+        {
+          "role": "null",
+          "label": "HRP (Schur γ=0)",
+          "sharpe": "0.62 (legacy 0.75)",
+          "maxdd": "−24.2%"
+        },
+        {
+          "role": "null",
+          "label": "Equal weight (capped)",
+          "sharpe": "0.65 (legacy 0.75)",
+          "maxdd": "−25.5%"
+        }
+      ],
+      "nw_t": "n/a · LW2008 HAC z 1.12 vs LW MinVar (capped QP) (p 0.132; bootstrap p 0.084)",
+      "dsr": "0.433 on Sharpe ex-BIL, not legacy (trial_count=12)",
+      "gate": {
+        "label": "PR #48",
+        "href": "https://github.com/jgridifier/usa-etf-feature-pipeline/pull/48"
+      },
+      "method_page": "methods/allocation_alpha_schur_results.html",
+      "artifact": {
+        "label": "schur_allocator/summary.csv",
+        "href": "https://github.com/jgridifier/usa-etf-feature-pipeline/blob/main/data/processed/schur_allocator/summary.csv"
+      },
+      "archived": "2026-10-02",
+      "archived_via": "Single pre-registered gate run (trial 12); mechanical label, Quant recompute pending",
+      "nw_t_links": [
+        {
+          "label": "Results page",
+          "href": "methods/allocation_alpha_schur_results.html"
+        }
+      ]
     }
   ]
 }

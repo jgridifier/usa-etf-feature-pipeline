@@ -102,14 +102,15 @@ def test_archived_fail_card_on_methods_and_archive_scoreboard():
         # Appended to the archive record: listed after every pre-existing card.
         assert html.index('id="card-nls_gmv_v3"') < html.index('id="card-uncond_book2_vt"') < start, rel
     methods = (DOCS / 'methods' / 'index.html').read_text(encoding='utf-8')
-    assert '6 FAIL / ARCHIVE methods + 3 VOID (NLS GMV v1, NLS GMV v2 and NLS GMV v3)' in methods
+    assert '7 FAIL / ARCHIVE methods + 3 VOID (NLS GMV v1, NLS GMV v2 and NLS GMV v3)' in methods
     assert 'EPO gate results: FAIL / ARCHIVE' in methods
     board = (DOCS / 'methods' / 'justina_round1_scoreboard.html').read_text(encoding='utf-8')
-    assert 'The six failed methods are' in board
+    assert 'The seven failed methods are' in board
     # CIO quote: only the counts change (FAIL cards; VOID runs from the VOID cards, 2026-10-01).
-    assert ('<p><em>None of the six archived methods cleared its binding null, and NLS GMV v1, NLS GMV v2 and NLS GMV v3 are VOID.</em> '
+    # Re-pinned 2026-10-02: the Schur card (mechanical FAIL, pending Quant recompute) makes seven FAILs.
+    assert ('<p><em>None of the seven archived methods cleared its binding null, and NLS GMV v1, NLS GMV v2 and NLS GMV v3 are VOID.</em> '
             '<strong>No book cut.</strong></p>') in board
-    assert 'None of the five archived methods' not in board
+    assert 'None of the five archived methods' not in board and 'None of the six archived methods' not in board
 
 
 # Lead sentence: Quant's correction (CIO signed off), replacing the CIO's first draft.
@@ -157,7 +158,7 @@ def test_archive_file_pre_existing_entries_byte_identical():
     assert len(prefix) == ARCHIVE_PREFIX_LEN
     assert hashlib.sha256(prefix).hexdigest() == ARCHIVE_PREFIX_SHA256
     assert data.endswith(b'\n  ]\n}\n')
-    assert [c['id'] for c in json.loads(data)['cards']] == PRE_EXISTING_IDS + ['epo_anchored_trend', 'nls_gmv_v1', 'nls_gmv_v2']
+    assert [c['id'] for c in json.loads(data)['cards']] == PRE_EXISTING_IDS + ['epo_anchored_trend', 'nls_gmv_v1', 'nls_gmv_v2', 'schur_allocator']
 
 
 def test_archive_tab_has_epo_card():
