@@ -6,8 +6,9 @@ without the script, so the menu did not open on restyled pages (found on the liv
 from pathlib import Path
 
 DOCS = Path(__file__).resolve().parents[1] / 'docs'
-# Published byte-for-byte from Quant's source; its menu needs the script added in the source.
-BYTE_COPIES = {'allocation_alpha_schur.html'}
+# Pages published byte-for-byte from a source we don't edit. None is exempt: Quant's Schur note now loads
+# nav.js in its own source (2026-10-02), so it is checked like every other page.
+BYTE_COPIES: set[str] = set()
 
 
 def test_nav_toggle_pages_load_nav_js():
