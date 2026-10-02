@@ -1,0 +1,122 @@
+# Pre-registration: Schur complementary allocator (third-book candidate, trial 12; research only).
+# Locked before the gate run. The SHA-256 of this file's exact bytes is pinned in
+# src/usa_etf_features/schur_allocator.py (PREREG_SHA256) and in tests. scripts/run_schur_gate.py
+# refuses to run if this file changes, its HEAD blob differs, or the git working tree is dirty.
+# A changed file is NOT a new pre-registration: any change needs a new ticket and adds a trial.
+gate_id: schur_allocator
+spec: /workspace/investments/justina_shortlist/QUANT_SPEC_schur_allocator.md (2026-10-02, incl. build rulings)
+registered: 2026-10-02
+registered_by: Quant (spec and build rulings), Engineering (defaults listed under engineering_defaults_pending_quant)
+status: PENDING QUANT sign-off of engineering_defaults_pending_quant
+
+method_constraint:
+  rule: "Statistical or classical methods only; no large pretrained models and no model downloads (Jared, standing rule)."
+  compliance: "Linear algebra, single-linkage clustering and SLSQP (numpy/scipy). No pretrained models, no downloads."
+
+paper:
+  citation: "Cotton, P. (2024). Schur Complementary Allocation: A Unification of Hierarchical Risk Parity and Minimum Variance Portfolios. arXiv:2411.05807v1 [q-fin.PM], 29 Oct 2024."
+  status: "single version, not peer-reviewed; simulation evidence only"
+  equation_map: "spec eq. 4.1 = arXiv v1 eq. (4) (bisection weights); spec eq. 4.2 = eq. (5) (A'' = A_c / (b_A b_A'), elementwise); spec eq. 4.5 = eq. (8) (A' = (A_c^-1 o b_A b_A')^-1); Table 1 / eqs. (10)-(11) (A_c(gamma) = A - gamma B D^-1 C, b_A(gamma) = 1 - gamma B D^-1 1); D side by symmetry (D_c = D - gamma C A^-1 B, b_D = 1 - gamma C A^-1 1)"
+
+universe:
+  rule: "epo_asset_class == equity (stored column in data/raw/usa_universe_categorized.csv; never Category), minus every cash_like, short_duration and near_cash name"
+  count: 98
+  eligibility: "at month-end t-1: 156 complete weekly returns ending at the last weekly row on or before month-end t-1 (non-zero variance), and >= 60 monthly returns through t-1"
+  eligible_per_month_expected: "69-93 on the current panel"
+  name_floor: 60          # months below the floor are skipped and listed
+  low_vol_list: [USMV, EFAV, SPHD]   # fixed; SPLV, EEMV, ACWV are not in the universe
+
+covariance:
+  estimator: "Ledoit-Wolf (2004) linear shrinkage, portfolio.ledoit_wolf_cov(window, force_shrinkage=True), divided by its mean diagonal (same as the MinVar null)"
+  window_weeks: 156
+
+seriation:
+  rule: "HRP (De Prado 2016) single linkage on d_ij = sqrt(0.5 (1 - rho_ij)) from the LW correlation; quasi-diagonal leaf order (scipy linkage method=single, leaves_list)"
+  bisection: "midpoint of the seriation order"
+  odd_sizes: "left child = first floor(n/2) names in seriation order (De Prado convention; build ruling)"
+
+recursion:
+  weights: "w proportional to [ w(A'') / nu(A') ; w(D'') / nu(D') ] (eq. 4), recursing on A'' and D''"
+  fitness: "nu(Q) = 1 / (1' Q^-1 1) on A' (eq. 8); computed as 1/nu(A') = b_A' A_c^-1 b_A"
+  intra_group_matrix: "A'' = A_c / (b_A b_A') elementwise (eq. 5)"
+  terminal_block: {max_dim: 5, method: "long-only min variance on A'' (spectral_risk_parity.long_only_minvar, SLSQP, ftol 1e-12, maxiter 1000)"}
+
+gamma:
+  rule: "gamma = 0.5 * gamma_max at every split; gamma_max = largest gamma < 1 with A_c(gamma) and D_c(gamma) positive definite (footnote 2, p. 7)"
+  scale: 0.5
+  gamma_max_search: "bisection on [0, 1) to 1e-6 in gamma; gamma_max capped at 1 - 1e-6 (build ruling)"
+  pd_definition: "min eigenvalue of both A_c and D_c >= 1e-8 x mean diagonal of that matrix (build ruling)"
+  fallback: "if A_c or D_c is not PD, or any entry of b_A or b_D is <= 0.05, halve gamma at that split until it passes"
+  max_halvings: 10        # after 10 halvings the split uses gamma = 0 (HRP at that node); logged (build ruling)
+  logging: "every split is logged (gamma_max, initial gamma, gamma used, halvings, reason, HRP fallback); the report prints the share of splits that used a fallback"
+  other_values_allowed: false
+
+caps:
+  applied: "after the recursion, to post-recursion target weights"
+  low_vol_combined_max: 0.30
+  single_name_max: 0.20
+  redistribution: "excess pro rata (by current weight) to uncapped names; iterate until no breach (build ruling)"
+  tolerance: 1.0e-10
+  max_passes: 100         # error if not converged
+  comparators: "MinVar, HRP and equal weight get both the 30% low-vol and 20% per-name caps (build ruling)"
+  report: "months each cap binds, per strategy"
+
+rebalance:
+  frequency: monthly
+  timing: "covariance dated month-end t-1; weights earn month t"
+  first_decision: 2016-10-31     # first weights applied to 2016-11
+  panel: "monthly_panel.load_monthly_panel (complete calendar months only; PanelProvenance kept); weekly panel cut at the last complete month-end; no hard-coded end month"
+
+costs:
+  primary: "5 bp one-way on drifted turnover, 0.5 * ||w_t - w_drift||_1 (EPO cost model), every strategy incl. the Book 1 rebuild"
+  diagnostic: "turnover_target = 0.5 * ||w_t - w_{t-1}||_1, reported only"
+
+nulls:
+  primary: {id: lw_minvar_156w, rule: "LW long-only MinVar (spectral_risk_parity.long_only_minvar), then the same caps"}
+  hrp: {id: hrp_g000, rule: "gamma = 0, same seriation, same LW covariance, same terminal rule, then the same caps"}
+  equal_weight: {id: equal_weight, rule: "1/N, then the same caps"}
+  rule: "same eligible names, rebalance dates, caps and costs as the method"
+  references: ["Backbone (data/processed/live/vol_target_oos_returns.csv r_vt, net)", "Book 1 (VOO/QQQM/IJR 70/20/10 rebuilt from the monthly panel, net of the same cost model)", "Book 2 (data/processed/live/skew_managed_gatefirst_returns.csv r_method, net)"]
+
+trial_count: 12           # 11 committed (HEAD:data/processed/epo_allocator/trial_registry.csv) + this one
+
+tripwires:   # checked first; any failure = VOID and no test, DSR or criterion is computed or reported
+  effective_n: "1/sum(w^2) on method post-cap target weights each rebalance; VOID if the MEAN over OOS months < 5; min and share of months < 5 printed"
+  composition: "gate_metrics.composition_tripwire (cash_like + short_duration + near_cash) <= 50% for method and primary null; expected 0%"
+  low_vol: "low-vol share <= 30% every month for method and every capped null (asserted; failure = VOID)"
+
+gate:   # gamma fixed, net of costs, full OOS window 2016-11 to the last complete month
+  window: "2016-11 to the last complete month"
+  c1: "Sharpe_exBIL > lw_minvar_156w with LW2008 one-sided p <= 0.05 on BOTH HAC (QS, prewhitened) and studentized circular block bootstrap (b = 4, B = 5000, seed 20261002)"
+  c2: "Sharpe_exBIL >= hrp_g000 (point estimate)"
+  c3: "Sharpe_exBIL >= equal_weight (point estimate)"
+  c4: "DSR >= 0.95 at N = 12 with registry cross-trial variance (Bailey & Lopez de Prado 2014)"
+  label: "VOID wins (tripwires or composition, gate_metrics.final_gate_label); else PASS if C1-C4 all pass; else FAIL"
+
+book_eligibility:   # CIO rule, computed only after PASS
+  window: "common months of the method, Backbone, Book 1 and Book 2 from 2021-02 to the last complete month; net vs net"
+  rule: "Sharpe_exBIL > Backbone (point estimate) AND MaxDD no worse than Book 1 (method MaxDD >= Book 1 MaxDD)"
+  book2: "shown for reference"
+  equity_share: "100% by construction"
+
+engineering_defaults_pending_quant:
+  b_descaling: "w(A'') is in the b-scaled coordinates of A''; the child's weights are divided elementwise by b_A (and b_D) before the group scale 1/nu(A') is applied. Literal eq. (4)/(9) without this step does not recover min variance at gamma = 1 (it fails the paper's own Appendix B 3x3 example); with it, gamma -> 1 recovers MV exactly. The b > 0.05 fallback keeps the division safe."
+  gamma_max_analytic: "For a PD covariance the exact Schur complement A - gamma B D^-1 C is PD for every gamma in [0, 1], so gamma_max hits the 1 - 1e-6 cap and gamma = 0.5 - 5e-7 unless numerics bind; footnote 2 targets the code's pseudo-Schur variant. Implemented exactly as ruled (bisection only if PD fails at the cap)."
+  gamma_halving_schedule: "gamma_k = 0.5 * gamma_max / 2^k, k = 0..10; first passing k is used; if k = 10 still fails, gamma = 0"
+  recursion_matrix: "children recurse on A'' and D'' (not on raw A, D); gamma_max and the fallback are re-evaluated at every split on that node's matrix"
+  seriation_once: "seriation is computed once per month on the full LW covariance and not recomputed inside the recursion or on augmented matrices"
+  hrp_null_definition: "HRP null = the same recursion at gamma = 0 (nu = MV variance 1/(1'A^-1 1), terminal long-only MV for blocks <= 5), i.e. Cotton's gamma = 0 endpoint, not De Prado's inverse-variance cluster variance with single-name leaves"
+  caps_on_comparators_mechanism: "comparators are capped with the same post-hoc pro-rata routine as the method (not a constrained optimisation)"
+  cap_receivers: "a name capped at 20% and, once the group cap binds, every low-vol name are frozen and receive no redistribution; if all receivers have zero weight the excess is split equally among them; infeasible name sets raise"
+  low_vol_realized: "the 30% low-vol tripwire is checked on post-cap target weights (holdings at the start of each month); the drifted month-end share is printed as a diagnostic, not a tripwire"
+  effective_n_scope: "the effective-N tripwire applies to the method; the nulls' effective N are diagnostics"
+  composition_scope: "composition tripwire on the method and the primary null (gate_metrics default)"
+  c1_tests: "LW2008 tests are run for the method vs the primary null only; C2 and C3 are point estimates"
+  dsr_registry: "the 11 committed rows of HEAD:data/processed/epo_allocator/trial_registry.csv plus this trial; cross-trial variance over finite ex-BIL Sharpes (excludes the two invalid v1 runs)"
+  backbone_series: "Backbone = live VT (data/processed/live/vol_target_oos_returns.csv r_vt, net, BIL-priced); Book 2 = live skew gate-first r_method; Book 1 = net rebuild from the panel"
+  maxdd_no_worse: "method MaxDD >= Book 1 MaxDD (ties count as no worse)"
+  book_comparison_when_not_pass: "not computed; book_eligible = no with reason 'gate label is X, not PASS'"
+  bootstrap_seed: 20261002
+  oos_return_missing: "an eligible name missing its month-t return raises (explicit data repair), as in EPO"
+
+no_reruns: "One run. No sensitivities, retuning or re-selection. A not-significant edge is recorded as not significant. Any preview or rerun adds a trial and needs a new ticket."
