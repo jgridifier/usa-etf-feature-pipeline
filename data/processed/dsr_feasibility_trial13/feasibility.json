@@ -1,0 +1,114 @@
+{
+  "title": "Trial-13 DSR feasibility check",
+  "method": "Bailey & López de Prado (2014) deflated Sharpe ratio, deflated_sharpe_bailey_lp (src/usa_etf_features/nonlinear_shrinkage_gmv_v3.py); hurdles solved by root-finding",
+  "scope": "Registry only: no gate run, no new trial, no signal on the panel looked at",
+  "sources": {
+    "registry": "data/processed/schur_allocator/trial_registry.csv",
+    "summary": "data/processed/schur_allocator/summary.csv"
+  },
+  "inputs": {
+    "T": 119,
+    "N": 13,
+    "sr_var_cross_trial_monthly": 0.014061082169479702,
+    "registry_trials": 12,
+    "registry_trials_with_sharpe": 10,
+    "kurtosis_convention": "raw (normal = 3)"
+  },
+  "sr0_annual": 0.6996803802657686,
+  "c4": {
+    "rule": "DSR >= 0.95",
+    "dsr": 0.95,
+    "hurdle_normal": 1.2407806647848423,
+    "hurdle_fat_tail_range": [
+      1.3046409703469828,
+      1.3692940347321618
+    ]
+  },
+  "cases": [
+    {
+      "key": "normal",
+      "label": "Normal returns",
+      "skew": 0.0,
+      "kurtosis_raw": 3.0,
+      "hurdles": [
+        {
+          "dsr": 0.5,
+          "sharpe_exbil_annual": 0.6996803802657864
+        },
+        {
+          "dsr": 0.9,
+          "sharpe_exbil_annual": 1.1188860678262342
+        },
+        {
+          "dsr": 0.95,
+          "sharpe_exbil_annual": 1.2407806647848423
+        }
+      ]
+    },
+    {
+      "key": "fat_tail_moderate",
+      "label": "Skew −0.5, kurtosis 5",
+      "skew": -0.5,
+      "kurtosis_raw": 5.0,
+      "hurdles": [
+        {
+          "dsr": 0.5,
+          "sharpe_exbil_annual": 0.6996803802657686
+        },
+        {
+          "dsr": 0.9,
+          "sharpe_exbil_annual": 1.1621011128227223
+        },
+        {
+          "dsr": 0.95,
+          "sharpe_exbil_annual": 1.3046409703469828
+        }
+      ]
+    },
+    {
+      "key": "fat_tail_severe",
+      "label": "Skew −1, kurtosis 7",
+      "skew": -1.0,
+      "kurtosis_raw": 7.0,
+      "hurdles": [
+        {
+          "dsr": 0.5,
+          "sharpe_exbil_annual": 0.6996803802657685
+        },
+        {
+          "dsr": 0.9,
+          "sharpe_exbil_annual": 1.2050953243932294
+        },
+        {
+          "dsr": 0.95,
+          "sharpe_exbil_annual": 1.3692940347321618
+        }
+      ]
+    }
+  ],
+  "reference": {
+    "capped_equal_weight_sharpe_exbil": 0.6450216454400344,
+    "capped_equal_weight_source": "data/processed/schur_allocator/summary.csv (equal_weight, full window)",
+    "hurdle_to_ew_ratio": 1.923626398519356
+  },
+  "check": {
+    "schur_sharpe_exbil": 0.625669496377814,
+    "N": 12,
+    "schur_dsr_reproduced": 0.42818621759352715,
+    "schur_dsr_recorded": 0.433327452991309,
+    "note": "normal moments here; the recorded value used realized skew and kurtosis"
+  },
+  "decision": {
+    "status": "pending",
+    "owner": "Jared",
+    "options": [
+      "Park the search",
+      "Report C4 without requiring it",
+      "Run a forward-only paper trade"
+    ]
+  },
+  "cio_recommendation": {
+    "label": "CIO recommendation",
+    "text": "park the allocator search. Loosening C4 after 12 trials would weaken the main guard against overfitting. If the idea is kept alive, choose a forward-only paper trade with C4 still required to pass, over loosening C4 on history we've already used. The decision is Jared's."
+  }
+}
