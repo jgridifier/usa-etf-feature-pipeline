@@ -37,6 +37,13 @@ CASES = (
     ('fat_tail_severe', 'Skew −1, kurtosis 7', -1.0, 7.0),
 )
 EULER_GAMMA = 0.5772156649015329
+# CIO's request (2026-10-03), verbatim; rendered as "<label>: <text>" directly under the options.
+CIO_RECOMMENDATION = dict(
+    label='CIO recommendation',
+    text=("park the allocator search. Loosening C4 after 12 trials would weaken the main guard against overfitting. "
+          "If the idea is kept alive, choose a forward-only paper trade with C4 still required to pass, over loosening "
+          "C4 on history we've already used. The decision is Jared's."),
+)
 
 
 def sr0_monthly(var_monthly: float, n_trials: int) -> float:
@@ -88,6 +95,7 @@ def compute(root: Path = ROOT) -> dict:
                    note='normal moments here; the recorded value used realized skew and kurtosis'),
         decision=dict(status='pending', owner='Jared',
                       options=['Park the search', 'Report C4 without requiring it', 'Run a forward-only paper trade']),
+        cio_recommendation=dict(CIO_RECOMMENDATION),
     )
 
 

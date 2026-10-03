@@ -49,6 +49,13 @@ def table(head: list[str], rows: list[list[str]], caption: str) -> str:
             + '</tbody></table></div>')
 
 
+def cio_line(d: dict) -> str:
+    rec = d.get('cio_recommendation')
+    if not rec:
+        return ''
+    return f'<div class="callout cio-recommendation"><strong>{escape(rec["label"])}:</strong> {escape(rec["text"])}</div>'
+
+
 def build_dsr_feasibility(page_shell, write_page) -> bool:
     if not available():
         return False
@@ -100,7 +107,8 @@ def build_dsr_feasibility(page_shell, write_page) -> bool:
     options = ('<h2>Options for Jared</h2>'
                '<p>Changing or keeping C4 is Jared’s call. The options, in no order:</p>'
                f'<ul>{opts}</ul>'
-               f'<p><strong>Decision: {escape(d["decision"]["status"])} with {escape(d["decision"]["owner"])}.</strong></p>')
+               + cio_line(d)
+               + f'<p><strong>Decision: {escape(d["decision"]["status"])} with {escape(d["decision"]["owner"])}.</strong></p>')
     content = (
         '<section class="band"><div class="band-inner">' + head
         + '<h2>Hurdles</h2>' + hurdles + sr0_line

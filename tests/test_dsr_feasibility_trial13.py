@@ -147,3 +147,36 @@ def test_no_quant_files_in_repo():
     import subprocess
     files = subprocess.run(['git', 'ls-files'], cwd=ROOT, capture_output=True, text=True, check=True).stdout.split()
     assert not [f for f in files if Path(f).name.startswith('QUANT_')]
+
+
+CIO_VERBATIM = ("CIO recommendation: park the allocator search. Loosening C4 after 12 trials would weaken the main guard "
+                "against overfitting. If the idea is kept alive, choose a forward-only paper trade with C4 still required "
+                "to pass, over loosening C4 on history we've already used. The decision is Jared's.")
+OPTIONS = ['Park the search', 'Report C4 without requiring it', 'Run a forward-only paper trade']
+
+
+def test_cio_recommendation_from_json_directly_under_unchanged_options():
+    d = _committed()
+    rec = d['cio_recommendation']
+    assert rec['label'] == 'CIO recommendation'
+    assert f"{rec['label']}: {rec['text']}" == CIO_VERBATIM
+    # Options: same wording, same (unranked) order, and still pending with Jared.
+    assert d['decision']['options'] == OPTIONS
+    raw = PAGE.read_text(encoding='utf-8')
+    ul = re.search(r'The options, in no order:</p><ul>(.*?)</ul>', raw, re.S)
+    assert ul, 'options list missing'
+    assert [_html.unescape(x) for x in re.findall(r'<li>(.*?)</li>', ul.group(1))] == OPTIONS
+    # The CIO line comes directly after the list, before the decision line.
+    after = raw[ul.end():]
+    m = re.match(r'<div class="callout cio-recommendation">(.*?)</div>', after, re.S)
+    assert m, 'CIO recommendation is not directly under the options'
+    line = _html.unescape(re.sub(r'<[^>]+>', '', m.group(1)))
+    assert line == CIO_VERBATIM
+    text = _text(raw)
+    assert text.index(CIO_VERBATIM) < text.index('Decision: pending with Jared.')
+    # It is rendered from the JSON: changing the JSON changes the line; removing it removes the line.
+    alt = copy.deepcopy(d)
+    alt['cio_recommendation'] = {'label': 'CIO recommendation', 'text': 'zz test text.'}
+    assert 'CIO recommendation: zz test text.' in _text(_build(alt))
+    del alt['cio_recommendation']
+    assert 'CIO recommendation' not in _text(_build(alt))

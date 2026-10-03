@@ -106,5 +106,9 @@
       "Report C4 without requiring it",
       "Run a forward-only paper trade"
     ]
+  },
+  "cio_recommendation": {
+    "label": "CIO recommendation",
+    "text": "park the allocator search. Loosening C4 after 12 trials would weaken the main guard against overfitting. If the idea is kept alive, choose a forward-only paper trade with C4 still required to pass, over loosening C4 on history we've already used. The decision is Jared's."
   }
 }
