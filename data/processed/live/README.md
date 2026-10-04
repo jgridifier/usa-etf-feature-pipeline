@@ -39,3 +39,16 @@ registry entry enabled. The other 179 months reproduce the committed returns (ma
 blank 2026-09 cell was written: −0.2340%. Output, registry, command and the code / input / output sha256 values are
 in `m3_p2_rerun_2026-09/` (`rerun_record.json`); `scripts/restore_m3_p2_rerun.py` checks and applies it, and the
 repair script no longer blanks the restored value. The strategy comparison is back to 68 months (2021-02..2026-09).
+
+### growth_alpha price fix: m3_p2_core_rotate re-run on the rebuilt file (2026-10-04)
+
+`growth_alpha_adj_close.csv` held a partial-day 2026-09-16 splice, so the 2026-09 m3_p2 value above (−0.2340%) came
+from spliced prices. The file was rebuilt from the full adjusted-close history
+(`data/processed/prices_fix_2026-10/growth_alpha_fix_record.json`) and every live consumer was re-run unchanged on it
+(`data/processed/prices_fix_2026-10/downstream_rerun_check.json`). The core books (vol-target backbone, skew gate-first,
+static / vol-target / XSD rows here) reproduce every committed month to ≤ 4.3e-7 and are kept. `m3_p2_core_rotate` does
+not: its walk-forward selection flips on the ~1e-6 daily differences between the two price vintages, so 56 earlier
+months move by more than 1e-6 (max 1.02 points, 2020-03). Its whole series is replaced by the re-run
+(`m3_p2_rerun_2026-09/`, `scripts/restore_m3_p2_rerun.py`); 2026-09 is now −0.6847%. Over 2021-02..2026-09
+(68 months) its Sharpe (rf 0) moves 0.7576 → 0.7405, ex-BIL 0.6032 → 0.5885 and NW t vs Option A −2.13 → −2.34.
+

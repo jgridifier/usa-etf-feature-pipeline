@@ -147,7 +147,8 @@ PUBLISHED_SHA256 = {
     # Re-pinned 2026-10-01: archive.epo_anchored_trend appended (EPO card on the Archive tab); everything else
     # is unchanged, see test_site_sharpe_only_gains_epo_archive_rows (previous pin 1e72c305…3f52fde).
     # Re-pinned 2026-10-04: m3_p2_core_rotate 2026-09 restored from its complete-month re-run (comparison Sharpes over 68 months).
-    'data/processed/cash_null_audit/site_sharpe.json': '7620da2c56250f430b59182f83a52aaae7a76fd347f3789fae126826c6d6d9d0',
+    # Re-pinned 2026-10-04 (price fix): growth_alpha_adj_close.csv rebuilt from the full history; m3_p2_core_rotate re-run on it.
+    'data/processed/cash_null_audit/site_sharpe.json': 'd292b042edee17eb6acdc5a9d6900e577943c12e04784bfc1c4444530c5f659c',
     'data/processed/nonlinear_shrinkage_gmv_v3/composition_tripwire.csv': '672e1661f238d4699574cc94bec50be44fbe5677bae3c8286316b771ccecbf66',
     'data/processed/nonlinear_shrinkage_gmv_v3/coverage_gaps.csv': 'a4d825ec2855d73d02c2b1ce22fa278c17fe35e06d55cee7b3a5eb719f9e9346',
     'data/processed/nonlinear_shrinkage_gmv_v3/final_month_unpriced.csv': '0c20686dc1794a0e4a08650c9914589a09da7a1f20ac0bf6e84271dbad935068',
@@ -165,7 +166,8 @@ PUBLISHED_SHA256 = {
     'data/processed/live/skew_managed_gatefirst_summary.csv': 'ae616ae25cc7e98bbde12cec31e1832a16eb2827a02cd47cd70676e931c257c5',
     'data/processed/live/skew_managed_gatefirst_weights.csv': 'cd66db8cd45f12d17ab10a199275d5249b401f637e4d1e2a31172cd447368a92',
     # Re-pinned 2026-10-04: m3_p2_core_rotate 2026-09 cell restored from its re-run (only that cell changed).
-    'data/processed/live/strategy_returns.csv': '6894c538852f3e329e4c68aca6a79c0354b085ff02480e0f28df0fed7ba2f628',
+    # Re-pinned 2026-10-04 (price fix): growth_alpha_adj_close.csv rebuilt from the full history; m3_p2_core_rotate re-run on it.
+    'data/processed/live/strategy_returns.csv': '0364e65a2e44c825a99681e4ec6d70599a1c6fe0b13ec4dff27fb36029848c59',
     'data/processed/live/vol_target_monthly_weights.csv': '1b54802c6feeedf8ea42d2609202a456fede2b46f70431081801d1bc2bc44f2a',
     'data/processed/live/vol_target_oos_returns.csv': 'a0e76aa34212821d4cad5b5dd6d473696af4997139129078afa0279cceb452c6',
     # Re-pinned 2026-10-04: Quant's Sept stats recompute (sept_fix_stat_recompute.csv, sha fe895441…): CIs / skew / %neg; NW t vs EW/MinVar/ERC to 2026-08.
@@ -188,11 +190,14 @@ PUBLISHED_SHA256 = {
     'docs/data/cio_book_shortlist/run_latest/strategy_diagnostics.csv': 'adaf7de3b3e266c3b1b30ca4935ead92b9447a2276dd856f0e9d004a4e288f21',
     'docs/data/cio_book_shortlist/run_latest/suggested_weights.csv': '708152bca4373923f7ab198b70fc1b5c8f57b7a0d99994102b6bfd6b6154b544',
     # Re-pinned 2026-10-04: m3_p2_core_rotate 2026-09 restored from its re-run (68-month comparison).
-    'docs/data/cio_book_shortlist/run_latest/strategy_comparison.csv': '0bd0484264493325a22dbd6b72b0d739fbafcb37f888aa08dbe4041e7b9ba4dc',
-    'docs/data/growth_alpha_adj_close.csv': '6af174a5a0f9096e68e22a9a25695ba770c9877e1c761abe121432835b7c6d5c',
+    # Re-pinned 2026-10-04 (price fix): growth_alpha_adj_close.csv rebuilt from the full history; m3_p2_core_rotate re-run on it.
+    'docs/data/cio_book_shortlist/run_latest/strategy_comparison.csv': 'd76d19719aecbd7c54f48a2f73152c349b62dd8137af0ce6650079618f9374e8',
+    # Re-pinned 2026-10-04 (price fix): byte copy of the rebuilt canonical file (2026-09-16 splice removed; previous pin 6af174a5…).
+    'docs/data/growth_alpha_adj_close.csv': '6306e0825ededbc9f013d26854384290e1bdf1927b3192b392dc261632057314',
     'docs/data/growth_panel_history_coverage.csv': '01fc48143a73a22a0a8fea0464bcf969fa2b07d1703a40548579d48ade36a7d4',
     # Re-pinned 2026-10-04: m3_p2_core_rotate 2026-09 restored from its re-run (68-month comparison).
-    'docs/data/strategy_comparison.csv': '0bd0484264493325a22dbd6b72b0d739fbafcb37f888aa08dbe4041e7b9ba4dc',
+    # Re-pinned 2026-10-04 (price fix): growth_alpha_adj_close.csv rebuilt from the full history; m3_p2_core_rotate re-run on it.
+    'docs/data/strategy_comparison.csv': 'd76d19719aecbd7c54f48a2f73152c349b62dd8137af0ce6650079618f9374e8',
     'docs/data/strategy_diagnostics.csv': 'adaf7de3b3e266c3b1b30ca4935ead92b9447a2276dd856f0e9d004a4e288f21',
     'docs/data/suggested_weights.csv': '708152bca4373923f7ab198b70fc1b5c8f57b7a0d99994102b6bfd6b6154b544',
     'docs/data/shortlist_comparison.csv': '8c5aa6c1852ede1461f4509c583ca912015da498bc955aa1f515d03b51930d16',
@@ -215,7 +220,7 @@ def test_site_sharpe_only_gains_epo_archive_rows():
     assert list(site['archive'])[-1] == 'epo_anchored_trend'
     del site['archive']['epo_anchored_trend']
     before = (json.dumps(site, indent=2) + '\n').encode()
-    assert hashlib.sha256(before).hexdigest() == '24b7b84da26f9acaf5c68386a3f6f42d3b29d399277f7bbad444825687e2c92c'  # re-pinned 2026-10-04: 2026-09 live row rebuilt from the complete-month panel; m3_p2_core_rotate 2026-09 restored from its re-run (68 months)
+    assert hashlib.sha256(before).hexdigest() == '678a81f6ed89c4617a64bdde10a3163be9003a4829a8375f4c175e92575e9694'  # re-pinned 2026-10-04 (price fix): m3_p2_core_rotate comparison Sharpes re-run on the fixed growth_alpha file (previous pin 24b7b84d…)
 
 
 def test_books_page_data_through_last_complete_month():

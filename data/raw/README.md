@@ -23,6 +23,13 @@
 - `growth_alpha_adj_close_sample.csv` — slim adj-close sample for demos/CI (committed).
 - Full history `growth_alpha_adj_close.csv` is **gitignored**. On the research box use:
   `/workspace/investments/growth_alpha_adj_close.csv`
+  Fixed 2026-10-04 (`scripts/fix_growth_alpha_prices.py`): the September refresh had spliced a partial-day
+  2026-09-16 snapshot into it and chained later rows onto that row (2026-09-16 daily returns off by up to 1.1
+  points, GVIP). Its 29 columns were rebuilt on the same 5470 dates from the full adjusted-close history
+  (`/workspace/investments/usa_universe_adj_close.csv`, sha256 631022f3…), so every daily return now matches it
+  exactly; sha256 6af174a5… → 6306e082…, backup kept as `growth_alpha_adj_close.csv.bak`. `docs/data/growth_alpha_adj_close.csv`
+  is a byte copy made by `scripts/build_pages.py` (never edited on its own) and the sample below was re-sliced from it.
+  Record: `data/processed/prices_fix_2026-10/growth_alpha_fix_record.json`; CI: `tests/test_growth_alpha_prices.py`.
 
 - `usa_universe_panel_monthly_returns.csv` — committed experimental research panel,
   405 dated rows × 339 ETFs; simple monthly returns, missing before inception.

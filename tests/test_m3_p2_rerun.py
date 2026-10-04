@@ -1,4 +1,7 @@
-"""m3_p2_core_rotate 2026-09: restored from an unchanged re-run on complete-month prices (follow-up to #53)."""
+"""m3_p2_core_rotate: re-run unchanged on the fixed growth_alpha_adj_close.csv (2026-09-16 splice removed, 2026-10-04).
+
+First restored for 2026-09 after #53; the 2026-10-04 price fix replaced the whole series with the re-run on the
+rebuilt price file (data/processed/prices_fix_2026-10/growth_alpha_fix_record.json)."""
 from __future__ import annotations
 
 import csv
@@ -23,10 +26,25 @@ def test_restored_cell_equals_the_saved_rerun_output():
              if r['strategy_id'] == 'm3_p2_core_rotate' and r['date'].startswith('2026-09')]
     assert len(live) == len(rerun) == 1
     assert float(live[0]['return']) == rec['restored_return'] == float(rerun[0]['return'])
-    assert rec['other_months_checked'] == 179 and rec['max_abs_return_diff_other_months'] <= rec['tolerance'] == 1e-7
+    assert rec['other_months_checked'] == 179 and rec['series_replaced'] is True
+    # Quant's expectation for 2026-09 on the fixed prices: -0.6847%.
+    assert round(rec['restored_return'] * 100, 4) == -0.6847
     assert hashlib.sha256((RUN / 'strategy_returns.csv').read_bytes()).hexdigest() == \
         rec['output_sha256']['data/processed/live/m3_p2_rerun_2026-09/strategy_returns.csv']
     assert rec['prices_last_date'] == '2026-09-30'
+    fix = json.loads((ROOT / 'data/processed/prices_fix_2026-10/growth_alpha_fix_record.json').read_text())
+    assert rec['inputs_sha256']['/workspace/investments/growth_alpha_adj_close.csv'] == fix['new_sha256']
+
+
+def test_whole_live_series_equals_the_saved_rerun_output():
+    live = {r['date']: r for r in csv.DictReader((ROOT / 'data/processed/live/strategy_returns.csv').open())
+            if r['strategy_id'] == 'm3_p2_core_rotate'}
+    rerun = {r['date']: r for r in csv.DictReader((RUN / 'strategy_returns.csv').open())
+             if r['strategy_id'] == 'm3_p2_core_rotate'}
+    assert len(live) == len(rerun) == 180 and list(live) == list(rerun)
+    for d, r in rerun.items():
+        assert float(live[d]['return']) == float(r['return']) and float(live[d]['turnover']) == float(r['turnover']), d
+        assert (live[d]['decision_date'], live[d]['feature_end']) == (r['decision_date'], r['feature_end']), d
 
 
 def test_rerun_used_the_frozen_m3_code():

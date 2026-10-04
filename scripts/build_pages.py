@@ -1050,7 +1050,18 @@ def self_host_fonts() -> None:
             page.write_text(t, encoding='utf-8')
 
 
+GROWTH_PRICES = Path('/workspace/investments/growth_alpha_adj_close.csv')   # canonical (fixed 2026-10-04)
+
+
+def copy_growth_prices() -> None:
+    """docs/data/growth_alpha_adj_close.csv (Explorer input) is a byte-for-byte copy of the one canonical file,
+    fixed by scripts/fix_growth_alpha_prices.py; it is never edited on its own."""
+    if GROWTH_PRICES.exists():
+        shutil.copyfile(GROWTH_PRICES, DATA / 'growth_alpha_adj_close.csv')
+
+
 def main() -> None:
+    copy_growth_prices()
     ASSETS.mkdir(parents=True, exist_ok=True)
     DATA.mkdir(parents=True, exist_ok=True)
     copy_cio_inputs()
