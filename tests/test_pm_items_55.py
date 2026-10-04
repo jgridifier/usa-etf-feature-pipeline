@@ -99,3 +99,27 @@ def test_scatter_tooltip_names_point_with_text_content():
     block = js[js.index('if (hints.pointTooltip)'):]
     block = block[:block.index('chart = globalThis.echarts.init')]
     assert 'textContent = point.name' in block and 'innerHTML' not in block
+
+
+def test_book2_own_nulls_table_labels_the_67_month_window():
+    """PM/CIO: Book 2's EW / MinVar / ERC null rows (NW t 1.99 etc.) cover 67 months to 2026-08; the caption under
+    the own-null table says so, and the numbers it labels come from the hub JSON."""
+    import html as _h
+    import json as _j
+    import re as _re
+    root = Path(__file__).resolve().parents[1]
+    s = (root / 'docs' / 'methods' / 'results' / 'book2.html').read_text(encoding='utf-8')
+    i = s.index('aria-label="Own null comparisons')
+    j = s.index('</table>', i)
+    tbl = _h.unescape(_re.sub(r'<[^>]+>', ' ', s[i:j]))
+    cap = _re.match(r'\s*</div>\s*<p class="caption null-windows">(.*?)</p>', s[j + len('</table>'):], _re.S)
+    assert cap, 'no window caption directly under the own-null table'
+    text = _h.unescape(cap.group(1))
+    assert 'Equal weight, LW MinVar, ERC: 2021-02 to 2026-08, 67 months (to 2026-08' in text, text
+    assert 'Backbone: 2021-02 to 2026-09, 68 months' in text, text
+    d = _j.loads((root / 'data' / 'processed' / 'hub' / 'subjects' / 'book2.json').read_text(encoding='utf-8'))
+    for r in d['vs_nulls']:
+        if r['key'] in ('ew', 'minvar', 'erc'):
+            assert (r['n'], r['end']) == (67, '2026-08'), r['key']
+            assert f"{r['return_test']['nw_t']:.2f}" in tbl, r['key']
+    assert '1.99' in tbl

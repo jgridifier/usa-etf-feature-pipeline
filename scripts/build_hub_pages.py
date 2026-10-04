@@ -216,6 +216,24 @@ LIVE_CORE = 'live core (VOO / QQQM / IJR, gross)'
 STANDIN_CORE = 'stand-in core (IVV / QQQ / IJR, gross)'
 
 
+def null_windows_caption(nulls):
+    """Caption naming each null row's paired window when the rows do not all share one (PM/CIO: Book 2's EW /
+    MinVar / ERC rows cover 67 months to 2026-08 while the Backbone row covers 68 to 2026-09)."""
+    groups = {}
+    for r in nulls:
+        groups.setdefault((r.get('start'), r.get('end'), r.get('n')), []).append(r['label'])
+    if len(groups) < 2:
+        return ''
+    latest = max(k[1] for k in groups if k[1])
+    parts = []
+    for (start, end, n), labels in groups.items():
+        part = f"{', '.join(labels)}: {start} to {end}, {integer(n)} months"
+        if end != latest:
+            part += f' (to {end}; their {latest} month awaits a re-run)'
+        parts.append(part)
+    return p('Windows: ' + '; '.join(parts) + '.', 'caption null-windows')
+
+
 def comparison(d, c, label, core_label=LIVE_CORE):
     if not c:
         return missing(source(d))
@@ -520,8 +538,9 @@ def subject_body(d, manifest):
         rows.append([text(r['label']) + (' (primary)' if r.get('primary') else ''),num(r['diff'].get('sharpe_exbil')),
                      num(st.get('z')),num(st.get('p_one_sided')),num(st.get('p_two_sided')),sig,
                      num((r.get('return_test') or {}).get('nw_t')),integer(r['n']),num(r.get('power',{}).get('detectable_sharpe_gap')),power(r)])
-    parts.append(table(['Null','Sharpe ex-BIL diff','z (LW2008)','p (one-sided)','p (two-sided)','Significance (two-sided 5%)',
-                        'NW t','Months','Detectable gap','Power'],rows,'Own null comparisons (Sharpe ex-BIL, own paired months)')
+    parts.append((table(['Null','Sharpe ex-BIL diff','z (LW2008)','p (one-sided)','p (two-sided)','Significance (two-sided 5%)',
+                         'NW t','Months','Detectable gap','Power'],rows,'Own null comparisons (Sharpe ex-BIL, own paired months)')
+                   + null_windows_caption(d.get('vs_nulls', [])))
                  if rows else p('No pre-registered null saved.'))
     own = d['own']; trials = d.get('trials') or {}
     body = admission_html(d)
