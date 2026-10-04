@@ -84,12 +84,18 @@ def test_fragility_figures_recompute_from_the_two_return_series():
 def test_note_text_is_generated_from_the_record():
     import build_pages
     want = ("56 of 179 earlier months' returns moved by more than 1e-6 between the two price files; largest monthly "
-            'gap 2020-03, \u22121.02 pp; picks flip on price differences under 1e-4, so this stays a lab run.')
+            'gap 2020-03, \u22121.02 pp; returns move on price differences under 1e-4, so this stays a lab run.')
     assert build_pages.m3_p2_fragility_note(rec()) == want
     notes = json.loads(NOTES.read_text(encoding='utf-8'))
     assert notes['file'] == 'strategy_comparison.csv'
     assert [(n['strategy_id'], n['text']) for n in notes['notes']] == [('m3_p2_core_rotate', want)]
-    assert 'changed picks' not in NOTES.read_text(encoding='utf-8') and 'changed picks' not in REC.read_text(encoding='utf-8')
+    # CIO: no claim about picks unless the record measures them (it does not: months_picks_differ is null).
+    assert rec()['disclosure']['picks_measured'] is False and rec()['disclosure']['months_picks_differ'] is None
+    bad = re.compile(r'picks?\s+flip|changed\s+picks?|picks?\s+changed|picks?\s+differ', re.I)
+    for text in (want, NOTES.read_text(encoding='utf-8'), (ROOT / 'data/processed/live/README.md').read_text(encoding='utf-8'),
+                 (ROOT / 'data/processed/prices_fix_2026-10/downstream_rerun_check.json').read_text(encoding='utf-8')):
+        assert not bad.search(text), bad.search(text)[0]
+    assert not re.search(r'\bpicks?\b', want, re.I)
     fake = json.loads(json.dumps(rec()))
     fake['disclosure'].update(months_returns_moved=3, earlier_months=10, largest_gap_month='2001-01',
                               largest_gap_pp=-0.5, pick_tolerance=1e-5)
@@ -133,3 +139,4 @@ def test_note_renders_on_the_runs_page():
     text = re.sub(r'\s+', ' ', htmllib.unescape(re.sub(r'<[^>]+>', '', m[0])))
     assert json.loads(NOTES.read_text(encoding='utf-8'))['notes'][0]['text'] in text
     assert 'M3 P2 (held off)' in text and 'not a new trial' in text
+    assert not re.search(r'picks?\s+flip|changed\s+picks?', text, re.I)

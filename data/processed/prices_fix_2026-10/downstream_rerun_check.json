@@ -65,5 +65,5 @@
   "strategy_returns.csv: m3_p2_core_rotate, whole series (see m3_p2_rerun_2026-09/rerun_record.json)"
  ],
  "september_core_note": "Every core 2026-09 cell re-runs to -0.001112271194480285 vs the committed panel core -0.0011122711944802606 (2.4e-17).",
- "m3_p2_note": "m3_p2_core_rotate is the only consumer whose history moves: its walk-forward selection flips on daily differences of about 1e-6 between the two price vintages, so 56 of 179 earlier months move by more than 1e-6 (114 by more than 1e-7; max 1.02 points, 2020-03). The re-run is deterministic: on the old spliced file it reproduces the committed series to 1.1e-9. The CIO run and the m3_p2-only run agree exactly on the fixed file."
+ "m3_p2_note": "m3_p2_core_rotate is the only consumer whose history moves: its walk-forward returns move on daily differences of about 1e-6 between the two price vintages: 56 of 179 earlier months move by more than 1e-6 (114 by more than 1e-7; max 1.02 points, 2020-03). The re-run is deterministic: on the old spliced file it reproduces the committed series to 1.1e-9. The CIO run and the m3_p2-only run agree exactly on the fixed file."
 }

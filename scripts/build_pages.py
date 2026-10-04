@@ -1076,7 +1076,7 @@ def m3_p2_fragility_note(rec: dict) -> str:
     gap = f"{d['largest_gap_pp']:.2f}".replace('-', '\u2212')
     return (f"{d['months_returns_moved']} of {d['earlier_months']} earlier months' returns moved by more than "
             f"{_sci(d['pick_tolerance'])} between the two price files; largest monthly gap {d['largest_gap_month']}, "
-            f"{gap} pp; picks flip on price differences under {_sci(d['price_diff_bound'])}, so this stays a lab run.")
+            f"{gap} pp; returns move on price differences under {_sci(d['price_diff_bound'])}, so this stays a lab run.")
 
 
 def build_comparison_notes() -> None:

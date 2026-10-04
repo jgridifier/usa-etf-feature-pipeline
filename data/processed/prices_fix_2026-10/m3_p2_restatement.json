@@ -129,7 +129,10 @@
    "2023-03",
    "2024-10",
    "2025-04"
-  ]
+  ],
+  "months_picks_differ": null,
+  "picks_measured": false,
+  "picks_note": "Not measured: the m3_p2 re-runs store monthly returns and turnover only; the only holdings written (suggested_weights.csv) are the final 2026-09-30 snapshot, not a monthly history, under either price file. The site note therefore says nothing about picks."
  },
  "before_ref": "e0ff4e3ea9f8931f4538171e497dbae53fe0a294"
 }

@@ -75,6 +75,11 @@ def main() -> None:
         largest_gap_return_was=float(old[worst]), largest_gap_return_now=float(new[worst]),
         max_daily_return_diff_before_splice=float(d.max()), price_diff_bound=1e-4,
         months_returns_moved_list=list(moved.index),
+        months_picks_differ=None,
+        picks_measured=False,
+        picks_note=('Not measured: the m3_p2 re-runs store monthly returns and turnover only; the only holdings written '
+                    '(suggested_weights.csv) are the final 2026-09-30 snapshot, not a monthly history, under either price '
+                    'file. The site note therefore says nothing about picks.'),
     )
     assert disclosure['max_daily_return_diff_before_splice'] < disclosure['price_diff_bound']
     record = dict(
