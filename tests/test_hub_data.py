@@ -113,7 +113,7 @@ def test_static_core_is_book1_s1_from_2020_11(built):
     assert len(j) == 68 and (j.iloc[:, 0] - j.iloc[:, 1]).abs().max() < 1e-12
     pdv = core['static_core_panel_derived'].dropna()
     diff = (pdv.reindex(s1.index) - s1).abs()
-    assert list(diff[diff > 1e-6].index.astype(str)) == ['2026-09']   # panel's last month has an earlier as-of; else ~1e-7 price rounding
+    assert diff.max() < 1e-6   # 2026-09 rebuilt from the complete-month panel; elsewhere ~1e-7 price rounding
     assert str(core['standin_core'].dropna().index.min()) == '2000-06'
     for sid, s in built['subjects'].items():
         cov = s['vs_core']['own_window']['coverage']
@@ -129,7 +129,7 @@ def test_recorded_figures_reproduce(built):
     epo = pd.read_csv(ROOT / 'data/processed/epo_allocator/trial_registry.csv').set_index('trial_id')
     assert S['epo']['own']['sharpe_exbil'] == pytest.approx(epo.loc['epo_a_w075', 'Sharpe_exBIL_annual'], abs=1e-9)
     site = json.loads((ROOT / hd.SITE_SHARPE).read_text())['books']
-    assert round(S['backbone']['own']['sharpe_exbil'], 4) == site['uncond_vt_audit_null']['exbil'] == 0.8615
+    assert round(S['backbone']['own']['sharpe_exbil'], 4) == site['uncond_vt_audit_null']['exbil'] == 0.8567   # 0.8615 before the Sep-core rebuild
     assert round(S['book2']['own']['sharpe_exbil'], 4) == site['book2_vt_x_gatefirst']['exbil']
     b1 = hd.window(hd.monthly_series(ROOT, 'data/processed/live/strategy_returns.csv', 'return', {'strategy_id': 'static_option_a'})[0],
                    '2021-02', '2026-09')
@@ -138,7 +138,8 @@ def test_recorded_figures_reproduce(built):
 
 def test_backbone_headline_ruling_d2():
     h = _load('subjects/backbone.json')['headline']
-    assert h['headline']['sharpe_exbil'] == 0.8615 and h['headline']['n_months'] == 68
+    assert h['headline']['sharpe_exbil'] == 0.8567 and h['headline']['n_months'] == 68
+    assert round(h['headline']['sharpe_exbil'], 2) == 0.86   # D2: headline 0.86 (0.8615 before the Sep-core rebuild)
     assert h['frozen_snapshot']['sharpe_exbil'] == 0.8274 and 'Frozen snapshot' in h['frozen_snapshot']['label']
     assert h['recorded']['value'].startswith('0.839') and 'archive card' in h['recorded']['label']
 
@@ -207,13 +208,27 @@ def test_regime_and_stress_cells_never_blank_never_backfilled():
             for m, v in zip(w['path']['months'], w['path']['core']):
                 assert v is None or m >= '2020-11', (sid, w['window'], m)
     schur = {w['window']: w for w in _load('subjects/schur.json')['stress']}
-    assert schur['gfc']['series']['subject']['coverage']['status'] == 'not in window'
-    assert schur['euro_2011']['series']['subject']['coverage']['status'] == 'not in window'
+    assert schur['gfc']['own_coverage']['subject']['status'] == 'not in window'
+    assert schur['euro_2011']['own_coverage']['subject']['status'] == 'not in window'
     b2 = {w['window']: w for w in _load('subjects/book2.json')['stress']}
-    assert b2['gfc']['series']['subject']['coverage']['status'] == 'not in window'
+    assert b2['gfc']['own_coverage']['subject']['status'] == 'not in window'
     ft = {w['window']: w for w in _load('subjects/ft_med.json')['stress']}
-    assert ft['dotcom']['series']['subject']['coverage']['status'].startswith('partly in window')
-    assert ft['gfc']['series']['core']['coverage']['status'] == 'not in window'
+    assert ft['dotcom']['own_coverage']['subject']['status'].startswith('partly in window')
+    assert ft['gfc']['own_coverage']['core']['status'] == 'not in window'
+    assert ft['gfc']['series_ex_core']['months'] > 0 and 'core' not in ft['gfc']['series_ex_core']['series']
+
+
+def test_regime_and_stress_figures_pair_method_core_and_null_on_the_same_months():
+    """CIO review of #55, item 5: no more 87 method months against 50 core months."""
+    for sid in hd.SUBJECT_IDS:
+        s = _load(f'subjects/{sid}.json')
+        for row in s['regimes'] + s['stress']:
+            ks = {e['coverage']['k'] for e in row['series'].values()}
+            assert len(ks) == 1, (sid, row.get('regime') or row.get('window'), ks)
+            assert ks == {row['paired_months']}
+            assert row['paired_months'] <= min(c['k'] for c in row['own_coverage'].values())
+    up = next(r for r in _load('subjects/schur.json')['regimes'] if r['kind'] == 'drawdown_state' and r['regime'] == 'Up')
+    assert up['own_coverage']['subject']['k'] > up['paired_months'] == up['series']['core']['coverage']['k']
 
 
 def test_stress_windows_follow_ruling_d7():
@@ -316,3 +331,65 @@ def test_weights_are_indexed_by_return_month():
         assert set(wm) <= set(s['months']) | set(s['partial_months_dropped']), sid
         assert wm[0] >= s['months'][0], (sid, wm[0], s['months'][0])
     assert _load('subjects/book2.json')['weights']['months'][0] == _load('subjects/book2.json')['months'][0] == '2021-02'
+
+
+def test_hub_core_matches_the_complete_month_panel_every_month():
+    """Sep 2026 bug: the live core file was built from a partial September. The hub core must equal the
+    70/20/10 VOO/QQQM/IJR core on the complete-month panel in every month it shows."""
+    from usa_etf_features import monthly_panel as mp
+    panel = mp.load_monthly_panel(ROOT / hd.PANEL, complete_months_only=True)
+    w = pd.Series(hd.CORE_WEIGHTS)
+    pc = panel[list(w.index)].mul(w, axis=1).sum(axis=1, min_count=len(w))
+    pc.index = panel.index.to_period('M').astype(str)
+    core = pd.read_csv(HUB / 'static_core_monthly.csv').dropna(subset=['static_core_s1']).set_index('month')
+    assert core.index[0] == '2020-11' and core.index[-1] == '2026-09'
+    diff = (core['static_core_s1'] - pc.reindex(core.index)).abs()
+    assert diff.notna().all() and diff.max() < 1e-6, diff[diff > 1e-6]   # ~1e-7 price rounding
+    assert abs(core.loc['2026-09', 'static_core_s1'] - (-0.0011122712)) < 1e-9   # was +0.0024118787 (partial month)
+    fix = _load('manifest.json')['static_core']['corrections']
+    assert [c['month'] for c in fix] == ['2026-09']
+    # CoS spec: the rebuilt static_option_a in the live file matches the panel-derived core within 1e-4 every month
+    live = pd.read_csv(ROOT / 'data/processed/live/strategy_returns.csv')
+    live = live[live.strategy_id == 'static_option_a'].assign(month=lambda d: d.date.str[:7]).set_index('month')['return']
+    d = (live - pc.reindex(live.index)).abs()
+    assert d.notna().all() and d.max() < 1e-4, d[d >= 1e-4]
+    for name, col in [('vol_target_oos_returns.csv', 'r_option_a'), ('skew_managed_gatefirst_returns.csv', 'r_null_b')]:
+        f = pd.read_csv(ROOT / 'data/processed/live' / name).assign(month=lambda d: d.date.str[:7]).set_index('month')[col]
+        d = (f - pc.reindex(f.index)).abs()
+        assert d.max() < 1e-4, (name, d[d >= 1e-4])
+
+
+def test_book1_cagr_still_rounds_to_15_0_after_the_sep_fix():
+    b1 = _load('subjects/book1.json')
+    core = pd.read_csv(HUB / 'static_core_monthly.csv').set_index('month')['static_core_s1']
+    r = core.loc['2021-02':'2026-09']
+    assert len(r) == 68
+    cagr = (1 + r).prod() ** (12 / len(r)) - 1
+    assert round(cagr * 100, 1) == 15.0
+    assert b1['own']['end'] == '2026-09'
+
+
+def test_sharpe_tests_carry_two_sided_p_and_book2_vs_backbone_is_not_significant():
+    b2 = _load('subjects/book2.json')
+    bb = next(h for h in b2['vs_nulls'] if h['primary'])
+    st = bb['sharpe_test']
+    assert abs(st['p_two_sided'] - 2 * st['p_one_sided']) < 1e-6
+    assert 0.15 < st['p_one_sided'] < 0.18 and 0.30 < st['p_two_sided'] < 0.36
+    assert st['significant_5pct_two_sided'] is False
+
+
+def test_no_bare_vt_in_hub_display_text():
+    import re
+    pat = re.compile(r'(?<![\w-])VT(?![\w-])')
+    def walk(o, path):
+        if isinstance(o, dict):
+            for k, v in o.items():
+                yield from walk(v, f'{path}.{k}')
+        elif isinstance(o, list):
+            for i, v in enumerate(o):
+                yield from walk(v, f'{path}[{i}]')
+        elif isinstance(o, str) and pat.search(o):
+            yield path
+    for sid in hd.SUBJECT_IDS:
+        assert not list(walk(_load(f'subjects/{sid}.json'), sid))
+    assert 'VT' not in _load('subjects/backbone.json')['verdict']['text'].split()

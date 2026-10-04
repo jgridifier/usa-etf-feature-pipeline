@@ -36,7 +36,7 @@
    "own_window": {
     "n": 68,
     "months": 68,
-    "cagr_diff": 0.0004151605
+    "cagr_diff": 0.0004149025
    },
    "excess_spark": [
     -0.00059157,
@@ -363,7 +363,7 @@
    "own_window": {
     "n": 68,
     "months": 68,
-    "cagr_diff": -0.0110714643
+    "cagr_diff": -0.0110645854
    },
    "excess_spark": [
     -0.00059157,
@@ -855,7 +855,7 @@
    "own_window": {
     "n": 71,
     "months": 119,
-    "cagr_diff": -0.0502730326
+    "cagr_diff": -0.0495746591
    },
    "excess_spark": [
     -0.02420642,
@@ -1675,7 +1675,7 @@
    "own_window": {
     "n": 71,
     "months": 119,
-    "cagr_diff": -0.1384291425
+    "cagr_diff": -0.137730769
    },
    "excess_spark": [
     -0.02718977,

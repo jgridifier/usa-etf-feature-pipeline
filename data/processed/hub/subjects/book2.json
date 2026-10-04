@@ -33,11 +33,11 @@
   "n": 68,
   "start": "2021-02",
   "end": "2026-09",
-  "total_return": 1.0932852762,
-  "cagr": 0.1392440781,
-  "ann_vol": 0.1056139408,
+  "total_return": 1.0859259748,
+  "cagr": 0.1385362516,
+  "ann_vol": 0.1056778646,
   "maxdd": -0.1011662465,
-  "sharpe_exbil": 0.9966514804
+  "sharpe_exbil": 0.9901274841
  },
  "partial_months_dropped": [],
  "vs_core": {
@@ -49,28 +49,28 @@
     "n": 68,
     "start": "2021-02",
     "end": "2026-09",
-    "total_return": 1.0932852762,
-    "cagr": 0.1392440781,
-    "ann_vol": 0.1056139408,
+    "total_return": 1.0859259748,
+    "cagr": 0.1385362516,
+    "ann_vol": 0.1056778646,
     "maxdd": -0.1011662465,
-    "sharpe_exbil": 0.9966514804
+    "sharpe_exbil": 0.9901274841
    },
    "b": {
     "n": 68,
     "start": "2021-02",
     "end": "2026-09",
-    "total_return": 1.2112080024,
-    "cagr": 0.1503155424,
-    "ann_vol": 0.1585085855,
+    "total_return": 1.2034341236,
+    "cagr": 0.149600837,
+    "ann_vol": 0.1585567344,
     "maxdd": -0.2556271385,
-    "sharpe_exbil": 0.7699085576
+    "sharpe_exbil": 0.7657336467
    },
    "diff": {
-    "total_return": -0.1179227262,
-    "cagr": -0.0110714643,
+    "total_return": -0.1175081488,
+    "cagr": -0.0110645854,
     "maxdd": 0.154460892,
     "maxdd_note": "single path, no test",
-    "sharpe_exbil": 0.2267429228
+    "sharpe_exbil": 0.2243938374
    },
    "return_test": {
     "nw_t": -0.6913991554,
@@ -79,15 +79,17 @@
     "detectable_ann_return_gap": 0.060159752
    },
    "sharpe_test": {
-    "z": 1.331505814,
-    "p_one_sided": 0.0915113166,
-    "se_hac_annual": 0.1715567176,
-    "detectable_sharpe_gap": 0.4265714655
+    "z": 1.322719593,
+    "p_one_sided": 0.0929643227,
+    "p_two_sided": 0.1859286453,
+    "significant_5pct_two_sided": false,
+    "se_hac_annual": 0.170907135,
+    "detectable_sharpe_gap": 0.4249562947
    },
    "power": {
     "n": 68,
-    "detectable_sharpe_gap": 0.4265714655,
-    "text": "68 paired months can only detect a Sharpe gap of about 0.43 (one-sided 5%, 80% power)."
+    "detectable_sharpe_gap": 0.4249562947,
+    "text": "68 paired months can only detect a Sharpe gap of about 0.42 (one-sided 5%, 80% power)."
    },
    "coverage": {
     "k": 68,
@@ -135,6 +137,8 @@
    "sharpe_test": {
     "z": 1.2096350543,
     "p_one_sided": 0.1132094804,
+    "p_two_sided": 0.2264189609,
+    "significant_5pct_two_sided": false,
     "se_hac_annual": 0.167587311,
     "detectable_sharpe_gap": 0.4167016358
    },
@@ -152,11 +156,11 @@
     "n": 68,
     "start": "2021-02",
     "end": "2026-09",
-    "total_return": 1.0932852762,
-    "cagr": 0.1392440781,
-    "ann_vol": 0.1056139408,
+    "total_return": 1.0859259748,
+    "cagr": 0.1385362516,
+    "ann_vol": 0.1056778646,
     "maxdd": -0.1011662465,
-    "sharpe_exbil": 0.9966514804
+    "sharpe_exbil": 0.9901274841
    },
    "b": {
     "n": 68,
@@ -169,27 +173,29 @@
     "sharpe_exbil": 0.7644770148
    },
    "diff": {
-    "total_return": -0.1086370127,
-    "cagr": -0.0102175246,
+    "total_return": -0.1159963141,
+    "cagr": -0.0109253511,
     "maxdd": 0.1548160407,
     "maxdd_note": "single path, no test",
-    "sharpe_exbil": 0.2321744656
+    "sharpe_exbil": 0.2256504693
    },
    "return_test": {
-    "nw_t": -0.6612457754,
+    "nw_t": -0.6875721448,
     "lags": 3,
-    "p_two_sided": 0.5084547097,
-    "detectable_ann_return_gap": 0.0601867486
+    "p_two_sided": 0.4917222545,
+    "detectable_ann_return_gap": 0.0601312811
    },
    "sharpe_test": {
-    "z": 1.3603774635,
-    "p_one_sided": 0.0868552532,
-    "se_hac_annual": 0.1719380832,
-    "detectable_sharpe_gap": 0.4275197214
+    "z": 1.3279202732,
+    "p_one_sided": 0.0921022233,
+    "p_two_sided": 0.1842044465,
+    "significant_5pct_two_sided": false,
+    "se_hac_annual": 0.1711911442,
+    "detectable_sharpe_gap": 0.4256624764
    },
    "power": {
     "n": 68,
-    "detectable_sharpe_gap": 0.4275197214,
+    "detectable_sharpe_gap": 0.4256624764,
     "text": "68 paired months can only detect a Sharpe gap of about 0.43 (one-sided 5%, 80% power)."
    },
    "label": "Sensitivity only: stand-in core 70% IVV / 20% QQQ / 10% IJR, monthly rebalanced, gross, from the saved panel. It never replaces the static core."
@@ -204,28 +210,28 @@
     "n": 68,
     "start": "2021-02",
     "end": "2026-09",
-    "total_return": 1.0932852762,
-    "cagr": 0.1392440781,
-    "ann_vol": 0.1056139408,
+    "total_return": 1.0859259748,
+    "cagr": 0.1385362516,
+    "ann_vol": 0.1056778646,
     "maxdd": -0.1011662465,
-    "sharpe_exbil": 0.9966514804
+    "sharpe_exbil": 0.9901274841
    },
    "b": {
     "n": 68,
     "start": "2021-02",
     "end": "2026-09",
-    "total_return": 1.2157340798,
-    "cagr": 0.1507307029,
-    "ann_vol": 0.1386311754,
+    "total_return": 1.2079442888,
+    "cagr": 0.1500157395,
+    "ann_vol": 0.1386852365,
     "maxdd": -0.2012859185,
-    "sharpe_exbil": 0.8615159386
+    "sharpe_exbil": 0.8566719937
    },
    "diff": {
-    "total_return": -0.1224488036,
-    "cagr": -0.0114866248,
+    "total_return": -0.122018314,
+    "cagr": -0.0114794879,
     "maxdd": 0.100119672,
     "maxdd_note": "single path, no test",
-    "sharpe_exbil": 0.1351355418
+    "sharpe_exbil": 0.1334554904
    },
    "return_test": {
     "nw_t": -0.800050335,
@@ -234,171 +240,179 @@
     "detectable_ann_return_gap": 0.043885093
    },
    "sharpe_test": {
-    "z": 0.9807296383,
-    "p_one_sided": 0.163363042,
-    "se_hac_annual": 0.1388153019,
-    "detectable_sharpe_gap": 0.3451607583
+    "z": 0.971535931,
+    "p_one_sided": 0.1656407347,
+    "p_two_sided": 0.3312814695,
+    "significant_5pct_two_sided": false,
+    "se_hac_annual": 0.1383867893,
+    "detectable_sharpe_gap": 0.3440952726
    },
    "power": {
     "n": 68,
-    "detectable_sharpe_gap": 0.3451607583,
-    "text": "68 paired months can only detect a Sharpe gap of about 0.35 (one-sided 5%, 80% power)."
+    "detectable_sharpe_gap": 0.3440952726,
+    "text": "68 paired months can only detect a Sharpe gap of about 0.34 (one-sided 5%, 80% power)."
    },
    "key": "backbone",
    "label": "Backbone",
    "primary": true
   },
   {
-   "n": 68,
+   "n": 67,
    "start": "2021-02",
-   "end": "2026-09",
+   "end": "2026-08",
    "a": {
-    "n": 68,
+    "n": 67,
     "start": "2021-02",
-    "end": "2026-09",
-    "total_return": 1.0932852762,
-    "cagr": 0.1392440781,
-    "ann_vol": 0.1056139408,
+    "end": "2026-08",
+    "total_return": 1.0882486736,
+    "cagr": 0.1409705279,
+    "ann_vol": 0.1063413574,
     "maxdd": -0.1011662465,
-    "sharpe_exbil": 0.9966514804
+    "sharpe_exbil": 1.0053762264
    },
    "b": {
-    "n": 68,
+    "n": 67,
     "start": "2021-02",
-    "end": "2026-09",
-    "total_return": 0.6094201231,
-    "cagr": 0.0876046992,
-    "ann_vol": 0.0967858799,
+    "end": "2026-08",
+    "total_return": 0.6253730252,
+    "cagr": 0.0908942068,
+    "ann_vol": 0.0972353128,
     "maxdd": -0.1605103504,
-    "sharpe_exbil": 0.5949729486
+    "sharpe_exbil": 0.6245665785
    },
    "diff": {
-    "total_return": 0.4838651531,
-    "cagr": 0.0516393789,
+    "total_return": 0.4628756484,
+    "cagr": 0.0500763211,
     "maxdd": 0.0593441039,
     "maxdd_note": "single path, no test",
-    "sharpe_exbil": 0.4016785318
+    "sharpe_exbil": 0.3808096479
    },
    "return_test": {
-    "nw_t": 2.1032999114,
+    "nw_t": 1.9900399547,
     "lags": 3,
-    "p_two_sided": 0.0354395612,
-    "detectable_ann_return_gap": 0.056287636
+    "p_two_sided": 0.0465865344,
+    "detectable_ann_return_gap": 0.0576429255
    },
    "sharpe_test": {
-    "z": 1.6383986954,
-    "p_one_sided": 0.0506692756,
-    "se_hac_annual": 0.2469881302,
-    "detectable_sharpe_gap": 0.6141297767
+    "z": 1.5367725144,
+    "p_one_sided": 0.0621745132,
+    "p_two_sided": 0.1243490264,
+    "significant_5pct_two_sided": false,
+    "se_hac_annual": 0.2496685229,
+    "detectable_sharpe_gap": 0.6207945057
    },
    "power": {
-    "n": 68,
-    "detectable_sharpe_gap": 0.6141297767,
-    "text": "68 paired months can only detect a Sharpe gap of about 0.61 (one-sided 5%, 80% power)."
+    "n": 67,
+    "detectable_sharpe_gap": 0.6207945057,
+    "text": "67 paired months can only detect a Sharpe gap of about 0.62 (one-sided 5%, 80% power)."
    },
    "key": "ew",
    "label": "Equal weight",
    "primary": false
   },
   {
-   "n": 68,
+   "n": 67,
    "start": "2021-02",
-   "end": "2026-09",
+   "end": "2026-08",
    "a": {
-    "n": 68,
+    "n": 67,
     "start": "2021-02",
-    "end": "2026-09",
-    "total_return": 1.0932852762,
-    "cagr": 0.1392440781,
-    "ann_vol": 0.1056139408,
+    "end": "2026-08",
+    "total_return": 1.0882486736,
+    "cagr": 0.1409705279,
+    "ann_vol": 0.1063413574,
     "maxdd": -0.1011662465,
-    "sharpe_exbil": 0.9966514804
+    "sharpe_exbil": 1.0053762264
    },
    "b": {
-    "n": 68,
+    "n": 67,
     "start": "2021-02",
-    "end": "2026-09",
-    "total_return": 0.2187458814,
-    "cagr": 0.0355263301,
-    "ann_vol": 0.0346276902,
+    "end": "2026-08",
+    "total_return": 0.2226697734,
+    "cagr": 0.0366626804,
+    "ann_vol": 0.0347881557,
     "maxdd": -0.076532072,
-    "sharpe_exbil": 0.117858798
+    "sharpe_exbil": 0.151322231
    },
    "diff": {
-    "total_return": 0.8745393948,
-    "cagr": 0.103717748,
+    "total_return": 0.8655789002,
+    "cagr": 0.1043078475,
     "maxdd": -0.0246341745,
     "maxdd_note": "single path, no test",
-    "sharpe_exbil": 0.8787926824
+    "sharpe_exbil": 0.8540539954
    },
    "return_test": {
-    "nw_t": 2.9124415426,
+    "nw_t": 2.8881345707,
     "lags": 3,
-    "p_two_sided": 0.0035861532,
-    "detectable_ann_return_gap": 0.0861852313
+    "p_two_sided": 0.0038753404,
+    "detectable_ann_return_gap": 0.0873409914
    },
    "sharpe_test": {
-    "z": 2.0357708415,
-    "p_one_sided": 0.0208866858,
-    "se_hac_annual": 0.4348851692,
-    "detectable_sharpe_gap": 1.0813310405
+    "z": 1.9202019444,
+    "p_one_sided": 0.0274161981,
+    "p_two_sided": 0.0548323961,
+    "significant_5pct_two_sided": false,
+    "se_hac_annual": 0.4481298334,
+    "detectable_sharpe_gap": 1.1142635649
    },
    "power": {
-    "n": 68,
-    "detectable_sharpe_gap": 1.0813310405,
-    "text": "68 paired months can only detect a Sharpe gap of about 1.08 (one-sided 5%, 80% power)."
+    "n": 67,
+    "detectable_sharpe_gap": 1.1142635649,
+    "text": "67 paired months can only detect a Sharpe gap of about 1.11 (one-sided 5%, 80% power)."
    },
    "key": "minvar",
    "label": "LW MinVar",
    "primary": false
   },
   {
-   "n": 68,
+   "n": 67,
    "start": "2021-02",
-   "end": "2026-09",
+   "end": "2026-08",
    "a": {
-    "n": 68,
+    "n": 67,
     "start": "2021-02",
-    "end": "2026-09",
-    "total_return": 1.0932852762,
-    "cagr": 0.1392440781,
-    "ann_vol": 0.1056139408,
+    "end": "2026-08",
+    "total_return": 1.0882486736,
+    "cagr": 0.1409705279,
+    "ann_vol": 0.1063413574,
     "maxdd": -0.1011662465,
-    "sharpe_exbil": 0.9966514804
+    "sharpe_exbil": 1.0053762264
    },
    "b": {
-    "n": 68,
+    "n": 67,
     "start": "2021-02",
-    "end": "2026-09",
-    "total_return": 0.4584466133,
-    "cagr": 0.0688625463,
-    "ann_vol": 0.0658842203,
+    "end": "2026-08",
+    "total_return": 0.4687100826,
+    "cagr": 0.0712701374,
+    "ann_vol": 0.0661558168,
     "maxdd": -0.1264287762,
-    "sharpe_exbil": 0.5755419779
+    "sharpe_exbil": 0.6089291147
    },
    "diff": {
-    "total_return": 0.6348386629,
-    "cagr": 0.0703815318,
+    "total_return": 0.619538591,
+    "cagr": 0.0697003905,
     "maxdd": 0.0252625297,
     "maxdd_note": "single path, no test",
-    "sharpe_exbil": 0.4211095025
+    "sharpe_exbil": 0.3964471117
    },
    "return_test": {
-    "nw_t": 2.2802387378,
+    "nw_t": 2.2167363146,
     "lags": 3,
-    "p_two_sided": 0.022593533,
-    "detectable_ann_return_gap": 0.0737021147
+    "p_two_sided": 0.0266411157,
+    "detectable_ann_return_gap": 0.0750565517
    },
    "sharpe_test": {
-    "z": 1.2423958986,
-    "p_one_sided": 0.1070452641,
-    "se_hac_annual": 0.3414696328,
-    "detectable_sharpe_gap": 0.8490556575
+    "z": 1.1477064269,
+    "p_one_sided": 0.1255448886,
+    "p_two_sided": 0.2510897771,
+    "significant_5pct_two_sided": false,
+    "se_hac_annual": 0.3480325617,
+    "detectable_sharpe_gap": 0.8653742153
    },
    "power": {
-    "n": 68,
-    "detectable_sharpe_gap": 0.8490556575,
-    "text": "68 paired months can only detect a Sharpe gap of about 0.85 (one-sided 5%, 80% power)."
+    "n": 67,
+    "detectable_sharpe_gap": 0.8653742153,
+    "text": "67 paired months can only detect a Sharpe gap of about 0.87 (one-sided 5%, 80% power)."
    },
    "key": "erc",
    "label": "ERC",
@@ -545,7 +559,7 @@
    0.00013886,
    -0.01507607,
    0.0263426,
-   0.00241188
+   -0.00111227
   ],
   "core": [
    0.02761173,
@@ -615,7 +629,7 @@
    0.00013886,
    -0.01507607,
    0.0263426,
-   0.00241188
+   -0.00111227
   ],
   "standin_core": [
    0.02675271,
@@ -755,7 +769,7 @@
    0.00013886,
    -0.01507607,
    0.0263426,
-   0.00241188
+   -0.00111227
   ],
   "ew": [
    0.02714222,
@@ -825,7 +839,7 @@
    -0.01025309,
    0.00858956,
    0.03542211,
-   -0.00981492
+   null
   ],
   "minvar": [
    -0.00703582,
@@ -895,7 +909,7 @@
    -0.00938954,
    0.00541718,
    0.02531462,
-   -0.00320928
+   null
   ],
   "erc": [
    -0.00125223,
@@ -965,7 +979,7 @@
    -0.01075316,
    0.01040878,
    0.0387159,
-   -0.00698808
+   null
   ]
  },
  "curves": {
@@ -1038,7 +1052,7 @@
     2.06579475,
     2.03465068,
     2.08824867,
-    2.09328528
+    2.08592597
    ],
    "backbone": [
     1.02761173,
@@ -1108,218 +1122,11 @@
     2.18663547,
     2.1536696,
     2.21040286,
-    2.21573408
+    2.20794429
    ],
-   "ew": [
-    1.02714222,
-    1.04690648,
-    1.07938711,
-    1.09032173,
-    1.0961116,
-    1.09970794,
-    1.1170947,
-    1.09465828,
-    1.13128143,
-    1.10686956,
-    1.13376096,
-    1.10350113,
-    1.09725334,
-    1.11198989,
-    1.05468115,
-    1.05824982,
-    0.99272195,
-    1.04845744,
-    1.01822009,
-    0.95178059,
-    0.99783986,
-    1.04595078,
-    1.01268574,
-    1.0684641,
-    1.04397694,
-    1.05948172,
-    1.06691128,
-    1.05189191,
-    1.09536495,
-    1.12628153,
-    1.10558729,
-    1.07209458,
-    1.05210354,
-    1.116265,
-    1.1632471,
-    1.16245715,
-    1.19301402,
-    1.22224027,
-    1.18962887,
-    1.22995632,
-    1.23463276,
-    1.26299756,
-    1.27771023,
-    1.29970029,
-    1.28451833,
-    1.32505271,
-    1.29342999,
-    1.32426747,
-    1.3187611,
-    1.29058013,
-    1.28715277,
-    1.33376775,
-    1.37511345,
-    1.38754622,
-    1.41676252,
-    1.44792787,
-    1.46009657,
-    1.46540039,
-    1.47314173,
-    1.50867254,
-    1.50593625,
-    1.47338975,
-    1.55456147,
-    1.57252294,
-    1.55639973,
-    1.56976851,
-    1.62537303,
-    1.60942012
-   ],
-   "minvar": [
-    0.99296418,
-    0.98932713,
-    1.00423799,
-    1.00753274,
-    1.01396771,
-    1.01762441,
-    1.01886656,
-    1.01437053,
-    1.01502415,
-    1.01375607,
-    1.0194172,
-    1.00508039,
-    1.00583101,
-    0.99647552,
-    0.98041978,
-    0.97759371,
-    0.95844671,
-    0.97257174,
-    0.96457646,
-    0.94313014,
-    0.94139909,
-    0.96443528,
-    0.96298464,
-    0.98293046,
-    0.96617293,
-    0.98263449,
-    0.98197785,
-    0.97898635,
-    0.98169362,
-    0.98784054,
-    0.98779824,
-    0.98231895,
-    0.98097093,
-    0.99984789,
-    1.01265418,
-    1.01733392,
-    1.01725208,
-    1.03069833,
-    1.02226932,
-    1.02828183,
-    1.02641299,
-    1.03296119,
-    1.03976608,
-    1.05517891,
-    1.05162997,
-    1.05957332,
-    1.06493073,
-    1.07529139,
-    1.07635517,
-    1.07543958,
-    1.0722697,
-    1.07778776,
-    1.08533415,
-    1.0893564,
-    1.10076735,
-    1.10609114,
-    1.11437234,
-    1.12378639,
-    1.12825809,
-    1.14659142,
-    1.17022963,
-    1.17569872,
-    1.19529418,
-    1.19729953,
-    1.18605744,
-    1.19248253,
-    1.22266977,
-    1.21874588
-   ],
-   "erc": [
-    0.99874777,
-    0.99912193,
-    1.01918475,
-    1.03010117,
-    1.03260888,
-    1.03894571,
-    1.04495127,
-    1.03095821,
-    1.04122447,
-    1.03170038,
-    1.04491424,
-    1.02240614,
-    1.01998666,
-    1.01528287,
-    0.98027886,
-    0.98191683,
-    0.94765755,
-    0.97460451,
-    0.95460035,
-    0.91283936,
-    0.93064421,
-    0.97342223,
-    0.96029179,
-    1.0039307,
-    0.97977446,
-    1.00284467,
-    1.01084831,
-    0.99982206,
-    1.02040305,
-    1.04048735,
-    1.02709599,
-    1.0078342,
-    1.00132364,
-    1.04386647,
-    1.067385,
-    1.07063245,
-    1.08823988,
-    1.11215391,
-    1.09317139,
-    1.1120846,
-    1.11215259,
-    1.12373795,
-    1.13472233,
-    1.15978539,
-    1.14961004,
-    1.16191777,
-    1.1530407,
-    1.17556134,
-    1.17393837,
-    1.16427621,
-    1.1599489,
-    1.18664097,
-    1.21423691,
-    1.2239413,
-    1.24927033,
-    1.27278067,
-    1.28092827,
-    1.29292524,
-    1.30251512,
-    1.33706684,
-    1.36490267,
-    1.35280996,
-    1.40870721,
-    1.41461257,
-    1.39940102,
-    1.41396708,
-    1.46871008,
-    1.45844661
-   ]
+   "ew": null,
+   "minvar": null,
+   "erc": null
   },
   "growth_vs_core": {
    "months": [
@@ -1460,7 +1267,7 @@
     2.06579475,
     2.03465068,
     2.08824867,
-    2.09328528
+    2.08592597
    ],
    "core": [
     1.02761173,
@@ -1530,7 +1337,7 @@
     2.18216883,
     2.1492703,
     2.20588767,
-    2.211208
+    2.20343412
    ],
    "cumulative_excess": [
     0.0,
@@ -1600,7 +1407,7 @@
     -0.11637408,
     -0.11461962,
     -0.117639,
-    -0.11792273
+    -0.11750815
    ],
    "rolling_12m_excess": [
     null,
@@ -1740,7 +1547,7 @@
     0.0,
     -0.01507607,
     0.0,
-    0.0
+    -0.00111227
    ],
    "drawdown_subject": [
     0.0,
@@ -1810,7 +1617,7 @@
     0.0,
     -0.01507607,
     0.0,
-    0.0
+    -0.00111227
    ]
   },
   "drawdown": {
@@ -1882,7 +1689,7 @@
     0.0,
     -0.01507607,
     0.0,
-    0.0
+    -0.00111227
    ],
    "backbone": [
     0.0,
@@ -1952,218 +1759,11 @@
     0.0,
     -0.01507607,
     0.0,
-    0.0
+    -0.00111227
    ],
-   "ew": [
-    0.0,
-    0.0,
-    0.0,
-    0.0,
-    0.0,
-    0.0,
-    0.0,
-    -0.02008462,
-    0.0,
-    -0.02157895,
-    0.0,
-    -0.02668978,
-    -0.03220046,
-    -0.01920252,
-    -0.06974999,
-    -0.06660235,
-    -0.12439924,
-    -0.07523943,
-    -0.10190937,
-    -0.16051035,
-    -0.11988514,
-    -0.07745034,
-    -0.10679078,
-    -0.05759315,
-    -0.07919131,
-    -0.06551579,
-    -0.05896276,
-    -0.07221015,
-    -0.03386605,
-    -0.006597,
-    -0.02484974,
-    -0.05439099,
-    -0.07202349,
-    -0.01543179,
-    0.0,
-    -0.00067909,
-    0.0,
-    0.0,
-    -0.02668166,
-    0.0,
-    0.0,
-    0.0,
-    0.0,
-    0.0,
-    -0.01168113,
-    0.0,
-    -0.02386525,
-    -0.00059261,
-    -0.00474819,
-    -0.026016,
-    -0.02860259,
-    0.0,
-    0.0,
-    0.0,
-    0.0,
-    0.0,
-    0.0,
-    0.0,
-    0.0,
-    0.0,
-    -0.00181371,
-    -0.02338665,
-    0.0,
-    0.0,
-    -0.01025309,
-    -0.0017516,
-    0.0,
-    -0.00981492
-   ],
-   "minvar": [
-    -0.00703582,
-    -0.01067287,
-    0.0,
-    0.0,
-    0.0,
-    0.0,
-    0.0,
-    -0.00441278,
-    -0.00377126,
-    -0.00501585,
-    0.0,
-    -0.01406373,
-    -0.01332741,
-    -0.0225047,
-    -0.03825462,
-    -0.04102686,
-    -0.05980916,
-    -0.04595317,
-    -0.05379616,
-    -0.07483399,
-    -0.07653207,
-    -0.05393466,
-    -0.05535767,
-    -0.03579177,
-    -0.0522301,
-    -0.0360821,
-    -0.03672623,
-    -0.03966075,
-    -0.03700505,
-    -0.03097521,
-    -0.0310167,
-    -0.03639163,
-    -0.03771397,
-    -0.01919657,
-    -0.0066342,
-    -0.00204359,
-    -0.00212387,
-    0.0,
-    -0.00817795,
-    -0.00234452,
-    -0.0041577,
-    0.0,
-    0.0,
-    0.0,
-    -0.00336335,
-    0.0,
-    0.0,
-    0.0,
-    0.0,
-    -0.00085064,
-    -0.00379565,
-    0.0,
-    0.0,
-    0.0,
-    0.0,
-    0.0,
-    0.0,
-    0.0,
-    0.0,
-    0.0,
-    0.0,
-    0.0,
-    0.0,
-    0.0,
-    -0.00938954,
-    -0.00402322,
-    0.0,
-    -0.00320928
-   ],
-   "erc": [
-    -0.00125223,
-    -0.00087807,
-    0.0,
-    0.0,
-    0.0,
-    0.0,
-    0.0,
-    -0.01339111,
-    -0.00356648,
-    -0.01268087,
-    -3.543e-05,
-    -0.02157529,
-    -0.02389069,
-    -0.02839213,
-    -0.06189035,
-    -0.06032285,
-    -0.09310838,
-    -0.06732061,
-    -0.08646424,
-    -0.12642878,
-    -0.10938985,
-    -0.06845204,
-    -0.08101763,
-    -0.03925596,
-    -0.06237306,
-    -0.04029528,
-    -0.03263593,
-    -0.04318786,
-    -0.02349221,
-    -0.00427189,
-    -0.01708719,
-    -0.03552039,
-    -0.04175088,
-    -0.00103813,
-    0.0,
-    0.0,
-    0.0,
-    0.0,
-    -0.01706825,
-    -6.232e-05,
-    -1.19e-06,
-    0.0,
-    0.0,
-    0.0,
-    -0.00877347,
-    0.0,
-    -0.00764001,
-    0.0,
-    -0.00138059,
-    -0.00959978,
-    -0.01328084,
-    0.0,
-    0.0,
-    0.0,
-    0.0,
-    0.0,
-    0.0,
-    0.0,
-    0.0,
-    0.0,
-    0.0,
-    -0.00885976,
-    0.0,
-    0.0,
-    -0.01075316,
-    -0.0004563,
-    0.0,
-    -0.00698808
-   ]
+   "ew": null,
+   "minvar": null,
+   "erc": null
   },
   "common_window_excess": {
    "months": [
@@ -2373,7 +1973,7 @@
    1.08995422,
    0.98348873,
    1.08572574,
-   1.17672413
+   1.16538224
   ],
   "backbone": [
    null,
@@ -2443,7 +2043,7 @@
    1.05101723,
    0.92097455,
    1.04818033,
-   1.22963606
+   1.2190983
   ],
   "ew": [
    null,
@@ -2513,7 +2113,7 @@
    0.94515695,
    0.8734339,
    1.11463517,
-   1.25294838
+   null
   ],
   "minvar": [
    null,
@@ -2583,7 +2183,7 @@
    0.72948471,
    0.72492528,
    0.99130007,
-   1.04943841
+   null
   ],
   "erc": [
    null,
@@ -2653,7 +2253,7 @@
    1.16161875,
    1.11440111,
    1.42069929,
-   1.55426011
+   null
   ],
   "core": [
    null,
@@ -2723,7 +2323,7 @@
    1.15656455,
    1.02857615,
    1.15411291,
-   1.33475544
+   1.32432647
   ],
   "diff_vs_core": {
    "months": [
@@ -2864,9 +2464,9 @@
     -0.06661033,
     -0.04508742,
     -0.06838717,
-    -0.15803131
+    -0.15894423
    ],
-   "detectable_gap_36m": 0.586266403,
+   "detectable_gap_36m": 0.5840465631,
    "band_note": "± detectable Sharpe gap scaled to a 36-month window from the full paired HAC SE"
   }
  },
@@ -2909,8 +2509,8 @@
   {
    "year": 2026,
    "months": 9,
-   "subject": 0.1504034032,
-   "core": 0.1504034032,
+   "subject": 0.1463589639,
+   "core": 0.1463589639,
    "partial": true
   }
  ],
@@ -3053,7 +2653,7 @@
    0.00013886,
    -0.01507607,
    0.0263426,
-   0.00241188
+   -0.00111227
   ],
   "core": [
    0.02761173,
@@ -3123,10 +2723,10 @@
    0.00013886,
    -0.01507607,
    0.0263426,
-   0.00241188
+   -0.00111227
   ],
-  "correlation": 0.9057709034,
-  "beta": 0.6035132689
+  "correlation": 0.9058067091,
+  "beta": 0.6037190353
  },
  "turnover": {
   "months": [
@@ -3775,41 +3375,60 @@
    "kind": "drawdown_state",
    "regime": "Up",
    "months_total": 238,
+   "paired_months": 47,
+   "paired_window": "2021-02 to 2026-09",
+   "own_coverage": {
+    "subject": {
+     "k": 47,
+     "m": 238,
+     "status": "partly in window (47 of 238 months)"
+    },
+    "core": {
+     "k": 50,
+     "m": 238,
+     "status": "partly in window (50 of 238 months)"
+    },
+    "primary_null": {
+     "k": 47,
+     "m": 238,
+     "status": "partly in window (47 of 238 months)"
+    }
+   },
    "series": {
     "subject": {
      "coverage": {
       "k": 47,
-      "m": 238,
-      "status": "partly in window (47 of 238 months)"
+      "m": 47,
+      "status": "in window"
      },
-     "cumulative_return": 1.4966264607,
-     "ann_vol": 0.097628105,
-     "sharpe_exbil": 2.1229095756
+     "cumulative_return": 1.4878491446,
+     "ann_vol": 0.0978101476,
+     "sharpe_exbil": 2.1097423949
     },
     "core": {
      "coverage": {
-      "k": 50,
-      "m": 238,
-      "status": "partly in window (50 of 238 months)"
+      "k": 47,
+      "m": 47,
+      "status": "in window"
      },
-     "cumulative_return": 2.6521080208,
-     "ann_vol": 0.1201924505,
-     "sharpe_exbil": 2.408514527
+     "cumulative_return": 2.121107058,
+     "ann_vol": 0.1140830632,
+     "sharpe_exbil": 2.3424493719
     },
     "primary_null": {
      "coverage": {
       "k": 47,
-      "m": 238,
-      "status": "partly in window (47 of 238 months)"
+      "m": 47,
+      "status": "in window"
      },
-     "cumulative_return": 1.9377188022,
-     "ann_vol": 0.1110499453,
-     "sharpe_exbil": 2.2600628747
+     "cumulative_return": 1.9273907507,
+     "ann_vol": 0.1112401516,
+     "sharpe_exbil": 2.2480973906
     }
    },
    "vs_core_power": {
     "n": 47,
-    "detectable_sharpe_gap": 0.3203201547,
+    "detectable_sharpe_gap": 0.3187644574,
     "text": "47 paired months can only detect a Sharpe gap of about 0.32 (one-sided 5%, 80% power)."
    }
   },
@@ -3817,12 +3436,31 @@
    "kind": "drawdown_state",
    "regime": "Correction",
    "months_total": 101,
+   "paired_months": 20,
+   "paired_window": "2022-01 to 2026-03",
+   "own_coverage": {
+    "subject": {
+     "k": 20,
+     "m": 101,
+     "status": "partly in window (20 of 101 months)"
+    },
+    "core": {
+     "k": 20,
+     "m": 101,
+     "status": "partly in window (20 of 101 months)"
+    },
+    "primary_null": {
+     "k": 20,
+     "m": 101,
+     "status": "partly in window (20 of 101 months)"
+    }
+   },
    "series": {
     "subject": {
      "coverage": {
       "k": 20,
-      "m": 101,
-      "status": "partly in window (20 of 101 months)"
+      "m": 20,
+      "status": "in window"
      },
      "cumulative_return": -0.1311907303,
      "ann_vol": 0.0925461059,
@@ -3831,8 +3469,8 @@
     "core": {
      "coverage": {
       "k": 20,
-      "m": 101,
-      "status": "partly in window (20 of 101 months)"
+      "m": 20,
+      "status": "in window"
      },
      "cumulative_return": -0.2195691856,
      "ann_vol": 0.1956245892,
@@ -3841,8 +3479,8 @@
     "primary_null": {
      "coverage": {
       "k": 20,
-      "m": 101,
-      "status": "partly in window (20 of 101 months)"
+      "m": 20,
+      "status": "in window"
      },
      "cumulative_return": -0.1872758214,
      "ann_vol": 0.1537835532,
@@ -3859,12 +3497,31 @@
    "kind": "drawdown_state",
    "regime": "Bear",
    "months_total": 65,
+   "paired_months": 1,
+   "paired_window": "2022-09 to 2022-09",
+   "own_coverage": {
+    "subject": {
+     "k": 1,
+     "m": 65,
+     "status": "partly in window (1 of 65 months)"
+    },
+    "core": {
+     "k": 1,
+     "m": 65,
+     "status": "partly in window (1 of 65 months)"
+    },
+    "primary_null": {
+     "k": 1,
+     "m": 65,
+     "status": "partly in window (1 of 65 months)"
+    }
+   },
    "series": {
     "subject": {
      "coverage": {
       "k": 1,
-      "m": 65,
-      "status": "partly in window (1 of 65 months)"
+      "m": 1,
+      "status": "in window"
      },
      "cumulative_return": -0.0349486921,
      "ann_vol": null,
@@ -3873,8 +3530,8 @@
     "core": {
      "coverage": {
       "k": 1,
-      "m": 65,
-      "status": "partly in window (1 of 65 months)"
+      "m": 1,
+      "status": "in window"
      },
      "cumulative_return": -0.0953991397,
      "ann_vol": null,
@@ -3883,8 +3540,8 @@
     "primary_null": {
      "coverage": {
       "k": 1,
-      "m": 65,
-      "status": "partly in window (1 of 65 months)"
+      "m": 1,
+      "status": "in window"
      },
      "cumulative_return": -0.0719652588,
      "ann_vol": null,
@@ -3900,41 +3557,60 @@
    "kind": "vol_state",
    "regime": "Low vol",
    "months_total": 197,
+   "paired_months": 29,
+   "paired_window": "2021-08 to 2026-09",
+   "own_coverage": {
+    "subject": {
+     "k": 29,
+     "m": 197,
+     "status": "partly in window (29 of 197 months)"
+    },
+    "core": {
+     "k": 29,
+     "m": 197,
+     "status": "partly in window (29 of 197 months)"
+    },
+    "primary_null": {
+     "k": 29,
+     "m": 197,
+     "status": "partly in window (29 of 197 months)"
+    }
+   },
    "series": {
     "subject": {
      "coverage": {
       "k": 29,
-      "m": 197,
-      "status": "partly in window (29 of 197 months)"
+      "m": 29,
+      "status": "in window"
      },
-     "cumulative_return": 0.3629619327,
-     "ann_vol": 0.1212608962,
-     "sharpe_exbil": 0.8396748943
+     "cumulative_return": 0.3581702076,
+     "ann_vol": 0.1213928923,
+     "sharpe_exbil": 0.8267198935
     },
     "core": {
      "coverage": {
       "k": 29,
-      "m": 197,
-      "status": "partly in window (29 of 197 months)"
+      "m": 29,
+      "status": "in window"
      },
-     "cumulative_return": 0.4163270254,
-     "ann_vol": 0.1346782288,
-     "sharpe_exbil": 0.8892869088
+     "cumulative_return": 0.4113476862,
+     "ann_vol": 0.1348136487,
+     "sharpe_exbil": 0.8775319994
     },
     "primary_null": {
      "coverage": {
       "k": 29,
-      "m": 197,
-      "status": "partly in window (29 of 197 months)"
+      "m": 29,
+      "status": "in window"
      },
-     "cumulative_return": 0.3436791613,
-     "ann_vol": 0.128281123,
-     "sharpe_exbil": 0.7545164454
+     "cumulative_return": 0.3389552281,
+     "ann_vol": 0.1284009171,
+     "sharpe_exbil": 0.7424194779
     }
    },
    "vs_core_power": {
     "n": 29,
-    "detectable_sharpe_gap": 0.3904212041,
+    "detectable_sharpe_gap": 0.3898772748,
     "text": "29 paired months can only detect a Sharpe gap of about 0.39 (one-sided 5%, 80% power)."
    }
   },
@@ -3942,12 +3618,31 @@
    "kind": "vol_state",
    "regime": "High vol",
    "months_total": 196,
+   "paired_months": 39,
+   "paired_window": "2021-02 to 2024-08",
+   "own_coverage": {
+    "subject": {
+     "k": 39,
+     "m": 196,
+     "status": "partly in window (39 of 196 months)"
+    },
+    "core": {
+     "k": 42,
+     "m": 196,
+     "status": "partly in window (42 of 196 months)"
+    },
+    "primary_null": {
+     "k": 39,
+     "m": 196,
+     "status": "partly in window (39 of 196 months)"
+    }
+   },
    "series": {
     "subject": {
      "coverage": {
       "k": 39,
-      "m": 196,
-      "status": "partly in window (39 of 196 months)"
+      "m": 39,
+      "status": "in window"
      },
      "cumulative_return": 0.5358354668,
      "ann_vol": 0.0939790562,
@@ -3955,19 +3650,19 @@
     },
     "core": {
      "coverage": {
-      "k": 42,
-      "m": 196,
-      "status": "partly in window (42 of 196 months)"
+      "k": 39,
+      "m": 39,
+      "status": "in window"
      },
-     "cumulative_return": 0.8204194935,
-     "ann_vol": 0.1790942862,
-     "sharpe_exbil": 0.8963729132
+     "cumulative_return": 0.5612270067,
+     "ann_vol": 0.1758814247,
+     "sharpe_exbil": 0.7035047005
     },
     "primary_null": {
      "coverage": {
       "k": 39,
-      "m": 196,
-      "status": "partly in window (39 of 196 months)"
+      "m": 39,
+      "status": "in window"
      },
      "cumulative_return": 0.6490053158,
      "ann_vol": 0.1473629266,
@@ -3987,32 +3682,52 @@
    "name": "LTCM 1998",
    "start": "1998-07",
    "end": "1998-08",
+   "months_total": 2,
+   "paired_months": 0,
+   "paired_window": null,
+   "own_coverage": {
+    "subject": {
+     "k": 0,
+     "m": 2,
+     "status": "not in window"
+    },
+    "core": {
+     "k": 0,
+     "m": 2,
+     "status": "not in window"
+    },
+    "primary_null": {
+     "k": 0,
+     "m": 2,
+     "status": "not in window"
+    }
+   },
    "series": {
     "subject": {
      "coverage": {
       "k": 0,
-      "m": 2,
+      "m": 0,
       "status": "not in window"
      }
     },
     "core": {
      "coverage": {
       "k": 0,
-      "m": 2,
+      "m": 0,
       "status": "not in window"
      }
     },
     "primary_null": {
      "coverage": {
       "k": 0,
-      "m": 2,
+      "m": 0,
       "status": "not in window"
      }
     }
    },
    "vs_core_power": {
     "n": 0,
-    "text": "not in window"
+    "text": "core not in window"
    },
    "path": {
     "months": [
@@ -4034,32 +3749,52 @@
    "name": "Dot-com bear",
    "start": "2000-09",
    "end": "2002-09",
+   "months_total": 25,
+   "paired_months": 0,
+   "paired_window": null,
+   "own_coverage": {
+    "subject": {
+     "k": 0,
+     "m": 25,
+     "status": "not in window"
+    },
+    "core": {
+     "k": 0,
+     "m": 25,
+     "status": "not in window"
+    },
+    "primary_null": {
+     "k": 0,
+     "m": 25,
+     "status": "not in window"
+    }
+   },
    "series": {
     "subject": {
      "coverage": {
       "k": 0,
-      "m": 25,
+      "m": 0,
       "status": "not in window"
      }
     },
     "core": {
      "coverage": {
       "k": 0,
-      "m": 25,
+      "m": 0,
       "status": "not in window"
      }
     },
     "primary_null": {
      "coverage": {
       "k": 0,
-      "m": 25,
+      "m": 0,
       "status": "not in window"
      }
     }
    },
    "vs_core_power": {
     "n": 0,
-    "text": "not in window"
+    "text": "core not in window"
    },
    "path": {
     "months": [
@@ -4150,32 +3885,52 @@
    "name": "GFC",
    "start": "2007-11",
    "end": "2009-02",
+   "months_total": 16,
+   "paired_months": 0,
+   "paired_window": null,
+   "own_coverage": {
+    "subject": {
+     "k": 0,
+     "m": 16,
+     "status": "not in window"
+    },
+    "core": {
+     "k": 0,
+     "m": 16,
+     "status": "not in window"
+    },
+    "primary_null": {
+     "k": 0,
+     "m": 16,
+     "status": "not in window"
+    }
+   },
    "series": {
     "subject": {
      "coverage": {
       "k": 0,
-      "m": 16,
+      "m": 0,
       "status": "not in window"
      }
     },
     "core": {
      "coverage": {
       "k": 0,
-      "m": 16,
+      "m": 0,
       "status": "not in window"
      }
     },
     "primary_null": {
      "coverage": {
       "k": 0,
-      "m": 16,
+      "m": 0,
       "status": "not in window"
      }
     }
    },
    "vs_core_power": {
     "n": 0,
-    "text": "not in window"
+    "text": "core not in window"
    },
    "path": {
     "months": [
@@ -4239,32 +3994,52 @@
    "name": "2011 euro crisis / US downgrade",
    "start": "2011-05",
    "end": "2011-09",
+   "months_total": 5,
+   "paired_months": 0,
+   "paired_window": null,
+   "own_coverage": {
+    "subject": {
+     "k": 0,
+     "m": 5,
+     "status": "not in window"
+    },
+    "core": {
+     "k": 0,
+     "m": 5,
+     "status": "not in window"
+    },
+    "primary_null": {
+     "k": 0,
+     "m": 5,
+     "status": "not in window"
+    }
+   },
    "series": {
     "subject": {
      "coverage": {
       "k": 0,
-      "m": 5,
+      "m": 0,
       "status": "not in window"
      }
     },
     "core": {
      "coverage": {
       "k": 0,
-      "m": 5,
+      "m": 0,
       "status": "not in window"
      }
     },
     "primary_null": {
      "coverage": {
       "k": 0,
-      "m": 5,
+      "m": 0,
       "status": "not in window"
      }
     }
    },
    "vs_core_power": {
     "n": 0,
-    "text": "not in window"
+    "text": "core not in window"
    },
    "path": {
     "months": [
@@ -4295,32 +4070,52 @@
    "name": "Q4 2018",
    "start": "2018-10",
    "end": "2018-12",
+   "months_total": 3,
+   "paired_months": 0,
+   "paired_window": null,
+   "own_coverage": {
+    "subject": {
+     "k": 0,
+     "m": 3,
+     "status": "not in window"
+    },
+    "core": {
+     "k": 0,
+     "m": 3,
+     "status": "not in window"
+    },
+    "primary_null": {
+     "k": 0,
+     "m": 3,
+     "status": "not in window"
+    }
+   },
    "series": {
     "subject": {
      "coverage": {
       "k": 0,
-      "m": 3,
+      "m": 0,
       "status": "not in window"
      }
     },
     "core": {
      "coverage": {
       "k": 0,
-      "m": 3,
+      "m": 0,
       "status": "not in window"
      }
     },
     "primary_null": {
      "coverage": {
       "k": 0,
-      "m": 3,
+      "m": 0,
       "status": "not in window"
      }
     }
    },
    "vs_core_power": {
     "n": 0,
-    "text": "not in window"
+    "text": "core not in window"
    },
    "path": {
     "months": [
@@ -4345,32 +4140,52 @@
    "name": "COVID",
    "start": "2020-01",
    "end": "2020-03",
+   "months_total": 3,
+   "paired_months": 0,
+   "paired_window": null,
+   "own_coverage": {
+    "subject": {
+     "k": 0,
+     "m": 3,
+     "status": "not in window"
+    },
+    "core": {
+     "k": 0,
+     "m": 3,
+     "status": "not in window"
+    },
+    "primary_null": {
+     "k": 0,
+     "m": 3,
+     "status": "not in window"
+    }
+   },
    "series": {
     "subject": {
      "coverage": {
       "k": 0,
-      "m": 3,
+      "m": 0,
       "status": "not in window"
      }
     },
     "core": {
      "coverage": {
       "k": 0,
-      "m": 3,
+      "m": 0,
       "status": "not in window"
      }
     },
     "primary_null": {
      "coverage": {
       "k": 0,
-      "m": 3,
+      "m": 0,
       "status": "not in window"
      }
     }
    },
    "vs_core_power": {
     "n": 0,
-    "text": "not in window"
+    "text": "core not in window"
    },
    "path": {
     "months": [
@@ -4395,6 +4210,26 @@
    "name": "2022 inflation bear",
    "start": "2022-01",
    "end": "2022-09",
+   "months_total": 9,
+   "paired_months": 9,
+   "paired_window": "2022-01 to 2022-09",
+   "own_coverage": {
+    "subject": {
+     "k": 9,
+     "m": 9,
+     "status": "in window"
+    },
+    "core": {
+     "k": 9,
+     "m": 9,
+     "status": "in window"
+    },
+    "primary_null": {
+     "k": 9,
+     "m": 9,
+     "status": "in window"
+    }
+   },
    "series": {
     "subject": {
      "coverage": {
@@ -4472,6 +4307,26 @@
    "name": "2025 tariff shock",
    "start": "2025-02",
    "end": "2025-04",
+   "months_total": 3,
+   "paired_months": 3,
+   "paired_window": "2025-02 to 2025-04",
+   "own_coverage": {
+    "subject": {
+     "k": 3,
+     "m": 3,
+     "status": "in window"
+    },
+    "core": {
+     "k": 3,
+     "m": 3,
+     "status": "in window"
+    },
+    "primary_null": {
+     "k": 3,
+     "m": 3,
+     "status": "in window"
+    }
+   },
    "series": {
     "subject": {
      "coverage": {
@@ -4823,8 +4678,8 @@
   ]
  },
  "dsr": {
-  "recorded": "not defined (trial_count=1)",
-  "recorded_basis": "rf = 0 basis",
+  "recorded": "not defined (N = 1)",
+  "recorded_basis": null,
   "primary": null,
   "primary_basis": null,
   "corrected": null,
@@ -4841,13 +4696,13 @@
    "recorded_unit_note": "recorded DSR passed ANNUAL Sharpe into a monthly-scale formula",
    "source": "data/processed/hub/dsr_exbil_recompute.csv"
   },
-  "note": "Gate-first spec: N = 1, so no DSR is defined (PSR only). The #6 grid row for this spec is shown for reference (N = 72). No verdict changes: every method affected had already failed other gates."
+  "note": "Eligibility never rested on DSR: the gate-first spec has N = 1, so no DSR is defined and only PSR applies. The #6 grid row for this spec (N = 72) is shown for reference: 0.53 corrected (Sharpe ex-BIL), 1.00 as recorded."
  },
  "gates": [
   {
    "gate": "Leakage / timing",
    "value": "68 of 68 rows pass",
-   "outcome": "pass",
+   "outcome": "partial pass",
    "basis": "decision month before return month",
    "scope": "partial: feature cut-off not saved",
    "source": "data/processed/live/skew_managed_gatefirst_returns.csv"
@@ -4856,20 +4711,30 @@
    "gate": "Null comparison (hub recompute, Sharpe ex-BIL)",
    "null": "Backbone",
    "value": {
-    "diff": 0.1351355418,
-    "z": 0.9807296383,
-    "p_one_sided": 0.163363042
+    "diff": 0.1334554904,
+    "z": 0.971535931,
+    "p_one_sided": 0.1656407347,
+    "p_two_sided": 0.3312814695,
+    "significant_5pct_two_sided": false
    },
-   "power": "68 paired months can only detect a Sharpe gap of about 0.35 (one-sided 5%, 80% power).",
+   "power": "68 paired months can only detect a Sharpe gap of about 0.34 (one-sided 5%, 80% power).",
    "source": "hub_data.head_to_head"
   },
   {
    "gate": "DSR / C4",
-   "value": null,
-   "basis": "rf = 0 basis",
+   "value": "not defined (N = 1; PSR only)",
+   "basis": "gate-first spec, N = 1",
    "as_recorded": null,
    "error_note": null,
-   "rule": null
+   "rule": null,
+   "grid_reference": {
+    "trial": "SM_option_a_vt_L63_SL21_g0p5_realizedamaya_cvar5",
+    "n_trials": 72,
+    "dsr_exbil": 0.5331,
+    "as_recorded": 1.0,
+    "error_note": "Recorded value used an annual Sharpe in a monthly formula; corrected value shown."
+   },
+   "note": "Eligibility never rested on DSR: the gate-first spec has N = 1, so no DSR is defined and only PSR applies. The #6 grid row for this spec (N = 72) is shown for reference: 0.53 corrected (Sharpe ex-BIL), 1.00 as recorded."
   },
   {
    "gate": "Empirical gate (recorded criteria and tripwires)",
@@ -4885,5 +4750,60 @@
   "scope": "partial: feature cut-off not saved",
   "source": "data/processed/live/skew_managed_gatefirst_returns.csv"
  },
- "vintage_note": "Book 2 is the live refresh of the #6 spec. Its monthly returns equal the frozen research record month for month through 2026-08; the record ends with a partial 2026-09 (as of 2026-09-16), which the hub drops. The nulls differ: the record's backbone used cash 0."
+ "vintage_note": "Book 2 is the live refresh of the #6 spec. Its monthly returns equal the frozen research record month for month through 2026-08; the record ends with a partial 2026-09 (as of 2026-09-16), which the hub drops. The nulls differ: the record's backbone used cash 0.",
+ "admission": {
+  "subject": "book2",
+  "admitted_as": "Book 2 path/risk overlay on the vol-target backbone (Justina #6, PR #27), not a third book",
+  "gate_date": "2026-09-23 (ET)",
+  "rule": "CIO gate for #6: beat the unconditional vol-target backbone (primary null) on Sharpe AND on the risk path, with leakage tests green, 5 bp costs, N ≥ 100 names, NW t and DSR reported, and no third book.",
+  "stage2_book_rule_note": "The stage-2 CIO Book rule (one-way turnover ≤ 100%/yr; CAGR above the static core at 10 bp) applies only to NEW candidates. Book 2 was admitted earlier under the #6 gate and is not re-judged by it; for reference it trails the core by about 1.1 pts CAGR.",
+  "criteria": [
+   {
+    "criterion": "Leakage / timing tests",
+    "recorded": "PR #27 leakage green (24/24)",
+    "result": "pass"
+   },
+   {
+    "criterion": "Sharpe vs unconditional vol-target backbone (primary null), rf = 0 as recorded",
+    "recorded": "1.280 vs 1.059",
+    "result": "pass"
+   },
+   {
+    "criterion": "Risk path vs the backbone (max drawdown)",
+    "recorded": "−10.1% vs −20.1%",
+    "result": "pass"
+   },
+   {
+    "criterion": "NW t vs the backbone (reported)",
+    "recorded": "−0.80 (no return edge; Sharpe gain comes from lower vol)",
+    "result": "reported, not a pass/fail gate"
+   },
+   {
+    "criterion": "DSR / trial count (reported)",
+    "recorded": "≈1.0 at 72 grid trials as recorded; corrected 0.53 ex-BIL (unit bug)",
+    "result": "reported; eligibility never rested on DSR (gate-first spec N = 1, PSR only)"
+   },
+   {
+    "criterion": "Breadth and costs",
+    "recorded": "min_names = 100; 5 bp one-way",
+    "result": "pass"
+   },
+   {
+    "criterion": "No third book",
+    "recorded": "overlay on Book 2; static core + Book 2 stay the two books",
+    "result": "pass"
+   }
+  ],
+  "verdict": "PASS as overlay (Book-2 path/risk overlay only; not a third book)",
+  "sources": [
+   {
+    "document": "Quant gate memo for the skewness-managed overlay (#6 / PR #27), shortlist workspace; working-file name kept out of the repo",
+    "sha256": "892ef108afbcbd0ecaf8c8290b385f163e3119a457c1824232c757c8f4e0253e"
+   },
+   {
+    "document": "config/strategies.yaml (vol_target_option_a: gate-first knobs locked)"
+   }
+  ],
+  "source": "data/processed/hub/book2_admission.json"
+ }
 }

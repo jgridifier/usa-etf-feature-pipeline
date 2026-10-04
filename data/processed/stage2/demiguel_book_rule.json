@@ -15,7 +15,7 @@
       "rule": "a",
       "test": "One-way turnover at most 100% a year on the dev window",
       "value": 1.78,
-      "limit": 1.00,
+      "limit": 1.0,
       "unit": "one-way turnover per year",
       "outcome": "FAIL"
     },
@@ -28,9 +28,12 @@
       "diff_at_5bp_one_way": -0.042,
       "cost_bp_one_way": 10,
       "core_basis": "stand-in static core 70% IVV / 20% QQQ / 10% IJR (Addendum 2 benchmark list)",
-      "outcome": "FAIL"
+      "outcome": "FAIL",
+      "core_label": "stand-in core only"
     }
   ],
   "cost_convention": "The dev engine charged 5 bp per unit of two-way (L1) turnover, which is 10 bp one-way. Turnover figures quoted earlier (e.g. 355%/yr) were two-way; one-way is half of that (178%/yr for S_k5). The holdout charges 5 bp one-way.",
-  "fix_variants_note": "All three fix variants (S_q_cv, S_ridge_cv, S_q_ridge_cv) also fail rules (a) and (b)."
+  "fix_variants_note": "All three fix variants (S_q_cv, S_ridge_cv, S_q_ridge_cv) also fail rules (a) and (b).",
+  "core_label": "stand-in core only",
+  "core_label_note": "DeMiguel's dev window (2019-11 …) predates the live core (from 2020-11), so its Book-rule figures exist against the stand-in core only (CIO and Quant approved, 2026-10-04)."
 }

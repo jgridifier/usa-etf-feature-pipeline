@@ -1,0 +1,120 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CIO note: stage 2 wrap-up (Oct 2026) | USA ETF Lab</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,wght@0,400;0,500;0,600;1,400;1,600&family=Playfair+Display:wght@700;900&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/style.css">
+<link rel="icon" type="image/svg+xml" href="../favicon.svg">
+
+</head>
+<body>
+<header class="site-header"><div class="site-header-inner"><a class="brand" href="../index.html">USA ETF Lab</a><button type="button" class="nav-toggle" aria-expanded="false" aria-controls="site-nav" aria-label="Open menu"><span class="nav-toggle-bars" aria-hidden="true"></span></button><nav class="site-nav" id="site-nav" aria-label="Main"><a href="../index.html">Home</a><a href="../index.html#/books">Books</a><a href="../index.html#/runs">Runs</a><a href="../explorer/index.html">Explorer</a><a href="../methods/index.html" class="is-active">Methods</a></nav></div></header>
+<main class="page">
+<section class="band"><div class="band-inner note-body"><p><span class="badge">Note for Jared</span></p><h1>Stage 2 wrap-up: nothing beat the static core</h1>
+<p><em>CIO · 4 Oct 2026 · Research on an experimental ETF panel. Not investment advice.</em></p>
+<h2>1. Bottom line</h2>
+<p>Across stage 1 and stage 2, nothing on this panel beat the static core after costs.</p>
+<p>The static core (70/20/10 VOO/QQQM/IJR) stays the default.</p>
+<p>The Books are unchanged, and no candidate is Book-eligible.</p>
+<h2>2. What we tested and why</h2>
+<p>Stage 1 logged 12 trials in the third-book search. Some are re-runs of the same paper, so that's trials, not papers. Counting every registry on the panel gives about 117. None of the 12 passed; most failed and several were ruled void. The covariance-only allocators drifted toward low-vol funds, bonds or cash and lost to capped equal weight (EW).</p>
+<p>Stage 2 asked a narrower question: can a method that uses <em>return</em> information, anchored to EW or to the core, do better? Every candidate had a pre-declared grid, a cap of 6 logged variants, and a placebo.</p>
+<div class="table-scroll" tabindex="0" role="region" aria-label="table"><table><thead><tr><th scope="col">Method</th><th scope="col">Paper</th><th scope="col">Verdict</th></tr></thead><tbody><tr><td>DeMiguel tilt</td><td>DeMiguel, Martín-Utrera, Nogales &amp; Uppal (2020), <em>RFS</em></td><td>Forward-track only; fails Book rule</td></tr><tr><td>KWZ blend</td><td>Kan, Wang &amp; Zhou (2022), <em>Mgmt Sci</em></td><td>Dropped before any run</td></tr><tr><td>A: core-anchored tilt</td><td>Deng, Gao &amp; Wang (2026) + Antulov-Fantulin, Kolm &amp; Šikić (2025)</td><td>Forward-only; no edge</td></tr><tr><td>B: core/cash timing</td><td>Guo &amp; Wachter (2025)</td><td>Forward-only; can't tell</td></tr></tbody></table></div>
+<p>Key numbers (dev window, Sharpe above BIL):</p>
+<div class="table-scroll" tabindex="0" role="region" aria-label="table"><table><thead><tr><th scope="col">Method</th><th scope="col">vs its null</th><th scope="col">vs the core</th></tr></thead><tbody><tr><td>DeMiguel</td><td>0.633 vs EW 0.600; CI −0.10 to +0.16</td><td>CAGR 12.3% vs 16.6% at 10 bp</td></tr><tr><td>A (variant A6)</td><td>Placebo p 0.78</td><td>0.853 vs 0.887; CI −0.12 to +0.06; CAGR −0.7 pts at 10 bp</td></tr><tr><td>B (variant B3)</td><td>Placebo p 0.33</td><td>0.823 vs 0.822; CI −0.21 to +0.20; CAGR −2.7 pts at 10 bp</td></tr></tbody></table></div>
+<p>CI is the block-bootstrap 95% interval for the Sharpe gap. To qualify for the holdout, its lower bound had to be above zero.</p>
+<p>Windows differ by method:</p>
+<ul><li>
+DeMiguel and B: Nov 2019 to Sep 2026 (83 months), against the stand-in core (IVV/QQQ/IJR).
+</li><li>
+A: Nov 2020 to Sep 2026 (71 months), against the live core.
+</li></ul>
+<p>KWZ was dropped because, under estimation noise, it falls back to minimum variance, not EW. It also can't be computed on 45–96 funds with a 36-month lookback.</p>
+<p>The older Tu &amp; Zhou (2011) blend toward EW would avoid that problem, but it predates your 2020-or-later rule. It's set aside unless you choose to waive the rule for it.</p>
+<h2>3. Why it failed, by failure family</h2>
+<p><strong>Risk-only drift (stage 1).</strong> The three NLS minimum-variance runs, Spectral RP, Schur and EPO estimated only risk. They either piled into cash, short bonds or USMV/EFAV, or ended up close to EW and still lost to it. EPO went to about 84% bonds.</p>
+<p><strong>Forecast noise and turnover.</strong> FT-MED's return forecast drove about 404% a year turnover and a −58% max drawdown.</p>
+<p>DeMiguel had the same problem in a milder form. Its tilt choice jumped between the edges of its grid in 88% of months, and turnover was 178% a year one-way. Smoothing, a quadratic cost penalty and ridge shrinkage all lowered Sharpe without lowering turnover. Its placebo p of 0.08 is suggestive, not conclusive.</p>
+<p><strong>No signal.</strong> Regime-dual, VCFC and RR-ERC never found a usable signal. RR-ERC's overlay fell back to plain ERC at every rebalance.</p>
+<p><strong>Anchored, but nothing to add (A).</strong> Anchoring to the core fixed the drift, but tilting away from the core cost about as much as the signal earned.</p>
+<p>The selected variant, A6, effectively made one decision. Its cost penalty froze the October 2020 portfolio (QQQ 51%, USMV 16%, SUSA 14%) and traded in only 24 of 71 months. A placebo with shuffled return estimates did as well or better (p 0.78). The paper's 10-industry result also didn't replicate in any of 8 settings.</p>
+<p><strong>Cutting risk, not adding return (B).</strong> A long-only core/cash switch can't hold more than 100% of the core. So it can only beat the core's CAGR by sidestepping drawdowns.</p>
+<p>B3 had a shallower max drawdown than the core (−19.1% vs −25.6%), but it de-risked late in COVID. Its correlation with Book 2 is 0.95, so it mostly reproduces the vol-target logic we already hold.</p>
+<h2>4. What "forward-only" means for each candidate</h2>
+<div class="table-scroll" tabindex="0" role="region" aria-label="table"><table><thead><tr><th scope="col">Candidate</th><th scope="col">Reading</th><th scope="col">Why</th></tr></thead><tbody><tr><td>DeMiguel</td><td>Research line</td><td>Fails the Book rule on turnover and CAGR, whatever a holdout shows</td></tr><tr><td>A</td><td>No edge</td><td>Placebo p 0.78; paper didn't replicate</td></tr><tr><td>B</td><td>Can't tell</td><td>CI centred on zero; replication held up; every variant had a negative CAGR gap</td></tr></tbody></table></div>
+<p><strong>Power caveat.</strong> These candidates move 0.95–0.99 with the core. Over 71–83 months, the dev window can only reliably detect Sharpe gaps of about 0.17–0.35. A true +0.1 edge would qualify only 12–16% of the time.</p>
+<p>So for B, "forward-only" means the data can't tell, not that B has no edge. For A, the evidence of no edge comes from the placebo and the failed replication, not from the CI.</p>
+<h2>5. What we kept</h2>
+<p><strong>The 2008–2016 holdout is unspent.</strong> It's our last unused stretch of history, and it can be used honestly only once.</p>
+<p>We decided not to run it for DeMiguel, because a pass couldn't become a Book. It's lightly used, not pristine: four stage-1 trials touched those years. That gets disclosed whenever it's used.</p>
+<p><strong>The frozen protocol carries over:</strong></p>
+<ul><li>
+Dev on the spent window, with every variant logged.
+</li><li>
+One pre-registered holdout run.
+</li><li>
+DSR counted at the number of candidates actually taken to the run, shown next to 13 (the 12 stage-1 trials plus the next one, as on the trial-13 DSR feasibility page) and about 117.
+</li><li>
+C1 as a one-sided Memmel test at p ≤ 0.20.
+</li><li>
+The Book rule: one-way turnover at or below 100% a year, and a positive CAGR edge over the core with costs doubled to 10 bp.
+</li></ul>
+<p><strong>Forward tracking.</strong> DeMiguel, A and B can be paper-traded against the live core from Oct 2026. That costs nothing and adds evidence each month.</p>
+<h2>6. The decision for Jared</h2>
+<p><strong>The Books today</strong> (Feb 2021 to Sep 2026, net of costs):</p>
+<div class="table-scroll" tabindex="0" role="region" aria-label="table"><table><thead><tr><th scope="col">Book</th><th scope="col">CAGR</th><th scope="col">Sharpe ex-BIL</th></tr></thead><tbody><tr><td>Book 1 (core)</td><td>15.0%</td><td>0.77</td></tr><tr><td>Backbone</td><td>15.1%</td><td>0.86</td></tr><tr><td>Book 2</td><td>13.9%</td><td>0.99</td></tr></tbody></table></div>
+<p>Book 2's Sharpe edge over the vol-target backbone isn't significant (p ≈ 0.30–0.38).</p>
+<p>These figures use the corrected Sep 2026 core month (−0.11%, full month).</p>
+<p><strong>Option 1: stop allocator tweaks on these ETFs.</strong> Keep the core and the Books, and run the forward tracker. This needs only a monthly scoring job and a hub page.</p>
+<p><strong>Option 2: go back to the growth-plus-extra-alpha mandate, framed as a semis timing question.</strong> The question is whether rotating into and out of semiconductors, via XSD, earns anything over the core.</p>
+<p>XSD is the only semis ETF in the research panel, with history from Feb 2006. That means it covers the unspent holdout.</p>
+<p>What it would need:</p>
+<ul><li>
+One pre-registered rule.
+</li><li>
+A judgement against the core on CAGR at 10 bp, not just Sharpe.
+</li><li>
+Acceptance that it's a single-sector bet with large drawdowns.
+</li></ul>
+<p>It would spend the holdout, and it may well fail.</p>
+<p><strong>Option 3: costs, tax and implementation efficiency.</strong> This means rebalancing bands, cash drag, and tax-aware rebalancing of the core and Books.</p>
+<p>It's not a return edge, but any gain is mechanical rather than statistical, so it doesn't need the holdout. It would need your tax and account constraints.</p>
+<p><strong>My lean: Option 1 now, plus Option 2 as the next research question.</strong> Semis timing is the growth-alpha question you set at the start, and XSD's history covers the unspent holdout. That makes it the one candidate that could actually become a Book. Option 3 is cheap and mechanical, so it can run alongside without using the holdout. Either way, I'm not promising an edge.</p>
+<h2>7. Sources</h2>
+<p><strong>Papers</strong></p>
+<ul><li>
+DeMiguel, Martín-Utrera, Nogales &amp; Uppal (2020), <em>RFS</em> 33(5) 2180–2222. <a href="https://doi.org/10.1093/rfs/hhz085">doi:10.1093/rfs/hhz085</a>
+</li><li>
+Kan, Wang &amp; Zhou (2022), <em>Management Science</em> 68(3) 2047–2068. <a href="https://doi.org/10.1287/mnsc.2021.3989">doi:10.1287/mnsc.2021.3989</a>
+</li><li>
+Tu &amp; Zhou (2011), <em>JFE</em> 99(1) 204–215. <a href="https://doi.org/10.1016/j.jfineco.2010.08.013">doi:10.1016/j.jfineco.2010.08.013</a>
+</li><li>
+Deng, Gao &amp; Wang (2026), arXiv:2606.13697. <a href="https://arxiv.org/abs/2606.13697">arxiv.org/abs/2606.13697</a>
+</li><li>
+Antulov-Fantulin, Kolm &amp; Šikić (2025), SSRN 5782702. <a href="https://doi.org/10.2139/ssrn.5782702">doi:10.2139/ssrn.5782702</a>
+</li><li>
+Guo &amp; Wachter (2025), "Forecast-Agnostic Portfolios", SSRN 5808182. <a href="https://papers.ssrn.com/sol3/papers.cfm?abstract_id=5808182">ssrn.com</a>
+</li><li>
+Bailey &amp; López de Prado (2014), <em>JPM</em> 40(5) 94–107. <a href="https://doi.org/10.3905/jpm.2014.40.5.094">doi:10.3905/jpm.2014.40.5.094</a>
+</li><li>
+Memmel (2003), <em>Finance Letters</em> 1, 21–23.
+</li><li>
+Hood &amp; Raughtigan (2025), "Volatility Targeting Is Trendy", <em>JPM</em> 52(1). <a href="https://papers.ssrn.com/sol3/papers.cfm?abstract_id=4773781">SSRN 4773781</a>
+</li></ul>
+<p><strong>Project notes</strong></p>
+<ul><li>
+<a href="https://jgridifier.github.io/usa-etf-feature-pipeline/methods/dsr_feasibility_trial13.html">Trial-13 DSR feasibility</a>
+</li><li>
+Stage-2 plan, pre-registration with Addenda 1–2, robustness appendix, family-2 dev report, and the DeMiguel teaching page.
+</li></ul><p class="dl"><a href="stage2_wrap.md">Markdown source</a> · <a href="../methods/index.html#notes">All notes</a></p></div></section>
+</main>
+<footer class="site-footer">
+<p>Research only; not investment advice; experimental panel; no performance guarantees.</p>
+<p class="muted">Static GitHub Pages · Research only</p>
+</footer>
+
+<script src="../assets/nav.js" defer></script>
+</body>
+</html>

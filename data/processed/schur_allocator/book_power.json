@@ -8,17 +8,17 @@
   "window": "2021-02..2026-09",
   "n_months": 68,
   "detectable_gap_min": 0.6421816003427059,
-  "detectable_gap_max": 0.860182932298488,
+  "detectable_gap_max": 0.8549748813523294,
   "comparisons": {
     "backbone": {
       "label": "Backbone",
       "n_months": 68,
-      "se_hac_monthly": 0.08401173567063493,
-      "se_hac_annual": 0.2910251892271725,
-      "sharpe_gap_annual": -0.29499240290965756,
-      "detectable_gap_annual": 0.7236268167927169,
-      "z": -1.013631856723537,
-      "p_one_sided": 0.844620774601325
+      "se_hac_monthly": 0.08349370576431735,
+      "se_hac_annual": 0.28923068099200816,
+      "sharpe_gap_annual": -0.2901124430356971,
+      "detectable_gap_annual": 0.7191648171789767,
+      "z": -1.0030486462939017,
+      "p_one_sided": 0.8420813047553172
     },
     "book1_static_option_a": {
       "label": "Book 1",
@@ -33,12 +33,12 @@
     "book2": {
       "label": "Book 2",
       "n_months": 68,
-      "se_hac_monthly": 0.09986564823143182,
-      "se_hac_annual": 0.3459447533352818,
-      "sharpe_gap_annual": -0.4311326836938914,
-      "detectable_gap_annual": 0.860182932298488,
-      "z": -1.246247210103075,
-      "p_one_sided": 0.89366317408479
+      "se_hac_monthly": 0.09926100314463536,
+      "se_hac_annual": 0.34385020131352506,
+      "sharpe_gap_annual": -0.42456018120833267,
+      "detectable_gap_annual": 0.8549748813523294,
+      "z": -1.234724247903568,
+      "p_one_sided": 0.8915334258282457
     }
   }
 }

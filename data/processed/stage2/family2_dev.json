@@ -1,0 +1,166 @@
+{
+  "id": "stage2_family2_dev",
+  "status": "forward-only (Addendum 3 §1.3)",
+  "turnover_convention": "textbook one-way, ½·Σ|Δw| per year (Addendum 3 E2); L1 (two-way) shown in brackets",
+  "core_versions": {
+    "live": "live static core 70/20/10 VOO/QQQM/IJR (from 2020-11)",
+    "standin": "stand-in core 70/20/10 IVV/QQQ/IJR (sensitivity; from 2019-11)"
+  },
+  "candidates": [
+    {
+      "id": "A6",
+      "candidate": "A",
+      "name": "Deng–Gao–Wang tilt plus the Antulov-Fantulin–Kolm–Šikić tracking-error layer (one candidate)",
+      "spec": {
+        "Q": "sigma",
+        "ref": "core",
+        "te": 0.03,
+        "corecap": 0.8,
+        "kappa": 25.0
+      },
+      "selected": true,
+      "qualifies": false,
+      "caution": "degenerate: holds the Oct 2020 weights",
+      "caution_basis": "Label per PM review of #55. Saved figures: one-way turnover 12%/yr and correlation 0.99 with the live core (A_dev_results.json).",
+      "window": "2020-11 to 2026-09",
+      "months": 71,
+      "sharpe_exbil": 0.8531,
+      "cagr": 0.1658,
+      "maxdd": -0.2693,
+      "turnover_one_way": 0.1178,
+      "turnover_l1": 0.2357,
+      "vs_live_core": {
+        "window": "2020-11 to 2026-09",
+        "sharpe_diff": -0.0335,
+        "cagr_diff": -0.0071,
+        "cagr_diff_10bp": -0.0071,
+        "sharpe_gap_ci": [
+          -0.1228,
+          -0.0345,
+          0.0575
+        ],
+        "cagr_diff_footnote": "−0.71 pp from A_dev_results.json (−0.705 at 5 bp, −0.712 at 10 bp) supersedes the −0.73 in Addendum 3 and the live-core recheck, which was a transcription error."
+      },
+      "vs_standin_core": {
+        "window": "2020-11 to 2026-09",
+        "sharpe_diff": -0.0321,
+        "cagr_diff": -0.0069,
+        "cagr_diff_10bp": -0.007,
+        "sharpe_gap_ci": [
+          -0.121,
+          -0.033,
+          0.0583
+        ]
+      },
+      "placebo_p": 0.78,
+      "corr_core": 0.99,
+      "book_rule": {
+        "turnover": "pass (12% one-way ≤ 100%)",
+        "cagr_10bp": "fail (gap below 0 at 10 bp)"
+      }
+    },
+    {
+      "id": "B3",
+      "candidate": "B",
+      "name": "Guo–Wachter core-vs-cash timing",
+      "spec": {
+        "preds": [
+          "tsmom"
+        ],
+        "sign": "theory",
+        "tau": 0.02
+      },
+      "selected": true,
+      "qualifies": false,
+      "caution": "0.95 correlated with Book 2",
+      "caution_basis": "corr_book2 = 0.950 over 68 months (B_dev_results.json)",
+      "window": "2019-11 to 2026-09",
+      "months": 83,
+      "sharpe_exbil": 0.8234,
+      "cagr": 0.1405,
+      "maxdd": -0.1912,
+      "turnover_one_way": 0.747,
+      "turnover_l1": 1.4941,
+      "vs_live_core": {
+        "window": "2020-11 to 2026-09",
+        "months": 71,
+        "sharpe_diff": 0.0781,
+        "cagr_diff": -0.0132,
+        "cagr_diff_10bp": -0.0139,
+        "sharpe_gap_ci": [
+          -0.1186,
+          0.0528,
+          0.2687
+        ]
+      },
+      "vs_standin_core": {
+        "window": "2019-11 to 2026-09",
+        "months": 83,
+        "sharpe_diff": 0.001,
+        "cagr_diff": -0.026,
+        "cagr_diff_10bp": -0.0268,
+        "sharpe_gap_ci": [
+          -0.2078,
+          -0.0135,
+          0.1969
+        ]
+      },
+      "placebo_p": 0.329,
+      "corr_book2": 0.95,
+      "book_rule": {
+        "turnover": "pass (75% one-way ≤ 100%)",
+        "cagr_10bp": "fail (gap below 0 at 10 bp)"
+      }
+    }
+  ],
+  "benchmarks": {
+    "live_core_2020_11": {
+      "T": 71,
+      "sharpe_exbil": 0.8865325395756275,
+      "cagr": 0.17284630647647337,
+      "vol": 0.16150213526498713,
+      "maxdd": -0.2556568362560586
+    },
+    "standin_core_2020_11": {
+      "T": 71,
+      "sharpe_exbil": 0.8851424758761894,
+      "cagr": 0.17270938482132014,
+      "vol": 0.16165085581633962,
+      "maxdd": -0.2560119721640908
+    },
+    "standin_core_2019_11": {
+      "T": 83,
+      "sharpe_exbil": 0.8223682524267493,
+      "cagr": 0.16649347132030745,
+      "vol": 0.17387446237654913,
+      "maxdd": -0.256011972164091
+    }
+  },
+  "sources": [
+    {
+      "file": "stage2_code/family2/results/A_dev_results.json",
+      "sha256": "b24707cb6b9a3d052ad6a2caf2d1493d86046a93871037f1af78973d23661e50"
+    },
+    {
+      "file": "stage2_code/family2/results/B_dev_results.json",
+      "sha256": "aa2d369d3fbbbdaba44dbc8d3e4ff81d0cfaf15e2f5c5c1f589441801be0c121"
+    },
+    {
+      "file": "stage2_code/family2/results/family2_dev_variant_log.csv",
+      "sha256": "49a9a4e0772bf67870c069a649501d09b74d63a4a3356489759df79da98282bb"
+    },
+    {
+      "file": "stage2_code/family2/results/family2_manifest.sha256",
+      "sha256": "0f65d5ec7e2a0dbce049f0b248107f7c3ce1e22168424570e7ecc7d5f4683cda"
+    },
+    {
+      "file": "Addendum 3 (data/processed/stage2/stage2_holdout_addendum3.md) §1.3, E2, E3",
+      "sha256": "47234cbc5f1af5beb9a859ccb56da52dfb28cb1164a507b6025a60f3994756df"
+    },
+    {
+      "file": "data/processed/stage2/stage2_livecore_recheck.md (correction to Addendum 3 E4)",
+      "sha256": "930692cdd2f03e5a5024226a0abb3f17d02d26d86d20f6c841d1adc7740c12ff"
+    }
+  ],
+  "live_core_note": "Family-2 code rebuilt the live core from the complete-month panel, so these live-core figures already use the corrected 2026-09 month and stand (Quant live-core recheck, a correction to Addendum 3 E4; data/processed/stage2/stage2_livecore_recheck.md)."
+}
