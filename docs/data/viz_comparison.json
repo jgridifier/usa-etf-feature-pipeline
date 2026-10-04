@@ -1,5 +1,6 @@
 {
   "source": "strategy_comparison.csv",
+  "window": "2021-02 to 2026-08 (67 months; m3_p2_core_rotate 2026-09 awaits a re-run on the complete-month panel)",
   "rows": [
     {
       "strategy_id": "score_rotate_xsd",

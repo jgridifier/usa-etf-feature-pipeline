@@ -46,6 +46,22 @@
             return node;
           };
         }
+        if (hints.pointTooltip) {
+          // Scatter points: subject name plus each coordinate with its own label.
+          option.tooltip.formatter = point => {
+            if (!point || !Array.isArray(point.value)) return '';
+            const node = document.createElement('div');
+            const title = document.createElement('strong');
+            title.textContent = point.name;
+            node.appendChild(title);
+            hints.pointTooltip.forEach((label, i) => {
+              const line = document.createElement('div');
+              line.textContent = `${label}: ${format(point.value[i])}`;
+              node.appendChild(line);
+            });
+            return node;
+          };
+        }
         chart = globalThis.echarts.init(element, 'hub', {renderer: 'svg'});
         chart.setOption(option);
         window.addEventListener('resize', () => chart.resize());

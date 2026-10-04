@@ -196,6 +196,21 @@ def link_e4(html: str) -> str:
     return html[:j] + note + html[j:]
 
 
+A6_NOTE = ('Lab note: −0.71 pp (−0.705 at 5 bp, −0.712 at 10 bp) from A_dev_results.json supersedes −0.73, '
+           'a transcription error (Quant).')
+A6_MARKERS = {'addendum3': "A6's gap is −0.73 pp against the live core.", 'recheck': 'its gap is −0.73 pp'}
+
+
+def note_a6(html: str, which: str) -> str:
+    """Lab note after the list item carrying A6's −0.73 pp gap (the pinned text itself is not edited)."""
+    i = html.find(A6_MARKERS[which])
+    if i < 0:
+        raise SystemExit(f'{which}: A6 −0.73 pp line not found; cannot place the A6 lab note')
+    j = html.find('</li>', i) + len('</li>')
+    note = f'<li class="lab-link a6-note" aria-label="Lab note">{escape(A6_NOTE)}</li>'
+    return html[:j] + note + html[j:]
+
+
 def build_recheck(page_shell, write_page, docs: Path) -> bool:
     if not RECHECK_SRC.exists():
         return False
@@ -203,7 +218,7 @@ def build_recheck(page_shell, write_page, docs: Path) -> bool:
     content = ('<article class="prose stage2">' f'<h1>{escape(RECHECK_TITLE)}</h1>'
                + _header(RECHECK_SHA256, 'data/processed/stage2/PROVENANCE.md')
                + '<p><a href="stage2_addendum3.html">Addendum 3</a> · <a href="stage2_robustness.html">Stage 2 robustness appendix</a></p>'
-               + render_markdown(body) + '</article>')
+               + note_a6(render_markdown(body), 'recheck') + '</article>')
     write_page(RECHECK_PAGE, page_shell(RECHECK_TITLE, content, prefix='../', active='methods/index.html', extra_head=STYLE))
     return True
 
@@ -218,7 +233,7 @@ def build_addendum3(page_shell, write_page, docs: Path) -> bool:
              + '</p>')
     content = ('<article class="prose stage2">' f'<h1>{escape(ADDENDUM3_TITLE)}</h1>'
                + _header(ADDENDUM3_SHA256, 'data/processed/stage2/PROVENANCE.md') + links
-               + link_e4(anchor_first_ruling(render_markdown(body))) + '</article>')
+               + note_a6(link_e4(anchor_first_ruling(render_markdown(body))), 'addendum3') + '</article>')
     write_page(ADDENDUM3_PAGE, page_shell(ADDENDUM3_TITLE, content, prefix='../', active='methods/index.html', extra_head=STYLE))
     return True
 

@@ -183,7 +183,7 @@
       return;
     }
     var head = ['Book', 'AnnReturn', 'AnnVol', 'MaxDD', 'Sharpe', 'NW t vs A', 'Stance'];
-    var html = '<div class="table-scroll" tabindex="0" role="region" aria-label="Strategy comparison"><table><caption>Strategy comparison</caption><thead><tr>';
+    var html = '<div class="table-scroll" tabindex="0" role="region" aria-label="Strategy comparison"><table><caption>Strategy comparison' + (payload.window ? ', ' + String(payload.window).replace(/[<>&]/g, '') : '') + '</caption><thead><tr>';
     head.forEach(function (h) { html += '<th scope="col">' + h + '</th>'; });
     html += '</tr></thead><tbody>';
     payload.rows.forEach(function (r) {

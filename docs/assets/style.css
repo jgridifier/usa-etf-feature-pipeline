@@ -151,6 +151,11 @@ button:focus-visible,
   cursor: pointer;
   padding: 0.25rem;
   color: var(--muted);
+  /* 44px tap target (WCAG 2.5.5); bars stay centred. */
+  min-width: 44px;
+  min-height: 44px;
+  align-items: center;
+  justify-content: center;
 }
 .nav-toggle:hover { color: var(--ink); }
 .nav-toggle-bars,
@@ -172,7 +177,7 @@ button:focus-visible,
 .nav-toggle-bars::after  { top:  5px; }
 
 @media (max-width: 640px) {
-  .nav-toggle { display: block; }
+  .nav-toggle { display: inline-flex; }
   .site-nav {
     display: none;
     position: absolute;

@@ -20,6 +20,7 @@ interface CompRow {
 interface CompPayload {
   rows: CompRow[]
   source?: string
+  window?: string
 }
 
 /** Order: live books first (static_option_a, vol_target_option_a), then optional sleeve last */
@@ -119,7 +120,7 @@ export function ComparisonTable() {
         </table>
         {data.source && (
           <div className="px-4 py-2 text-2xs text-muted bg-raised border-t border-border">
-            Source: <code>{data.source}</code> · Live books only
+            Source: <code>{data.source}</code> · Live books only{data.window ? ` · ${data.window}` : ''}
           </div>
         )}
       </div>

@@ -33,6 +33,9 @@ def main_text(raw):
 def figures(value):
     # Dates and numeric fragments embedded in identifiers are labels, not figures.
     value = re.sub(r'\b\d{4}-\d{2}(?:-\d{2})?\b', '', value)
+    # Section references (Addendum 3 §1.4) and literature citations (Newey and West 1987) are labels too.
+    value = re.sub(r'§\d+(?:\.\d+)*', '', value)
+    value = re.sub(r'\b(?:West|Wolf) \(?\d{4}\)?', '', value)
     return set(re.findall(r'(?<![\w.])[+−-]?\d+(?:\.\d+)?%?(?!\w|\.\d)',value))
 
 
@@ -42,7 +45,7 @@ def allowed_numbers(value):
     if isinstance(value,list):
         return set().union(*(allowed_numbers(v) for v in value))
     if isinstance(value,(int,float)) and not isinstance(value,bool):
-        result = {hub.num(value),hub.pct(value)}
+        result = {hub.num(value),hub.pct(value),hub.pp(value).split()[0]}
         if int(value)==value: result.add(hub.integer(value))
         return result
     # Recorded verdicts, power sentences, dates and source identifiers are saved
@@ -61,8 +64,12 @@ def test_rebuild_and_every_visible_figure_from_json(built,id):
         archive = json.loads((ROOT/'apps/pages/src/data/archive_verdicts.json').read_text())
         inputs += [manifest,dict(hub.Counter(c['badge'] for c in archive['cards']))]
         inputs += [json.loads(hub.DEMIGUEL.read_text())]
+        inputs += [json.loads(hub.FAMILY2.read_text())]  # A6/B3 forward-tracked table
+        inputs += [hub.load('subjects/backbone')]  # Backbone own- vs common-window footnote
     else:
         inputs += [next(s for s in manifest['subjects'] if s['id']==id)]
+    # Trial-count copy (12 vs ~117, per-registry counts) is shared by every page.
+    inputs += [manifest.get('trial_counts')]
     allowed = allowed_numbers(inputs)
     actual = figures(main_text(built[path]))
     assert actual <= allowed, actual-allowed
@@ -83,9 +90,9 @@ def test_leaderboard_contract(built):
     assert raw.index(data['common_window']['label']) < raw.index('<table')
     assert data['benchmark'] in main_text(raw)
     ranked = re.search(r'<tbody id="ranked-body">(.*?)</tbody>',raw,re.S)[1]
-    rows = re.findall(r'<tr data-subject="([^"]+)".*?</tr>',ranked,re.S)
+    rows = re.findall(r'<tr[^>]*data-subject="([^"]+)".*?</tr>',ranked,re.S)
     assert rows == [r['id'] for r in sorted(data['rows'],key=lambda r:r['cagr_diff'],reverse=True)]
-    benchmark = re.search(r'<tr data-subject="book1".*?</tr>',ranked,re.S)[0]
+    benchmark = re.search(r'<tr class="benchmark" data-subject="book1".*?</tr>',ranked,re.S)[0]
     assert '<td>—</td>' in benchmark and 'benchmark (zero line)' in benchmark
     void = re.search(r'<table id="void-table">(.*?)</table>',raw,re.S)[1]
     assert 'Sharpe' not in void and 'DSR' not in void
@@ -127,7 +134,8 @@ def test_subject_order_slots_and_power(built,id):
     assert re.search(r'<section[^>]*><h2>(.*?)</h2>',raw)[1]=='Result vs the static core'
     parser = ChartParser(); parser.feed(raw)
     assert [s['id'] for s in parser.slots]==[f'chart-{n}' for n in range(1,17)]
-    assert 'open' in parser.slots[0] and all('open' not in s for s in parser.slots[1:])
+    # PM item: every subject chart starts collapsed (phones scroll past summaries, not 16 open charts).
+    assert parser.slots and all('open' not in s for s in parser.slots)
     assert raw.count('<summary>Data table</summary>')==len(parser.charts)
     d = hub.load('subjects/'+id)
     comparisons = [c for c in d['vs_core'].values() if c] + d['vs_nulls']
@@ -165,7 +173,7 @@ def test_dsr_display(built):
     d = hub.load('subjects/book2')['dsr']
     primary = hub.num(d['grid_reference']['dsr_exbil'])
     recorded = hub.num(d['grid_reference']['dsr_rf0_recorded'])
-    dsr_table = re.search(r'<table><caption>DSR</caption>.*?</table>',raw,re.S)[0]
+    dsr_table = re.search(r'<table><caption>DSR[^<]*</caption>.*?</table>',raw,re.S)[0]
     assert dsr_table.index(primary) < dsr_table.index(recorded+' (as recorded)')
     assert d['grid_reference']['error_note'] in main_text(raw)
     # Book 2's DSR note (from #53): eligibility never rested on DSR (N = 1, PSR only).
@@ -184,7 +192,8 @@ def test_null_safe_chart_inputs_and_generic_subjects():
         d[key] = None
     raw = hub.subject_charts(d)
     assert raw.count('class="hub-chart"')==16
-    assert 'Not saved for this run: Source: data/processed/schur_allocator/weights.csv' in raw
+    assert 'Not saved for this run (checked data/processed/schur_allocator/weights.csv).' in raw
+    assert 'Beta —' not in raw and '(checked —' not in raw
 
 
 def test_demiguel_forward_tracked_from_data(built):

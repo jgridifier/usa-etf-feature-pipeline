@@ -141,7 +141,8 @@ PUBLISHED_SHA256 = {
     'docs/data/vol_target_oos_returns.csv': 'a0e76aa34212821d4cad5b5dd6d473696af4997139129078afa0279cceb452c6',
     'docs/data/viz_metrics.json': 'b00ae1db0d390f52834c25811676a0e15dd3fde22266d770e7b4021f0bd42993',
     # Re-pinned 2026-10-01: audit-null stance quotes the live Book 2 Sharpe (1.00); label 'VT' -> 'Backbone'.
-    'docs/data/viz_comparison.json': 'dc777418b4ec6aeeb426d6c2c31fa10e5e65823e75e4fcd75543618f84cd3eb9',
+    # Re-pinned 2026-10-04 (#55): adds 'window' ("2021-02 to 2026-08 …") until m3_p2_core_rotate's 2026-09 re-run; rows unchanged.
+    'docs/data/viz_comparison.json': '5d6383d439e0129b5d1547a29a1b6b4c9259c0a3047e4148272186fd8e59862c',
     # Re-pinned 2026-10-01: archive.epo_anchored_trend appended (EPO card on the Archive tab); everything else
     # is unchanged, see test_site_sharpe_only_gains_epo_archive_rows (previous pin 1e72c305…3f52fde).
     'data/processed/cash_null_audit/site_sharpe.json': 'c8ef2ed867944fa05a1f2c5887756ead65bfb7a8e08d9dd489d552b0b02f66e0',

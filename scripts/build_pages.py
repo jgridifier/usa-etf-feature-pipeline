@@ -89,6 +89,18 @@ def regenerate_comparison() -> None:
     short.to_csv(DATA / 'shortlist_comparison.csv', index=False, date_format='%Y-%m-%d')
 
 
+def comparison_window_label() -> str:
+    """'2021-02 to 2026-08 (67 months; m3_p2_core_rotate 2026-09 awaits a re-run)' from strategy_comparison.csv."""
+    rows = read_csv('strategy_comparison.csv')
+    if not rows:
+        return ''
+    start = min(r['start_date'] for r in rows)[:7]
+    end = max(r['end_date'] for r in rows)[:7]
+    n = max(int(float(r['n_months'])) for r in rows if r.get('n_months'))
+    note = '; m3_p2_core_rotate 2026-09 awaits a re-run on the complete-month panel' if end < '2026-09' else ''
+    return f'{start} to {end} ({n} months{note})'
+
+
 def copy_cio_inputs() -> None:
     DATA.mkdir(parents=True, exist_ok=True)
     for src, dest_name in CIO_COPIES:
@@ -359,6 +371,7 @@ def build_viz() -> None:
         })
     write_json('viz_comparison.json', {
         'source': 'strategy_comparison.csv' if (DATA / 'strategy_comparison.csv').exists() else 'shortlist_comparison.csv',
+        'window': comparison_window_label(),
         'rows': rows_out,
     })
 
@@ -684,7 +697,7 @@ def build_books() -> None:
   <div class="band-inner">
     <div class="section-head">
       <h2>Comparison</h2>
-      <p class="lede">From <code>strategy_comparison.csv</code> (live Books 1–2; optional XSD sleeve may appear). Mobile-friendly table.</p>
+      <p class="lede">From <code>strategy_comparison.csv</code>, @@CMP_WINDOW@@ (live Books 1–2; optional XSD sleeve may appear). Mobile-friendly table.</p>
     </div>
     <div id="comparison-table" class="comparison-host" data-viz="comparison"></div>
   </div>
@@ -731,6 +744,7 @@ def build_books() -> None:
     if snapshot.exists():
         content += csv_table(snapshot)
     content += '</div></section>'
+    content = content.replace('@@CMP_WINDOW@@', escape(comparison_window_label()))
     write_page('books.html', page_shell(
         'Books / strategies', content, active='books.html', include_charts=True,
     ))

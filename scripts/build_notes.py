@@ -24,6 +24,9 @@ NOTES = [
 ]
 # Pinned notes: published verbatim; the build refuses a copy whose bytes differ (CIO + CoS approved 2026-10-04).
 NOTE_SHA256 = {'stage2_wrap': '2efdf27b345d152cdb111406ea10dd4167617d0f47b21591bf68308063814491'}
+# Build-time banners: injected above the note body; the .md sources are not edited (PM, 2026-10-04).
+SEPT_FIX_BANNER = 'Superseded: Book 2 Sharpe ex-BIL is 0.99 after the September full-month fix.'
+NOTE_BANNERS = {'book2_reframe': SEPT_FIX_BANNER, 'book2_lw2008_drawdowns': SEPT_FIX_BANNER}
 
 
 def _inline(text: str) -> str:
@@ -147,6 +150,7 @@ def build_notes(page_shell, write_page) -> None:
         content = (
             '<section class="band"><div class="band-inner note-body">'
             '<p><span class="badge">Note for Jared</span></p>'
+            + (f'<p class="callout note-banner" role="note">{escape(NOTE_BANNERS[slug])}</p>' if slug in NOTE_BANNERS else '')
             + body
             + f'<p class="dl"><a href="{slug}.md">Markdown source</a> · '
             '<a href="../methods/index.html#notes">All notes</a></p>'
