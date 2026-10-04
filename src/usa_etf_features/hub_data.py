@@ -88,6 +88,9 @@ SUBJECTS = [
          trials=None, prereg=None, pages=dict(books='index.html#/books')),
     dict(id='book2', name='Book 2 (vol-target backbone × gate-first skew overlay)', group='live_book', label='LIVE BOOK',
          card=None, related='skew_overlay',
+         # CIO verdict sentence (2026-10-04). Figures: live_figures.json books window 2021-02..2026-09 (MaxDD, Sharpe ex-BIL, CAGR
+         # vs Book 1 = the core) and vs_nulls backbone Sharpe test (two-sided p 0.33). Checked by tests/test_hub_verdicts.py.
+         verdict_text='Live book. Admitted as a drawdown-control overlay under its gate-first rule. Max drawdown −10.1% vs −25.6% for the core, and Sharpe ex-BIL 0.99 vs 0.77, but CAGR 13.9% vs 15.0%. Its Sharpe edge over the vol-target backbone is not significant.',
          series=dict(file=_f('live', 'skew_managed_gatefirst_returns.csv'), col='r_method', turnover='turnover'),
          nulls=[dict(key='backbone', label='Backbone', col='r_null_a', primary=True),
                 dict(key='ew', label='Equal weight', col='r_null_c'),
@@ -843,7 +846,7 @@ def compute_subject(root, subject, ctx):
         id=subject['id'], name=subject['name'], group=subject['group'], label=label, card=subject.get('card'),
         related=subject.get('related'), pages=subject.get('pages', {}),
         verdict=dict(label=(verdict or {}).get('verdict_label') or label,
-                     text=prose((verdict or {}).get('verdict_line') or (card or {}).get('verdict')),
+                     text=prose(subject.get('verdict_text') or (verdict or {}).get('verdict_line') or (card or {}).get('verdict')),
                      detail=prose((card or {}).get('detail')),
                      void_reason=(card or {}).get('void_reason') if void else None,
                      banner='Reported for transparency; the test design was void.' if void else None),

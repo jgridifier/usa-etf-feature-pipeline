@@ -11,7 +11,7 @@
  },
  "verdict": {
   "label": "LIVE BOOK",
-  "text": null,
+  "text": "Live book. Admitted as a drawdown-control overlay under its gate-first rule. Max drawdown −10.1% vs −25.6% for the core, and Sharpe ex-BIL 0.99 vs 0.77, but CAGR 13.9% vs 15.0%. Its Sharpe edge over the vol-target backbone is not significant.",
   "detail": null,
   "void_reason": null,
   "banner": null

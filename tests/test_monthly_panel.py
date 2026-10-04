@@ -141,11 +141,13 @@ PUBLISHED_SHA256 = {
     'docs/data/vol_target_oos_returns.csv': 'a0e76aa34212821d4cad5b5dd6d473696af4997139129078afa0279cceb452c6',
     'docs/data/viz_metrics.json': 'b00ae1db0d390f52834c25811676a0e15dd3fde22266d770e7b4021f0bd42993',
     # Re-pinned 2026-10-01: audit-null stance quotes the live Book 2 Sharpe (1.00); label 'VT' -> 'Backbone'.
-    # Re-pinned 2026-10-04 (#55): adds 'window' ("2021-02 to 2026-08 …") until m3_p2_core_rotate's 2026-09 re-run; rows unchanged.
-    'docs/data/viz_comparison.json': '5d6383d439e0129b5d1547a29a1b6b4c9259c0a3047e4148272186fd8e59862c',
+    # Re-pinned 2026-10-04 (#55 after #56): m3_p2_core_rotate 2026-09 restored (68 months) plus the 'window' label
+    # ("2021-02 to 2026-09 (68 months)"); rows identical to main's 0797179 copy.
+    'docs/data/viz_comparison.json': '7a5bc24c5edf66bb141bcdfdd09f257d36dd62a7752126db79149632150829e9',
     # Re-pinned 2026-10-01: archive.epo_anchored_trend appended (EPO card on the Archive tab); everything else
     # is unchanged, see test_site_sharpe_only_gains_epo_archive_rows (previous pin 1e72c305…3f52fde).
-    'data/processed/cash_null_audit/site_sharpe.json': 'c8ef2ed867944fa05a1f2c5887756ead65bfb7a8e08d9dd489d552b0b02f66e0',
+    # Re-pinned 2026-10-04: m3_p2_core_rotate 2026-09 restored from its complete-month re-run (comparison Sharpes over 68 months).
+    'data/processed/cash_null_audit/site_sharpe.json': '7620da2c56250f430b59182f83a52aaae7a76fd347f3789fae126826c6d6d9d0',
     'data/processed/nonlinear_shrinkage_gmv_v3/composition_tripwire.csv': '672e1661f238d4699574cc94bec50be44fbe5677bae3c8286316b771ccecbf66',
     'data/processed/nonlinear_shrinkage_gmv_v3/coverage_gaps.csv': 'a4d825ec2855d73d02c2b1ce22fa278c17fe35e06d55cee7b3a5eb719f9e9346',
     'data/processed/nonlinear_shrinkage_gmv_v3/final_month_unpriced.csv': '0c20686dc1794a0e4a08650c9914589a09da7a1f20ac0bf6e84271dbad935068',
@@ -161,7 +163,8 @@ PUBLISHED_SHA256 = {
     'data/processed/live/skew_managed_gatefirst_state.csv': 'd1f3eeb9f469bc94b8de9b3c7b572a3f25421a285ef06def43ffc2e12b4feac1',
     'data/processed/live/skew_managed_gatefirst_summary.csv': '0e95eab5d021042331a0aa1a131e6e879a76711530c2ea230219d6d489d35ad2',
     'data/processed/live/skew_managed_gatefirst_weights.csv': 'cd66db8cd45f12d17ab10a199275d5249b401f637e4d1e2a31172cd447368a92',
-    'data/processed/live/strategy_returns.csv': '6cfa365d6d6d1812bc31845c3e643cdbae55f932297702b38b87f59386ad87d1',
+    # Re-pinned 2026-10-04: m3_p2_core_rotate 2026-09 cell restored from its re-run (only that cell changed).
+    'data/processed/live/strategy_returns.csv': '6894c538852f3e329e4c68aca6a79c0354b085ff02480e0f28df0fed7ba2f628',
     'data/processed/live/vol_target_monthly_weights.csv': '1b54802c6feeedf8ea42d2609202a456fede2b46f70431081801d1bc2bc44f2a',
     'data/processed/live/vol_target_oos_returns.csv': 'a0e76aa34212821d4cad5b5dd6d473696af4997139129078afa0279cceb452c6',
     'data/processed/live/vol_target_oos_summary.csv': 'dee50a537e650f15ee680e6aa60279ab98d1127aa30188b4ae4bf1bd36cda09d',
@@ -181,10 +184,12 @@ PUBLISHED_SHA256 = {
     'docs/data/cio_book_shortlist/run_latest/strategy_registry_used.csv': 'fa8cf2898b5ab45fb4e9578f0cade53e93bba43d04e13ffe9c10eed543bb030d',
     'docs/data/cio_book_shortlist/run_latest/strategy_diagnostics.csv': 'adaf7de3b3e266c3b1b30ca4935ead92b9447a2276dd856f0e9d004a4e288f21',
     'docs/data/cio_book_shortlist/run_latest/suggested_weights.csv': '708152bca4373923f7ab198b70fc1b5c8f57b7a0d99994102b6bfd6b6154b544',
-    'docs/data/cio_book_shortlist/run_latest/strategy_comparison.csv': '3f207d7f4c8c14f18d21d1de839240671c7e1005eb8521f6a5db961c8179e564',
+    # Re-pinned 2026-10-04: m3_p2_core_rotate 2026-09 restored from its re-run (68-month comparison).
+    'docs/data/cio_book_shortlist/run_latest/strategy_comparison.csv': '0bd0484264493325a22dbd6b72b0d739fbafcb37f888aa08dbe4041e7b9ba4dc',
     'docs/data/growth_alpha_adj_close.csv': '6af174a5a0f9096e68e22a9a25695ba770c9877e1c761abe121432835b7c6d5c',
     'docs/data/growth_panel_history_coverage.csv': '01fc48143a73a22a0a8fea0464bcf969fa2b07d1703a40548579d48ade36a7d4',
-    'docs/data/strategy_comparison.csv': '3f207d7f4c8c14f18d21d1de839240671c7e1005eb8521f6a5db961c8179e564',
+    # Re-pinned 2026-10-04: m3_p2_core_rotate 2026-09 restored from its re-run (68-month comparison).
+    'docs/data/strategy_comparison.csv': '0bd0484264493325a22dbd6b72b0d739fbafcb37f888aa08dbe4041e7b9ba4dc',
     'docs/data/strategy_diagnostics.csv': 'adaf7de3b3e266c3b1b30ca4935ead92b9447a2276dd856f0e9d004a4e288f21',
     'docs/data/suggested_weights.csv': '708152bca4373923f7ab198b70fc1b5c8f57b7a0d99994102b6bfd6b6154b544',
     'docs/data/shortlist_comparison.csv': '8c5aa6c1852ede1461f4509c583ca912015da498bc955aa1f515d03b51930d16',
@@ -207,7 +212,7 @@ def test_site_sharpe_only_gains_epo_archive_rows():
     assert list(site['archive'])[-1] == 'epo_anchored_trend'
     del site['archive']['epo_anchored_trend']
     before = (json.dumps(site, indent=2) + '\n').encode()
-    assert hashlib.sha256(before).hexdigest() == 'b6a7b6b43e95f7a0f7060ee26ad0aedfdb27be1e733ca417a9cc5408630d8523'  # re-pinned 2026-10-04: 2026-09 live row rebuilt from the complete-month panel
+    assert hashlib.sha256(before).hexdigest() == '24b7b84da26f9acaf5c68386a3f6f42d3b29d399277f7bbad444825687e2c92c'  # re-pinned 2026-10-04: 2026-09 live row rebuilt from the complete-month panel; m3_p2_core_rotate 2026-09 restored from its re-run (68 months)
 
 
 def test_books_page_data_through_last_complete_month():

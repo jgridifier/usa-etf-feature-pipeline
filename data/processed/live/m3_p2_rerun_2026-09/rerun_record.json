@@ -1,0 +1,38 @@
+{
+ "strategy_id": "m3_p2_core_rotate",
+ "month": "2026-09",
+ "restored_return": -0.00234032951068012,
+ "was": -0.0023403295106801,
+ "turnover_rerun": 0.1564734990085025,
+ "turnover_kept": 0.15647350606986052,
+ "other_months_checked": 179,
+ "max_abs_return_diff_other_months": 1.592258416782677e-08,
+ "tolerance": 1e-07,
+ "code_commit": "85002a84ff4c9bd1ac34146ee8b1593c7d878ff5",
+ "code_note": "M3/P2 path unchanged since the original refresh 111fbc7 (only the disabled EPO adapter was added).",
+ "code_sha256": {
+  "src/usa_etf_features/strategy_registry.py": "01c4c66636b4a589e189ad0eb65ebdcf6e729de5ec21f87d21ba39f24defa8dd",
+  "src/usa_etf_features/walkforward.py": "741e93354fb4f5e1b99955fcff8364307d7ad71802224faee8d23e70de465a99",
+  "src/usa_etf_features/portfolio.py": "e61b73d66d51c85048b0dbbf947d0d52609612529302d70bf85913ed5fa68bb8",
+  "src/usa_etf_features/scores.py": "1c32ab5d9c93594c10720bb2c02ddc4203e1f1f38ae5c5e17053dfac4d348806",
+  "src/usa_etf_features/features.py": "fd02a88156e46fcf2954f3b354c4f31199b54fbd46462dc937750ace3860ec49",
+  "src/usa_etf_features/rotation.py": "5a37c11a185e7d2aafb41b96b3176e5f7a656b1d873e86fb6aa76a712c9b9103",
+  "src/usa_etf_features/universe.py": "6ca84a350293f5adca0c3bb73da4e3275004e978ac3f0b4a5f8bb235c23169ff",
+  "src/usa_etf_features/vol_target.py": "b0936e97b04adaf04fc92f8a877d79d4929deceee694068a24152bd3f1fd7ef0",
+  "src/usa_etf_features/cli.py": "a56a65322471e393869ca7783530b2c523c0a961a540eda50b474ad293add2f6"
+ },
+ "function_source_sha256": {
+  "strategy_registry._m3_returns": "5f4c234c65bfe38dbbe5821c36fd2197cd395592ea3632abadb74a061502aee3",
+  "walkforward.walkforward_optimization_tables": "7a4a09d7303f04f0add581eed640a7370c7675804b7b3fe97b67c59f22ef6c54"
+ },
+ "inputs_sha256": {
+  "/workspace/investments/growth_alpha_adj_close.csv": "6af174a5a0f9096e68e22a9a25695ba770c9877e1c761abe121432835b7c6d5c",
+  "/workspace/investments/usa_universe_categorized.csv": "63d81888c0402e1fdf9ac9bfa62dc819adadacb1ed3b2b9c5f547445ce9f528a",
+  "data/processed/live/m3_p2_rerun_2026-09/registry_m3_p2_only.yaml": "91f0875e7e777713aa9bc5a91f4a0cad43d227318fab56e833b9d36a3b6042a4"
+ },
+ "output_sha256": {
+  "data/processed/live/m3_p2_rerun_2026-09/strategy_returns.csv": "be37c1eff43493e3035941e5272f5e61dee242a6ee6bdcaaad777000da5676c0"
+ },
+ "command": "PYTHONPATH=src python -m usa_etf_features.cli run-strategies --walkforward --prices /workspace/investments/growth_alpha_adj_close.csv --universe /workspace/investments/usa_universe_categorized.csv --registry data/processed/live/m3_p2_rerun_2026-09/registry_m3_p2_only.yaml --out-dir <tmp>",
+ "prices_last_date": "2026-09-30"
+}
