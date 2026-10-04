@@ -20,7 +20,10 @@ NOTES = [
     ('allocator_candidates', 'CIO note: candidates for the 100+ ETF allocator (30 Sep 2026)', 'published', ''),
     ('book2_lw2008_drawdowns', 'Quant note: Book 2 vs the vol-target backbone (Sharpe test and drawdowns, Oct 2026)', 'published', ''),
     ('book2_reframe', 'CIO note: Book 2, the drawdown-controlled version of the same core (Oct 2026)', 'published', ''),
+    ('stage2_wrap', 'CIO note: stage 2 wrap-up (Oct 2026)', 'published', ''),
 ]
+# Pinned notes: published verbatim; the build refuses a copy whose bytes differ (CIO + CoS approved 2026-10-04).
+NOTE_SHA256 = {'stage2_wrap': '2efdf27b345d152cdb111406ea10dd4167617d0f47b21591bf68308063814491'}
 
 
 def _inline(text: str) -> str:
@@ -133,7 +136,13 @@ def build_notes(page_shell, write_page) -> None:
     for slug, title, status, _ in NOTES:
         if status != 'published':
             continue
-        md = (NOTES_DIR / f'{slug}.md').read_text(encoding='utf-8')
+        path = NOTES_DIR / f'{slug}.md'
+        if slug in NOTE_SHA256:
+            import hashlib
+            got = hashlib.sha256(path.read_bytes()).hexdigest()
+            if got != NOTE_SHA256[slug]:
+                raise SystemExit(f'notes/{slug}.md sha256 {got} != pinned {NOTE_SHA256[slug]}; not published')
+        md = path.read_text(encoding='utf-8')
         body = md_to_html(md)
         content = (
             '<section class="band"><div class="band-inner note-body">'

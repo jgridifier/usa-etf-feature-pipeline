@@ -84,6 +84,8 @@
    "sharpe_test": {
     "z": -2.5192686581,
     "p_one_sided": 0.9941200555,
+    "p_two_sided": 0.011759889,
+    "significant_5pct_two_sided": true,
     "se_hac_annual": 0.1973168546,
     "detectable_sharpe_gap": 0.4906233986
    },
@@ -138,6 +140,8 @@
    "sharpe_test": {
     "z": -2.2057542788,
     "p_one_sided": 0.9862993954,
+    "p_two_sided": 0.0274012092,
+    "significant_5pct_two_sided": true,
     "se_hac_annual": 0.2035814195,
     "detectable_sharpe_gap": 0.5062000818
    },
@@ -187,6 +191,8 @@
    "sharpe_test": {
     "z": -0.4591704706,
     "p_one_sided": 0.6769441229,
+    "p_two_sided": 0.6461117542,
+    "significant_5pct_two_sided": false,
     "se_hac_annual": 0.1202669718,
     "detectable_sharpe_gap": 0.2990408018
    },
@@ -239,6 +245,8 @@
    "sharpe_test": {
     "z": 0.1271784433,
     "p_one_sided": 0.4493995833,
+    "p_two_sided": 0.8987991665,
+    "significant_5pct_two_sided": false,
     "se_hac_annual": 0.0217882186,
     "detectable_sharpe_gap": 0.0541758579
    },
@@ -291,6 +299,8 @@
    "sharpe_test": {
     "z": 0.797373725,
     "p_one_sided": 0.2126170072,
+    "p_two_sided": 0.4252340144,
+    "significant_5pct_two_sided": false,
     "se_hac_annual": 0.0906267119,
     "detectable_sharpe_gap": 0.2253410408
    },
@@ -343,6 +353,8 @@
    "sharpe_test": {
     "z": 0.1789828331,
     "p_one_sided": 0.4289755906,
+    "p_two_sided": 0.8579511813,
+    "significant_5pct_two_sided": false,
     "se_hac_annual": 0.1235860661,
     "detectable_sharpe_gap": 0.3072936465
    },
@@ -411,6 +423,8 @@
     "sharpe_test": {
      "z": -2.5058902702,
      "p_one_sided": 0.993892824,
+     "p_two_sided": 0.0122143519,
+     "significant_5pct_two_sided": true,
      "se_hac_annual": 0.1978557388,
      "detectable_sharpe_gap": 0.4919633205
     },
@@ -11081,36 +11095,55 @@
    "kind": "drawdown_state",
    "regime": "Up",
    "months_total": 238,
+   "paired_months": 49,
+   "paired_window": "2020-11 to 2026-08",
+   "own_coverage": {
+    "subject": {
+     "k": 155,
+     "m": 238,
+     "status": "partly in window (155 of 238 months)"
+    },
+    "core": {
+     "k": 50,
+     "m": 238,
+     "status": "partly in window (50 of 238 months)"
+    },
+    "primary_null": {
+     "k": 155,
+     "m": 238,
+     "status": "partly in window (155 of 238 months)"
+    }
+   },
    "series": {
     "subject": {
      "coverage": {
-      "k": 155,
-      "m": 238,
-      "status": "partly in window (155 of 238 months)"
+      "k": 49,
+      "m": 49,
+      "status": "in window"
      },
-     "cumulative_return": 2.1098251484,
-     "ann_vol": 0.0458372558,
-     "sharpe_exbil": 1.5941638558
+     "cumulative_return": 0.6510894373,
+     "ann_vol": 0.0589427016,
+     "sharpe_exbil": 1.6072366087
     },
     "core": {
      "coverage": {
-      "k": 50,
-      "m": 238,
-      "status": "partly in window (50 of 238 months)"
+      "k": 49,
+      "m": 49,
+      "status": "in window"
      },
-     "cumulative_return": 2.6521080208,
-     "ann_vol": 0.1201924505,
-     "sharpe_exbil": 2.408514527
+     "cumulative_return": 2.643320773,
+     "ann_vol": 0.1208108834,
+     "sharpe_exbil": 2.4461213235
     },
     "primary_null": {
      "coverage": {
-      "k": 155,
-      "m": 238,
-      "status": "partly in window (155 of 238 months)"
+      "k": 49,
+      "m": 49,
+      "status": "in window"
      },
-     "cumulative_return": 2.0102202964,
-     "ann_vol": 0.0444945387,
-     "sharpe_exbil": 1.5881908893
+     "cumulative_return": 0.6509243452,
+     "ann_vol": 0.0593140549,
+     "sharpe_exbil": 1.6000595629
     }
    },
    "vs_core_power": {
@@ -11123,22 +11156,41 @@
    "kind": "drawdown_state",
    "regime": "Correction",
    "months_total": 101,
+   "paired_months": 20,
+   "paired_window": "2022-01 to 2026-03",
+   "own_coverage": {
+    "subject": {
+     "k": 82,
+     "m": 101,
+     "status": "partly in window (82 of 101 months)"
+    },
+    "core": {
+     "k": 20,
+     "m": 101,
+     "status": "partly in window (20 of 101 months)"
+    },
+    "primary_null": {
+     "k": 82,
+     "m": 101,
+     "status": "partly in window (82 of 101 months)"
+    }
+   },
    "series": {
     "subject": {
      "coverage": {
-      "k": 82,
-      "m": 101,
-      "status": "partly in window (82 of 101 months)"
+      "k": 20,
+      "m": 20,
+      "status": "in window"
      },
-     "cumulative_return": 0.1611482949,
-     "ann_vol": 0.085919712,
-     "sharpe_exbil": 0.0583044511
+     "cumulative_return": -0.0951768566,
+     "ann_vol": 0.0969480009,
+     "sharpe_exbil": -0.8629636138
     },
     "core": {
      "coverage": {
       "k": 20,
-      "m": 101,
-      "status": "partly in window (20 of 101 months)"
+      "m": 20,
+      "status": "in window"
      },
      "cumulative_return": -0.2195691856,
      "ann_vol": 0.1956245892,
@@ -11146,13 +11198,13 @@
     },
     "primary_null": {
      "coverage": {
-      "k": 82,
-      "m": 101,
-      "status": "partly in window (82 of 101 months)"
+      "k": 20,
+      "m": 20,
+      "status": "in window"
      },
-     "cumulative_return": 0.1807502022,
-     "ann_vol": 0.083345239,
-     "sharpe_exbil": 0.0866326353
+     "cumulative_return": -0.0930114356,
+     "ann_vol": 0.0976722124,
+     "sharpe_exbil": -0.840754238
     }
    },
    "vs_core_power": {
@@ -11165,22 +11217,41 @@
    "kind": "drawdown_state",
    "regime": "Bear",
    "months_total": 65,
+   "paired_months": 1,
+   "paired_window": "2022-09 to 2022-09",
+   "own_coverage": {
+    "subject": {
+     "k": 42,
+     "m": 65,
+     "status": "partly in window (42 of 65 months)"
+    },
+    "core": {
+     "k": 1,
+     "m": 65,
+     "status": "partly in window (1 of 65 months)"
+    },
+    "primary_null": {
+     "k": 42,
+     "m": 65,
+     "status": "partly in window (42 of 65 months)"
+    }
+   },
    "series": {
     "subject": {
      "coverage": {
-      "k": 42,
-      "m": 65,
-      "status": "partly in window (42 of 65 months)"
+      "k": 1,
+      "m": 1,
+      "status": "in window"
      },
-     "cumulative_return": 0.2570810219,
-     "ann_vol": 0.128468541,
-     "sharpe_exbil": 0.5227621497
+     "cumulative_return": -0.0569501984,
+     "ann_vol": null,
+     "sharpe_exbil": null
     },
     "core": {
      "coverage": {
       "k": 1,
-      "m": 65,
-      "status": "partly in window (1 of 65 months)"
+      "m": 1,
+      "status": "in window"
      },
      "cumulative_return": -0.0953991397,
      "ann_vol": null,
@@ -11188,13 +11259,13 @@
     },
     "primary_null": {
      "coverage": {
-      "k": 42,
-      "m": 65,
-      "status": "partly in window (42 of 65 months)"
+      "k": 1,
+      "m": 1,
+      "status": "in window"
      },
-     "cumulative_return": 0.2704333628,
-     "ann_vol": 0.1337144378,
-     "sharpe_exbil": 0.5301072331
+     "cumulative_return": -0.0577482073,
+     "ann_vol": null,
+     "sharpe_exbil": null
     }
    },
    "vs_core_power": {
@@ -11206,36 +11277,55 @@
    "kind": "vol_state",
    "regime": "Low vol",
    "months_total": 197,
+   "paired_months": 28,
+   "paired_window": "2021-08 to 2026-08",
+   "own_coverage": {
+    "subject": {
+     "k": 153,
+     "m": 197,
+     "status": "partly in window (153 of 197 months)"
+    },
+    "core": {
+     "k": 29,
+     "m": 197,
+     "status": "partly in window (29 of 197 months)"
+    },
+    "primary_null": {
+     "k": 153,
+     "m": 197,
+     "status": "partly in window (153 of 197 months)"
+    }
+   },
    "series": {
     "subject": {
      "coverage": {
-      "k": 153,
-      "m": 197,
-      "status": "partly in window (153 of 197 months)"
+      "k": 28,
+      "m": 28,
+      "status": "in window"
      },
-     "cumulative_return": 1.1995384964,
-     "ann_vol": 0.0578644349,
-     "sharpe_exbil": 0.7618757135
+     "cumulative_return": 0.1527494038,
+     "ann_vol": 0.0564557312,
+     "sharpe_exbil": 0.5102590183
     },
     "core": {
      "coverage": {
-      "k": 29,
-      "m": 197,
-      "status": "partly in window (29 of 197 months)"
+      "k": 28,
+      "m": 28,
+      "status": "in window"
      },
-     "cumulative_return": 0.4163270254,
-     "ann_vol": 0.1346782288,
-     "sharpe_exbil": 0.8892869088
+     "cumulative_return": 0.4129192356,
+     "ann_vol": 0.1369686573,
+     "sharpe_exbil": 0.9070140034
     },
     "primary_null": {
      "coverage": {
-      "k": 153,
-      "m": 197,
-      "status": "partly in window (153 of 197 months)"
+      "k": 28,
+      "m": 28,
+      "status": "in window"
      },
-     "cumulative_return": 1.1750865176,
-     "ann_vol": 0.0563799048,
-     "sharpe_exbil": 0.7649249205
+     "cumulative_return": 0.1555232984,
+     "ann_vol": 0.0571122122,
+     "sharpe_exbil": 0.5231988547
     }
    },
    "vs_core_power": {
@@ -11248,22 +11338,41 @@
    "kind": "vol_state",
    "regime": "High vol",
    "months_total": 196,
+   "paired_months": 42,
+   "paired_window": "2020-11 to 2024-08",
+   "own_coverage": {
+    "subject": {
+     "k": 126,
+     "m": 196,
+     "status": "partly in window (126 of 196 months)"
+    },
+    "core": {
+     "k": 42,
+     "m": 196,
+     "status": "partly in window (42 of 196 months)"
+    },
+    "primary_null": {
+     "k": 126,
+     "m": 196,
+     "status": "partly in window (126 of 196 months)"
+    }
+   },
    "series": {
     "subject": {
      "coverage": {
-      "k": 126,
-      "m": 196,
-      "status": "partly in window (126 of 196 months)"
+      "k": 42,
+      "m": 42,
+      "status": "in window"
      },
-     "cumulative_return": 1.0637418089,
-     "ann_vol": 0.0941031009,
-     "sharpe_exbil": 0.6465022301
+     "cumulative_return": 0.2221767598,
+     "ann_vol": 0.0917095531,
+     "sharpe_exbil": 0.3722818901
     },
     "core": {
      "coverage": {
       "k": 42,
-      "m": 196,
-      "status": "partly in window (42 of 196 months)"
+      "m": 42,
+      "status": "in window"
      },
      "cumulative_return": 0.8204194935,
      "ann_vol": 0.1790942862,
@@ -11271,13 +11380,13 @@
     },
     "primary_null": {
      "coverage": {
-      "k": 126,
-      "m": 196,
-      "status": "partly in window (126 of 196 months)"
+      "k": 42,
+      "m": 42,
+      "status": "in window"
      },
-     "cumulative_return": 1.0760206166,
-     "ann_vol": 0.0951846226,
-     "sharpe_exbil": 0.6465118767
+     "cumulative_return": 0.2210044569,
+     "ann_vol": 0.0921582259,
+     "sharpe_exbil": 0.3680946554
     }
    },
    "vs_core_power": {
@@ -11293,32 +11402,52 @@
    "name": "LTCM 1998",
    "start": "1998-07",
    "end": "1998-08",
+   "months_total": 2,
+   "paired_months": 0,
+   "paired_window": null,
+   "own_coverage": {
+    "subject": {
+     "k": 0,
+     "m": 2,
+     "status": "not in window"
+    },
+    "core": {
+     "k": 0,
+     "m": 2,
+     "status": "not in window"
+    },
+    "primary_null": {
+     "k": 0,
+     "m": 2,
+     "status": "not in window"
+    }
+   },
    "series": {
     "subject": {
      "coverage": {
       "k": 0,
-      "m": 2,
+      "m": 0,
       "status": "not in window"
      }
     },
     "core": {
      "coverage": {
       "k": 0,
-      "m": 2,
+      "m": 0,
       "status": "not in window"
      }
     },
     "primary_null": {
      "coverage": {
       "k": 0,
-      "m": 2,
+      "m": 0,
       "status": "not in window"
      }
     }
    },
    "vs_core_power": {
     "n": 0,
-    "text": "not in window"
+    "text": "core not in window"
    },
    "path": {
     "months": [
@@ -11340,32 +11469,52 @@
    "name": "Dot-com bear",
    "start": "2000-09",
    "end": "2002-09",
+   "months_total": 25,
+   "paired_months": 0,
+   "paired_window": null,
+   "own_coverage": {
+    "subject": {
+     "k": 0,
+     "m": 25,
+     "status": "not in window"
+    },
+    "core": {
+     "k": 0,
+     "m": 25,
+     "status": "not in window"
+    },
+    "primary_null": {
+     "k": 0,
+     "m": 25,
+     "status": "not in window"
+    }
+   },
    "series": {
     "subject": {
      "coverage": {
       "k": 0,
-      "m": 25,
+      "m": 0,
       "status": "not in window"
      }
     },
     "core": {
      "coverage": {
       "k": 0,
-      "m": 25,
+      "m": 0,
       "status": "not in window"
      }
     },
     "primary_null": {
      "coverage": {
       "k": 0,
-      "m": 25,
+      "m": 0,
       "status": "not in window"
      }
     }
    },
    "vs_core_power": {
     "n": 0,
-    "text": "not in window"
+    "text": "core not in window"
    },
    "path": {
     "months": [
@@ -11456,38 +11605,78 @@
    "name": "GFC",
    "start": "2007-11",
    "end": "2009-02",
+   "months_total": 16,
+   "paired_months": 0,
+   "paired_window": null,
+   "own_coverage": {
+    "subject": {
+     "k": 16,
+     "m": 16,
+     "status": "in window"
+    },
+    "core": {
+     "k": 0,
+     "m": 16,
+     "status": "not in window"
+    },
+    "primary_null": {
+     "k": 16,
+     "m": 16,
+     "status": "in window"
+    }
+   },
    "series": {
     "subject": {
      "coverage": {
-      "k": 16,
-      "m": 16,
-      "status": "in window"
-     },
-     "cumulative_return": -0.2375451272,
-     "ann_vol": 0.1290750264,
-     "sharpe_exbil": -1.6449354354
+      "k": 0,
+      "m": 0,
+      "status": "not in window"
+     }
     },
     "core": {
      "coverage": {
       "k": 0,
-      "m": 16,
+      "m": 0,
       "status": "not in window"
      }
     },
     "primary_null": {
      "coverage": {
-      "k": 16,
-      "m": 16,
-      "status": "in window"
-     },
-     "cumulative_return": -0.2517815684,
-     "ann_vol": 0.129967045,
-     "sharpe_exbil": -1.7462393265
+      "k": 0,
+      "m": 0,
+      "status": "not in window"
+     }
     }
    },
    "vs_core_power": {
     "n": 0,
-    "text": "not in window"
+    "text": "core not in window"
+   },
+   "series_ex_core": {
+    "months": 16,
+    "window": "2007-11 to 2009-02",
+    "series": {
+     "subject": {
+      "coverage": {
+       "k": 16,
+       "m": 16,
+       "status": "in window"
+      },
+      "cumulative_return": -0.2375451272,
+      "ann_vol": 0.1290750264,
+      "sharpe_exbil": -1.6449354354
+     },
+     "primary_null": {
+      "coverage": {
+       "k": 16,
+       "m": 16,
+       "status": "in window"
+      },
+      "cumulative_return": -0.2517815684,
+      "ann_vol": 0.129967045,
+      "sharpe_exbil": -1.7462393265
+     }
+    }
    },
    "path": {
     "months": [
@@ -11551,38 +11740,78 @@
    "name": "2011 euro crisis / US downgrade",
    "start": "2011-05",
    "end": "2011-09",
+   "months_total": 5,
+   "paired_months": 0,
+   "paired_window": null,
+   "own_coverage": {
+    "subject": {
+     "k": 5,
+     "m": 5,
+     "status": "in window"
+    },
+    "core": {
+     "k": 0,
+     "m": 5,
+     "status": "not in window"
+    },
+    "primary_null": {
+     "k": 5,
+     "m": 5,
+     "status": "in window"
+    }
+   },
    "series": {
     "subject": {
      "coverage": {
-      "k": 5,
-      "m": 5,
-      "status": "in window"
-     },
-     "cumulative_return": -0.0411157914,
-     "ann_vol": 0.0455729019,
-     "sharpe_exbil": null
+      "k": 0,
+      "m": 0,
+      "status": "not in window"
+     }
     },
     "core": {
      "coverage": {
       "k": 0,
-      "m": 5,
+      "m": 0,
       "status": "not in window"
      }
     },
     "primary_null": {
      "coverage": {
-      "k": 5,
-      "m": 5,
-      "status": "in window"
-     },
-     "cumulative_return": -0.0395943127,
-     "ann_vol": 0.0433370131,
-     "sharpe_exbil": null
+      "k": 0,
+      "m": 0,
+      "status": "not in window"
+     }
     }
    },
    "vs_core_power": {
     "n": 0,
-    "text": "not in window"
+    "text": "core not in window"
+   },
+   "series_ex_core": {
+    "months": 5,
+    "window": "2011-05 to 2011-09",
+    "series": {
+     "subject": {
+      "coverage": {
+       "k": 5,
+       "m": 5,
+       "status": "in window"
+      },
+      "cumulative_return": -0.0411157914,
+      "ann_vol": 0.0455729019,
+      "sharpe_exbil": null
+     },
+     "primary_null": {
+      "coverage": {
+       "k": 5,
+       "m": 5,
+       "status": "in window"
+      },
+      "cumulative_return": -0.0395943127,
+      "ann_vol": 0.0433370131,
+      "sharpe_exbil": null
+     }
+    }
    },
    "path": {
     "months": [
@@ -11613,38 +11842,78 @@
    "name": "Q4 2018",
    "start": "2018-10",
    "end": "2018-12",
+   "months_total": 3,
+   "paired_months": 0,
+   "paired_window": null,
+   "own_coverage": {
+    "subject": {
+     "k": 3,
+     "m": 3,
+     "status": "in window"
+    },
+    "core": {
+     "k": 0,
+     "m": 3,
+     "status": "not in window"
+    },
+    "primary_null": {
+     "k": 3,
+     "m": 3,
+     "status": "in window"
+    }
+   },
    "series": {
     "subject": {
      "coverage": {
-      "k": 3,
-      "m": 3,
-      "status": "in window"
-     },
-     "cumulative_return": -0.0368639835,
-     "ann_vol": 0.0639954163,
-     "sharpe_exbil": null
+      "k": 0,
+      "m": 0,
+      "status": "not in window"
+     }
     },
     "core": {
      "coverage": {
       "k": 0,
-      "m": 3,
+      "m": 0,
       "status": "not in window"
      }
     },
     "primary_null": {
      "coverage": {
-      "k": 3,
-      "m": 3,
-      "status": "in window"
-     },
-     "cumulative_return": -0.0351362956,
-     "ann_vol": 0.0628309084,
-     "sharpe_exbil": null
+      "k": 0,
+      "m": 0,
+      "status": "not in window"
+     }
     }
    },
    "vs_core_power": {
     "n": 0,
-    "text": "not in window"
+    "text": "core not in window"
+   },
+   "series_ex_core": {
+    "months": 3,
+    "window": "2018-10 to 2018-12",
+    "series": {
+     "subject": {
+      "coverage": {
+       "k": 3,
+       "m": 3,
+       "status": "in window"
+      },
+      "cumulative_return": -0.0368639835,
+      "ann_vol": 0.0639954163,
+      "sharpe_exbil": null
+     },
+     "primary_null": {
+      "coverage": {
+       "k": 3,
+       "m": 3,
+       "status": "in window"
+      },
+      "cumulative_return": -0.0351362956,
+      "ann_vol": 0.0628309084,
+      "sharpe_exbil": null
+     }
+    }
    },
    "path": {
     "months": [
@@ -11669,38 +11938,78 @@
    "name": "COVID",
    "start": "2020-01",
    "end": "2020-03",
+   "months_total": 3,
+   "paired_months": 0,
+   "paired_window": null,
+   "own_coverage": {
+    "subject": {
+     "k": 3,
+     "m": 3,
+     "status": "in window"
+    },
+    "core": {
+     "k": 0,
+     "m": 3,
+     "status": "not in window"
+    },
+    "primary_null": {
+     "k": 3,
+     "m": 3,
+     "status": "in window"
+    }
+   },
    "series": {
     "subject": {
      "coverage": {
-      "k": 3,
-      "m": 3,
-      "status": "in window"
-     },
-     "cumulative_return": -0.0842545081,
-     "ann_vol": 0.1358454886,
-     "sharpe_exbil": null
+      "k": 0,
+      "m": 0,
+      "status": "not in window"
+     }
     },
     "core": {
      "coverage": {
       "k": 0,
-      "m": 3,
+      "m": 0,
       "status": "not in window"
      }
     },
     "primary_null": {
      "coverage": {
-      "k": 3,
-      "m": 3,
-      "status": "in window"
-     },
-     "cumulative_return": -0.071337879,
-     "ann_vol": 0.1229312862,
-     "sharpe_exbil": null
+      "k": 0,
+      "m": 0,
+      "status": "not in window"
+     }
     }
    },
    "vs_core_power": {
     "n": 0,
-    "text": "not in window"
+    "text": "core not in window"
+   },
+   "series_ex_core": {
+    "months": 3,
+    "window": "2020-01 to 2020-03",
+    "series": {
+     "subject": {
+      "coverage": {
+       "k": 3,
+       "m": 3,
+       "status": "in window"
+      },
+      "cumulative_return": -0.0842545081,
+      "ann_vol": 0.1358454886,
+      "sharpe_exbil": null
+     },
+     "primary_null": {
+      "coverage": {
+       "k": 3,
+       "m": 3,
+       "status": "in window"
+      },
+      "cumulative_return": -0.071337879,
+      "ann_vol": 0.1229312862,
+      "sharpe_exbil": null
+     }
+    }
    },
    "path": {
     "months": [
@@ -11725,6 +12034,26 @@
    "name": "2022 inflation bear",
    "start": "2022-01",
    "end": "2022-09",
+   "months_total": 9,
+   "paired_months": 9,
+   "paired_window": "2022-01 to 2022-09",
+   "own_coverage": {
+    "subject": {
+     "k": 9,
+     "m": 9,
+     "status": "in window"
+    },
+    "core": {
+     "k": 9,
+     "m": 9,
+     "status": "in window"
+    },
+    "primary_null": {
+     "k": 9,
+     "m": 9,
+     "status": "in window"
+    }
+   },
    "series": {
     "subject": {
      "coverage": {
@@ -11802,6 +12131,26 @@
    "name": "2025 tariff shock",
    "start": "2025-02",
    "end": "2025-04",
+   "months_total": 3,
+   "paired_months": 3,
+   "paired_window": "2025-02 to 2025-04",
+   "own_coverage": {
+    "subject": {
+     "k": 3,
+     "m": 3,
+     "status": "in window"
+    },
+    "core": {
+     "k": 3,
+     "m": 3,
+     "status": "in window"
+    },
+    "primary_null": {
+     "k": 3,
+     "m": 3,
+     "status": "in window"
+    }
+   },
    "series": {
     "subject": {
      "coverage": {
@@ -11897,7 +12246,7 @@
   {
    "gate": "Leakage / timing",
    "value": "280 of 280 rows pass",
-   "outcome": "pass",
+   "outcome": "partial pass",
    "basis": "decision month before return month",
    "scope": "partial: feature cut-off not saved",
    "source": "data/processed/rr_erc/rr_erc_oos_returns.csv"
@@ -11914,7 +12263,9 @@
    "value": {
     "diff": 0.0027660213,
     "z": 0.1271784433,
-    "p_one_sided": 0.4493995833
+    "p_one_sided": 0.4493995833,
+    "p_two_sided": 0.8987991665,
+    "significant_5pct_two_sided": false
    },
    "power": "279 paired months can only detect a Sharpe gap of about 0.05 (one-sided 5%, 80% power).",
    "source": "hub_data.head_to_head"

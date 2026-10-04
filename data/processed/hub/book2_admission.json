@@ -1,0 +1,54 @@
+{
+  "subject": "book2",
+  "admitted_as": "Book 2 path/risk overlay on the vol-target backbone (Justina #6, PR #27), not a third book",
+  "gate_date": "2026-09-23 (ET)",
+  "rule": "CIO gate for #6: beat the unconditional vol-target backbone (primary null) on Sharpe AND on the risk path, with leakage tests green, 5 bp costs, N ≥ 100 names, NW t and DSR reported, and no third book.",
+  "stage2_book_rule_note": "The stage-2 CIO Book rule (one-way turnover ≤ 100%/yr; CAGR above the static core at 10 bp) applies only to NEW candidates. Book 2 was admitted earlier under the #6 gate and is not re-judged by it; for reference it trails the core by about 1.1 pts CAGR.",
+  "criteria": [
+    {
+      "criterion": "Leakage / timing tests",
+      "recorded": "PR #27 leakage green (24/24)",
+      "result": "pass"
+    },
+    {
+      "criterion": "Sharpe vs unconditional vol-target backbone (primary null), rf = 0 as recorded",
+      "recorded": "1.280 vs 1.059",
+      "result": "pass"
+    },
+    {
+      "criterion": "Risk path vs the backbone (max drawdown)",
+      "recorded": "−10.1% vs −20.1%",
+      "result": "pass"
+    },
+    {
+      "criterion": "NW t vs the backbone (reported)",
+      "recorded": "−0.80 (no return edge; Sharpe gain comes from lower vol)",
+      "result": "reported, not a pass/fail gate"
+    },
+    {
+      "criterion": "DSR / trial count (reported)",
+      "recorded": "≈1.0 at 72 grid trials as recorded; corrected 0.53 ex-BIL (unit bug)",
+      "result": "reported; eligibility never rested on DSR (gate-first spec N = 1, PSR only)"
+    },
+    {
+      "criterion": "Breadth and costs",
+      "recorded": "min_names = 100; 5 bp one-way",
+      "result": "pass"
+    },
+    {
+      "criterion": "No third book",
+      "recorded": "overlay on Book 2; static core + Book 2 stay the two books",
+      "result": "pass"
+    }
+  ],
+  "verdict": "PASS as overlay (Book-2 path/risk overlay only; not a third book)",
+  "sources": [
+    {
+      "document": "Quant gate memo for the skewness-managed overlay (#6 / PR #27), shortlist workspace; working-file name kept out of the repo",
+      "sha256": "892ef108afbcbd0ecaf8c8290b385f163e3119a457c1824232c757c8f4e0253e"
+    },
+    {
+      "document": "config/strategies.yaml (vol_target_option_a: gate-first knobs locked)"
+    }
+  ]
+}

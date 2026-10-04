@@ -28,12 +28,16 @@ import pandas as pd
 from scipy.stats import norm
 
 from . import gate_metrics as gm
+from . import monthly_panel as mp
 from .nonlinear_shrinkage_gmv_v3 import lw2008_sharpe_test
 from .vol_target import newey_west_tstat
 
 ROOT = Path(__file__).resolve().parents[2]
 P = 'data/processed/'
 PANEL = 'data/raw/usa_universe_panel_monthly_returns.csv'
+TRIAL_COUNTS = 'data/processed/hub/trial_counts.json'
+ADMISSION = {'book2': 'data/processed/hub/book2_admission.json'}
+TURNOVER_CONVENTION = 'one-way, ½·Σ|Δw| per year'
 ARCHIVE = 'apps/pages/src/data/archive_verdicts.json'
 SITE_SHARPE = P + 'cash_null_audit/site_sharpe.json'
 DSR_RECOMPUTE = P + 'hub/dsr_exbil_recompute.csv'   # Quant's ex-BIL DSR recompute (verbatim copy; see .PROVENANCE.md)
@@ -59,6 +63,14 @@ STRESS_NAMES = {'1998-07': ('ltcm_1998', 'LTCM 1998'), '2000-09': ('dotcom', 'Do
 
 LEGACY = 'rf = 0 basis'
 EXBIL = 'Sharpe ex-BIL basis'
+
+
+def prose(text):
+    """Display text: the bare internal 'VT' label becomes 'vol-target backbone' (ids such as VT_option_a stay)."""
+    if not isinstance(text, str):
+        return text
+    text = re.sub(r'\bBook-2 VT\b', 'vol-target backbone', text)
+    return re.sub(r'(?<![\w-])VT(?![\w-])', 'vol-target backbone', text)
 
 
 def _f(*parts):
@@ -231,7 +243,59 @@ def _filter(df, filters):
     return df
 
 
+LIVE_DIR = P + 'live/'
+LIVE_CORE = (LIVE_DIR + 'strategy_returns.csv', 'return', {'strategy_id': 'static_option_a'})
+LIVE_REPAIR_LOG = 'data/processed/live/partial_month_repair.json'
+LIVE_FIX_NOTE = ('The live-book files were built from daily closes with the live loader default, which keeps an '
+                 'incomplete final month (rotation.month_end_trading_dates(complete_months_only=False)), so their '
+                 '2026-09 row is a partial-September return labelled 2026-09-30. The value matches neither the '
+                 'complete-month panel nor the panel\'s earlier 2026-09-16 cut, and the daily closes behind it were not '
+                 'saved, so the exact cut-off is not recoverable. The complete-month panel '
+                 '(load_monthly_panel(complete_months_only=True), the PR #41 rule) is used for that month.')
+
+
+def live_core_fixes(root, cache=None):
+    """Months where the saved live core differs from the complete-month panel core (70/20/10 VOO/QQQM/IJR).
+
+    Returns {month: dict(live=..., panel=...)}. Any other month must agree to 1e-6 (else ValueError)."""
+    cache = {} if cache is None else cache
+    key = ('__live_fix__', str(root))
+    if key in cache:
+        return cache[key]
+    live, _ = _monthly_raw(root, *LIVE_CORE, cache)
+    panel = mp.load_monthly_panel(Path(root) / PANEL, complete_months_only=True)
+    r = panel[list(CORE_WEIGHTS)].mul(pd.Series(CORE_WEIGHTS), axis=1).sum(axis=1, min_count=len(CORE_WEIGHTS))
+    pc = pd.Series(r.to_numpy(), index=panel.index.to_period('M')).dropna()
+    both = pd.concat([live, pc], axis=1, join='inner').dropna()
+    diff = (both.iloc[:, 0] - both.iloc[:, 1]).abs()
+    bad = diff[diff > 1e-6]
+    if len(bad) and str(bad.index.min()) < '2026-09':
+        raise ValueError(f'live core differs from the complete-month panel before 2026-09: {list(map(str, bad.index))}')
+    fixes = {m: dict(live=float(both.loc[m].iloc[0]), panel=float(both.loc[m].iloc[1])) for m in bad.index}
+    cache[key] = fixes
+    return fixes
+
+
 def monthly_series(root, rel, col, filters=None, cache=None):
+    """Saved monthly returns, complete months only; live-book rows built from a partial month are repaired.
+
+    For files under data/processed/live/, a month listed by live_core_fixes is rebuilt from the complete-month
+    panel when the saved value is mechanically the core (it equals the saved live core: full exposure, no cost);
+    otherwise that month is dropped and reported."""
+    cache = {} if cache is None else cache
+    s, dropped = _monthly_raw(root, rel, col, filters, cache)
+    if rel.startswith(LIVE_DIR):
+        for m, fx in live_core_fixes(root, cache).items():
+            if m in s.index:
+                if abs(s[m] - fx['live']) < 1e-12:
+                    s[m] = fx['panel']
+                else:
+                    s = s.drop(m)
+                    dropped = sorted(set(dropped) | {str(m)})
+    return s, dropped
+
+
+def _monthly_raw(root, rel, col, filters=None, cache=None):
     """Saved monthly returns as a month-indexed Series, complete months only.
 
     A row whose date falls before the 25th is a partial month (several archived runs end on 2026-09-16).
@@ -249,7 +313,8 @@ def monthly_series(root, rel, col, filters=None, cache=None):
 
 
 def load_panel(root):
-    return pd.read_csv(Path(root) / PANEL, index_col=0, parse_dates=True)
+    """The saved monthly panel through the PR #41 loader (incomplete final month cut off)."""
+    return mp.load_monthly_panel(Path(root) / PANEL, complete_months_only=True)
 
 
 def risk_free(root):
@@ -266,14 +331,26 @@ def rf_series(rf, months):
 
 def static_core(root, cache):
     """S1, the saved live Book 1 series; the panel-derived core and the stand-in core for reference."""
-    s1, dropped = monthly_series(root, P + 'live/strategy_returns.csv', 'return', {'strategy_id': 'static_option_a'}, cache)
+    s1, dropped = monthly_series(root, *LIVE_CORE, cache)
     panel = load_panel(root)
     months = panel.index.to_period('M')
 
     def fixed(weights):
         r = panel[list(weights)].mul(pd.Series(weights), axis=1).sum(axis=1, min_count=len(weights))
         return pd.Series(r.to_numpy(), index=months).dropna()
-    return dict(s1=s1, s1_dropped=dropped, panel_derived=fixed(CORE_WEIGHTS), standin=fixed(STANDIN_WEIGHTS))
+    fixes = live_core_fixes(root, cache)      # empty once scripts/repair_live_partial_month.py has run
+    corrections = [dict(month=str(m), live_file=_r(v['live']), complete_month_panel=_r(v['panel']),
+                        action='rebuilt from the complete-month panel at load time', note=LIVE_FIX_NOTE)
+                   for m, v in sorted(fixes.items())]
+    log = Path(root) / LIVE_REPAIR_LOG
+    if log.exists():
+        rep = json.loads(log.read_text(encoding='utf-8'))
+        corrections += [dict(month=rep['month'], live_file=_r(rep['partial_month_core']),
+                             complete_month_panel=_r(rep['complete_month_panel_core']),
+                             action='rebuilt in the live files by scripts/repair_live_partial_month.py', note=LIVE_FIX_NOTE,
+                             log=LIVE_REPAIR_LOG, cells_changed=len(rep['changes']))]
+    return dict(s1=s1, s1_dropped=dropped, panel_derived=fixed(CORE_WEIGHTS), standin=fixed(STANDIN_WEIGHTS),
+                corrections=corrections)
 
 
 # ---------- statistics ----------
@@ -325,7 +402,9 @@ def head_to_head(a, b, rf, *, sharpe=True):
             idx = pair.index.to_timestamp('M')
             t = lw2008_sharpe_test(pd.Series(pair.iloc[:, 0].to_numpy(), idx), pd.Series(pair.iloc[:, 1].to_numpy(), idx), rf)
             se_ann = t['se_hac'] * math.sqrt(12)
-            out['sharpe_test'] = dict(z=_r(t['z']), p_one_sided=_r(t['p_one_sided_a_gt_b']), se_hac_annual=_r(se_ann),
+            out['sharpe_test'] = dict(z=_r(t['z']), p_one_sided=_r(t['p_one_sided_a_gt_b']),
+                                      p_two_sided=_r(2 * norm.sf(abs(t['z']))), significant_5pct_two_sided=bool(2 * norm.sf(abs(t['z'])) < 0.05),
+                                      se_hac_annual=_r(se_ann),
                                       detectable_sharpe_gap=_r(Z_POWER * se_ann))
     out['power'] = power_caveat(out, sharpe)
     return out
@@ -399,6 +478,29 @@ def coverage(s, months):
     m = len(months)
     status = 'not in window' if k == 0 else ('in window' if k == m else f'partly in window ({k} of {m} months)')
     return dict(k=k, m=m, status=status)
+
+
+def paired_blocks(pseries, s, s1, months, rf, sharpe):
+    """Regime / stress cells on PAIRED months (CIO review of #55, item 5).
+
+    `series`: method, core and primary null on the same months (those all three cover).
+    `series_ex_core`: where the core is absent (it starts 2020-11), method and null on their shared months.
+    `own_coverage`: each series' own coverage of the regime/window, reported beside the paired figures."""
+    def common(keys):
+        return [m for m in months if all(m in pseries[k].index for k in keys)]
+    paired = common(list(pseries))
+    h = head_to_head(s[s.index.isin(paired)], s1[s1.index.isin(paired)], rf, sharpe=sharpe)
+    empty = {k: dict(coverage=dict(k=0, m=0, status='not in window')) for k in pseries}
+    out = dict(paired_months=len(paired), paired_window=(f'{paired[0]} to {paired[-1]}' if paired else None),
+               own_coverage={k: coverage(x, months) for k, x in pseries.items()},
+               series=period_block(pseries, paired, rf, sharpe=sharpe) if paired else empty,
+               vs_core_power=power_caveat(h, sharpe) if h['n'] else dict(n=0, text='core not in window'))
+    rest = {k: v for k, v in pseries.items() if k != 'core'}
+    ex = common(list(rest))
+    if not paired and ex and len(rest) > 1:
+        out['series_ex_core'] = dict(months=len(ex), window=f'{ex[0]} to {ex[-1]}',
+                                     series=period_block(rest, ex, rf, sharpe=sharpe))
+    return out
 
 
 def period_block(series, months, rf, *, sharpe):
@@ -559,9 +661,11 @@ def dsr_block(subject, card, summary, recompute, chosen=None):
         out.update(corrected=_recompute_entry(row), primary=_r(float(row['dsr_exbil']), 4),
                    primary_basis='Sharpe ex-BIL basis (corrected; Quant recompute)', note=NO_VERDICT_CHANGE)
     elif subject['id'] in DSR_GRID_REFERENCE and DSR_GRID_REFERENCE[subject['id']] in recompute:
-        out.update(grid_reference=_recompute_entry(recompute[DSR_GRID_REFERENCE[subject['id']]]),
-                   note='Gate-first spec: N = 1, so no DSR is defined (PSR only). The #6 grid row for this spec is shown '
-                        'for reference (N = 72). ' + NO_VERDICT_CHANGE)
+        g = _recompute_entry(recompute[DSR_GRID_REFERENCE[subject['id']]])
+        out.update(grid_reference=g, recorded='not defined (N = 1)', recorded_basis=None,
+                   note=('Eligibility never rested on DSR: the gate-first spec has N = 1, so no DSR is defined and only '
+                         f"PSR applies. The #6 grid row for this spec (N = {g['n_trials']}) is shown for reference: "
+                         f"{g['dsr_exbil']:.2f} corrected (Sharpe ex-BIL), {g['dsr_rf0_recorded']:.2f} as recorded."))
     elif 'ex-BIL' in basis:
         m = re.match(r'\s*(\d+(?:\.\d+)?)', recorded or '')
         out.update(primary=float(m.group(1)) if m else None, primary_basis=basis,
@@ -570,8 +674,9 @@ def dsr_block(subject, card, summary, recompute, chosen=None):
 
 
 def gates_block(subject, card, timing, vs_primary, verdict, gate_result, dsr=None):
+    partial = timing['status'] == 'pass' and str(timing.get('scope') or '').startswith('partial')
     rows = [dict(gate='Leakage / timing', value=f"{timing['n'] - timing.get('n_fail', 0)} of {timing['n']} rows pass"
-                 if timing['n'] else timing['status'], outcome=timing['status'], basis=timing['basis'], scope=timing.get('scope'),
+                 if timing['n'] else timing['status'], outcome='partial pass' if partial else timing['status'], basis=timing['basis'], scope=timing.get('scope'),
                  source=timing.get('source'))]
     if card:
         rows.append(dict(gate='Null comparison (recorded)', value=card.get('nw_t'), outcome=card.get('badge'),
@@ -579,16 +684,26 @@ def gates_block(subject, card, timing, vs_primary, verdict, gate_result, dsr=Non
     if vs_primary and vs_primary.get('n') and subject['group'] != 'void':
         st = vs_primary.get('sharpe_test') or {}
         rows.append(dict(gate='Null comparison (hub recompute, Sharpe ex-BIL)', null=vs_primary['label'],
-                         value=dict(diff=vs_primary['diff'].get('sharpe_exbil'), z=st.get('z'), p_one_sided=st.get('p_one_sided')),
+                         value=dict(diff=vs_primary['diff'].get('sharpe_exbil'), z=st.get('z'), p_one_sided=st.get('p_one_sided'),
+                                    p_two_sided=st.get('p_two_sided'), significant_5pct_two_sided=st.get('significant_5pct_two_sided')),
                          power=vs_primary['power']['text'], source='hub_data.head_to_head'))
     if subject['group'] != 'void':
         corr = (dsr or {}).get('corrected')
+        grid = (dsr or {}).get('grid_reference')
+        if grid and not corr:
+            rows.append(dict(gate='DSR / C4', value='not defined (N = 1; PSR only)', basis='gate-first spec, N = 1',
+                             as_recorded=None, error_note=None, rule=None,
+                             grid_reference=dict(trial=grid['trial'], n_trials=grid['n_trials'], dsr_exbil=grid['dsr_exbil'],
+                                                 as_recorded=grid['dsr_rf0_recorded'], error_note=grid['error_note']),
+                             note=dsr['note']))
+            corr = False
+    if subject['group'] != 'void' and corr is not False:
         rows.append(dict(gate='DSR / C4', value=corr['dsr_exbil'] if corr else (card or {}).get('dsr'),
                          basis=(dsr or {}).get('primary_basis') if corr else subject.get('dsr_basis', LEGACY),
                          as_recorded=(card or {}).get('dsr') if corr else None, error_note=corr['error_note'] if corr else None,
                          rule='DSR ≥ 0.95 (C4, pre-registered)' if subject.get('prereg') else None))
     emp = dict(gate='Empirical gate (recorded criteria and tripwires)', outcome=(card or {}).get('badge') or subject.get('label'),
-               value=(verdict or {}).get('verdict_label') or (card or {}).get('verdict'))
+               value=prose((verdict or {}).get('verdict_label') or (card or {}).get('verdict')))
     if gate_result:
         emp.update(mechanical=gate_result.get('mechanical'), composition=(gate_result.get('composition') or {}).get('status'),
                    tripwires=((gate_result.get('fields') or {}).get('tripwires') or {}).get('status'))
@@ -687,17 +802,13 @@ def compute_subject(root, subject, ctx):
     for col in ('drawdown_state', 'vol_state'):
         for val in [v for v in regimes[col].dropna().unique()]:
             rm = list(regimes.index[regimes[col] == val])
-            h = head_to_head(s[s.index.isin(rm)], s1[s1.index.isin(rm)], rf, sharpe=sharpe)
             regime_rows.append(dict(kind=col, regime=str(val), months_total=len(rm),
-                                    series=period_block(pseries, rm, rf, sharpe=sharpe), vs_core_power=power_caveat(h, sharpe)
-                                    if h['n'] else dict(n=0, text='not in window')))
+                                    **paired_blocks(pseries, s, s1, rm, rf, sharpe)))
     stress_rows = []
     for w in ctx['stress']:
         wm = list(pd.period_range(w['start'], w['end'], freq='M'))
-        h = head_to_head(s[s.index.isin(wm)], s1[s1.index.isin(wm)], rf, sharpe=sharpe)
-        stress_rows.append(dict(window=w['id'], name=w['name'], start=w['start'], end=w['end'],
-                                series=period_block(pseries, wm, rf, sharpe=sharpe),
-                                vs_core_power=power_caveat(h, sharpe) if h['n'] else dict(n=0, text='not in window'),
+        stress_rows.append(dict(window=w['id'], name=w['name'], start=w['start'], end=w['end'], months_total=len(wm),
+                                **paired_blocks(pseries, s, s1, wm, rf, sharpe),
                                 path=dict(months=[str(m) for m in wm], subject=_on(s, wm), core=_on(s1, wm))))
     trials = None
     if subject.get('trials') and not void:   # VOID: no Sharpe rows (D4)
@@ -720,8 +831,8 @@ def compute_subject(root, subject, ctx):
         id=subject['id'], name=subject['name'], group=subject['group'], label=label, card=subject.get('card'),
         related=subject.get('related'), pages=subject.get('pages', {}),
         verdict=dict(label=(verdict or {}).get('verdict_label') or label,
-                     text=(verdict or {}).get('verdict_line') or (card or {}).get('verdict'),
-                     detail=(card or {}).get('detail'),
+                     text=prose((verdict or {}).get('verdict_line') or (card or {}).get('verdict')),
+                     detail=prose((card or {}).get('detail')),
                      void_reason=(card or {}).get('void_reason') if void else None,
                      banner='Reported for transparency; the test design was void.' if void else None),
         sources=dict(series=spec['file'], filters=spec.get('filters'), column=spec['col'],
@@ -833,19 +944,29 @@ def build(root=ROOT):
         static_core=dict(definition='Book 1, static_option_a: 70% VOO / 20% QQQM / 10% IJR, monthly rebalanced, gross',
                          defined_in=['data/processed/live/cio_registry.yaml', 'src/usa_etf_features/strategy_registry.py'],
                          series='data/processed/live/strategy_returns.csv (static_option_a)', first_month=CORE_START,
-                         partial_months_dropped=core['s1_dropped'],
-                         standin='70% IVV / 20% QQQ / 10% IJR from ' + PANEL + ', sensitivity only'),
+                         partial_months_dropped=core['s1_dropped'], corrections=core['corrections'],
+                         version_label='live core (VOO / QQQM / IJR)',
+                         standin='70% IVV / 20% QQQ / 10% IJR from ' + PANEL + ', sensitivity only',
+                         standin_version_label='stand-in core (IVV / QQQ / IJR)'),
         common_window=list(COMMON_WINDOW), rf='BIL from the saved panel; FRED TB3MS/1200 before BIL\'s first full month',
         power=dict(alpha=ALPHA, power=POWER, z=Z_POWER), rolling_window_months=ROLL, min_sharpe_months=MIN_SHARPE_MONTHS,
         regimes=dict(source=PANEL + ' (SPY)', drawdown_states='Up: drawdown > −5%; Correction: −5% to −20%; Bear: ≤ −20%',
                      vol_states='SPY trailing 12-month realized vol above / below its median', vol_median=_r(vol_median)),
         stress_windows=ctx['stress'],
         dsr_recompute_slot=DSR_RECOMPUTE,
+        trial_counts=json.loads((Path(root) / TRIAL_COUNTS).read_text(encoding='utf-8')),
+        trial_counts_source=TRIAL_COUNTS,
+        cost_basis='The static core is gross (no costs); method series are net of the costs saved with each run.',
+        turnover_convention=TURNOVER_CONVENTION,
         subjects=[dict(id=s['id'], name=s['name'], group=s['group'], label=labels[s['id']], card=s.get('card'),
                        series=s['series'], nulls=s['nulls'], weights={k: v for k, v in s['weights'].items() if k != 'weights'},
                        trials=s.get('trials'), prereg=s.get('prereg'), verdict=s.get('verdict'),
                        sensitivities=s.get('sensitivities', []), pages=s.get('pages', {})) for s in SUBJECTS],
     )
+    for subj in subjects:
+        adm = ADMISSION.get(subj['id'])
+        if adm:
+            subj['admission'] = dict(json.loads((Path(root) / adm).read_text(encoding='utf-8')), source=adm)
     reg_df = regimes.copy()
     reg_df.index.name = 'month'
     return dict(manifest=manifest, leaderboard=leaderboard(subjects), subjects={s['id']: s for s in subjects},

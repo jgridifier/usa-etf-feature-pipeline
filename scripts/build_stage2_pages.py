@@ -24,7 +24,17 @@ APPENDIX_SRC = ROOT / 'data/processed/stage2/stage2_robustness.md'
 APPENDIX_SHA256 = 'c1ca949521e3132f9bae592acfcb5fe53fa323fdd48b646d6bc6b14963fbde17'
 PAGE = 'methods/stage2_robustness.html'
 TEACHING = 'stage2_demiguel.html'                   # under docs/methods/ (the old *_kwz.html is never published)
-TEACHING_SHA256: str | None = '8091157e656d740ceae02f2f53ec75ff049c02a8e8c56364d05ce379a9e1625d'  # final (CoS, 2026-10-04 08:25 ET)
+TEACHING_SHA256: str | None = '08b251a2425b1802ddf5c8e7de63ab8b97469744d5fbff8490c3c8cb56fb0893'  # final revision (hash verified by CoS, 2026-10-04 09:06 ET; supersedes 8091157e…)
+ADDENDUM3_SRC = ROOT / 'data/processed/stage2/stage2_holdout_addendum3.md'
+ADDENDUM3_SHA256 = '47234cbc5f1af5beb9a859ccb56da52dfb28cb1164a507b6025a60f3994756df'
+ADDENDUM3_PAGE = 'methods/stage2_addendum3.html'
+ADDENDUM3_TITLE = 'Stage 2 holdout pre-registration, Addendum 3: final dispositions and errata'
+RECHECK_SRC = ROOT / 'data/processed/stage2/stage2_livecore_recheck.md'
+RECHECK_SHA256 = '930692cdd2f03e5a5024226a0abb3f17d02d26d86d20f6c841d1adc7740c12ff'
+RECHECK_PAGE = 'methods/stage2_livecore_recheck.html'
+RECHECK_TITLE = 'Live-core recheck for family 2 (correction to Addendum 3 E4)'
+ADDENDUM3_RULING_ID = 's1-1'   # anchor on §1 item 1 (DeMiguel forward-tracked; supersedes 'N_holdout = 1')
+# Addendum 2 is not published on Pages yet: the hub keeps a link slot for it (scripts/build_hub_pages.py).
 TITLE = 'Stage 2 robustness appendix: KWZ, DeMiguel, replications, holdout power'
 
 
@@ -96,7 +106,8 @@ def render_markdown(md: str) -> str:
                 i += 1
             continue
         if ln.startswith('  ') and not ln.startswith('   -'):
-            html.append(f'<p class="formula">{inline(ln.strip())}</p>')
+            cls = 'formula' if '=' in ln else 'cont'     # indented prose continues the list item above it
+            html.append(f'<p class="{cls}">{inline(ln.strip())}</p>')
             i += 1
             continue
         para = [ln]
@@ -130,17 +141,102 @@ def _list(lines: list[str], start: int) -> str:
     return ''.join(out)
 
 
+STYLE = ('<style>.stage2 .formula{font-family:"JetBrains Mono",ui-monospace,monospace;font-size:.85rem;'
+         'overflow-wrap:anywhere;padding:.25rem 0 .25rem .75rem;border-left:2px solid #1c2d6b}'
+         '.stage2 table{font-size:.85rem}.stage2 h2{margin-top:2rem}.stage2 code{overflow-wrap:anywhere}'
+         '.stage2 .cont{padding-left:1.25rem}.stage2 .lab-link{display:block;font-size:.85rem;margin:.2rem 0 .4rem;padding-left:.6rem;border-left:2px solid #1c2d6b}'
+         '.stage2 :target{outline:2px solid #1c2d6b;outline-offset:2px}</style>')
+NHOLDOUT_LI = '<li>N_holdout = 1, DeMiguel only.'
+
+
+def _check(src: Path, pin: str, name: str) -> str:
+    if sha256(src) != pin:
+        raise SystemExit(f'{name} does not match its pinned sha256; update the pin with Quant\'s new hash')
+    md = src.read_text(encoding='utf-8')
+    return md.split('\n', 1)[1] if md.startswith('# ') else md
+
+
+def link_nholdout(html: str, href: str) -> str:
+    """Add a lab link to Addendum 3 §1.1 right after the 'N_holdout = 1' ruling (§7).
+
+    Quant's §7 text is not edited: the link is a separate, labelled lab element placed after the list item."""
+    i = html.find(NHOLDOUT_LI)
+    if i < 0:
+        raise SystemExit("robustness appendix: 'N_holdout = 1, DeMiguel only' not found; cannot place the Addendum 3 link")
+    j = html.find('</li>', i) + len('</li>')
+    note = (f'<li class="lab-link" aria-label="Lab note">Lab note: superseded by '
+            f'<a href="{href}">Addendum 3 §1.1</a> (DeMiguel is forward-tracked only; the holdout is not run).</li>')
+    return html[:j] + note + html[j:]
+
+
+def anchor_first_ruling(html: str) -> str:
+    """Give §1 item 1 of Addendum 3 a stable id so other pages can link 'Addendum 3 §1.1'."""
+    h = html.find('1. Rulings recorded')
+    i = html.find('<li>', h)
+    if h < 0 or i < 0:
+        raise SystemExit('Addendum 3: §1 item 1 not found')
+    return html[:i] + f'<li id="{ADDENDUM3_RULING_ID}">' + html[i + 4:]
+
+
+def _header(sha: str, prov: str) -> str:
+    return ('<p class="muted">Quant · 2026-10-04 (ET) · research only, not investment advice. Published verbatim from Quant\'s '
+            f'document (sha256 <code>{sha[:12]}…</code>; see {prov}). Nothing was re-run for this page.</p>')
+
+
+def link_e4(html: str) -> str:
+    """Lab link from Addendum 3 E4 to Quant's correction (E4's text is not edited)."""
+    if not RECHECK_SRC.exists():
+        return html
+    i = html.find('E4 (September 2026 core row)')
+    if i < 0:
+        raise SystemExit('Addendum 3: E4 not found')
+    j = html.find('</li>', i) + len('</li>')
+    note = ('<li class="lab-link" aria-label="Lab note">Lab note: corrected by Quant\'s '
+            '<a href="stage2_livecore_recheck.html">live-core recheck</a>: family 2 already used the corrected month; nothing is recomputed.</li>')
+    return html[:j] + note + html[j:]
+
+
+def build_recheck(page_shell, write_page, docs: Path) -> bool:
+    if not RECHECK_SRC.exists():
+        return False
+    body = _check(RECHECK_SRC, RECHECK_SHA256, 'stage2_livecore_recheck.md')
+    content = ('<article class="prose stage2">' f'<h1>{escape(RECHECK_TITLE)}</h1>'
+               + _header(RECHECK_SHA256, 'data/processed/stage2/PROVENANCE.md')
+               + '<p><a href="stage2_addendum3.html">Addendum 3</a> · <a href="stage2_robustness.html">Stage 2 robustness appendix</a></p>'
+               + render_markdown(body) + '</article>')
+    write_page(RECHECK_PAGE, page_shell(RECHECK_TITLE, content, prefix='../', active='methods/index.html', extra_head=STYLE))
+    return True
+
+
+def build_addendum3(page_shell, write_page, docs: Path) -> bool:
+    if not ADDENDUM3_SRC.exists():
+        return False
+    body = _check(ADDENDUM3_SRC, ADDENDUM3_SHA256, 'stage2_holdout_addendum3.md')
+    links = ('<p><a href="stage2_robustness.html">Stage 2 robustness appendix</a>'
+             + (f' · <a href="{TEACHING}">Teaching note: the DeMiguel tilt</a>' if teaching_published(docs) else '')
+             + (' · <a href="results/index.html">Results hub</a>' if (docs / 'methods/results/index.html').exists() else '')
+             + '</p>')
+    content = ('<article class="prose stage2">' f'<h1>{escape(ADDENDUM3_TITLE)}</h1>'
+               + _header(ADDENDUM3_SHA256, 'data/processed/stage2/PROVENANCE.md') + links
+               + link_e4(anchor_first_ruling(render_markdown(body))) + '</article>')
+    write_page(ADDENDUM3_PAGE, page_shell(ADDENDUM3_TITLE, content, prefix='../', active='methods/index.html', extra_head=STYLE))
+    return True
+
+
 def build_page(page_shell, write_page, docs: Path) -> bool:
+    build_addendum3(page_shell, write_page, docs)
+    build_recheck(page_shell, write_page, docs)
     if not APPENDIX_SRC.exists():
         return False
-    if sha256(APPENDIX_SRC) != APPENDIX_SHA256:
-        raise SystemExit('stage2_robustness.md does not match its pinned sha256; update the pin with Quant\'s new hash')
-    md = APPENDIX_SRC.read_text(encoding='utf-8')
-    body = md.split('\n', 1)[1] if md.startswith('# ') else md
+    body = _check(APPENDIX_SRC, APPENDIX_SHA256, 'stage2_robustness.md')
     if teaching_published(docs):
         teach = f'<a href="{TEACHING}">Quant\'s teaching note: the DeMiguel tilt</a>'
     else:
         teach = 'Quant\'s teaching note is being revised and will be linked here once its final version is published.'
+    html = render_markdown(body)
+    if ADDENDUM3_SRC.exists():
+        html = link_nholdout(html, f'stage2_addendum3.html#{ADDENDUM3_RULING_ID}')
+        teach += ' · <a href="stage2_addendum3.html">Addendum 3 (final dispositions and errata)</a>'
     content = (
         '<article class="prose stage2">'
         f'<h1>{escape(TITLE)}</h1>'
@@ -149,13 +245,10 @@ def build_page(page_shell, write_page, docs: Path) -> bool:
         'Every figure below is Quant\'s, from <code>stage2_code/results/</code>; nothing was re-run for this page.</p>'
         f'<p>{teach}' + (' · <a href="results/index.html">Results hub</a>' if (docs / 'methods/results/index.html').exists() else '')
         + '</p>'
-        + render_markdown(body) +
+        + html +
         '</article>'
     )
-    style = ('<style>.stage2 .formula{font-family:"JetBrains Mono",ui-monospace,monospace;font-size:.85rem;'
-             'overflow-wrap:anywhere;padding:.25rem 0 .25rem .75rem;border-left:2px solid #1c2d6b}'
-             '.stage2 table{font-size:.85rem}.stage2 h2{margin-top:2rem}.stage2 code{overflow-wrap:anywhere}</style>')
-    write_page(PAGE, page_shell(TITLE, content, prefix='../', active='methods/index.html', extra_head=style))
+    write_page(PAGE, page_shell(TITLE, content, prefix='../', active='methods/index.html', extra_head=STYLE))
     return True
 
 
