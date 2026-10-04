@@ -1,0 +1,49 @@
+// JSON options stay portable; browser-only number formatting is installed here.
+(() => {
+  if (globalThis.hubCharts) { globalThis.hubCharts.scan(); return; }
+  const pending = new WeakSet();
+  function scan() {
+    document.querySelectorAll('[data-hub-chart]').forEach(element => {
+      if (pending.has(element) || globalThis.echarts.getInstanceByDom(element)) return;
+      pending.add(element);
+      const ancestors = [];
+      for (let parent = element.parentElement; parent; parent = parent.parentElement) {
+        if (parent.tagName === 'DETAILS') ancestors.push(parent);
+      }
+      let chart;
+      function start() {
+        if (ancestors.some(details => !details.open)) return;
+        if (chart) { chart.resize(); return; }
+        const source = document.getElementById(element.dataset.hubChart);
+        const option = JSON.parse(source.textContent);
+        const hints = option._hub || {};
+        delete option._hub;
+        const number = new Intl.NumberFormat('en-US', {
+          style: hints.percent ? 'percent' : 'decimal',
+          minimumFractionDigits: hints.decimals ?? 2,
+          maximumFractionDigits: hints.decimals ?? 2,
+        });
+        const format = value => value == null || value === '-' ? '—' :
+          (typeof value === 'number' ? number.format(value) : value);
+        option.tooltip = {...option.tooltip, valueFormatter: format};
+        for (const key of ['xAxis', 'yAxis']) {
+          for (const axis of [].concat(option[key] || [])) {
+            if (axis.type !== 'category') axis.axisLabel = {...axis.axisLabel, formatter: format};
+          }
+        }
+        chart = globalThis.echarts.init(element, 'hub', {renderer: 'svg'});
+        chart.setOption(option);
+        window.addEventListener('resize', () => chart.resize());
+        if (typeof ResizeObserver !== 'undefined') {
+          const observer = new ResizeObserver(() => chart.resize());
+          observer.observe(element);
+        }
+      }
+      ancestors.forEach(details => details.addEventListener('toggle', start));
+      start();
+    });
+  }
+  globalThis.hubCharts = {scan};
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', scan);
+  else scan();
+})();

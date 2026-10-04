@@ -1,0 +1,104 @@
+<svg width="375" height="240" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" baseProfile="full" viewBox="0 0 375 240">
+<rect width="375" height="240" x="0" y="0" fill="#ffffff"></rect>
+<path d="M43.8 164.5L333.9 164.5" fill="none" pointer-events="visible" stroke="#c3c7cf" class="zr0-cls-16"></path>
+<path d="M43.8 147.5L333.9 147.5" fill="none" pointer-events="visible" stroke="#c3c7cf" class="zr0-cls-16"></path>
+<path d="M43.8 130.5L333.9 130.5" fill="none" pointer-events="visible" stroke="#c3c7cf" class="zr0-cls-16"></path>
+<path d="M43.8 113.5L333.9 113.5" fill="none" pointer-events="visible" stroke="#c3c7cf" class="zr0-cls-16"></path>
+<path d="M43.8 96.5L333.9 96.5" fill="none" pointer-events="visible" stroke="#c3c7cf" class="zr0-cls-16"></path>
+<path d="M43.8 79.5L333.9 79.5" fill="none" pointer-events="visible" stroke="#c3c7cf" class="zr0-cls-16"></path>
+<path d="M43.8 63.5L333.9 63.5" fill="none" pointer-events="visible" stroke="#c3c7cf" class="zr0-cls-16"></path>
+<path d="M43.8 46.5L333.9 46.5" fill="none" pointer-events="visible" stroke="#c3c7cf" class="zr0-cls-16"></path>
+<text dominant-baseline="central" text-anchor="middle" style="font-size:12px;font-family:sans-serif;" y="-6" transform="translate(43.76 31)" fill="#3f434a">Return</text>
+<path d="M43.8 130.5L333.9 130.5" fill="none" pointer-events="visible" stroke="#c3c7cf" stroke-linecap="round" class="zr0-cls-16"></path>
+<path d="M44.5 130.3L44.5 135.3" fill="none" pointer-events="visible" stroke="#c3c7cf" class="zr0-cls-16"></path>
+<path d="M102.5 130.3L102.5 135.3" fill="none" pointer-events="visible" stroke="#c3c7cf" class="zr0-cls-16"></path>
+<path d="M160.5 130.3L160.5 135.3" fill="none" pointer-events="visible" stroke="#c3c7cf" class="zr0-cls-16"></path>
+<path d="M218.5 130.3L218.5 135.3" fill="none" pointer-events="visible" stroke="#c3c7cf" class="zr0-cls-16"></path>
+<path d="M276.5 130.3L276.5 135.3" fill="none" pointer-events="visible" stroke="#c3c7cf" class="zr0-cls-16"></path>
+<path d="M334.5 130.3L334.5 135.3" fill="none" pointer-events="visible" stroke="#c3c7cf" class="zr0-cls-16"></path>
+<text dominant-baseline="central" text-anchor="end" style="font-size:12px;font-family:sans-serif;" transform="translate(35.76 164)" fill="#6b7079">-0.2</text>
+<text dominant-baseline="central" text-anchor="end" style="font-size:12px;font-family:sans-serif;" transform="translate(35.76 147.1429)" fill="#6b7079">-0.1</text>
+<text dominant-baseline="central" text-anchor="end" style="font-size:12px;font-family:sans-serif;" transform="translate(35.76 130.2857)" fill="#6b7079">0</text>
+<text dominant-baseline="central" text-anchor="end" style="font-size:12px;font-family:sans-serif;" transform="translate(35.76 113.4286)" fill="#6b7079">0.1</text>
+<text dominant-baseline="central" text-anchor="end" style="font-size:12px;font-family:sans-serif;" transform="translate(35.76 96.5714)" fill="#6b7079">0.2</text>
+<text dominant-baseline="central" text-anchor="end" style="font-size:12px;font-family:sans-serif;" transform="translate(35.76 79.7143)" fill="#6b7079">0.3</text>
+<text dominant-baseline="central" text-anchor="end" style="font-size:12px;font-family:sans-serif;" transform="translate(35.76 62.8571)" fill="#6b7079">0.4</text>
+<text dominant-baseline="central" text-anchor="end" style="font-size:12px;font-family:sans-serif;" transform="translate(35.76 46)" fill="#6b7079">0.5</text>
+<text dominant-baseline="central" text-anchor="middle" style="font-size:12px;font-family:sans-serif;" y="6" transform="translate(43.76 172)" fill="#6b7079">2025-01</text>
+<text dominant-baseline="central" text-anchor="middle" style="font-size:12px;font-family:sans-serif;" y="6" transform="translate(101.78 172)" fill="#6b7079">2025-02</text>
+<text dominant-baseline="central" text-anchor="middle" style="font-size:12px;font-family:sans-serif;" y="6" transform="translate(159.8 172)" fill="#6b7079">2025-03</text>
+<text dominant-baseline="central" text-anchor="middle" style="font-size:12px;font-family:sans-serif;" y="6" transform="translate(217.82 172)" fill="#6b7079">2025-04</text>
+<text dominant-baseline="central" text-anchor="middle" style="font-size:12px;font-family:sans-serif;" y="6" transform="translate(275.84 172)" fill="#6b7079">2025-05</text>
+<text dominant-baseline="central" text-anchor="middle" style="font-size:12px;font-family:sans-serif;" y="6" transform="translate(333.86 172)" fill="#6b7079">2025-06</text>
+<polygon points="101.8 164 217.8 164 217.8 46 101.8 46" fill="#f4f5f7" fill-opacity="0.6" stroke="#1c2d6b" stroke-width="0" stroke-opacity="0.6" ecmeta_series_index="0" ecmeta_data_index="0" ecmeta_ssr_type="chart" class="zr0-cls-17"></polygon>
+<text dominant-baseline="central" text-anchor="middle" style="font-size:12px;font-family:sans-serif;" y="-6" transform="translate(159.8 41)" fill="#6b7079">Window</text>
+<g clip-path="url(#zr0-c0)">
+<path d="M43.8 147.1L101.8 130.3L43.8 130.3ZM217.8 164L275.8 113.4L333.9 96.6L333.9 130.3L275.8 130.3L217.8 130.3Z" fill="#858a94" fill-opacity="0" class="zr0-cls-16"></path>
+</g>
+<g clip-path="url(#zr0-c1)">
+<path d="M43.8 96.6L101.8 79.7L101.8 130.3L43.8 147.1ZM217.8 113.4L275.8 62.9L333.9 46L333.9 96.6L275.8 113.4L217.8 164Z" fill="#858a94" fill-opacity="0.25" class="zr0-cls-16"></path>
+</g>
+<g clip-path="url(#zr0-c2)">
+<path d="M43.8 113.4L101.8 96.6M217.8 147.1L275.8 79.7L333.9 62.9" fill="none" pointer-events="visible" stroke="#1c2d6b" stroke-width="2" stroke-linejoin="bevel" class="zr0-cls-19"></path>
+</g>
+<g clip-path="url(#zr0-c3)">
+<path d="M43.8 121.9L101.8 113.4L159.8 105L217.8 113.4L275.8 96.6L333.9 79.7" fill="none" pointer-events="visible" stroke="#1a1410" stroke-width="2" stroke-dasharray="8,4" stroke-linejoin="bevel" class="zr0-cls-19"></path>
+</g>
+<g clip-path="url(#zr0-c0)">
+<path d="M43.8 147.1L101.8 130.3M217.8 164L275.8 113.4L333.9 96.6" fill="none" pointer-events="visible" stroke="#858a94" stroke-width="2" stroke-opacity="0" stroke-linejoin="bevel" class="zr0-cls-16"></path>
+</g>
+<g clip-path="url(#zr0-c1)">
+<path d="M43.8 96.6L101.8 79.7M217.8 113.4L275.8 62.9L333.9 46" fill="none" pointer-events="visible" stroke="#5b6ba8" stroke-width="2" stroke-opacity="0" stroke-linejoin="bevel" class="zr0-cls-16"></path>
+</g>
+<path d="M-5 -5.9l185.7 0l0 25l-185.7 0Z" transform="translate(99.64 220.9)" fill="rgb(0,0,0)" fill-opacity="0" stroke="#c3c7cf" stroke-width="0" class="zr0-cls-16"></path>
+<path d="M0 7L25 7" transform="translate(100.64 220.5)" fill="#000" stroke="#1c2d6b" stroke-width="2" stroke-linecap="butt" stroke-miterlimit="10" class="zr0-cls-16"></path>
+<path d="M18.1 7A5.6 5.6 0 1 1 18.1 6.4A5.6 5.6 0 0 1 18.1 7" transform="translate(100.64 220.5)" fill="#fff" stroke="#1c2d6b" stroke-width="2" stroke-linecap="butt" stroke-miterlimit="10" class="zr0-cls-16"></path>
+<text dominant-baseline="central" text-anchor="start" style="font-size:12px;font-family:sans-serif;" x="30" y="7" transform="translate(100.64 220.5)" fill="#3f434a">Strategy</text>
+<path d="M-1 0.4l75.9 0l0 13.2l-75.9 0Z" transform="translate(100.64 220.5)" fill="none" pointer-events="visible" ecmeta_series_index="0" ecmeta_data_index="0" ecmeta_ssr_type="legend" class="zr0-cls-20"></path>
+<path d="M0 7L25 7" transform="translate(184.52 220.5)" fill="#000" stroke="#1a1410" stroke-width="2" stroke-dasharray="8,4" stroke-linecap="butt" stroke-miterlimit="10" class="zr0-cls-16"></path>
+<path d="M18.1 7A5.6 5.6 0 1 1 18.1 6.4A5.6 5.6 0 0 1 18.1 7" transform="translate(184.52 220.5)" fill="#fff" stroke="#1a1410" stroke-width="2" stroke-linecap="butt" stroke-miterlimit="10" class="zr0-cls-16"></path>
+<text dominant-baseline="central" text-anchor="start" style="font-size:12px;font-family:sans-serif;" x="30" y="7" transform="translate(184.52 220.5)" fill="#3f434a">Benchmark</text>
+<path d="M-1 0.4l91.8 0l0 13.2l-91.8 0Z" transform="translate(184.52 220.5)" fill="none" pointer-events="visible" ecmeta_series_index="1" ecmeta_data_index="1" ecmeta_ssr_type="legend" class="zr0-cls-20"></path>
+<path d="M43.8 130.5L333.9 130.5" fill="none" pointer-events="visible" stroke="#6b7079" stroke-dasharray="4,2" ecmeta_series_index="0" ecmeta_data_index="0" ecmeta_ssr_type="chart" class="zr0-cls-21"></path>
+<defs >
+<clipPath id="zr0-c0">
+<path d="M42 45l294 0l0 120l-294 0Z" fill="#000" class="zr0-cls-16"></path>
+</clipPath>
+<clipPath id="zr0-c1">
+<path d="M42 45l294 0l0 120l-294 0Z" fill="#000" class="zr0-cls-16"></path>
+</clipPath>
+<clipPath id="zr0-c2">
+<path d="M42 45l294 0l0 120l-294 0Z" fill="#000" class="zr0-cls-18"></path>
+</clipPath>
+<clipPath id="zr0-c3">
+<path d="M42 45l294 0l0 120l-294 0Z" fill="#000" class="zr0-cls-18"></path>
+</clipPath>
+</defs>
+<style ><![CDATA[
+.zr0-cls-16:hover {
+pointer-events:none;
+}
+.zr0-cls-17:hover {
+cursor:pointer;
+fill:rgba(255,255,255,1);
+}
+.zr0-cls-18:hover {
+cursor:pointer;
+fill:rgba(0,0,0,1);
+}
+.zr0-cls-19:hover {
+cursor:pointer;
+}
+.zr0-cls-20:hover {
+cursor:pointer;
+fill:rgba(0,0,0,0);
+}
+.zr0-cls-21:hover {
+cursor:pointer;
+stroke-width:3;
+}
+
+]]>
+
+</style>
+</svg>
