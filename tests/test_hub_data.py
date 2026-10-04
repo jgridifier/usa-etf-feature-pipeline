@@ -259,3 +259,15 @@ def test_timing_audit_passes_where_saved():
         assert t['status'] == 'pass' and t['n'] > 0, sid
     assert _load('subjects/schur.json')['timing_audit']['scope'] == 'full'
     assert _load('subjects/ft_med.json')['timing_audit']['scope'].startswith('partial')
+
+
+def test_leaderboard_sparks_cover_common_window_and_match_total_return_diff():
+    import json
+    from pathlib import Path
+    lb = json.loads((Path(__file__).resolve().parents[1] / 'data/processed/hub/leaderboard.json').read_text())
+    for row in lb['rows'] + lb['void']:
+        if not row.get('n'):
+            continue
+        assert len(row['excess_spark']) == row['n'] == 65
+        assert row['excess_spark_months'][0] == '2021-04' and row['excess_spark_months'][-1] == '2026-08'
+        assert abs(row['excess_spark'][-1] - row['total_return_diff']) < 1e-6, row['id']

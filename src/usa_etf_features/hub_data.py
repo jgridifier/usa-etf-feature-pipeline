@@ -600,6 +600,12 @@ def compute_subject(root, subject, ctx):
                                                             ((1 + pair_core.iloc[:, 0]).rolling(12).apply(np.prod, raw=True)
                                                              - (1 + pair_core.iloc[:, 1]).rolling(12).apply(np.prod, raw=True))],
                                         drawdown_core=_dd(pair_core.iloc[:, 1]), drawdown_subject=_dd(pair_core.iloc[:, 0]))
+    pair_cw = pd.concat([window(s, *COMMON_WINDOW), window(s1, *COMMON_WINDOW)], axis=1, join='inner').dropna()
+    curves['common_window_excess'] = dict(
+        months=[str(m) for m in pair_cw.index],
+        cumulative_excess=[_r(v, 8) for v in (1 + pair_cw.iloc[:, 0]).cumprod() - (1 + pair_cw.iloc[:, 1]).cumprod()],
+        note='Growth of $1 in the subject minus the static core, both rebased at the start of the common window',
+    ) if len(pair_cw) else None
     for k, (_, ns) in nulls.items():
         al = ns.reindex(months)
         curves['growth'][k] = _curve(al.dropna()) if al.notna().all() else None
@@ -726,7 +732,8 @@ def leaderboard(subjects):
                        cagr_diff=cw['diff']['cagr'], total_return_diff=cw['diff']['total_return'], maxdd_diff=cw['diff']['maxdd'],
                        power=cw['power'], own_window=dict(n=s['vs_core']['own_window'].get('n'), months=len(s['months']),
                                                          cagr_diff=(s['vs_core']['own_window'].get('diff') or {}).get('cagr')),
-                       excess_spark=(s['curves']['growth_vs_core'] or {}).get('cumulative_excess'))
+                       excess_spark=(s['curves']['common_window_excess'] or {}).get('cumulative_excess'),
+                       excess_spark_months=(s['curves']['common_window_excess'] or {}).get('months'))
             if s['group'] != 'void':
                 row.update(sharpe_exbil=cw['a'].get('sharpe_exbil'), sharpe_diff=cw['diff'].get('sharpe_exbil'))
         (void if s['group'] == 'void' else rows).append(row)
