@@ -19,6 +19,7 @@ from __future__ import annotations
 
 import csv
 import json
+import re
 import math
 from pathlib import Path
 
@@ -562,7 +563,9 @@ def dsr_block(subject, card, summary, recompute, chosen=None):
                    note='Gate-first spec: N = 1, so no DSR is defined (PSR only). The #6 grid row for this spec is shown '
                         'for reference (N = 72). ' + NO_VERDICT_CHANGE)
     elif 'ex-BIL' in basis:
-        out.update(primary_basis=basis, note='Already recorded on the Sharpe ex-BIL basis; not part of the recompute.')
+        m = re.match(r'\s*(\d+(?:\.\d+)?)', recorded or '')
+        out.update(primary=float(m.group(1)) if m else None, primary_basis=basis,
+                   note='Already recorded on the Sharpe ex-BIL basis; not part of the recompute.')
     return out
 
 

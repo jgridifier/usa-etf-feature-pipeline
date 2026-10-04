@@ -6,7 +6,7 @@
   pinned in APPENDIX_SHA256 and in data/processed/stage2/PROVENANCE.md.
 - docs/methods/stage2_demiguel_kwz.html is Quant's teaching note, published byte-for-byte and never restyled.
   It is copied ONLY when TEACHING_SHA256 is set and the source matches it:
-      python scripts/build_stage2_pages.py --teaching-source /path/to/stage2_demiguel_kwz.html
+      python scripts/build_stage2_pages.py --teaching-source /path/to/stage2_demiguel.html
   While TEACHING_SHA256 is None (Quant is revising the note), no teaching page ships and the appendix says so.
 """
 from __future__ import annotations
@@ -21,10 +21,10 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 APPENDIX_SRC = ROOT / 'data/processed/stage2/stage2_robustness.md'
-APPENDIX_SHA256 = '289114d045ea97f3f6d92f0870f8472b320b81e6a55395274010176eec4b2b14'
+APPENDIX_SHA256 = 'c1ca949521e3132f9bae592acfcb5fe53fa323fdd48b646d6bc6b14963fbde17'
 PAGE = 'methods/stage2_robustness.html'
-TEACHING = 'stage2_demiguel_kwz.html'               # under docs/methods/
-TEACHING_SHA256: str | None = None                  # pending Quant's final revision (CoS sends the sha256)
+TEACHING = 'stage2_demiguel.html'                   # under docs/methods/ (the old *_kwz.html is never published)
+TEACHING_SHA256: str | None = '8091157e656d740ceae02f2f53ec75ff049c02a8e8c56364d05ce379a9e1625d'  # final (CoS, 2026-10-04 08:25 ET)
 TITLE = 'Stage 2 robustness appendix: KWZ, DeMiguel, replications, holdout power'
 
 
@@ -138,7 +138,7 @@ def build_page(page_shell, write_page, docs: Path) -> bool:
     md = APPENDIX_SRC.read_text(encoding='utf-8')
     body = md.split('\n', 1)[1] if md.startswith('# ') else md
     if teaching_published(docs):
-        teach = f'<a href="{TEACHING}">Quant\'s teaching note: DeMiguel tilt and the KWZ slot</a>'
+        teach = f'<a href="{TEACHING}">Quant\'s teaching note: the DeMiguel tilt</a>'
     else:
         teach = 'Quant\'s teaching note is being revised and will be linked here once its final version is published.'
     content = (

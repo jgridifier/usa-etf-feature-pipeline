@@ -283,3 +283,28 @@ Fat tails (t5) change these by ≤ 0.02. ρ = 0.995 behaves almost identically.
 | replicate.py | §3 replications (public Ken French data) | replications.json |
 | hurdles.py, power.py, power2.py | §4 | hurdles.json, power.json, power2.json |
 | dsr_recompute.py | ex-BIL DSR recompute (deliverable C) | ../QUANT_dsr_exbil_recompute.csv |
+
+## 7. Update 2026-10-04 (after the CIO + CoS rulings; see Addendum 2, body `f004527e…`)
+**Rulings adopted:**
+- N_holdout = 1, DeMiguel only. KWZ is dropped (it falls back to GMV, is infeasible at N = 45–96 with a 36-month lookback, and the long-only projection removes about 290% of short positions).
+- C1 becomes a one-sided Memmel test with p ≤ 0.20.
+- DSR N = the number of candidates actually taken to the run.
+- New-family qualification closes 2026-10-18 23:59 ET.
+- New CIO Book rule: one-way turnover ≤ 100%/yr on dev **and** CAGR above the static core at 10 bp.
+
+**Dev fixes (slots 4–6).** Pre-declared in `QUANT_dev_fixes_PREDECLARE.md` (sha256 `3cef2fa3…`); code `stage2_code/dev_fixes.py`; output `results/dev_fixes.json`.
+
+| Variant | Sharpe | Δ vs EW [95% CI] | One-way TO | θ on grid edge | Placebo p | CAGR − core (10 bp) |
+|---|---|---|---|---|---|---|
+| S_k5 (frozen) | 0.633 | +0.034 [−0.10, +0.16] | 178% | 88% | 0.08 | −4.3 pp |
+| S_q_cv (quadratic TC, CV) | 0.565 | −0.034 [−0.16, +0.08] | 220% | 55% | 0.75 | −5.5 pp |
+| S_ridge_cv (ridge θ, CV) | 0.565 | −0.035 [−0.13, +0.05] | 192% | 46% | 0.85 | −5.4 pp |
+| S_q_ridge_cv | 0.568 | −0.033 [−0.14, +0.07] | 216% | 47% | 0.70 | −5.4 pp |
+
+The CV-chosen penalties jump from month to month, which adds switching on top of the θ jumps. S_k5 is re-confirmed under the pre-declared rule. All 6 of 6 selectable slots are now used.
+
+**Book rule: every variant fails both (a) and (b).** A holdout PASS is therefore a research result only.
+
+**Cost-convention correction.** The engine charged 5 bp per unit of L1 turnover, which is 10 bp one-way. Turnover figures earlier in this appendix (for example "355%/yr") are L1; one-way is half of that. The holdout charges 5 bp one-way. On dev, the frozen spec at 5 bp one-way scores 0.639 vs EW 0.601.
+
+**Power at N = 1 with the Memmel C1** (ρ = 0.977, `results/power_N1_c1p20.json`): a no-skill candidate passes 11% of the time (26% under the point-estimate C1), and a +0.3 edge passes 81%.
