@@ -1,0 +1,32 @@
+{
+  "library": "ECharts",
+  "version": "6.1.0",
+  "file": "echarts-6.1.0.custom.min.js",
+  "sha256": "a50da38d57a6a0de23e02d6a0ae3efe4165074dbef90ffd4cfc7dbd7694c3fa0",
+  "gzip_bytes": 256744,
+  "build": "cd tools/echarts-build && npm ci && npm run build",
+  "source": "npm echarts@6.1.0 + esbuild@0.25.10 (tools/echarts-build/package-lock.json)",
+  "components": [
+    "LineChart",
+    "BarChart",
+    "ScatterChart",
+    "HeatmapChart",
+    "CustomChart",
+    "GridComponent",
+    "TooltipComponent",
+    "LegendComponent",
+    "MarkAreaComponent",
+    "MarkLineComponent",
+    "MarkPointComponent",
+    "DatasetComponent",
+    "AriaComponent",
+    "DataZoomComponent",
+    "VisualMapComponent",
+    "TitleComponent",
+    "GraphicComponent",
+    "SVGRenderer",
+    "CanvasRenderer",
+    "LabelLayout",
+    "UniversalTransition"
+  ]
+}

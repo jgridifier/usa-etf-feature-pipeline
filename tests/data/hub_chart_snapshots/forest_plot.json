@@ -1,0 +1,208 @@
+{
+  "animation": false,
+  "aria": {
+    "enabled": true
+  },
+  "tooltip": {
+    "trigger": "item",
+    "confine": true,
+    "triggerOn": "mousemove|click"
+  },
+  "grid": {
+    "left": 12,
+    "right": 16,
+    "top": 40,
+    "bottom": 56,
+    "containLabel": true
+  },
+  "legend": {
+    "type": "scroll",
+    "bottom": 0,
+    "data": [
+      "Estimate"
+    ]
+  },
+  "_hub": {
+    "percent": false,
+    "decimals": 2,
+    "table": {
+      "headers": [
+        "Name",
+        "Estimate",
+        "Lower",
+        "Upper"
+      ],
+      "rows": [
+        [
+          "A",
+          0.2,
+          -0.1,
+          0.4
+        ],
+        [
+          "B",
+          -0.1,
+          -0.3,
+          0.1
+        ],
+        [
+          "Gap",
+          null,
+          null,
+          null
+        ]
+      ]
+    }
+  },
+  "series": [
+    {
+      "name": "Estimate",
+      "type": "scatter",
+      "data": [
+        [
+          0.2,
+          0
+        ],
+        [
+          -0.1,
+          1
+        ],
+        [
+          null,
+          2
+        ]
+      ],
+      "markLine": {
+        "symbol": [
+          "none",
+          "none"
+        ],
+        "label": {
+          "show": false
+        },
+        "lineStyle": {
+          "color": "#6b7079",
+          "type": "dashed"
+        },
+        "data": [
+          {
+            "xAxis": 0
+          }
+        ]
+      }
+    },
+    {
+      "name": "Interval offset",
+      "type": "bar",
+      "stack": "__hub_interval",
+      "stackStrategy": "all",
+      "barWidth": 2,
+      "data": [
+        -0.1,
+        -0.3,
+        null
+      ],
+      "silent": true,
+      "tooltip": {
+        "show": false
+      },
+      "itemStyle": {
+        "color": "#1c2d6b",
+        "opacity": 0
+      }
+    },
+    {
+      "name": "Interval",
+      "type": "bar",
+      "stack": "__hub_interval",
+      "stackStrategy": "all",
+      "barWidth": 2,
+      "data": [
+        0.5,
+        0.4,
+        null
+      ],
+      "silent": true,
+      "tooltip": {
+        "show": false
+      },
+      "itemStyle": {
+        "color": "#1c2d6b",
+        "opacity": 1
+      }
+    },
+    {
+      "name": "Interval lower",
+      "type": "scatter",
+      "data": [
+        [
+          -0.1,
+          0
+        ],
+        [
+          -0.3,
+          1
+        ],
+        [
+          null,
+          2
+        ]
+      ],
+      "symbol": "rect",
+      "symbolSize": [
+        2,
+        10
+      ],
+      "silent": true,
+      "itemStyle": {
+        "color": "#1c2d6b"
+      },
+      "tooltip": {
+        "show": false
+      }
+    },
+    {
+      "name": "Interval upper",
+      "type": "scatter",
+      "data": [
+        [
+          0.4,
+          0
+        ],
+        [
+          0.1,
+          1
+        ],
+        [
+          null,
+          2
+        ]
+      ],
+      "symbol": "rect",
+      "symbolSize": [
+        2,
+        10
+      ],
+      "silent": true,
+      "itemStyle": {
+        "color": "#1c2d6b"
+      },
+      "tooltip": {
+        "show": false
+      }
+    }
+  ],
+  "xAxis": {
+    "type": "value",
+    "name": "Estimate"
+  },
+  "yAxis": {
+    "type": "category",
+    "data": [
+      "A",
+      "B",
+      "Gap"
+    ],
+    "inverse": true
+  }
+}

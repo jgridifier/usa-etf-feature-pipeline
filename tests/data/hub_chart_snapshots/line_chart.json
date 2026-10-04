@@ -1,0 +1,232 @@
+{
+  "animation": false,
+  "aria": {
+    "enabled": true
+  },
+  "tooltip": {
+    "trigger": "axis",
+    "confine": true,
+    "triggerOn": "mousemove|click"
+  },
+  "grid": {
+    "left": 12,
+    "right": 16,
+    "top": 40,
+    "bottom": 56,
+    "containLabel": true
+  },
+  "legend": {
+    "type": "scroll",
+    "bottom": 0,
+    "data": [
+      "Strategy",
+      "Benchmark"
+    ]
+  },
+  "_hub": {
+    "percent": true,
+    "decimals": 2,
+    "table": {
+      "headers": [
+        "Date",
+        "Strategy",
+        "Benchmark",
+        "Range lower",
+        "Range upper"
+      ],
+      "rows": [
+        [
+          "2025-01",
+          0.1,
+          0.05,
+          -0.1,
+          0.2
+        ],
+        [
+          "2025-02",
+          0.2,
+          0.1,
+          0,
+          0.3
+        ],
+        [
+          "2025-03",
+          null,
+          0.15,
+          null,
+          null
+        ],
+        [
+          "2025-04",
+          -0.1,
+          0.1,
+          -0.2,
+          0.1
+        ],
+        [
+          "2025-05",
+          0.3,
+          0.2,
+          0.1,
+          0.4
+        ],
+        [
+          "2025-06",
+          0.4,
+          0.3,
+          0.2,
+          0.5
+        ]
+      ]
+    }
+  },
+  "series": [
+    {
+      "name": "Strategy",
+      "type": "line",
+      "data": [
+        0.1,
+        0.2,
+        null,
+        -0.1,
+        0.3,
+        0.4
+      ],
+      "connectNulls": false,
+      "showSymbol": false,
+      "lineStyle": {
+        "type": "solid"
+      },
+      "markLine": {
+        "symbol": [
+          "none",
+          "none"
+        ],
+        "label": {
+          "show": false
+        },
+        "lineStyle": {
+          "color": "#6b7079",
+          "type": "dashed"
+        },
+        "data": [
+          {
+            "yAxis": 0
+          }
+        ]
+      },
+      "markArea": {
+        "itemStyle": {
+          "color": "#f4f5f7",
+          "opacity": 0.6
+        },
+        "label": {
+          "color": "#6b7079"
+        },
+        "data": [
+          [
+            {
+              "name": "Window",
+              "xAxis": "2025-02"
+            },
+            {
+              "xAxis": "2025-04"
+            }
+          ]
+        ]
+      }
+    },
+    {
+      "name": "Benchmark",
+      "type": "line",
+      "data": [
+        0.05,
+        0.1,
+        0.15,
+        0.1,
+        0.2,
+        0.3
+      ],
+      "connectNulls": false,
+      "showSymbol": false,
+      "lineStyle": {
+        "type": "dashed"
+      }
+    },
+    {
+      "name": "Range lower",
+      "type": "line",
+      "stack": "__hub_band",
+      "stackStrategy": "all",
+      "data": [
+        -0.1,
+        0,
+        null,
+        -0.2,
+        0.1,
+        0.2
+      ],
+      "connectNulls": false,
+      "symbol": "none",
+      "lineStyle": {
+        "opacity": 0
+      },
+      "silent": true,
+      "tooltip": {
+        "show": false
+      },
+      "areaStyle": {
+        "color": "#858a94",
+        "opacity": 0
+      }
+    },
+    {
+      "name": "Range range",
+      "type": "line",
+      "stack": "__hub_band",
+      "stackStrategy": "all",
+      "data": [
+        0.30000000000000004,
+        0.3,
+        null,
+        0.30000000000000004,
+        0.30000000000000004,
+        0.3
+      ],
+      "connectNulls": false,
+      "symbol": "none",
+      "lineStyle": {
+        "opacity": 0
+      },
+      "silent": true,
+      "tooltip": {
+        "show": false
+      },
+      "areaStyle": {
+        "color": "#858a94",
+        "opacity": 0.25
+      }
+    }
+  ],
+  "xAxis": {
+    "type": "category",
+    "data": [
+      "2025-01",
+      "2025-02",
+      "2025-03",
+      "2025-04",
+      "2025-05",
+      "2025-06"
+    ],
+    "boundaryGap": false
+  },
+  "yAxis": {
+    "type": "value",
+    "name": "Return"
+  },
+  "dataZoom": [
+    {
+      "type": "inside"
+    }
+  ]
+}

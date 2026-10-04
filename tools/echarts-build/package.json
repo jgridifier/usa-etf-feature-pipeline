@@ -1,0 +1,12 @@
+{
+  "name": "echarts-hub-build",
+  "private": true,
+  "description": "Builds the vendored, pinned ECharts custom bundle in docs/assets/vendor/. Run: npm ci && npm run build",
+  "scripts": {
+    "build": "esbuild entry.js --bundle --minify --format=iife --legal-comments=eof --outfile=../../docs/assets/vendor/echarts-6.1.0.custom.min.js"
+  },
+  "devDependencies": {
+    "echarts": "6.1.0",
+    "esbuild": "0.25.10"
+  }
+}

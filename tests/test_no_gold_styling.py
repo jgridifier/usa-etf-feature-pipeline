@@ -5,7 +5,8 @@ Scans site styling sources and built assets for colours with a hue of roughly
 colour keywords or Tailwind classes. Wording such as "Treasuries or gold" is
 text, not styling, and is not matched. The vendored ECharts bundle
 (docs/assets/v2-echarts-*.js) carries the library's built-in colour tables and
-is excluded; site charts set explicit colours in components/EChart.tsx.
+is excluded, as is the hub's vendored build (docs/assets/vendor/echarts-*.min.js);
+site charts set explicit colours in components/EChart.tsx and docs/assets/hub-theme.js.
 """
 from __future__ import annotations
 
@@ -21,7 +22,7 @@ GLOBS = [
     'docs/**/*.html', 'docs/**/*.css', 'docs/**/*.svg', 'docs/**/*.js',
     'scripts/build_pages.py', 'scripts/build_notes.py', 'scripts/build_composition.py',
 ]
-EXCLUDE = re.compile(r'docs/assets/v2-echarts-[^/]+\.js$')
+EXCLUDE = re.compile(r'docs/assets/(?:v2-echarts-[^/]+|vendor/echarts-[^/]+\.min)\.js$')
 HEX = re.compile(r'(?<![\w&])#([0-9a-fA-F]{6}|[0-9a-fA-F]{3})(?![0-9a-zA-Z])')
 RGB = re.compile(r'rgba?\(\s*(\d{1,3})[\s,]+(\d{1,3})[\s,]+(\d{1,3})')
 NAMED = re.compile(

@@ -1,0 +1,130 @@
+{
+  "animation": false,
+  "aria": {
+    "enabled": true
+  },
+  "tooltip": {
+    "trigger": "axis",
+    "confine": true,
+    "triggerOn": "mousemove|click"
+  },
+  "grid": {
+    "left": 12,
+    "right": 16,
+    "top": 40,
+    "bottom": 56,
+    "containLabel": true
+  },
+  "legend": {
+    "type": "scroll",
+    "bottom": 0
+  },
+  "_hub": {
+    "percent": true,
+    "decimals": 2,
+    "table": {
+      "headers": [
+        "Date",
+        "Strategy",
+        "Benchmark"
+      ],
+      "rows": [
+        [
+          "2025-01",
+          0.1,
+          0.05
+        ],
+        [
+          "2025-02",
+          0.2,
+          0.1
+        ],
+        [
+          "2025-03",
+          null,
+          0.15
+        ],
+        [
+          "2025-04",
+          -0.1,
+          0.1
+        ],
+        [
+          "2025-05",
+          0.3,
+          0.2
+        ],
+        [
+          "2025-06",
+          0.4,
+          0.3
+        ]
+      ]
+    }
+  },
+  "series": [
+    {
+      "name": "Strategy",
+      "type": "line",
+      "data": [
+        0.1,
+        0.2,
+        null,
+        -0.1,
+        0.3,
+        0.4
+      ],
+      "connectNulls": false,
+      "showSymbol": false,
+      "lineStyle": {
+        "type": "solid"
+      },
+      "stack": "total",
+      "areaStyle": {
+        "opacity": 0.4
+      }
+    },
+    {
+      "name": "Benchmark",
+      "type": "line",
+      "data": [
+        0.05,
+        0.1,
+        0.15,
+        0.1,
+        0.2,
+        0.3
+      ],
+      "connectNulls": false,
+      "showSymbol": false,
+      "lineStyle": {
+        "type": "dashed"
+      },
+      "stack": "total",
+      "areaStyle": {
+        "opacity": 0.4
+      }
+    }
+  ],
+  "xAxis": {
+    "type": "category",
+    "data": [
+      "2025-01",
+      "2025-02",
+      "2025-03",
+      "2025-04",
+      "2025-05",
+      "2025-06"
+    ],
+    "boundaryGap": false
+  },
+  "yAxis": {
+    "type": "value",
+    "name": "Weight"
+  },
+  "dataZoom": [
+    {
+      "type": "inside"
+    }
+  ]
+}
