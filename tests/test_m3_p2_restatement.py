@@ -69,27 +69,31 @@ def test_after_figures_equal_the_published_comparison():
 def test_fragility_figures_recompute_from_the_two_return_series():
     """56 / 179 and the 2020-03 gap, recomputed from the was / now values saved with the re-run record."""
     d = rec()['disclosure']
-    moved = json.loads(RERUN.read_text())['other_months_changed_beyond_tolerance']   # every month that moved > 1e-7
-    gaps = {m: v['now'] - v['was'] for m, v in moved.items() if m != '2026-09'}
-    changed = sorted(m for m, g in gaps.items() if abs(g) > d['pick_tolerance'])
+    rerun = json.loads(RERUN.read_text())['other_months_changed_beyond_tolerance']   # every month that moved > 1e-7
+    gaps = {m: v['now'] - v['was'] for m, v in rerun.items() if m != '2026-09'}
+    moved = sorted(m for m, g in gaps.items() if abs(g) > d['pick_tolerance'])
     worst = max(gaps, key=lambda m: abs(gaps[m]))
-    assert (d['months_changed'], d['earlier_months']) == (len(changed), 179) == (56, 179)
-    assert d['months'] == changed
+    assert d['pick_tolerance'] == 1e-6
+    assert (d['months_returns_moved'], d['earlier_months']) == (len(moved), 179) == (56, 179)
+    assert d['months_returns_moved_list'] == moved
+    assert 'months_changed' not in d and 'months' not in d
     assert d['largest_gap_month'] == worst == '2020-03' and d['largest_gap_pp'] == round(gaps[worst] * 100, 2) == -1.02
     assert d['max_daily_return_diff_before_splice'] < d['price_diff_bound'] == 1e-4
 
 
 def test_note_text_is_generated_from_the_record():
     import build_pages
-    want = ('56 of 179 earlier months changed picks between the two price files; largest monthly gap 2020-03, '
-            '\u22121.02 pp; picks flip on price differences under 1e-4, so this stays a lab run.')
+    want = ("56 of 179 earlier months' returns moved by more than 1e-6 between the two price files; largest monthly "
+            'gap 2020-03, \u22121.02 pp; picks flip on price differences under 1e-4, so this stays a lab run.')
     assert build_pages.m3_p2_fragility_note(rec()) == want
     notes = json.loads(NOTES.read_text(encoding='utf-8'))
     assert notes['file'] == 'strategy_comparison.csv'
     assert [(n['strategy_id'], n['text']) for n in notes['notes']] == [('m3_p2_core_rotate', want)]
+    assert 'changed picks' not in NOTES.read_text(encoding='utf-8') and 'changed picks' not in REC.read_text(encoding='utf-8')
     fake = json.loads(json.dumps(rec()))
-    fake['disclosure'].update(months_changed=3, earlier_months=10, largest_gap_month='2001-01', largest_gap_pp=-0.5)
-    assert build_pages.m3_p2_fragility_note(fake).startswith('3 of 10 earlier months') and '2001-01, \u22120.50 pp' in build_pages.m3_p2_fragility_note(fake)
+    fake['disclosure'].update(months_returns_moved=3, earlier_months=10, largest_gap_month='2001-01',
+                              largest_gap_pp=-0.5, pick_tolerance=1e-5)
+    assert build_pages.m3_p2_fragility_note(fake).startswith("3 of 10 earlier months' returns moved by more than 1e-5 ") and '2001-01, \u22120.50 pp' in build_pages.m3_p2_fragility_note(fake)
 
 
 def test_spa_bundle_renders_the_notes_on_runs():

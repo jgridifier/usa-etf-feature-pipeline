@@ -1063,14 +1063,20 @@ def copy_growth_prices() -> None:
 M3_RESTATEMENT = ROOT / 'data/processed/prices_fix_2026-10/m3_p2_restatement.json'
 
 
+def _sci(x: float) -> str:
+    """1e-06 -> '1e-6'."""
+    m, e = f'{x:.0e}'.split('e')
+    return f'{m}e{int(e)}'
+
+
 def m3_p2_fragility_note(rec: dict) -> str:
     """Fragility disclosure for m3_p2_core_rotate, every figure from the restatement record (computed from the two
     return series by scripts/record_m3_p2_restatement.py)."""
     d = rec['disclosure']
     gap = f"{d['largest_gap_pp']:.2f}".replace('-', '\u2212')
-    return (f"{d['months_changed']} of {d['earlier_months']} earlier months changed picks between the two price files; "
-            f"largest monthly gap {d['largest_gap_month']}, {gap} pp; picks flip on price differences under "
-            f"{d['price_diff_bound']:.0e}".replace('e-0', 'e-') + ", so this stays a lab run.")
+    return (f"{d['months_returns_moved']} of {d['earlier_months']} earlier months' returns moved by more than "
+            f"{_sci(d['pick_tolerance'])} between the two price files; largest monthly gap {d['largest_gap_month']}, "
+            f"{gap} pp; picks flip on price differences under {_sci(d['price_diff_bound'])}, so this stays a lab run.")
 
 
 def build_comparison_notes() -> None:

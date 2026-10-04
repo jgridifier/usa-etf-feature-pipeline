@@ -64,7 +64,7 @@
  },
  "disclosure": {
   "earlier_months": 179,
-  "months_changed": 56,
+  "months_returns_moved": 56,
   "pick_tolerance": 1e-06,
   "largest_gap_month": "2020-03",
   "largest_gap_pp": -1.02,
@@ -72,7 +72,7 @@
   "largest_gap_return_now": -0.15322132159190868,
   "max_daily_return_diff_before_splice": 2.270376236568339e-06,
   "price_diff_bound": 0.0001,
-  "months": [
+  "months_returns_moved_list": [
    "2014-06",
    "2014-07",
    "2014-08",
