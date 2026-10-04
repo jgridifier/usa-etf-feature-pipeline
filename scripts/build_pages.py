@@ -1006,6 +1006,8 @@ def main() -> None:
     epo_results.build_epo_results(page_shell, write_page)
     schur_results.build_schur_results(page_shell, write_page)
     dsr_feasibility.build_dsr_feasibility(page_shell, write_page)
+    from build_hub_pages import build_hub_pages
+    build_hub_pages(page_shell, write_page)
     stage2_pages.build_page(page_shell, write_page, DOCS)
     import build_composition  # pandas: run with the repo venv (scripts/build_pages_v2.sh)
     build_composition.write_data(DOCS, build_composition.build_page(page_shell, write_page))

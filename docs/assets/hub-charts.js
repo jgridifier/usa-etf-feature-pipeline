@@ -25,11 +25,26 @@
         });
         const format = value => value == null || value === '-' ? '—' :
           (typeof value === 'number' ? number.format(value) : value);
+        const month = value => {
+          const index = Math.round(value);
+          return `${Math.floor(index / 12)}-${String(index % 12 + 1).padStart(2, '0')}`;
+        };
         option.tooltip = {...option.tooltip, valueFormatter: format};
         for (const key of ['xAxis', 'yAxis']) {
           for (const axis of [].concat(option[key] || [])) {
             if (axis.type !== 'category') axis.axisLabel = {...axis.axisLabel, formatter: format};
           }
+        }
+        if (hints.monthIndex) {
+          option.xAxis.axisLabel.formatter = month;
+          option.xAxis.minInterval = 12;
+          option.tooltip.formatter = point => {
+            const row = hints.table.rows[point.dataIndex];
+            if (!row) return '';
+            const node = document.createElement('div');
+            node.textContent = `${row[0]}: ${row[1]} to ${row[2]}`;
+            return node;
+          };
         }
         chart = globalThis.echarts.init(element, 'hub', {renderer: 'svg'});
         chart.setOption(option);
