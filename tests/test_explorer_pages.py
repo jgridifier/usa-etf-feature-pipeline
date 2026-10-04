@@ -13,7 +13,7 @@ def test_explorer_links_and_chrome():
     page = ROOT / 'docs/explorer/index.html'
     html = page.read_text()
     assert 'Research only; not investment advice' in html
-    assert 'echarts@5.5.1/dist/echarts.min.js' in html
+    assert '../assets/vendor/echarts-6.1.0.custom.min.js' in html
     assert '<noscript>' in html
     assert len(re.findall(r'id="chart-', html)) == 13
     for href in re.findall(r'(?:href|src)="([^"]+)"', html):
@@ -38,3 +38,8 @@ def test_explorer_numerics():
     if not node:
         pytest.skip('Node is required for browser JavaScript numerical tests')
     subprocess.run([node, str(ROOT / 'tests/explorer_numerics.cjs')], cwd=ROOT, check=True)
+
+
+def test_explorer_charts_have_explicit_height():
+    html = (ROOT / 'docs/explorer/index.html').read_text()
+    assert re.search(r'\.chart-wrap \.chart \{[^}]*height:\s*\d+px', html), 'ECharts containers render 0px tall without a height'

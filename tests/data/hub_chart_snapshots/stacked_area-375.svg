@@ -1,0 +1,85 @@
+<svg width="375" height="240" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" baseProfile="full" viewBox="0 0 375 240">
+<rect width="375" height="240" x="0" y="0" fill="#ffffff"></rect>
+<path d="M43.8 164.5L333.9 164.5" fill="none" pointer-events="visible" stroke="#c3c7cf" class="zr0-cls-36"></path>
+<path d="M43.8 140.5L333.9 140.5" fill="none" pointer-events="visible" stroke="#c3c7cf" class="zr0-cls-36"></path>
+<path d="M43.8 117.5L333.9 117.5" fill="none" pointer-events="visible" stroke="#c3c7cf" class="zr0-cls-36"></path>
+<path d="M43.8 93.5L333.9 93.5" fill="none" pointer-events="visible" stroke="#c3c7cf" class="zr0-cls-36"></path>
+<path d="M43.8 69.5L333.9 69.5" fill="none" pointer-events="visible" stroke="#c3c7cf" class="zr0-cls-36"></path>
+<path d="M43.8 46.5L333.9 46.5" fill="none" pointer-events="visible" stroke="#c3c7cf" class="zr0-cls-36"></path>
+<text dominant-baseline="central" text-anchor="middle" style="font-size:12px;font-family:sans-serif;" y="-6" transform="translate(43.76 31)" fill="#3f434a">Weight</text>
+<path d="M43.8 140.5L333.9 140.5" fill="none" pointer-events="visible" stroke="#c3c7cf" stroke-linecap="round" class="zr0-cls-36"></path>
+<path d="M44.5 140.4L44.5 145.4" fill="none" pointer-events="visible" stroke="#c3c7cf" class="zr0-cls-36"></path>
+<path d="M102.5 140.4L102.5 145.4" fill="none" pointer-events="visible" stroke="#c3c7cf" class="zr0-cls-36"></path>
+<path d="M160.5 140.4L160.5 145.4" fill="none" pointer-events="visible" stroke="#c3c7cf" class="zr0-cls-36"></path>
+<path d="M218.5 140.4L218.5 145.4" fill="none" pointer-events="visible" stroke="#c3c7cf" class="zr0-cls-36"></path>
+<path d="M276.5 140.4L276.5 145.4" fill="none" pointer-events="visible" stroke="#c3c7cf" class="zr0-cls-36"></path>
+<path d="M334.5 140.4L334.5 145.4" fill="none" pointer-events="visible" stroke="#c3c7cf" class="zr0-cls-36"></path>
+<text dominant-baseline="central" text-anchor="end" style="font-size:12px;font-family:sans-serif;" transform="translate(35.76 164)" fill="#6b7079">-0.2</text>
+<text dominant-baseline="central" text-anchor="end" style="font-size:12px;font-family:sans-serif;" transform="translate(35.76 140.4)" fill="#6b7079">0</text>
+<text dominant-baseline="central" text-anchor="end" style="font-size:12px;font-family:sans-serif;" transform="translate(35.76 116.8)" fill="#6b7079">0.2</text>
+<text dominant-baseline="central" text-anchor="end" style="font-size:12px;font-family:sans-serif;" transform="translate(35.76 93.2)" fill="#6b7079">0.4</text>
+<text dominant-baseline="central" text-anchor="end" style="font-size:12px;font-family:sans-serif;" transform="translate(35.76 69.6)" fill="#6b7079">0.6</text>
+<text dominant-baseline="central" text-anchor="end" style="font-size:12px;font-family:sans-serif;" transform="translate(35.76 46)" fill="#6b7079">0.8</text>
+<text dominant-baseline="central" text-anchor="middle" style="font-size:12px;font-family:sans-serif;" y="6" transform="translate(43.76 172)" fill="#6b7079">2025-01</text>
+<text dominant-baseline="central" text-anchor="middle" style="font-size:12px;font-family:sans-serif;" y="6" transform="translate(101.78 172)" fill="#6b7079">2025-02</text>
+<text dominant-baseline="central" text-anchor="middle" style="font-size:12px;font-family:sans-serif;" y="6" transform="translate(159.8 172)" fill="#6b7079">2025-03</text>
+<text dominant-baseline="central" text-anchor="middle" style="font-size:12px;font-family:sans-serif;" y="6" transform="translate(217.82 172)" fill="#6b7079">2025-04</text>
+<text dominant-baseline="central" text-anchor="middle" style="font-size:12px;font-family:sans-serif;" y="6" transform="translate(275.84 172)" fill="#6b7079">2025-05</text>
+<text dominant-baseline="central" text-anchor="middle" style="font-size:12px;font-family:sans-serif;" y="6" transform="translate(333.86 172)" fill="#6b7079">2025-06</text>
+<g clip-path="url(#zr0-c0)">
+<path d="M43.8 128.6L101.8 116.8L101.8 140.4L43.8 140.4ZM217.8 152.2L275.8 105L333.9 93.2L333.9 140.4L275.8 140.4L217.8 140.4Z" fill="#1c2d6b" fill-opacity="0.4" class="zr0-cls-38"></path>
+</g>
+<g clip-path="url(#zr0-c1)">
+<path d="M43.8 122.7L101.8 105L159.8 122.7L217.8 128.6L275.8 81.4L333.9 57.8L333.9 93.2L275.8 105L217.8 140.4L159.8 140.4L101.8 116.8L43.8 128.6Z" fill="#1a1410" fill-opacity="0.4" class="zr0-cls-39"></path>
+</g>
+<g clip-path="url(#zr0-c0)">
+<path d="M43.8 128.6L101.8 116.8M217.8 152.2L275.8 105L333.9 93.2" fill="none" pointer-events="visible" stroke="#1c2d6b" stroke-width="2" stroke-linejoin="bevel" class="zr0-cls-40"></path>
+</g>
+<g clip-path="url(#zr0-c1)">
+<path d="M43.8 122.7L101.8 105L159.8 122.7L217.8 128.6L275.8 81.4L333.9 57.8" fill="none" pointer-events="visible" stroke="#1a1410" stroke-width="2" stroke-dasharray="8,4" stroke-linejoin="bevel" class="zr0-cls-40"></path>
+</g>
+<path d="M-5 -5.9l185.7 0l0 25l-185.7 0Z" transform="translate(99.64 220.9)" fill="rgb(0,0,0)" fill-opacity="0" stroke="#c3c7cf" stroke-width="0" class="zr0-cls-36"></path>
+<path d="M0 7L25 7" transform="translate(100.64 220.5)" fill="#000" stroke="#1c2d6b" stroke-width="2" stroke-linecap="butt" stroke-miterlimit="10" class="zr0-cls-36"></path>
+<path d="M18.1 7A5.6 5.6 0 1 1 18.1 6.4A5.6 5.6 0 0 1 18.1 7" transform="translate(100.64 220.5)" fill="#fff" stroke="#1c2d6b" stroke-width="2" stroke-linecap="butt" stroke-miterlimit="10" class="zr0-cls-36"></path>
+<text dominant-baseline="central" text-anchor="start" style="font-size:12px;font-family:sans-serif;" x="30" y="7" transform="translate(100.64 220.5)" fill="#3f434a">Strategy</text>
+<path d="M-1 0.4l75.9 0l0 13.2l-75.9 0Z" transform="translate(100.64 220.5)" fill="none" pointer-events="visible" ecmeta_series_index="0" ecmeta_data_index="0" ecmeta_ssr_type="legend" class="zr0-cls-41"></path>
+<path d="M0 7L25 7" transform="translate(184.52 220.5)" fill="#000" stroke="#1a1410" stroke-width="2" stroke-dasharray="8,4" stroke-linecap="butt" stroke-miterlimit="10" class="zr0-cls-36"></path>
+<path d="M18.1 7A5.6 5.6 0 1 1 18.1 6.4A5.6 5.6 0 0 1 18.1 7" transform="translate(184.52 220.5)" fill="#fff" stroke="#1a1410" stroke-width="2" stroke-linecap="butt" stroke-miterlimit="10" class="zr0-cls-36"></path>
+<text dominant-baseline="central" text-anchor="start" style="font-size:12px;font-family:sans-serif;" x="30" y="7" transform="translate(184.52 220.5)" fill="#3f434a">Benchmark</text>
+<path d="M-1 0.4l91.8 0l0 13.2l-91.8 0Z" transform="translate(184.52 220.5)" fill="none" pointer-events="visible" ecmeta_series_index="1" ecmeta_data_index="1" ecmeta_ssr_type="legend" class="zr0-cls-41"></path>
+<defs >
+<clipPath id="zr0-c0">
+<path d="M42 45l294 0l0 120l-294 0Z" fill="#000" class="zr0-cls-37"></path>
+</clipPath>
+<clipPath id="zr0-c1">
+<path d="M42 45l294 0l0 120l-294 0Z" fill="#000" class="zr0-cls-37"></path>
+</clipPath>
+</defs>
+<style ><![CDATA[
+.zr0-cls-36:hover {
+pointer-events:none;
+}
+.zr0-cls-37:hover {
+cursor:pointer;
+fill:rgba(0,0,0,1);
+}
+.zr0-cls-38:hover {
+cursor:pointer;
+fill:rgba(30,49,117,1);
+}
+.zr0-cls-39:hover {
+cursor:pointer;
+fill:rgba(28,22,17,1);
+}
+.zr0-cls-40:hover {
+cursor:pointer;
+}
+.zr0-cls-41:hover {
+cursor:pointer;
+fill:rgba(0,0,0,0);
+}
+
+]]>
+
+</style>
+</svg>

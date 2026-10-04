@@ -446,7 +446,7 @@ def page_shell(
     scripts = ''
     if include_charts:
         scripts = (
-            '<script src="https://cdn.jsdelivr.net/npm/echarts@5.5.1/dist/echarts.min.js"></script>'
+            f'<script src="{prefix}assets/vendor/echarts-6.1.0.custom.min.js"></script>'
             f'<script src="{prefix}assets/app.js" defer></script>'
         )
     fonts = (
