@@ -2,7 +2,12 @@
 
 - **What:** Quant's recompute of the archived deflated Sharpe ratios (DSRs) on a Sharpe ex-BIL basis. It has 118 rows and was produced 2026-10-04 (ET).
 - **Copy:** the file is a byte-for-byte copy of Quant's working CSV in the shortlist workspace (`justina_shortlist/`). Only the file name changed: working-file names are kept out of the repo.
-- **Source sha256:** `94c122bb05d9c25ef3db113f7cdcc64e63fc2794edc012f9579c00d440c8b8f6`. The committed file has the same hash, and `tests/test_hub_data.py` pins it.
+- **Source sha256 (original copy):** `94c122bb05d9c25ef3db113f7cdcc64e63fc2794edc012f9579c00d440c8b8f6`.
+- **Complete-months update (2026-10-04):** the 86 rows whose window ended 2026-09-16 (the partial September) were rewritten from Quant's September stats recompute (`sept_fix_stat_recompute.csv`, source sha256 `fe8954415fa028f954cc662d79d52689e1c3e6a93caf5233f1ba539a460f1f3c`, notes in `sept_fix_stat_recompute_NOTES.md`) by `scripts/apply_sept_fix_stat_recompute.py`:
+  - `window_end` 2026-08-31, `T` − 1, `dsr_exbil` = the `[complete months only]` value, `sharpe_exbil` from the row's method note, `rf_file` = the panel BIL.
+  - `dsr_exbil_blp_ownvar`, `own_registry_var_monthly`, `skew`, `kurt` and `bil_share` were not recomputed by Quant, so they are blank in those rows.
+  - The other 32 rows are unchanged. #6 grid row: 0.533 → 0.563 (T = 67); VCFC chosen: 0.663 → 0.690.
+- **Committed sha256:** `be9a847aa80473b4924a705630fbd8c66942c506b1863c795bf7c8d5659bf507`, pinned in `tests/test_hub_data.py`.
 - **Method (from Quant's notes):**
   - Each row keeps the trial count `N_used` and the repo's `deflated_sharpe_approx`, with SR0 = z(1−1/N)/√(T−1) on the monthly Sharpe, using sample skew and kurtosis.
   - Only the risk-free basis changes, from rf = 0 to BIL (TB3MS/12 before 2007-06).
