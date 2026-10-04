@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>Idea 2: fixed Book 2 / core blend (Quant teaching note)</title>
+<style>
+  :root { --navy:#0b1f3a; --fg:#111; --muted:#555; --border:#d6d9de; --bg:#f5f6f8; }
+  * { box-sizing: border-box; }
+  html { -webkit-text-size-adjust: 100%; }
+  body { font-family: Georgia, "Times New Roman", serif; color: var(--fg); line-height: 1.55; max-width: 42rem; margin: 2rem auto; padding: 0 1.25rem; background: #fff; overflow-wrap: anywhere; }
+  h1,h2,h3 { font-family: system-ui, -apple-system, "Segoe UI", sans-serif; line-height: 1.25; color: var(--navy); }
+  h1 { font-size: 1.6rem; margin-bottom: 0.25rem; }
+  h2 { font-size: 1.22rem; margin-top: 2rem; border-bottom: 1px solid var(--border); padding-bottom: 0.3rem; }
+  h3 { font-size: 1.04rem; margin-top: 1.4rem; }
+  .meta { color: var(--muted); font-family: system-ui, sans-serif; font-size: 0.9rem; margin-bottom: 1.5rem; }
+  .disclaimer { background: var(--bg); border: 1px solid var(--border); padding: 0.75rem 1rem; border-radius: 6px; font-size: 0.92rem; margin: 1rem 0 1.5rem; }
+  .callout { background: var(--bg); border-left: 4px solid var(--navy); padding: 0.75rem 1rem; margin: 1rem 0; }
+  .warn { background: #fff; border: 2px solid var(--navy); padding: 0.75rem 1rem; margin: 1rem 0; }
+  .wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; max-width: 100%; }
+  table { border-collapse: collapse; width: 100%; font-size: 0.9rem; margin: 0.75rem 0 1rem; }
+  th, td { border: 1px solid var(--border); padding: 0.4rem 0.5rem; text-align: left; vertical-align: top; }
+  th { background: var(--navy); color: #fff; font-family: system-ui, sans-serif; font-weight: 600; }
+  td.n { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+  code, .math { font-family: Menlo, Consolas, monospace; font-size: 0.88em; background: #eef0f3; padding: 0 0.2em; border-radius: 3px; overflow-wrap: anywhere; word-break: break-word; }
+  pre.math { display: block; padding: 0.7rem 0.9rem; overflow-x: auto; line-height: 1.5; white-space: pre-wrap; word-break: break-word; max-width: 100%; }
+  a { color: var(--navy); text-decoration: underline; overflow-wrap: anywhere; }
+  .small { font-size: 0.88rem; color: var(--muted); }
+  ol li, ul li { margin-bottom: 0.3rem; }
+  @media (max-width: 420px) { body { padding: 0 0.8rem; margin: 1rem auto; } h1 { font-size: 1.35rem; } table { font-size: 0.82rem; } th, td { padding: 0.3rem 0.35rem; } }
+</style>
+</head>
+<body>
+<p class="small"><a href="index.html">← Beat-the-benchmark shortlist</a></p>
+<h1>Idea 2 · Fixed-weight blend of Book 2 and the static core</h1>
+<div class="meta">Quant teaching note · 2026-10-04 · status: <strong>proposal only, no ticket, no run</strong> · target: <strong>static core</strong> · rank 2 of 3</div>
+<div class="disclaimer">Research only. This note proposes a methodology test on an experimental research panel of ETFs. It is not personalized investment advice, it carries no approval status, and it changes no Book. Nothing here reads the 2008-01 to 2016-10 holdout. All numbers come from the hub's live series through 2026-08 (complete months), from an in-sample illustration on 2016-11 to 2026-08 daily prices, or from simulation. In-sample illustrations are labelled and are <strong>not gate results</strong>.</div>
+
+<div class="callout"><strong>One-sentence version.</strong> Hold half the money in Book 2 and half in the static core, with the split fixed in advance rather than estimated. Equivalently, run Book 2's scaling at half strength. The goal is to keep most of Book 2's drawdown protection while giving back less of the core's return. <strong>Target benchmark: the static core</strong>, judged on Sharpe and drawdown, with CAGR held close.</div>
+
+<h2>1. The idea in plain language</h2>
+<p>Jared's default is the static core. Book 2 beats it on the risk axis (Sharpe ex-BIL 0.99 vs 0.77, MaxDD −10.1% vs −25.6% on the hub's 68-month window) but trails it on CAGR by about 1.1 pp. The obvious question is whether there is a point between the two that beats the core on risk-adjusted terms while giving up almost no return. Two post-2020 results say how to pick that point. Wang &amp; Yan (2021) find that <em>fixed-weight</em> combinations of managed and unmanaged portfolios fix much of the real-time weakness of volatility management. Cederburg et al. (2020) trace that weakness to unstable estimated combination weights. Kan, Wang &amp; Zhou (2022) show how estimation risk eats an estimated optimal mix when samples are short. DeMiguel, Martín-Utrera &amp; Uppal (2024) give the combination view: the gain from volatility management appears when the managed and unmanaged positions are held together in one mean-variance portfolio, and survives costs out of sample.</p>
+
+<h2>2. The math</h2>
+<pre class="math">R_blend = α·R_Book2 + (1 − α)·R_core,    α = 0.5 (frozen)
+Because Book 2 = f̃_t·core + (1 − f̃_t)·BIL:
+  R_blend = (α f̃_t + 1 − α)·R_core + α(1 − f̃_t)·R_BIL
+  ⇒ exposure e_t = 1 − α(1 − f̃_t) = 0.5 + 0.5·f̃_t   (floor 0.625 when f̃ = 0.25)</pre>
+<p>So the blend is Book 2's own signal at half strength. One-way turnover is α times Book 2's: about 0.5 × 43% ≈ 22%/yr, well under the CIO Book rule's 100%/yr.</p>
+<h3>Why fix α instead of estimating it</h3>
+<p>With two risky positions, the Sharpe-maximising mix is <span class="math">α* ∝ Σ⁻¹(μ − r_f)</span>. It depends on the mean gap between Book 2 and the core, and that gap is not identified: NW t = -0.22 for backbone vs core, and −0.69 for Book 2 vs core over 68 months. An α* estimated from these 67 months would mostly fit noise. This is the KWZ estimation-risk problem in its simplest form, and Wang &amp; Yan's fixed-weight remedy. α = 0.5 is the uninformed equal split. It was fixed by that rule, not by the table below.</p>
+
+<h2>3. How it maps onto the panel</h2>
+<ul>
+<li>No new signal and no new data. It uses the two live series (core and Book 2) and the frozen gate.</li>
+<li>Implementation: a single exposure e_t = 0.5 + 0.5·f̃_t to the live core, the rest in BIL, rebalanced monthly. Average BIL share is about half of Book 2's, roughly 12%, far below the 50% composition tripwire.</li>
+</ul>
+
+<h2>4. Feasibility</h2>
+<h3>In-sample illustration on the hub window (NOT a gate result)</h3>
+<p>2021-02 to 2026-08, 67 complete months, from the live hub series. All α values are shown so it is clear that 0.5 was not picked from them. Book 2's returns are already net of its 5 bp costs. The blend is computed on net returns with an extra 5 bp drift-rebalancing charge.</p>
+<div class="wrap"><table><thead><tr><th>α (share in Book 2)</th><th>CAGR</th><th>Vol</th><th>Sharpe ex-BIL</th><th>MaxDD</th><th>CAGR gap vs core</th><th>MaxDD gap vs core</th></tr></thead><tbody><tr><td>0 (static core)</td><td class="n">15.2%</td><td class="n">16.0%</td><td class="n">0.776</td><td class="n">−25.6%</td><td class="n">—</td><td class="n">—</td></tr><tr><td>0.25</td><td class="n">15.0%</td><td class="n">14.4%</td><td class="n">0.830</td><td class="n">−21.8%</td><td class="n">−0.22 pp</td><td class="n">+3.7 pp</td></tr><tr><td>0.5 (frozen choice)</td><td class="n">14.7%</td><td class="n">13.0%</td><td class="n">0.888</td><td class="n">−18.0%</td><td class="n">−0.48 pp</td><td class="n">+7.6 pp</td></tr><tr><td>0.75</td><td class="n">14.4%</td><td class="n">11.7%</td><td class="n">0.949</td><td class="n">−14.1%</td><td class="n">−0.78 pp</td><td class="n">+11.5 pp</td></tr><tr><td>1.0 (Book 2)</td><td class="n">14.1%</td><td class="n">10.6%</td><td class="n">1.005</td><td class="n">−10.1%</td><td class="n">−1.13 pp</td><td class="n">+15.4 pp</td></tr></tbody></table></div>
+<p>At α = 0.5: Sharpe +0.112 vs the core, MaxDD +7.6 pp shallower, CAGR −0.48 pp. That is better than Book 2's own CAGR gap (−1.13 pp) but still behind the core. As a dev-window proxy without the skew gate, a 50/50 backbone-replica/core blend over 2018-12 to 2026-08 gives Sharpe 0.794 vs the core's 0.814, so in that window it does not lead.</p>
+<h3>Power</h3>
+<p>Correlation with the core is 0.985. Minimum detectable annual Sharpe gap vs the core (one-sided 5%, 80%): 0.32 at 24 months, 0.20 at 60, 0.19 at 67, 0.15 at 106. The in-sample gap (0.11) is below even the 106-month threshold. For CAGR, the tracking error vs the core is about 3.9%/yr. If the true CAGR gap equals the in-sample one, the chance that the blend's CAGR beats the core over 24 forward months is about 38% (about 31% over 60). If the true gap is zero, it is 50%.</p>
+<h3>DSR</h3>
+<p>Same hurdle table as the other ideas (T = 67: N = 1 → 0.71, N = 3 → 1.07, N = 73 → 1.74). The blend's Sharpe ex-BIL of 0.89 clears N = 1 only. Reported, not gating.</p>
+<h3>Costs</h3>
+<p>About 22%/yr one-way. At 10 bp that costs about 0.02 pp/yr in CAGR (the table's CAGR at 10 bp is 14.74%).</p>
+
+<h2>5. Honest odds and how it fails</h2>
+<div class="warn"><strong>Expected edge vs the core:</strong> Sharpe about +0.05 to +0.11, MaxDD about 5–8 pp shallower, CAGR about −0.3 to −0.8 pp. <strong>Probability of a gated PASS</strong> under the CIO Book rule (CAGR above the core at 10 bp, plus Sharpe and drawdown no worse): about <strong>25–35% on a 24-month forward point estimate</strong>, and below 5% for anything statistically significant. This is the most likely idea to "look better than the core" in a chart. It is also the least likely to be <em>proven</em> better.</div>
+<ul>
+<li><strong>It is not new information.</strong> It inherits Book 2's edge and Book 2's uncertainty. If Book 2's risk edge fades forward, so does this.</li>
+<li><strong>CAGR is structurally behind in rising markets.</strong> Any time the gate or scaling binds during a rally, the blend lags. It can only beat the core on CAGR in windows with a real drawdown.</li>
+<li><strong>It is close to a preference choice.</strong> Choosing α is a statement about how much drawdown Jared will trade for return. That is a decision for him, not a discovery, and the page should be read that way.</li>
+</ul>
+
+<h2>6. What a gate would look like</h2>
+<ul>
+<li><strong>Candidate:</strong> one frozen spec, α = 0.5 on live Book 2 + live core. No α grid.</li>
+<li><strong>Primary benchmark:</strong> the live static core, same months and costs. Secondary: Book 2 and the backbone.</li>
+<li><strong>Pass rule (proposal):</strong> the CIO stage-2 Book rule (one-way turnover ≤ 100%/yr; CAGR above the core at 10 bp), plus Sharpe ex-BIL above the core and MaxDD shallower, over at least 24 complete forward months. Paired tests reported with their power.</li>
+</ul>
+<ul>
+<li><strong>Panel:</strong> <code>load_monthly_panel(path, complete_months_only=True)</code>, which drops a partial final month. <code>write_gate_results</code> records <code>complete_months_only</code>, <code>dropped_partial_month</code> and <code>source_asof</code>. Daily prices for the volatility estimate end on the last trading day of the decision month.</li>
+<li><strong>Composition tripwire:</strong> <code>composition_tripwire(weights, universe, method=…, primary_null=…)</code> makes the run VOID if the average cash_like + short_duration + near_cash share (near_cash = FTSL, SRLN) is above 50% for the method or its primary null. The overlay parks the unused exposure in BIL, which is cash_like, so the share is real and must be printed: about 12% on average (half of Book 2's). Then <code>final_gate_label(mechanical, composition)</code> sets the label and <code>composition_report_lines(result)</code> goes into the report.</li>
+<li><strong>Trial count carried forward:</strong> a new overlay inherits Book 2's overlay registry (72 skew-grid specs) plus the backbone (1), so N = 73, and this shortlist adds 3, giving about 120 project-wide (hub: about 117 before this). The registry row is written before any run.</li>
+<li><strong>DSR reported</strong> (Bailey &amp; López de Prado form used in the repo, registry cross-trial variance V = 0.014061), at the candidate's own N = 1, at N = 3 (this shortlist), at N = 73 and at N ≈ 120, with realised skew and kurtosis. As with Book 2, DSR is reported, not the admission gate, because no equity-core overlay can reach the N = 73 hurdle (see the feasibility section).</li>
+<li><strong>Costs:</strong> 5 bp one-way on |Δf| (exposure changes), 10 bp sensitivity. Leakage tests: every σ̂ and signal is dated at or before the decision month-end; returns are for the next month.</li>
+</ul>
+<p><strong>Holdout:</strong> not proposed. Book 2's gate was never run on 2008–16, so the blend could only be tested there by also testing the gate there, which is a separate and bigger spend.</p>
+
+<h2>References (all 2020 or later, links checked 2026-10-04)</h2>
+<ol><li>Wang, F. &amp; Yan, X. S. (2021). Downside risk and the performance of volatility-managed portfolios. <em>Journal of Banking &amp; Finance</em> 131, 106198. <a href="https://doi.org/10.1016/j.jbankfin.2021.106198">doi:10.1016/j.jbankfin.2021.106198</a></li><li>Cederburg, S., O’Doherty, M. S., Wang, F. &amp; Yan, X. S. (2020). On the performance of volatility-managed portfolios. <em>Journal of Financial Economics</em> 138(1), 95–117. <a href="https://doi.org/10.1016/j.jfineco.2020.04.015">doi:10.1016/j.jfineco.2020.04.015</a></li><li>Kan, R., Wang, X. &amp; Zhou, G. (2022). Optimal portfolio choice with estimation risk: No risk-free asset case. <em>Management Science</em> 68(3), 2047–2068. <a href="https://doi.org/10.1287/mnsc.2021.3989">doi:10.1287/mnsc.2021.3989</a></li><li>DeMiguel, V., Martín-Utrera, A. &amp; Uppal, R. (2024). A multifactor perspective on volatility-managed portfolios. <em>Journal of Finance</em> 79(6), 3859–3891. <a href="https://doi.org/10.1111/jofi.13395">doi:10.1111/jofi.13395</a></li><li>Gong, R., Lynch, J. &amp; Ogden, R. (2025). Skewness managed portfolios. Working paper, January 2025. <a href="https://richardeogden.github.io/Skewness_Managed_Portfolios.pdf">author PDF</a> (the source cited by Book 2’s overlay; it is a cross-sectional anomaly paper, and our use of it as a time-series gate is our adaptation)</li></ol>
+
+<p class="small">Quant teaching note · beat_benchmark_2026-10 · no external requests on this page · numbers generated by <code>work/feasibility.py</code> and <code>work/feasibility2.py</code> (outputs <code>work/feasibility_results.json</code>, <code>work/feasibility2_results.json</code>).</p>
+</body>
+</html>

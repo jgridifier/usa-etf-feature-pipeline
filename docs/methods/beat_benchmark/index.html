@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>Beat the benchmark: ranked shortlist (Quant)</title>
+<style>
+  :root { --navy:#0b1f3a; --fg:#111; --muted:#555; --border:#d6d9de; --bg:#f5f6f8; }
+  * { box-sizing: border-box; }
+  html { -webkit-text-size-adjust: 100%; }
+  body { font-family: Georgia, "Times New Roman", serif; color: var(--fg); line-height: 1.55; max-width: 42rem; margin: 2rem auto; padding: 0 1.25rem; background: #fff; overflow-wrap: anywhere; }
+  h1,h2,h3 { font-family: system-ui, -apple-system, "Segoe UI", sans-serif; line-height: 1.25; color: var(--navy); }
+  h1 { font-size: 1.6rem; margin-bottom: 0.25rem; }
+  h2 { font-size: 1.22rem; margin-top: 2rem; border-bottom: 1px solid var(--border); padding-bottom: 0.3rem; }
+  h3 { font-size: 1.04rem; margin-top: 1.4rem; }
+  .meta { color: var(--muted); font-family: system-ui, sans-serif; font-size: 0.9rem; margin-bottom: 1.5rem; }
+  .disclaimer { background: var(--bg); border: 1px solid var(--border); padding: 0.75rem 1rem; border-radius: 6px; font-size: 0.92rem; margin: 1rem 0 1.5rem; }
+  .callout { background: var(--bg); border-left: 4px solid var(--navy); padding: 0.75rem 1rem; margin: 1rem 0; }
+  .warn { background: #fff; border: 2px solid var(--navy); padding: 0.75rem 1rem; margin: 1rem 0; }
+  .wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; max-width: 100%; }
+  table { border-collapse: collapse; width: 100%; font-size: 0.9rem; margin: 0.75rem 0 1rem; }
+  th, td { border: 1px solid var(--border); padding: 0.4rem 0.5rem; text-align: left; vertical-align: top; }
+  th { background: var(--navy); color: #fff; font-family: system-ui, sans-serif; font-weight: 600; }
+  td.n { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+  code, .math { font-family: Menlo, Consolas, monospace; font-size: 0.88em; background: #eef0f3; padding: 0 0.2em; border-radius: 3px; overflow-wrap: anywhere; word-break: break-word; }
+  pre.math { display: block; padding: 0.7rem 0.9rem; overflow-x: auto; line-height: 1.5; white-space: pre-wrap; word-break: break-word; max-width: 100%; }
+  a { color: var(--navy); text-decoration: underline; overflow-wrap: anywhere; }
+  .small { font-size: 0.88rem; color: var(--muted); }
+  ol li, ul li { margin-bottom: 0.3rem; }
+  @media (max-width: 420px) { body { padding: 0 0.8rem; margin: 1rem auto; } h1 { font-size: 1.35rem; } table { font-size: 0.82rem; } th, td { padding: 0.3rem 0.35rem; } }
+</style>
+</head>
+<body>
+<h1>Beat the benchmark: three ideas, ranked</h1>
+<div class="meta">Quant shortlist · 2026-10-04 · builds on Book 2 (vol-target backbone × skew gate) · <strong>proposals only; no tickets until Jared chooses</strong> · 2008–16 holdout unspent</div>
+<div class="disclaimer">Research only. This note proposes a methodology test on an experimental research panel of ETFs. It is not personalized investment advice, it carries no approval status, and it changes no Book. Nothing here reads the 2008-01 to 2016-10 holdout. All numbers come from the hub's live series through 2026-08 (complete months), from an in-sample illustration on 2016-11 to 2026-08 daily prices, or from simulation. In-sample illustrations are labelled and are <strong>not gate results</strong>.</div>
+
+<div class="callout"><strong>Bottom line.</strong> Nothing on this panel is likely to <em>prove</em> it beats a benchmark soon. With 67 complete months, even Book 2 vs the static core can only detect a Sharpe gap of about 0.42. No equity-core strategy can clear DSR ≥ 0.95 at the carried trial count of 73, which needs a Sharpe of about 1.6–1.7. The three ideas below are ranked by how likely they are to produce an answer we can trust, not by how good their backtest looks. <strong>Top pick: Idea 1, the downside-volatility backbone.</strong></div>
+
+<h2>Ranked shortlist</h2>
+<div class="wrap"><table><thead><tr><th>Rank</th><th>Idea</th><th>Target</th><th>Expected edge</th><th>Honest PASS odds</th><th>Turnover/yr</th></tr></thead><tbody><tr><td>1</td><td class="n"><a href="idea1_downside_vol_backbone.html">Downside-volatility backbone</a></td><td class="n">Vol-target backbone</td><td class="n">Sharpe +0.00 to +0.03</td><td class="n">≈10–15% forward (≈20–25% with holdout)</td><td class="n">54%</td></tr><tr><td>2</td><td class="n"><a href="idea2_fixed_blend_book2_core.html">Fixed 50/50 Book 2 + core</a></td><td class="n">Static core</td><td class="n">Sharpe +0.05 to +0.11; MaxDD 5–8 pp better; CAGR −0.3 to −0.8 pp</td><td class="n">≈25–35% point estimate; &lt;5% significant</td><td class="n">≈22%</td></tr><tr><td>3</td><td class="n"><a href="idea3_har_vol_forecast.html">HAR volatility forecast</a></td><td class="n">Vol-target backbone</td><td class="n">Sharpe −0.04 to +0.08; MaxDD likely worse</td><td class="n">≈5–10%</td><td class="n">78%</td></tr></tbody></table></div>
+
+<h3>1. Downside-volatility backbone (top pick)</h3>
+<p>It changes one line of Book 2's backbone: risk is measured on down days only. The 2021 evidence (Wang &amp; Yan) says this adds return timing, which is exactly the axis Book 2 lacks, and Barroso &amp; Detzel (2021) find the managed <em>market</em> portfolio is the case that survives costs. Turnover is unchanged. Its main virtue is that the new series is 0.998-correlated with the backbone, so a paired test can detect a Sharpe gap of about 0.07 in 60 months, or 0.05 if the holdout were spent. It is the only idea we can actually settle. The honest catch is that the likely true gain is small: in-sample it is +0.027 over 2018-12 to 2026-08 and about zero on 2021-02 onward. It is also the only idea where I would <em>propose</em> spending the 2008–16 holdout, and only if a pass would actually switch Book 2's backbone.</p>
+
+<h3>2. Fixed 50/50 Book 2 + static core</h3>
+<p>This is the most direct answer to "beat the core." Holding half in each is the same as running Book 2's scaling at half strength. On the hub window it gives Sharpe 0.89 vs 0.78 and MaxDD −18.0% vs −25.6%, for −0.48 pp of CAGR (in-sample, every α shown on the page). The split is fixed rather than estimated, following the fixed-weight result of Wang &amp; Yan and the estimation-risk logic of Kan, Wang &amp; Zhou. It adds no new information: it inherits Book 2's edge and its uncertainty, and it still trails the core's CAGR in-sample. Read it as a way to present the risk-return choice to Jared, not as a discovery.</p>
+
+<h3>3. HAR volatility forecast</h3>
+<p>A faster, forecast-based risk estimate (HAR, with Christensen et al. 2023 as the modern benchmark study). In-sample it looked best over the long window (+0.084 Sharpe vs the backbone), but the sign flips on 2021-02 onward, MaxDD is worse, and turnover rises to 78%/yr. It also trades away the drawdown control Book 2 was admitted for, so it ranks last.</p>
+
+<h2>Considered and not shortlisted</h2>
+<ul>
+<li><strong>Conditional (extreme-state-only) volatility targeting</strong> (Bongaerts et al. 2020). Our backbone already scales only down, so it is half-conditional already. The in-sample version was slightly worse (−0.020).</li>
+<li><strong>Trend or drawdown overlays.</strong> Family-2 B3 (core-vs-cash timing) was 0.95-correlated with Book 2 and inconclusive, so another tail overlay would be redundant.</li>
+<li><strong>Volatility-managing EW or DeMiguel's base.</strong> Book 2 already beats capped EW (NW t ≈ 2.07 on corrected prices, secondary null), and the DeMiguel tilt fails the turnover rule. Neither targets Jared's actual default.</li>
+<li><strong>Beating the core on CAGR outright.</strong> In this family that needs leverage (exposure above 1 in calm markets), which is outside the long-only rules. I don't propose it.</li>
+</ul>
+
+<h2>Shared feasibility numbers</h2>
+<div class="wrap"><table><thead><tr><th>Series (2021-02 to 2026-08, 67 months)</th><th>CAGR</th><th>Vol</th><th>Sharpe ex-BIL</th><th>MaxDD</th></tr></thead><tbody><tr><td>Static core (70/20/10)</td><td class="n">15.2%</td><td class="n">16.0%</td><td class="n">0.776</td><td class="n">−25.6%</td></tr><tr><td>Vol-target backbone</td><td class="n">15.3%</td><td class="n">14.0%</td><td class="n">0.869</td><td class="n">−20.1%</td></tr><tr><td>Book 2 (backbone × skew gate)</td><td class="n">14.1%</td><td class="n">10.6%</td><td class="n">1.005</td><td class="n">−10.1%</td></tr><tr><td>Capped EW (equity panel)</td><td class="n">9.1%</td><td class="n">9.7%</td><td class="n">0.625</td><td class="n">−16.1%</td></tr></tbody></table></div>
+<p>Annualised Sharpe ex-BIL needed for DSR ≥ 0.95:</p>
+<div class="wrap"><table><thead><tr><th>Trial count N</th><th>T = 67 (now)</th><th>T = 91 (+24 forward)</th><th>T = 127 (+60 forward)</th></tr></thead><tbody><tr><td>N = 1</td><td class="n">0.71</td><td class="n">0.61</td><td class="n">0.51</td></tr><tr><td>N = 3</td><td class="n">1.07</td><td class="n">0.96</td><td class="n">0.87</td></tr><tr><td>N = 12</td><td class="n">1.41</td><td class="n">1.31</td><td class="n">1.21</td></tr><tr><td>N = 73</td><td class="n">1.74</td><td class="n">1.63</td><td class="n">1.52</td></tr><tr><td>N = 120</td><td class="n">1.81</td><td class="n">1.70</td><td class="n">1.60</td></tr></tbody></table></div>
+<p class="small">Gate conventions for any future ticket (on every idea page): <code>load_monthly_panel</code> with complete months only; <code>composition_tripwire</code> + <code>final_gate_label</code> + <code>composition_report_lines</code> (VOID if average cash_like + short_duration + near_cash &gt; 50%, near_cash = FTSL, SRLN); trial count carried forward (N = 73 for overlays, about 120 project-wide); DSR reported. No Engineering tickets until Jared chooses.</p>
+
+<h2>Data caveats</h2>
+<ul>
+<li>Live figures are recomputed on 67 complete months (2021-02 to 2026-08). The hub's 68-month figures include 2026-09.</li>
+<li>The in-sample illustration uses the stand-in core (IVV/QQQ/IJR), rebalanced daily, from 2016-11 prices only. σ* therefore starts in 2016-11, while the live backbone uses longer history. Replica correlation with the live backbone is 0.998.</li>
+<li>The illustration window overlaps the backbone's live out-of-sample window, so any real test must be forward (or a pre-registered holdout spend).</li>
+<li>There is no intraday data: realized variance is proxied by daily squared returns.</li>
+<li>Simulations are bivariate normal. They understate fat tails and crash clustering.</li>
+</ul>
+<h2>References</h2>
+<ol><li>Wang, F. &amp; Yan, X. S. (2021). Downside risk and the performance of volatility-managed portfolios. <em>Journal of Banking &amp; Finance</em> 131, 106198. <a href="https://doi.org/10.1016/j.jbankfin.2021.106198">doi:10.1016/j.jbankfin.2021.106198</a></li><li>Barroso, P. &amp; Detzel, A. (2021). Do limits to arbitrage explain the benefits of volatility-managed portfolios? <em>Journal of Financial Economics</em> 140(3), 744–767. <a href="https://doi.org/10.1016/j.jfineco.2021.02.009">doi:10.1016/j.jfineco.2021.02.009</a></li><li>Cederburg, S., O’Doherty, M. S., Wang, F. &amp; Yan, X. S. (2020). On the performance of volatility-managed portfolios. <em>Journal of Financial Economics</em> 138(1), 95–117. <a href="https://doi.org/10.1016/j.jfineco.2020.04.015">doi:10.1016/j.jfineco.2020.04.015</a></li><li>Kan, R., Wang, X. &amp; Zhou, G. (2022). Optimal portfolio choice with estimation risk: No risk-free asset case. <em>Management Science</em> 68(3), 2047–2068. <a href="https://doi.org/10.1287/mnsc.2021.3989">doi:10.1287/mnsc.2021.3989</a></li><li>DeMiguel, V., Martín-Utrera, A. &amp; Uppal, R. (2024). A multifactor perspective on volatility-managed portfolios. <em>Journal of Finance</em> 79(6), 3859–3891. <a href="https://doi.org/10.1111/jofi.13395">doi:10.1111/jofi.13395</a></li><li>Christensen, K., Siggaard, M. &amp; Veliyev, B. (2023). A machine learning approach to volatility forecasting. <em>Journal of Financial Econometrics</em> 21(5), 1680–1727. <a href="https://doi.org/10.1093/jjfinec/nbac020">doi:10.1093/jjfinec/nbac020</a> (<a href="https://papers.ssrn.com/sol3/papers.cfm?abstract_id=3766999">SSRN 3766999</a>)</li><li>Bongaerts, D., Kang, X. &amp; van Dijk, M. A. (2020). Conditional volatility targeting. <em>Financial Analysts Journal</em> 76(4), 54–71. <a href="https://doi.org/10.1080/0015198X.2020.1790853">doi:10.1080/0015198X.2020.1790853</a> (<a href="https://papers.ssrn.com/sol3/papers.cfm?abstract_id=3636727">SSRN 3636727</a>)</li><li>Gong, R., Lynch, J. &amp; Ogden, R. (2025). Skewness managed portfolios. Working paper, January 2025. <a href="https://richardeogden.github.io/Skewness_Managed_Portfolios.pdf">author PDF</a> (the source cited by Book 2’s overlay; it is a cross-sectional anomaly paper, and our use of it as a time-series gate is our adaptation)</li></ol>
+
+<p class="small">Quant teaching note · beat_benchmark_2026-10 · no external requests on this page · numbers generated by <code>work/feasibility.py</code> and <code>work/feasibility2.py</code> (outputs <code>work/feasibility_results.json</code>, <code>work/feasibility2_results.json</code>).</p>
+</body>
+</html>
