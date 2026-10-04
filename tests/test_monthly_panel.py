@@ -138,13 +138,13 @@ def test_legacy_bil_and_rotation():
 PUBLISHED_SHA256 = {
     'data/processed/skewness_managed/skew_managed_gatefirst_returns.csv': '68ad0748fc3af670d7eb2e6d665ccf40131ab0b8e4469779ade3fc6891aab0f3',
     'data/processed/vol_target_oos_returns.csv': '3434b1a569a77d2e8f17fd6b465267ab9e2c898317755cca70b63468c1fae358',
-    'docs/data/vol_target_oos_returns.csv': '4ce54896def952eb352ea97d1041684a47f4ad91d6393aa0f7de0e4ffe78028f',
-    'docs/data/viz_metrics.json': 'b5c57b5ac88147cfd8fd5168c630fd3c412f0f9b8649a685c596cc199ec09b30',
+    'docs/data/vol_target_oos_returns.csv': 'a0e76aa34212821d4cad5b5dd6d473696af4997139129078afa0279cceb452c6',
+    'docs/data/viz_metrics.json': 'b00ae1db0d390f52834c25811676a0e15dd3fde22266d770e7b4021f0bd42993',
     # Re-pinned 2026-10-01: audit-null stance quotes the live Book 2 Sharpe (1.00); label 'VT' -> 'Backbone'.
-    'docs/data/viz_comparison.json': 'e5296b80fa12bd149ab8b3d6d6e1222d3622b5ec950d79caf47d10da586cb52f',
+    'docs/data/viz_comparison.json': 'dc777418b4ec6aeeb426d6c2c31fa10e5e65823e75e4fcd75543618f84cd3eb9',
     # Re-pinned 2026-10-01: archive.epo_anchored_trend appended (EPO card on the Archive tab); everything else
     # is unchanged, see test_site_sharpe_only_gains_epo_archive_rows (previous pin 1e72c305…3f52fde).
-    'data/processed/cash_null_audit/site_sharpe.json': '434588151765f3689d467ed468a9eadf4c3d3f6decd3b6353ef46665f1aff7e4',
+    'data/processed/cash_null_audit/site_sharpe.json': 'c8ef2ed867944fa05a1f2c5887756ead65bfb7a8e08d9dd489d552b0b02f66e0',
     'data/processed/nonlinear_shrinkage_gmv_v3/composition_tripwire.csv': '672e1661f238d4699574cc94bec50be44fbe5677bae3c8286316b771ccecbf66',
     'data/processed/nonlinear_shrinkage_gmv_v3/coverage_gaps.csv': 'a4d825ec2855d73d02c2b1ce22fa278c17fe35e06d55cee7b3a5eb719f9e9346',
     'data/processed/nonlinear_shrinkage_gmv_v3/final_month_unpriced.csv': '0c20686dc1794a0e4a08650c9914589a09da7a1f20ac0bf6e84271dbad935068',
@@ -156,43 +156,44 @@ PUBLISHED_SHA256 = {
     'data/processed/nonlinear_shrinkage_gmv_v3/variance_tests.csv': '957b13d432b9d512a3265db8bdd444ddd2b6abc90c3c6e377532fc65b422ed5c',
     'data/processed/nonlinear_shrinkage_gmv_v3/weights.csv': 'd23fe0ba9655e0da05945940cea45dbd2f5b5b04e9a58a8ef24418710dc3b060',
     'data/processed/live/skew_managed_gatefirst_registry.csv': '66e244bb744397665e837d60654974d2e221f65be26eb3c10c289abe3b4e5d78',
-    'data/processed/live/skew_managed_gatefirst_returns.csv': 'ecf474471bf45d87d9bf9f88d8907c93bbfef57ed7ca66e90dd9351812ff089d',
+    'data/processed/live/skew_managed_gatefirst_returns.csv': 'dfee6ca05ef24a847c13d9b9cecd2275846d5ad31a8e056e444f40f323703f02',
     'data/processed/live/skew_managed_gatefirst_state.csv': 'd1f3eeb9f469bc94b8de9b3c7b572a3f25421a285ef06def43ffc2e12b4feac1',
-    'data/processed/live/skew_managed_gatefirst_summary.csv': '858ac46252d66a4a265e69aad69db3525c60c5fb191d78119a3c8e9881f11f56',
+    'data/processed/live/skew_managed_gatefirst_summary.csv': '0e95eab5d021042331a0aa1a131e6e879a76711530c2ea230219d6d489d35ad2',
     'data/processed/live/skew_managed_gatefirst_weights.csv': 'cd66db8cd45f12d17ab10a199275d5249b401f637e4d1e2a31172cd447368a92',
-    'data/processed/live/strategy_returns.csv': '1894fa3a0c1b419cbe85c05c6d4ec76ac7e4a71711f507e8c65e8118969f0d71',
+    'data/processed/live/strategy_returns.csv': '6cfa365d6d6d1812bc31845c3e643cdbae55f932297702b38b87f59386ad87d1',
     'data/processed/live/vol_target_monthly_weights.csv': '1b54802c6feeedf8ea42d2609202a456fede2b46f70431081801d1bc2bc44f2a',
-    'data/processed/live/vol_target_oos_returns.csv': '4ce54896def952eb352ea97d1041684a47f4ad91d6393aa0f7de0e4ffe78028f',
-    'data/processed/live/vol_target_oos_summary.csv': 'b3b5bc6990e295bed399b572eae85df54257f6527c26ec752788c20f70d4a2bb',
+    'data/processed/live/vol_target_oos_returns.csv': 'a0e76aa34212821d4cad5b5dd6d473696af4997139129078afa0279cceb452c6',
+    'data/processed/live/vol_target_oos_summary.csv': 'dee50a537e650f15ee680e6aa60279ab98d1127aa30188b4ae4bf1bd36cda09d',
     'data/processed/live/vol_target_regime_table.csv': 'fe2a8ef21f7043463a970bdd51151d91fc08f9e1586d94b1d108a001ff24a2cd',
     'data/processed/live/vol_target_trial_registry.csv': 'f98634cd626f932dd4957de94b88371c9ff7c65eea5152998d5eaa3662ab305d',
     'docs/data/viz_weights.json': '148c7452df4d685a2e5d309f740e9f959c8c953824378c74e97509cdafc1b5dd',
     'docs/data/viz_ft_history.json': '48528ed030c0005beac4fe526755551b298e58aca0c3d013ec6b3bdfe6184fce',
     'docs/data/viz_xsd_timeline.json': '5b1acb8b21533d6d09c020040b5bb13038f1de43f00bb32ec80f1511730a913d',
-    'docs/data/viz_equity_drawdown.json': 'e43d5737f9388e8396a3043693ae043a48d57261f664e3a3d6b1ded4957f84ed',
+    'docs/data/viz_equity_drawdown.json': '030e0d1163b0c239d93e7d09f86d1479f19aba6677503c713d15a3a400aef32a',
     'docs/data/vol_target_trial_registry.csv': 'f98634cd626f932dd4957de94b88371c9ff7c65eea5152998d5eaa3662ab305d',
-    'docs/data/vol_target_oos_summary.csv': 'b3b5bc6990e295bed399b572eae85df54257f6527c26ec752788c20f70d4a2bb',
+    'docs/data/vol_target_oos_summary.csv': 'dee50a537e650f15ee680e6aa60279ab98d1127aa30188b4ae4bf1bd36cda09d',
     'docs/data/vol_target_monthly_weights.csv': '1b54802c6feeedf8ea42d2609202a456fede2b46f70431081801d1bc2bc44f2a',
     'docs/data/vol_target_regime_table.csv': 'fe2a8ef21f7043463a970bdd51151d91fc08f9e1586d94b1d108a001ff24a2cd',
     'docs/data/cio_book_shortlist/book1_static_option_a_weights.csv': 'a1ca1d9eb0cacc221868463affe6aacf678083d2ee538218c491dc8e2d829878',
-    'docs/data/cio_book_shortlist/shortlist_comparison.csv': '457557e41109a239066d16479c147279ae00e453a2c67db818379896cf820514',
+    'docs/data/cio_book_shortlist/shortlist_comparison.csv': '8c5aa6c1852ede1461f4509c583ca912015da498bc955aa1f515d03b51930d16',
     'docs/data/cio_book_shortlist/book2_vol_target_option_a_weights.csv': '0a98eb83ec3acd5167669fc4cf89d3572e53ff8c2cf6ab1f21afa30435926b27',
     'docs/data/cio_book_shortlist/run_latest/strategy_registry_used.csv': 'fa8cf2898b5ab45fb4e9578f0cade53e93bba43d04e13ffe9c10eed543bb030d',
     'docs/data/cio_book_shortlist/run_latest/strategy_diagnostics.csv': 'adaf7de3b3e266c3b1b30ca4935ead92b9447a2276dd856f0e9d004a4e288f21',
     'docs/data/cio_book_shortlist/run_latest/suggested_weights.csv': '708152bca4373923f7ab198b70fc1b5c8f57b7a0d99994102b6bfd6b6154b544',
-    'docs/data/cio_book_shortlist/run_latest/strategy_comparison.csv': '7e5a42c40f6391ada3e8cbc8b0325a4795abdf2141c293786aa62fd84b6e1d19',
+    'docs/data/cio_book_shortlist/run_latest/strategy_comparison.csv': '3f207d7f4c8c14f18d21d1de839240671c7e1005eb8521f6a5db961c8179e564',
     'docs/data/growth_alpha_adj_close.csv': '6af174a5a0f9096e68e22a9a25695ba770c9877e1c761abe121432835b7c6d5c',
     'docs/data/growth_panel_history_coverage.csv': '01fc48143a73a22a0a8fea0464bcf969fa2b07d1703a40548579d48ade36a7d4',
-    'docs/data/strategy_comparison.csv': '7e5a42c40f6391ada3e8cbc8b0325a4795abdf2141c293786aa62fd84b6e1d19',
+    'docs/data/strategy_comparison.csv': '3f207d7f4c8c14f18d21d1de839240671c7e1005eb8521f6a5db961c8179e564',
     'docs/data/strategy_diagnostics.csv': 'adaf7de3b3e266c3b1b30ca4935ead92b9447a2276dd856f0e9d004a4e288f21',
     'docs/data/suggested_weights.csv': '708152bca4373923f7ab198b70fc1b5c8f57b7a0d99994102b6bfd6b6154b544',
-    'docs/data/shortlist_comparison.csv': '457557e41109a239066d16479c147279ae00e453a2c67db818379896cf820514',
+    'docs/data/shortlist_comparison.csv': '8c5aa6c1852ede1461f4509c583ca912015da498bc955aa1f515d03b51930d16',
     'docs/data/book1_static_option_a_weights.csv': 'a1ca1d9eb0cacc221868463affe6aacf678083d2ee538218c491dc8e2d829878',
     'docs/data/book2_vol_target_option_a_weights.csv': '0a98eb83ec3acd5167669fc4cf89d3572e53ff8c2cf6ab1f21afa30435926b27',
     'docs/data/latest_weights_snapshot.csv': '08df3c1ce3c9658de5a84112452d883d01491740fe48d2888ed59ce67b7b7bf3',
 }
 
 
+# Re-pinned 2026-10-04 (Sep-core fix, scripts/repair_live_partial_month.py): docs/data/viz_metrics.json, docs/data/viz_comparison.json, data/processed/cash_null_audit/site_sharpe.json, data/processed/live/skew_managed_gatefirst_returns.csv, data/processed/live/strategy_returns.csv, data/processed/live/vol_target_oos_returns.csv
 def test_published_books_and_v3_byte_identical():
     for name, expected in PUBLISHED_SHA256.items():
         assert hashlib.sha256((ROOT / name).read_bytes()).hexdigest() == expected, name
@@ -205,7 +206,7 @@ def test_site_sharpe_only_gains_epo_archive_rows():
     assert list(site['archive'])[-1] == 'epo_anchored_trend'
     del site['archive']['epo_anchored_trend']
     before = (json.dumps(site, indent=2) + '\n').encode()
-    assert hashlib.sha256(before).hexdigest() == '1e72c3055233e40cc2407c97c631fe561cad01678f27a0acd019548cc3f52fde'
+    assert hashlib.sha256(before).hexdigest() == 'b6a7b6b43e95f7a0f7060ee26ad0aedfdb27be1e733ca417a9cc5408630d8523'  # re-pinned 2026-10-04: 2026-09 live row rebuilt from the complete-month panel
 
 
 def test_books_page_data_through_last_complete_month():

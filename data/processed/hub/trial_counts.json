@@ -1,0 +1,25 @@
+{
+  "third_book_search": {
+    "n": 12,
+    "label": "12 trials in the third-book search",
+    "what": "The allocator registry (the search for a third book: Schur and its pre-registered siblings). A new third-book candidate is deflated against this count; C4 asks for DSR ≥ 0.95 at 12 trials."
+  },
+  "all_registries": {
+    "n": 117,
+    "approx": true,
+    "label": "about 117 trials across all registries",
+    "what": "Every trial run on this panel in every registry (for example the 72-spec skew grid behind Book 2's overlay and the 12 VCFC trials). Shown as a sensitivity only."
+  },
+  "why_they_differ": "The DSR penalises the number of tries that could have produced the winner. Only the 12 allocator trials competed for the third-book slot, so they set the pre-registered hurdle; the ~117 count adds unrelated searches (overlays, timing grids, VOID runs) and is the conservative sensitivity.",
+  "page_counts_note": "Each subject page also shows that subject's own trial count (for example 1 for a single pre-registered spec, 72 for the skew grid). Those count the subject's own registry, not the project.",
+  "sources": [
+    {
+      "document": "Quant stage-2 holdout pre-registration, Addendum 2 §8 (\"about 117 project-wide; the allocator line has 12 before this stage\")",
+      "body_sha256": "f004527e2c41183ef679b7ca5b9de18bc9884ef1c64816201df9963c96496e0c"
+    },
+    {
+      "document": "docs/methods/stage2_demiguel.html (teaching note, DSR table: N ≈ 117 all trials project-wide)",
+      "sha256": "08b251a2425b1802ddf5c8e7de63ab8b97469744d5fbff8490c3c8cb56fb0893"
+    }
+  ]
+}

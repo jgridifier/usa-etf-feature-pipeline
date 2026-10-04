@@ -53,6 +53,7 @@ import archive_void  # noqa: E402
 import build_epo_results as epo_results  # noqa: E402
 import build_schur_results as schur_results  # noqa: E402
 import build_dsr_feasibility as dsr_feasibility  # noqa: E402
+import build_stage2_pages as stage2_pages  # noqa: E402
 
 
 def read_csv(name: str) -> list[dict]:
@@ -68,19 +69,40 @@ def write_json(name: str, payload: object) -> None:
     path.write_text(json.dumps(payload, indent=2) + '\n', encoding='utf-8')
 
 
+SHORTLIST_IDS = ('static_option_a', 'vol_target_option_a', 'score_rotate_xsd')
+
+
+def regenerate_comparison() -> None:
+    """Re-derive the published comparison from the repaired live returns (2026-09 rebuilt from the complete-month
+    panel; scripts/repair_live_partial_month.py) instead of copying run_latest's partial-month figures.
+
+    Same function as the registry run (strategy_registry.comparison_frame). strategy_comparison.csv uses the months
+    every strategy covers (m3_p2_core_rotate's 2026-09 is blank, so 67 months); the shortlist slice is computed on
+    its three strategies alone (68 months). The external run_latest files are not modified."""
+    import pandas as pd
+    from usa_etf_features.strategy_registry import comparison_frame
+    ret = pd.read_csv(LIVE / 'strategy_returns.csv', parse_dates=['date'])
+    core = ret[ret.strategy_id == 'static_option_a'].set_index('date')['return']
+    full = comparison_frame(ret, core)
+    full.to_csv(DATA / 'strategy_comparison.csv', index=False, date_format='%Y-%m-%d')
+    short = comparison_frame(ret[ret.strategy_id.isin(SHORTLIST_IDS)], core)
+    short.to_csv(DATA / 'shortlist_comparison.csv', index=False, date_format='%Y-%m-%d')
+
+
 def copy_cio_inputs() -> None:
     DATA.mkdir(parents=True, exist_ok=True)
     for src, dest_name in CIO_COPIES:
         if src.is_file():
             shutil.copy2(src, DATA / dest_name)
+    regenerate_comparison()
     # Refresh the published slices from run_latest; the older external shortlist
     # exports are fallback inputs only and are not modified by this build.
     comparison = read_csv('strategy_comparison.csv')
     suggested = read_csv('suggested_weights.csv')
     slices = {}
-    if comparison:
-        slices['shortlist_comparison.csv'] = [r for r in comparison if r['strategy_id'] in
-                                             {'static_option_a', 'vol_target_option_a', 'score_rotate_xsd'}]
+    shortlist = read_csv('shortlist_comparison.csv')
+    if shortlist:
+        slices['shortlist_comparison.csv'] = shortlist
     if suggested:
         for sid, name in [('static_option_a', 'book1_static_option_a_weights.csv'),
                           ('vol_target_option_a', 'book2_vol_target_option_a_weights.csv')]:
@@ -99,7 +121,7 @@ def copy_cio_inputs() -> None:
             shutil.copy2(DATA / name, nested / name)
     for name in ('strategy_comparison.csv', 'suggested_weights.csv',
                  'strategy_diagnostics.csv', 'strategy_registry_used.csv'):
-        src = CIO / 'run_latest' / name
+        src = DATA / name if name == 'strategy_comparison.csv' else CIO / 'run_latest' / name
         if src.is_file():
             (nested / 'run_latest').mkdir(parents=True, exist_ok=True)
             shutil.copy2(src, nested / 'run_latest' / name)
@@ -953,6 +975,8 @@ def restyle_methods_shell() -> None:
         p.name for p in (DOCS / 'methods').glob('*.html') if p.name not in {'index.html', 'justina_round1_scoreboard.html', epo_results.PAGE.removeprefix('methods/'),
                           schur_results.PAGE.removeprefix('methods/'), 'composition_over_time.html',
                           dsr_feasibility.PAGE.removeprefix('methods/'),
+                          stage2_pages.PAGE.removeprefix('methods/'),
+                          stage2_pages.TEACHING,  # Quant's stage-2 teaching note: byte-for-byte, never restyled
                           schur_results.TEACHING}  # Quant's Schur note: published byte-for-byte, never restyled
     )
     for name in methods:
@@ -1003,6 +1027,7 @@ def main() -> None:
     epo_results.build_epo_results(page_shell, write_page)
     schur_results.build_schur_results(page_shell, write_page)
     dsr_feasibility.build_dsr_feasibility(page_shell, write_page)
+    stage2_pages.build_page(page_shell, write_page, DOCS)
     import build_composition  # pandas: run with the repo venv (scripts/build_pages_v2.sh)
     build_composition.write_data(DOCS, build_composition.build_page(page_shell, write_page))
     build_methods_index()

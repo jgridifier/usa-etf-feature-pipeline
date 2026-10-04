@@ -125,3 +125,17 @@ def test_cio_reframe_note_published_unchanged():
     index = (DOCS / 'methods' / 'index.html').read_text(encoding='utf-8')
     assert 'href="../notes/book2_reframe.html"' in index
     assert 'data-pending-note="notes/book2_reframe.md"' not in index
+
+
+def test_stage2_wrap_is_published_verbatim_at_its_pinned_hash():
+    import hashlib
+    spec = importlib.util.spec_from_file_location('build_notes', ROOT / 'scripts' / 'build_notes.py')
+    bn = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(bn)
+    pin = '2efdf27b345d152cdb111406ea10dd4167617d0f47b21591bf68308063814491'
+    assert bn.NOTE_SHA256['stage2_wrap'] == pin
+    md = ROOT / 'docs/notes/stage2_wrap.md'
+    assert hashlib.sha256(md.read_bytes()).hexdigest() == pin
+    assert ('stage2_wrap', 'CIO note: stage 2 wrap-up (Oct 2026)', 'published', '') in bn.NOTES
+    html = (ROOT / 'docs/notes/stage2_wrap.html').read_text(encoding='utf-8')
+    assert 'Stage 2 wrap-up: nothing beat the static core' in html

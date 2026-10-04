@@ -162,8 +162,9 @@ def test_bil_priced_return_is_used_not_zero_proxy(rf, frozen_rf):
     assert sharpe_excess(sk, np.zeros(len(sk))) > 1.2
     live = pd.read_csv(ROOT / "data/processed/live/skew_managed_gatefirst_returns.csv",
                        parse_dates=["date"]).set_index("date")["r_method"]
-    # Re-pinned 2026-10-01: data refresh through 2026-09-30 close
-    assert sharpe_exbil(live, rf) == pytest.approx(0.9967, abs=1e-4)
+    # Re-pinned 2026-10-01: data refresh through 2026-09-30 close; 2026-10-04: 2026-09 row rebuilt from the
+    # complete-month panel (scripts/repair_live_partial_month.py), 0.9967 -> 0.9901
+    assert sharpe_exbil(live, rf) == pytest.approx(0.9901, abs=1e-4)
 
 
 def test_sharpe_formulas(rf):
@@ -252,9 +253,10 @@ def test_site_sharpe_artifact_and_pages_figures(rf, frozen_rf):
     assert site["archive"] == frozen["archive"]
     assert site["books"]["uncond_vt_committed_cash0"] == frozen["books"]["uncond_vt_committed_cash0"]
     books = site["books"]
-    # Re-pinned 2026-10-01: data refresh through 2026-09-30 close
+    # Re-pinned 2026-10-01: data refresh through 2026-09-30 close; 2026-10-04: 2026-09 rebuilt from the
+    # complete-month panel (Book 2 0.9967 -> 0.9901)
     assert round(books["book1_static_core"]["exbil"], 2) == 0.77
-    assert round(books["book2_vt_x_gatefirst"]["exbil"], 2) == 1.00
+    assert round(books["book2_vt_x_gatefirst"]["exbil"], 2) == 0.99
     assert round(books["uncond_vt_audit_null"]["exbil"], 2) == 0.86
     # Archive cards: "<excess of BIL> (legacy <rf = 0>)" at the card's own precision.
     cards = json.loads((ROOT / "apps/pages/src/data/archive_verdicts.json").read_text(encoding="utf-8"))["cards"]

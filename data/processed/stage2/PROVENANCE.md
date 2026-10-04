@@ -1,0 +1,15 @@
+# Stage-2 pages: provenance
+
+| Repo file | Source (Quant workspace) | sha256 | How it's published |
+|---|---|---|---|
+| `data/processed/stage2/stage2_robustness.md` | Quant's stage-2 robustness appendix (`justina_shortlist/`, 2026-10-04 ET, including the §7 update after the rulings; renamed, bytes unchanged) | `c1ca949521e3132f9bae592acfcb5fe53fa323fdd48b646d6bc6b14963fbde17` | Rendered by `scripts/build_stage2_pages.py` to `docs/methods/stage2_robustness.html`. The text is unchanged; only the lab header, footer and a provenance line are added. |
+| `docs/methods/stage2_demiguel.html` | Quant's final teaching note, revised per Addendum 3 E5 (`methods/stage2_demiguel.html`; hash verified by CoS 2026-10-04 09:06 ET; supersedes `8091157e…625d`; no scripts, no CDN) | `08b251a2425b1802ddf5c8e7de63ab8b97469744d5fbff8490c3c8cb56fb0893` | Byte-for-byte copy, never restyled (excluded from `restyle_methods_shell`). It's copied only when the source matches `TEACHING_SHA256` in `scripts/build_stage2_pages.py`. The earlier `stage2_demiguel_kwz.html` (now a redirect note) is not published. |
+| `data/processed/stage2/demiguel_book_rule.json` | Figures transcribed from Quant's Addendum 2 to the stage-2 prereg, §7 CIO Book rule | Addendum 2 body `f004527e2c41183ef679b7ca5b9de18bc9884ef1c64816201df9963c96496e0c` | Read by the hub (forward-tracked research line: DeMiguel S_k5 fails the Book rule) |
+
+| `data/processed/stage2/stage2_holdout_addendum3.md` | Quant's Addendum 3 to the stage-2 holdout pre-registration (final dispositions and errata; renamed, bytes unchanged) | `47234cbc5f1af5beb9a859ccb56da52dfb28cb1164a507b6025a60f3994756df` | Rendered to `docs/methods/stage2_addendum3.html`; §1 item 1 carries the anchor `#s1-1` ("Addendum 3 §1.1"). The robustness page links it as a separate lab note after "N_holdout = 1, DeMiguel only" in §7; neither §7 nor Addendum 2 is edited. |
+| `data/processed/stage2/stage2_livecore_recheck.md` | Quant's live-core recheck for family 2, a correction to Addendum 3 E4 (renamed, bytes unchanged) | `930692cdd2f03e5a5024226a0abb3f17d02d26d86d20f6c841d1adc7740c12ff` | Rendered to `docs/methods/stage2_livecore_recheck.html`; Addendum 3's page links it as a lab note after E4. |
+| `data/processed/stage2/family2_dev.json` | Figures transcribed from Quant's family-2 results (`stage2_code/family2/results/`: `A_dev_results.json` `b24707cb…`, `B_dev_results.json` `aa2d369d…`, `family2_dev_variant_log.csv` `49a9a4e0…`, `family2_manifest.sha256`) and Addendum 3 §1.3 / E2 / E3 | per-file sha256 inside the JSON | Read by the hub (forward-only A6 and B3 beside DeMiguel). Live core first, stand-in in brackets; turnover one-way ½·Σ|Δw|. |
+
+Addendum 2 is not published on Pages; the hub keeps a link slot for it. The CIO's stage-2 wrap-up (`docs/notes/stage2_wrap.md`) is under revision and is not in this PR.
+
+The appendix carries the KWZ correction (KWZ falls back to GMV, not EW; §1) and the DeMiguel placebo result (OOS p = 0.08, in-sample p = 0.01; §2.3). Nothing was re-run for these pages.
