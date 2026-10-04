@@ -168,7 +168,8 @@ def test_dsr_display(built):
     dsr_table = re.search(r'<table><caption>DSR</caption>.*?</table>',raw,re.S)[0]
     assert dsr_table.index(primary) < dsr_table.index(recorded+' (as recorded)')
     assert d['grid_reference']['error_note'] in main_text(raw)
-    assert 'No verdict changes' in raw
+    # Book 2's DSR note (from #53): eligibility never rested on DSR (N = 1, PSR only).
+    assert d['note'] in main_text(raw) and 'Eligibility never rested on DSR' in raw
     schur = hub.load('subjects/schur')['dsr']
     assert schur['recorded'] in main_text(built['methods/results/schur.html'])
     assert schur['recorded_basis'] in main_text(built['methods/results/schur.html'])
