@@ -2653,7 +2653,6 @@
   "source": "data/processed/vol_cond_factor_corr/vol_cfc_monthly_weights.csv",
   "basis": "saved weights (data/processed/vol_cond_factor_corr/vol_cfc_monthly_weights.csv)",
   "months": [
-   "2020-11",
    "2020-12",
    "2021-01",
    "2021-02",
@@ -2722,7 +2721,8 @@
    "2026-05",
    "2026-06",
    "2026-07",
-   "2026-08"
+   "2026-08",
+   "2026-09"
   ],
   "top": {
    "VOO": [
@@ -3974,9 +3974,24 @@
  },
  "dsr": {
   "recorded": "1.000 (trial_count=12)",
-  "basis": "rf = 0 basis",
-  "dsr_exbil_recomputed": null,
-  "recompute_note": "Quant ex-BIL recompute pending (slot: data/processed/hub/dsr_exbil_recompute.csv)"
+  "recorded_basis": "rf = 0 basis",
+  "primary": 0.6625,
+  "primary_basis": "Sharpe ex-BIL basis (corrected; Quant recompute)",
+  "corrected": {
+   "trial": "VCFC_option_a_vt_L21_C12_g0p5_mkt_vol",
+   "dsr_exbil": 0.6625,
+   "dsr_rf0_recorded": 1.0,
+   "sharpe_exbil": 0.7516,
+   "sharpe_rf0_recorded": 1.0487,
+   "n_trials": 12,
+   "months": 70,
+   "window": "2020-12 to 2026-09",
+   "error_note": "Recorded value used an annual Sharpe in a monthly formula; corrected value shown.",
+   "recorded_unit_note": "recorded DSR passed ANNUAL Sharpe into a monthly-scale formula",
+   "source": "data/processed/hub/dsr_exbil_recompute.csv"
+  },
+  "grid_reference": null,
+  "note": "No verdict changes: every method affected had already failed other gates."
  },
  "gates": [
   {
@@ -4006,8 +4021,10 @@
   },
   {
    "gate": "DSR / C4",
-   "value": "1.000 (trial_count=12)",
-   "basis": "rf = 0 basis",
+   "value": 0.6625,
+   "basis": "Sharpe ex-BIL basis (corrected; Quant recompute)",
+   "as_recorded": "1.000 (trial_count=12)",
+   "error_note": "Recorded value used an annual Sharpe in a monthly formula; corrected value shown.",
    "rule": null
   },
   {

@@ -1,0 +1,23 @@
+# dsr_exbil_recompute.csv: provenance
+
+- **What:** Quant's recompute of the archived deflated Sharpe ratios (DSRs) on a Sharpe ex-BIL basis. It has 118 rows and was produced 2026-10-04 (ET).
+- **Copy:** the file is a byte-for-byte copy of Quant's working CSV in the shortlist workspace (`justina_shortlist/`). Only the file name changed: working-file names are kept out of the repo.
+- **Source sha256:** `94c122bb05d9c25ef3db113f7cdcc64e63fc2794edc012f9579c00d440c8b8f6`. The committed file has the same hash, and `tests/test_hub_data.py` pins it.
+- **Method (from Quant's notes):**
+  - Each row keeps the trial count `N_used` and the repo's `deflated_sharpe_approx`, with SR0 = z(1−1/N)/√(T−1) on the monthly Sharpe, using sample skew and kurtosis.
+  - Only the risk-free basis changes, from rf = 0 to BIL (TB3MS/12 before 2007-06).
+  - `sharpe_rf0` and `dsr_rf0_reproduced` re-derive every recorded value, with 0 mismatches except the flagged unit bug.
+- **Unit bug:** the VCFC rows (12) and the skew-managed grid rows (72) have `recorded_unit_note` set. Their recorded DSR of about 1.0 fed an annual Sharpe into a monthly formula.
+- **Display rule (Quant + CIO, 2026-10-04):**
+  - Where a hub subject has a matching row, the corrected `dsr_exbil` is primary.
+  - The recorded value sits beside it, labelled "as recorded", with a one-line error note.
+  - No verdict changes: every affected method had already failed other gates.
+- **Not covered:**
+  - FT-MED, Book 2's vol-target and the #6 gate-first overlay have N = 1, so no DSR is defined.
+  - NLS v2, NLS v3, EPO and Schur were already recorded ex-BIL.
+  - NLS v1 is VOID and shows no DSR (ruling D4).
+- **Mapping:** see `DSR_MATCH` in `src/usa_etf_features/hub_data.py`:
+  - VCFC and RR-ERC use the chosen trial.
+  - Regime-dual uses `sleeve:<chosen>`.
+  - Spectral RP uses `name:spectral_risk_parity__0`.
+  - The Backbone card's "1.00 (#6 overlay; trial_count=72)" maps to the #6 gate-first spec's grid row.

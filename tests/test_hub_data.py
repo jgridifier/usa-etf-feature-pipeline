@@ -231,15 +231,48 @@ def test_partial_final_months_are_dropped_not_paired():
     assert _load('subjects/schur.json')['partial_months_dropped'] == []
 
 
-def test_dsr_recorded_with_basis_and_recompute_slot(tmp_path):
-    for sid in ('spectral_rp', 'regime_dual', 'vcfc', 'ft_med', 'rr_erc'):
+RECOMPUTE_SHA256 = '94c122bb05d9c25ef3db113f7cdcc64e63fc2794edc012f9579c00d440c8b8f6'
+
+
+def test_dsr_recompute_copy_is_verbatim_and_not_named_quant():
+    import hashlib
+    p = ROOT / hd.DSR_RECOMPUTE
+    assert hashlib.sha256(p.read_bytes()).hexdigest() == RECOMPUTE_SHA256
+    prov = (p.parent / 'dsr_exbil_recompute.PROVENANCE.md').read_text()
+    assert RECOMPUTE_SHA256 in prov
+    assert not [f for f in (ROOT / 'data/processed/hub').rglob('*') if f.name.upper().startswith('QUANT_')]
+    assert len(hd.load_recompute(ROOT)) == 118
+
+
+def test_every_dsr_with_a_recompute_match_uses_the_corrected_value_as_primary():
+    rec = hd.load_recompute(ROOT)
+    matched = 0
+    for f in sorted((ROOT / 'data/processed/hub/subjects').glob('*.json')):
+        s = json.loads(f.read_text())
+        d = s['dsr']
+        if s['group'] == 'void':
+            assert d is None
+            continue
+        if d['corrected'] is None:
+            assert d['primary'] is None or 'ex-BIL' in d['primary_basis'], s['id']
+            continue
+        matched += 1
+        row = rec[d['corrected']['trial']]
+        assert d['primary'] == d['corrected']['dsr_exbil'] == round(float(row['dsr_exbil']), 4), s['id']
+        assert d['corrected']['dsr_rf0_recorded'] == round(float(row['dsr_rf0_recorded']), 4)
+        assert d['corrected']['error_note'] and 'No verdict changes' in d['note']
+        if row['recorded_unit_note']:
+            assert d['corrected']['error_note'] == hd.UNIT_NOTE
+        gate = next(g for g in s['gates'] if g['gate'] == 'DSR / C4')
+        assert gate['value'] == d['primary'] and gate['as_recorded'] == d['recorded'], s['id']
+    assert matched == 5   # vcfc, rr_erc, regime_dual, spectral_rp, backbone
+    vc = _load('subjects/vcfc.json')['dsr']
+    assert vc['primary'] == 0.6625 and vc['recorded'].startswith('1.000') and vc['corrected']['error_note'] == hd.UNIT_NOTE
+    assert _load('subjects/spectral_rp.json')['dsr']['primary'] == 0.5041
+    assert _load('subjects/schur.json')['dsr']['corrected'] is None
+    for sid in ('book2', 'skew_overlay'):
         d = _load(f'subjects/{sid}.json')['dsr']
-        assert d['basis'] == 'rf = 0 basis' and d['dsr_exbil_recomputed'] is None and 'pending' in d['recompute_note']
-    assert _load('subjects/schur.json')['dsr']['basis'] == 'Sharpe ex-BIL basis'
-    slot = tmp_path / hd.DSR_RECOMPUTE
-    slot.parent.mkdir(parents=True)
-    slot.write_text('subject_id,dsr_exbil,trial_count\nft_med,0.5,1\n')
-    assert hd.load_recompute(tmp_path) == {'ft_med': dict(dsr_exbil=0.5, trial_count=1, source=hd.DSR_RECOMPUTE)}
+        assert d['primary'] is None and d['grid_reference']['n_trials'] == 72 and 'N = 1' in d['note']
 
 
 def test_standin_core_is_sensitivity_only():
@@ -271,3 +304,14 @@ def test_leaderboard_sparks_cover_common_window_and_match_total_return_diff():
         assert len(row['excess_spark']) == row['n'] == 65
         assert row['excess_spark_months'][0] == '2021-04' and row['excess_spark_months'][-1] == '2026-08'
         assert abs(row['excess_spark'][-1] - row['total_return_diff']) < 1e-6, row['id']
+
+
+def test_weights_are_indexed_by_return_month():
+    for sid in ('book2', 'backbone', 'vcfc', 'ft_med', 'rr_erc', 'skew_overlay', 'schur', 'epo'):
+        s = _load(f'subjects/{sid}.json')
+        wm = s['weights']['months']
+        if not wm:
+            continue
+        assert set(wm) <= set(s['months']) | set(s['partial_months_dropped']), sid
+        assert wm[0] >= s['months'][0], (sid, wm[0], s['months'][0])
+    assert _load('subjects/book2.json')['weights']['months'][0] == _load('subjects/book2.json')['months'][0] == '2021-02'

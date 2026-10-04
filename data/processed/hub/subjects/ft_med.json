@@ -9081,7 +9081,6 @@
   "source": "data/processed/ft_med/ft_med_monthly_weights.csv",
   "basis": "saved weights (data/processed/ft_med/ft_med_monthly_weights.csv)",
   "months": [
-   "2002-06",
    "2002-07",
    "2002-08",
    "2002-09",
@@ -9371,7 +9370,8 @@
    "2026-05",
    "2026-06",
    "2026-07",
-   "2026-08"
+   "2026-08",
+   "2026-09"
   ],
   "top": {
    "Sector / Factor / Thematic": [
@@ -13400,9 +13400,12 @@
  },
  "dsr": {
   "recorded": "N/A (trial_count=1)",
-  "basis": "rf = 0 basis",
-  "dsr_exbil_recomputed": null,
-  "recompute_note": "Quant ex-BIL recompute pending (slot: data/processed/hub/dsr_exbil_recompute.csv)"
+  "recorded_basis": "rf = 0 basis",
+  "primary": null,
+  "primary_basis": null,
+  "corrected": null,
+  "grid_reference": null,
+  "note": null
  },
  "gates": [
   {
@@ -13434,6 +13437,8 @@
    "gate": "DSR / C4",
    "value": "N/A (trial_count=1)",
    "basis": "rf = 0 basis",
+   "as_recorded": null,
+   "error_note": null,
    "rule": null
   },
   {

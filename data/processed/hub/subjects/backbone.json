@@ -2015,7 +2015,6 @@
   "source": "data/processed/live/vol_target_monthly_weights.csv",
   "basis": "saved weights (data/processed/live/vol_target_monthly_weights.csv)",
   "months": [
-   "2021-01",
    "2021-02",
    "2021-03",
    "2021-04",
@@ -2082,7 +2081,8 @@
    "2026-05",
    "2026-06",
    "2026-07",
-   "2026-08"
+   "2026-08",
+   "2026-09"
   ],
   "top": {
    "VOO": [
@@ -3156,9 +3156,24 @@
  "trials": null,
  "dsr": {
   "recorded": "1.00 (#6 overlay; trial_count=72)",
-  "basis": "recorded on the archive card for the #6 overlay, rf = 0 basis",
-  "dsr_exbil_recomputed": null,
-  "recompute_note": "Quant ex-BIL recompute pending (slot: data/processed/hub/dsr_exbil_recompute.csv)"
+  "recorded_basis": "recorded on the archive card for the #6 overlay, rf = 0 basis",
+  "primary": 0.5331,
+  "primary_basis": "Sharpe ex-BIL basis (corrected; Quant recompute)",
+  "corrected": {
+   "trial": "SM_option_a_vt_L63_SL21_g0p5_realizedamaya_cvar5",
+   "dsr_exbil": 0.5331,
+   "dsr_rf0_recorded": 1.0,
+   "sharpe_exbil": 0.9664,
+   "sharpe_rf0_recorded": 1.2798,
+   "n_trials": 72,
+   "months": 68,
+   "window": "2021-02 to 2026-09",
+   "error_note": "Recorded value used an annual Sharpe in a monthly formula; corrected value shown.",
+   "recorded_unit_note": "recorded DSR passed ANNUAL Sharpe into a monthly-scale formula",
+   "source": "data/processed/hub/dsr_exbil_recompute.csv"
+  },
+  "grid_reference": null,
+  "note": "No verdict changes: every method affected had already failed other gates."
  },
  "gates": [
   {
@@ -3177,8 +3192,10 @@
   },
   {
    "gate": "DSR / C4",
-   "value": "1.00 (#6 overlay; trial_count=72)",
-   "basis": "rf = 0 basis",
+   "value": 0.5331,
+   "basis": "Sharpe ex-BIL basis (corrected; Quant recompute)",
+   "as_recorded": "1.00 (#6 overlay; trial_count=72)",
+   "error_note": "Recorded value used an annual Sharpe in a monthly formula; corrected value shown.",
    "rule": null
   },
   {

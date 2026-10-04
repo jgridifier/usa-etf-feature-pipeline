@@ -53,6 +53,7 @@ import archive_void  # noqa: E402
 import build_epo_results as epo_results  # noqa: E402
 import build_schur_results as schur_results  # noqa: E402
 import build_dsr_feasibility as dsr_feasibility  # noqa: E402
+import build_stage2_pages as stage2_pages  # noqa: E402
 
 
 def read_csv(name: str) -> list[dict]:
@@ -953,6 +954,8 @@ def restyle_methods_shell() -> None:
         p.name for p in (DOCS / 'methods').glob('*.html') if p.name not in {'index.html', 'justina_round1_scoreboard.html', epo_results.PAGE.removeprefix('methods/'),
                           schur_results.PAGE.removeprefix('methods/'), 'composition_over_time.html',
                           dsr_feasibility.PAGE.removeprefix('methods/'),
+                          stage2_pages.PAGE.removeprefix('methods/'),
+                          stage2_pages.TEACHING,  # Quant's stage-2 teaching note: byte-for-byte, never restyled
                           schur_results.TEACHING}  # Quant's Schur note: published byte-for-byte, never restyled
     )
     for name in methods:
@@ -1003,6 +1006,7 @@ def main() -> None:
     epo_results.build_epo_results(page_shell, write_page)
     schur_results.build_schur_results(page_shell, write_page)
     dsr_feasibility.build_dsr_feasibility(page_shell, write_page)
+    stage2_pages.build_page(page_shell, write_page, DOCS)
     import build_composition  # pandas: run with the repo venv (scripts/build_pages_v2.sh)
     build_composition.write_data(DOCS, build_composition.build_page(page_shell, write_page))
     build_methods_index()

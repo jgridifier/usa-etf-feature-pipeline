@@ -3081,9 +3081,12 @@
  "trials": null,
  "dsr": {
   "recorded": null,
-  "basis": "rf = 0 basis",
-  "dsr_exbil_recomputed": null,
-  "recompute_note": "Quant ex-BIL recompute pending (slot: data/processed/hub/dsr_exbil_recompute.csv)"
+  "recorded_basis": "rf = 0 basis",
+  "primary": null,
+  "primary_basis": null,
+  "corrected": null,
+  "grid_reference": null,
+  "note": null
  },
  "gates": [
   {
@@ -3098,6 +3101,8 @@
    "gate": "DSR / C4",
    "value": null,
    "basis": "rf = 0 basis",
+   "as_recorded": null,
+   "error_note": null,
    "rule": null
   },
   {

@@ -7689,7 +7689,6 @@
   "source": "data/processed/rr_erc/rr_erc_monthly_weights.csv",
   "basis": "saved weights (data/processed/rr_erc/rr_erc_monthly_weights.csv)",
   "months": [
-   "2003-05",
    "2003-06",
    "2003-07",
    "2003-08",
@@ -7968,7 +7967,8 @@
    "2026-05",
    "2026-06",
    "2026-07",
-   "2026-08"
+   "2026-08",
+   "2026-09"
   ],
   "top": {
    "US Treasuries / Govt / Cash-like": [
@@ -11874,9 +11874,24 @@
  },
  "dsr": {
   "recorded": "1.000 (trial_count=2)",
-  "basis": "rf = 0 basis",
-  "dsr_exbil_recomputed": null,
-  "recompute_note": "Quant ex-BIL recompute pending (slot: data/processed/hub/dsr_exbil_recompute.csv)"
+  "recorded_basis": "rf = 0 basis",
+  "primary": 0.9993,
+  "primary_basis": "Sharpe ex-BIL basis (corrected; Quant recompute)",
+  "corrected": {
+   "trial": "rr_erc_pathB_loim_vols_histfreq_cat",
+   "dsr_exbil": 0.9993,
+   "dsr_rf0_recorded": 1.0,
+   "sharpe_exbil": 0.6647,
+   "sharpe_rf0_recorded": 0.8692,
+   "n_trials": 2,
+   "months": 280,
+   "window": "2003-06 to 2026-09",
+   "error_note": "Recorded on an rf = 0 basis; corrected to the Sharpe ex-BIL basis.",
+   "recorded_unit_note": null,
+   "source": "data/processed/hub/dsr_exbil_recompute.csv"
+  },
+  "grid_reference": null,
+  "note": "No verdict changes: every method affected had already failed other gates."
  },
  "gates": [
   {
@@ -11906,8 +11921,10 @@
   },
   {
    "gate": "DSR / C4",
-   "value": "1.000 (trial_count=2)",
-   "basis": "rf = 0 basis",
+   "value": 0.9993,
+   "basis": "Sharpe ex-BIL basis (corrected; Quant recompute)",
+   "as_recorded": "1.000 (trial_count=2)",
+   "error_note": "Recorded on an rf = 0 basis; corrected to the Sharpe ex-BIL basis.",
    "rule": null
   },
   {

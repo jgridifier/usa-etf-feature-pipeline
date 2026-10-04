@@ -11,11 +11,13 @@ rebalanced, gross). Its returns are the saved live series S1 (``live/strategy_re
 
 Rulings applied (CoS + CIO, 2026-10-04): leaderboard ranked by CAGR difference vs the core over the common
 65 months (2021-04..2026-08); VOID runs carry no Sharpe and no DSR and sit below the ranking; the Backbone
-headline is the live 0.86 (site_sharpe.json); recorded DSRs keep their basis label, with a slot for Quant's
-ex-BIL recompute.
+headline is the live 0.86 (site_sharpe.json). DSRs (Quant + CIO, 2026-10-04): where Quant's ex-BIL recompute
+has a row, the corrected dsr_exbil is primary and the recorded value sits beside it "as recorded", with a one-line
+error note; no verdict changes.
 """
 from __future__ import annotations
 
+import csv
 import json
 import math
 from pathlib import Path
@@ -33,7 +35,7 @@ P = 'data/processed/'
 PANEL = 'data/raw/usa_universe_panel_monthly_returns.csv'
 ARCHIVE = 'apps/pages/src/data/archive_verdicts.json'
 SITE_SHARPE = P + 'cash_null_audit/site_sharpe.json'
-DSR_RECOMPUTE = P + 'hub/dsr_exbil_recompute.csv'   # Quant's ex-BIL DSR recompute (D3 follow-up); optional
+DSR_RECOMPUTE = P + 'hub/dsr_exbil_recompute.csv'   # Quant's ex-BIL DSR recompute (verbatim copy; see .PROVENANCE.md)
 
 COMMON_WINDOW = ('2021-04', '2026-08')
 CORE_START = '2020-11'
@@ -425,7 +427,9 @@ def weights_long(root, spec, cache):
         w = df.pivot_table(index='date', columns=tick, values='weight', aggfunc='sum').fillna(0.0)
     else:
         cols = [c for c in df.columns if c.startswith('w_')]
-        w = df.set_index('date')[cols].astype(float).fillna(0.0)
+        # Wide files: `date` is the decision date and `eval_date` the month earning the return; index by the
+        # return month so weights line up with returns (and with the long files, whose `date` is the return month).
+        w = df.set_index('eval_date' if 'eval_date' in df.columns else 'date')[cols].astype(float).fillna(0.0)
         w.columns = [c[2:] for c in cols]
     w.index = pd.to_datetime(w.index).to_period('M')
     w = w.groupby(level=0).last().sort_index()
@@ -510,21 +514,59 @@ def card_for(archive, cid):
     return next((c for c in archive['cards'] if c['id'] == cid), None) if cid else None
 
 
-def dsr_block(subject, card, summary, recompute):
+# Which recompute row is each subject's headline DSR (Quant + CIO ruling, 2026-10-04).
+# 'chosen' = the subject's chosen trial id; prefixes pick the sleeve / name-level vintage the card cites.
+DSR_MATCH = {
+    'vcfc': 'chosen', 'rr_erc': 'chosen', 'regime_dual': 'sleeve:{chosen}',
+    'spectral_rp': 'name:spectral_risk_parity__0',
+    'backbone': 'SM_option_a_vt_L63_SL21_g0p5_realizedamaya_cvar5',   # card: "1.00 (#6 overlay; trial_count=72)"
+}
+# The #6 gate-first spec has N = 1 (no DSR defined); its grid row is shown for reference.
+DSR_GRID_REFERENCE = {'book2': 'SM_option_a_vt_L63_SL21_g0p5_realizedamaya_cvar5',
+                      'skew_overlay': 'SM_option_a_vt_L63_SL21_g0p5_realizedamaya_cvar5'}
+UNIT_NOTE = 'Recorded value used an annual Sharpe in a monthly formula; corrected value shown.'
+BASIS_NOTE = 'Recorded on an rf = 0 basis; corrected to the Sharpe ex-BIL basis.'
+NO_VERDICT_CHANGE = 'No verdict changes: every method affected had already failed other gates.'
+
+
+def _recompute_entry(row):
+    note = UNIT_NOTE if str(row.get('recorded_unit_note') or '').strip() not in ('', 'nan') else BASIS_NOTE
+    return dict(trial=row['trial'], dsr_exbil=_r(float(row['dsr_exbil']), 4), dsr_rf0_recorded=_r(float(row['dsr_rf0_recorded']), 4),
+                sharpe_exbil=_r(float(row['sharpe_exbil']), 4), sharpe_rf0_recorded=_r(float(row['sharpe_rf0_recorded']), 4),
+                n_trials=int(row['N_used']), months=int(row['T']), window=f"{row['window_start'][:7]} to {row['window_end'][:7]}",
+                error_note=note, recorded_unit_note=str(row.get('recorded_unit_note') or '') or None, source=DSR_RECOMPUTE)
+
+
+def dsr_block(subject, card, summary, recompute, chosen=None):
     if subject['group'] == 'void':
         return None
     recorded = card.get('dsr') if card else None
     if recorded is None and summary is not None and 'DSR' in summary:
-        recorded = f"{float(summary['DSR']):.2f} (trial_count={int(summary['trial_count'])})"
+        v = float(summary['DSR'])
+        recorded = (f"{v:.2f}" if np.isfinite(v) else 'not defined') + f" (trial_count={int(summary['trial_count'])})"
     basis = subject.get('dsr_basis', LEGACY)
     if subject['id'] == 'backbone':
         basis = 'recorded on the archive card for the #6 overlay, rf = 0 basis'
-    rec = recompute.get(subject['id'])
-    return dict(recorded=recorded, basis=basis, dsr_exbil_recomputed=rec,
-                recompute_note=('Quant ex-BIL recompute pending (slot: ' + DSR_RECOMPUTE + ')') if rec is None else None)
+    out = dict(recorded=recorded, recorded_basis=basis, primary=None, primary_basis=None, corrected=None,
+               grid_reference=None, note=None)
+    key = DSR_MATCH.get(subject['id'])
+    if key:
+        key = (chosen or '') if key == 'chosen' else key.format(chosen=chosen or '')
+        row = recompute.get(key)
+        if row is None:
+            raise ValueError(f"{subject['id']}: no DSR recompute row for {key!r}")
+        out.update(corrected=_recompute_entry(row), primary=_r(float(row['dsr_exbil']), 4),
+                   primary_basis='Sharpe ex-BIL basis (corrected; Quant recompute)', note=NO_VERDICT_CHANGE)
+    elif subject['id'] in DSR_GRID_REFERENCE and DSR_GRID_REFERENCE[subject['id']] in recompute:
+        out.update(grid_reference=_recompute_entry(recompute[DSR_GRID_REFERENCE[subject['id']]]),
+                   note='Gate-first spec: N = 1, so no DSR is defined (PSR only). The #6 grid row for this spec is shown '
+                        'for reference (N = 72). ' + NO_VERDICT_CHANGE)
+    elif 'ex-BIL' in basis:
+        out.update(primary_basis=basis, note='Already recorded on the Sharpe ex-BIL basis; not part of the recompute.')
+    return out
 
 
-def gates_block(subject, card, timing, vs_primary, verdict, gate_result):
+def gates_block(subject, card, timing, vs_primary, verdict, gate_result, dsr=None):
     rows = [dict(gate='Leakage / timing', value=f"{timing['n'] - timing.get('n_fail', 0)} of {timing['n']} rows pass"
                  if timing['n'] else timing['status'], outcome=timing['status'], basis=timing['basis'], scope=timing.get('scope'),
                  source=timing.get('source'))]
@@ -537,7 +579,10 @@ def gates_block(subject, card, timing, vs_primary, verdict, gate_result):
                          value=dict(diff=vs_primary['diff'].get('sharpe_exbil'), z=st.get('z'), p_one_sided=st.get('p_one_sided')),
                          power=vs_primary['power']['text'], source='hub_data.head_to_head'))
     if subject['group'] != 'void':
-        rows.append(dict(gate='DSR / C4', value=(card or {}).get('dsr'), basis=subject.get('dsr_basis', LEGACY),
+        corr = (dsr or {}).get('corrected')
+        rows.append(dict(gate='DSR / C4', value=corr['dsr_exbil'] if corr else (card or {}).get('dsr'),
+                         basis=(dsr or {}).get('primary_basis') if corr else subject.get('dsr_basis', LEGACY),
+                         as_recorded=(card or {}).get('dsr') if corr else None, error_note=corr['error_note'] if corr else None,
                          rule='DSR ≥ 0.95 (C4, pre-registered)' if subject.get('prereg') else None))
     emp = dict(gate='Empirical gate (recorded criteria and tripwires)', outcome=(card or {}).get('badge') or subject.get('label'),
                value=(verdict or {}).get('verdict_label') or (card or {}).get('verdict'))
@@ -667,6 +712,7 @@ def compute_subject(root, subject, ctx):
     if gr_path.exists():
         gate_result = json.loads(gr_path.read_text())
     timing = timing_audit(root, subject['timing'], cache)
+    dsr = dsr_block(subject, card, summary, ctx['recompute'], (trials or {}).get('chosen'))
     out = dict(
         id=subject['id'], name=subject['name'], group=subject['group'], label=label, card=subject.get('card'),
         related=subject.get('related'), pages=subject.get('pages', {}),
@@ -689,8 +735,8 @@ def compute_subject(root, subject, ctx):
                              beta=_r(np.cov(pair_core.iloc[:, 0], pair_core.iloc[:, 1], ddof=1)[0, 1] / pair_core.iloc[:, 1].var(ddof=1))
                              if len(pair_core) > 2 else None),
         turnover=turnover, weights=weights, regimes=regime_rows, stress=stress_rows, trials=trials,
-        dsr=dsr_block(subject, card, summary, ctx['recompute']),
-        gates=gates_block(subject, card, timing, primary, verdict, gate_result),
+        dsr=dsr,
+        gates=gates_block(subject, card, timing, primary, verdict, gate_result, dsr),
         timing_audit=timing,
     )
     if void:
@@ -758,12 +804,12 @@ def leaderboard(subjects):
 
 
 def load_recompute(root):
+    """Quant's ex-BIL DSR recompute (118 rows), keyed by trial id. Copied verbatim; see dsr_exbil_recompute.PROVENANCE.md."""
     p = Path(root) / DSR_RECOMPUTE
     if not p.exists():
         return {}
-    df = pd.read_csv(p)
-    return {str(r['subject_id']): dict(dsr_exbil=_r(r['dsr_exbil']), trial_count=int(r['trial_count']),
-                                       source=DSR_RECOMPUTE) for _, r in df.iterrows()}
+    with p.open(newline='', encoding='utf-8') as f:
+        return {r['trial']: r for r in csv.DictReader(f)}
 
 
 def build(root=ROOT):

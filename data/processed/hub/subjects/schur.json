@@ -6393,9 +6393,12 @@
  },
  "dsr": {
   "recorded": "0.433 on Sharpe ex-BIL, not legacy (trial_count=12)",
-  "basis": "Sharpe ex-BIL basis",
-  "dsr_exbil_recomputed": null,
-  "recompute_note": "Quant ex-BIL recompute pending (slot: data/processed/hub/dsr_exbil_recompute.csv)"
+  "recorded_basis": "Sharpe ex-BIL basis",
+  "primary": null,
+  "primary_basis": "Sharpe ex-BIL basis",
+  "corrected": null,
+  "grid_reference": null,
+  "note": "Already recorded on the Sharpe ex-BIL basis; not part of the recompute."
  },
  "gates": [
   {
@@ -6427,6 +6430,8 @@
    "gate": "DSR / C4",
    "value": "0.433 on Sharpe ex-BIL, not legacy (trial_count=12)",
    "basis": "Sharpe ex-BIL basis",
+   "as_recorded": null,
+   "error_note": null,
    "rule": "DSR ≥ 0.95 (C4, pre-registered)"
   },
   {

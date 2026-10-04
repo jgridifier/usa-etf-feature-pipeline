@@ -3277,7 +3277,6 @@
   "source": "data/processed/live/skew_managed_gatefirst_weights.csv",
   "basis": "saved weights (data/processed/live/skew_managed_gatefirst_weights.csv)",
   "months": [
-   "2021-01",
    "2021-02",
    "2021-03",
    "2021-04",
@@ -3344,7 +3343,8 @@
    "2026-05",
    "2026-06",
    "2026-07",
-   "2026-08"
+   "2026-08",
+   "2026-09"
   ],
   "top": {
    "VOO": [
@@ -4823,10 +4823,25 @@
   ]
  },
  "dsr": {
-  "recorded": "nan (trial_count=1)",
-  "basis": "rf = 0 basis",
-  "dsr_exbil_recomputed": null,
-  "recompute_note": "Quant ex-BIL recompute pending (slot: data/processed/hub/dsr_exbil_recompute.csv)"
+  "recorded": "not defined (trial_count=1)",
+  "recorded_basis": "rf = 0 basis",
+  "primary": null,
+  "primary_basis": null,
+  "corrected": null,
+  "grid_reference": {
+   "trial": "SM_option_a_vt_L63_SL21_g0p5_realizedamaya_cvar5",
+   "dsr_exbil": 0.5331,
+   "dsr_rf0_recorded": 1.0,
+   "sharpe_exbil": 0.9664,
+   "sharpe_rf0_recorded": 1.2798,
+   "n_trials": 72,
+   "months": 68,
+   "window": "2021-02 to 2026-09",
+   "error_note": "Recorded value used an annual Sharpe in a monthly formula; corrected value shown.",
+   "recorded_unit_note": "recorded DSR passed ANNUAL Sharpe into a monthly-scale formula",
+   "source": "data/processed/hub/dsr_exbil_recompute.csv"
+  },
+  "note": "Gate-first spec: N = 1, so no DSR is defined (PSR only). The #6 grid row for this spec is shown for reference (N = 72). No verdict changes: every method affected had already failed other gates."
  },
  "gates": [
   {
@@ -4852,6 +4867,8 @@
    "gate": "DSR / C4",
    "value": null,
    "basis": "rf = 0 basis",
+   "as_recorded": null,
+   "error_note": null,
    "rule": null
   },
   {

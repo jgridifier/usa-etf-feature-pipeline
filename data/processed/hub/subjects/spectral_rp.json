@@ -4477,9 +4477,24 @@
  "trials": null,
  "dsr": {
   "recorded": "0.961 (n_trials=4)",
-  "basis": "rf = 0 basis",
-  "dsr_exbil_recomputed": null,
-  "recompute_note": "Quant ex-BIL recompute pending (slot: data/processed/hub/dsr_exbil_recompute.csv)"
+  "recorded_basis": "rf = 0 basis",
+  "primary": 0.5041,
+  "primary_basis": "Sharpe ex-BIL basis (corrected; Quant recompute)",
+  "corrected": {
+   "trial": "name:spectral_risk_parity__0",
+   "dsr_exbil": 0.5041,
+   "dsr_rf0_recorded": 0.9614,
+   "sharpe_exbil": 0.2965,
+   "sharpe_rf0_recorded": 1.0571,
+   "n_trials": 4,
+   "months": 65,
+   "window": "2021-04 to 2026-08",
+   "error_note": "Recorded on an rf = 0 basis; corrected to the Sharpe ex-BIL basis.",
+   "recorded_unit_note": null,
+   "source": "data/processed/hub/dsr_exbil_recompute.csv"
+  },
+  "grid_reference": null,
+  "note": "No verdict changes: every method affected had already failed other gates."
  },
  "gates": [
   {
@@ -4509,8 +4524,10 @@
   },
   {
    "gate": "DSR / C4",
-   "value": "0.961 (n_trials=4)",
-   "basis": "rf = 0 basis",
+   "value": 0.5041,
+   "basis": "Sharpe ex-BIL basis (corrected; Quant recompute)",
+   "as_recorded": "0.961 (n_trials=4)",
+   "error_note": "Recorded on an rf = 0 basis; corrected to the Sharpe ex-BIL basis.",
    "rule": null
   },
   {
