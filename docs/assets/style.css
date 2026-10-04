@@ -1,7 +1,7 @@
 /* USA ETF Lab — paper-editorial design tokens.
    Aligned with apps/pages Tailwind theme (tailwind.config.ts).
    All class names preserved for existing static method HTML stubs. */
-@import url('https://fonts.googleapis.com/css2?family=Newsreader:ital,wght@0,400;0,500;0,600;1,400;1,600&family=Playfair+Display:wght@700;900&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+/* Fonts are self-hosted: docs/assets/fonts.css (linked from every page head). */
 
 :root {
   /* Paper substrate */
@@ -191,6 +191,8 @@ button:focus-visible,
     gap: 0.75rem;
   }
   .nav-open .site-nav { display: flex; }
+  /* Open-menu links: 44px tap targets (PM re-test, 2026-10-04). */
+  .site-nav a { display: flex; align-items: center; min-height: 44px; }
 }
 
 /* ── Page scaffold ───────────────────────────────────────────── */
@@ -515,3 +517,10 @@ tr:hover td { background: var(--surface); }
   :not(pre) > code { overflow-wrap: anywhere; word-break: break-word; }
   pre, .math-block { max-width: 100%; overflow-x: auto; }
 }
+
+/* Long tokens in tables (64-character sha256 values, file paths) wrap instead of widening the page at 375px. */
+td code, th code, td a, .table-scroll td { overflow-wrap: anywhere; }
+td code, th code { word-break: break-all; }
+/* Bare hashes and spec names in prose (e.g. Addendum 3 E5/E6) wrap rather than widen the page. */
+main p, main li, .prose p, .prose li { overflow-wrap: break-word; }
+main li code, main p code, .prose li code, .prose p code { overflow-wrap: anywhere; }

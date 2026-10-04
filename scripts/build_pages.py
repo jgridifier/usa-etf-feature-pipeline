@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import csv
 import json
+import os
 import re
 import shutil
 from html import escape
@@ -484,14 +485,7 @@ def page_shell(
             f'<script src="{prefix}assets/vendor/echarts-6.1.0.custom.min.js"></script>'
             f'<script src="{prefix}assets/app.js" defer></script>'
         )
-    fonts = (
-        '<link rel="preconnect" href="https://fonts.googleapis.com">'
-        '<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>'
-        '<link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,wght@0,400;0,500;0,600;1,400;1,600'
-        '&family=Playfair+Display:wght@700;900'
-        '&family=Inter:wght@400;500;600;700'
-        '&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">'
-    )
+    fonts = f'<link rel="stylesheet" href="{prefix}assets/fonts.css">'  # self-hosted (SIL OFL 1.1); no outside hosts
     return f'''<!doctype html>
 <html lang="en">
 <head>
@@ -999,13 +993,17 @@ def restyle_methods_shell() -> None:
             continue
         s = p.read_text(encoding='utf-8')
         s = re.sub(r'<!-- lab:start -->.*?<!-- lab:end -->', '', s, flags=re.S)
+        # Pages that already ship part of the lab shell (stage-2 addenda from build_stage2_pages, pages
+        # given nav.js in #50) get only the missing parts: a second nav.js double-binds the menu toggle
+        # so the 375px menu never opens.
+        has_css, has_nav, has_footer = 'assets/style.css' in s, 'assets/nav.js' in s, 'class="site-footer"' in s
         s = re.sub(r'<header class="site-header">.*?</header>', '', s, count=1, flags=re.S)
         # Inject shared stylesheet + fonts link marker
         inject_head = (
+            ''
+            if has_css else
             '<!-- lab:start -->'
-            '<link rel="preconnect" href="https://fonts.googleapis.com">'
-            '<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>'
-            '<link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,wght@0,400;0,500;0,600;1,400;1,600&family=Playfair+Display:wght@700;900&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">'
+            '<link rel="stylesheet" href="../assets/fonts.css">'
             '<link rel="stylesheet" href="../assets/style.css">'
             '<link rel="icon" type="image/svg+xml" href="../favicon.svg">'
             '<!-- lab:end -->'
@@ -1017,11 +1015,39 @@ def restyle_methods_shell() -> None:
         )
         s = s.replace(
             '</body>',
-            '<!-- lab:start --><footer class="site-footer"><p>'
-            + DISCLAIMER
-            + '</p></footer><script src="../assets/nav.js" defer></script><!-- lab:end --></body>',
+            ('' if has_footer and has_nav else
+             '<!-- lab:start -->'
+             + ('' if has_footer else '<footer class="site-footer"><p>' + DISCLAIMER + '</p></footer>')
+             + ('' if has_nav else '<script src="../assets/nav.js" defer></script>')
+             + '<!-- lab:end -->') + '</body>',
         )
         p.write_text(s, encoding='utf-8')
+
+
+FONT_LINK_RE = re.compile(r'<link\b[^>]*https://fonts\.(?:googleapis|gstatic)\.com[^>]*>\s*')
+
+
+def self_host_fonts() -> None:
+    """Every page loads the vendored fonts (docs/assets/fonts.css); no page links an outside font host.
+
+    Hand-written method pages carried their own Google Fonts links; they are stripped here at build time."""
+    for page in sorted(DOCS.rglob('*.html')):
+        s = page.read_text(encoding='utf-8')
+        rel = os.path.relpath(ASSETS / 'fonts.css', page.parent).replace(os.sep, '/')
+        link = f'<link rel="stylesheet" href="{rel}">'
+        # The first outside font link is replaced in place (so on Quant's byte-pinned Schur note the change stays
+        # inside its <!-- lab:start --> chrome block); any further ones are dropped.
+        first = FONT_LINK_RE.search(s)
+        t = s
+        if first:
+            keep = '' if 'assets/fonts.css' in s else link
+            t = s[:first.start()] + keep + FONT_LINK_RE.sub('', s[first.end():]) if keep else FONT_LINK_RE.sub('', s)
+        # Pages on the shared stylesheet need the vendored fonts too; self-contained pages (the pinned stage-2
+        # teaching note) are left untouched.
+        if 'assets/style.css' in t and 'assets/fonts.css' not in t and '</head>' in t:
+            t = t.replace('</head>', link + '\n</head>', 1)
+        if t != s:
+            page.write_text(t, encoding='utf-8')
 
 
 def main() -> None:
@@ -1050,6 +1076,7 @@ def main() -> None:
     build_archive_scoreboard()
     restyle_methods_shell()
     build_notes(page_shell, write_page)
+    self_host_fonts()
     print('Built docs viz JSON + methods under', DOCS)
 
 

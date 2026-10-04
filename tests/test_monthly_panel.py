@@ -161,13 +161,15 @@ PUBLISHED_SHA256 = {
     'data/processed/live/skew_managed_gatefirst_registry.csv': '66e244bb744397665e837d60654974d2e221f65be26eb3c10c289abe3b4e5d78',
     'data/processed/live/skew_managed_gatefirst_returns.csv': 'dfee6ca05ef24a847c13d9b9cecd2275846d5ad31a8e056e444f40f323703f02',
     'data/processed/live/skew_managed_gatefirst_state.csv': 'd1f3eeb9f469bc94b8de9b3c7b572a3f25421a285ef06def43ffc2e12b4feac1',
-    'data/processed/live/skew_managed_gatefirst_summary.csv': '0e95eab5d021042331a0aa1a131e6e879a76711530c2ea230219d6d489d35ad2',
+    # Re-pinned 2026-10-04: Quant's Sept stats recompute (sept_fix_stat_recompute.csv, sha fe895441…): CIs / skew / %neg; NW t vs EW/MinVar/ERC to 2026-08.
+    'data/processed/live/skew_managed_gatefirst_summary.csv': 'ae616ae25cc7e98bbde12cec31e1832a16eb2827a02cd47cd70676e931c257c5',
     'data/processed/live/skew_managed_gatefirst_weights.csv': 'cd66db8cd45f12d17ab10a199275d5249b401f637e4d1e2a31172cd447368a92',
     # Re-pinned 2026-10-04: m3_p2_core_rotate 2026-09 cell restored from its re-run (only that cell changed).
     'data/processed/live/strategy_returns.csv': '6894c538852f3e329e4c68aca6a79c0354b085ff02480e0f28df0fed7ba2f628',
     'data/processed/live/vol_target_monthly_weights.csv': '1b54802c6feeedf8ea42d2609202a456fede2b46f70431081801d1bc2bc44f2a',
     'data/processed/live/vol_target_oos_returns.csv': 'a0e76aa34212821d4cad5b5dd6d473696af4997139129078afa0279cceb452c6',
-    'data/processed/live/vol_target_oos_summary.csv': 'dee50a537e650f15ee680e6aa60279ab98d1127aa30188b4ae4bf1bd36cda09d',
+    # Re-pinned 2026-10-04: Quant's Sept stats recompute (sept_fix_stat_recompute.csv, sha fe895441…): CIs / skew / %neg; NW t vs EW/MinVar/ERC to 2026-08.
+    'data/processed/live/vol_target_oos_summary.csv': 'e352820a540e6f65a51d3f464c824df5b773e9d92b0407db5a542db09f99803a',
     'data/processed/live/vol_target_regime_table.csv': 'fe2a8ef21f7043463a970bdd51151d91fc08f9e1586d94b1d108a001ff24a2cd',
     'data/processed/live/vol_target_trial_registry.csv': 'f98634cd626f932dd4957de94b88371c9ff7c65eea5152998d5eaa3662ab305d',
     'docs/data/viz_weights.json': '148c7452df4d685a2e5d309f740e9f959c8c953824378c74e97509cdafc1b5dd',
@@ -175,7 +177,8 @@ PUBLISHED_SHA256 = {
     'docs/data/viz_xsd_timeline.json': '5b1acb8b21533d6d09c020040b5bb13038f1de43f00bb32ec80f1511730a913d',
     'docs/data/viz_equity_drawdown.json': '030e0d1163b0c239d93e7d09f86d1479f19aba6677503c713d15a3a400aef32a',
     'docs/data/vol_target_trial_registry.csv': 'f98634cd626f932dd4957de94b88371c9ff7c65eea5152998d5eaa3662ab305d',
-    'docs/data/vol_target_oos_summary.csv': 'dee50a537e650f15ee680e6aa60279ab98d1127aa30188b4ae4bf1bd36cda09d',
+    # Re-pinned 2026-10-04: Quant's Sept stats recompute (sept_fix_stat_recompute.csv, sha fe895441…): CIs / skew / %neg; NW t vs EW/MinVar/ERC to 2026-08.
+    'docs/data/vol_target_oos_summary.csv': 'e352820a540e6f65a51d3f464c824df5b773e9d92b0407db5a542db09f99803a',
     'docs/data/vol_target_monthly_weights.csv': '1b54802c6feeedf8ea42d2609202a456fede2b46f70431081801d1bc2bc44f2a',
     'docs/data/vol_target_regime_table.csv': 'fe2a8ef21f7043463a970bdd51151d91fc08f9e1586d94b1d108a001ff24a2cd',
     'docs/data/cio_book_shortlist/book1_static_option_a_weights.csv': 'a1ca1d9eb0cacc221868463affe6aacf678083d2ee538218c491dc8e2d829878',

@@ -13943,17 +13943,17 @@
  "dsr": {
   "recorded": "1.000 (trial_count=2)",
   "recorded_basis": "rf = 0 basis",
-  "primary": 0.9993,
+  "primary": 0.9994,
   "primary_basis": "Sharpe ex-BIL basis (corrected; Quant recompute)",
   "corrected": {
    "trial": "rr_erc_pathB_loim_vols_histfreq_cat",
-   "dsr_exbil": 0.9993,
+   "dsr_exbil": 0.9994,
    "dsr_rf0_recorded": 1.0,
-   "sharpe_exbil": 0.6647,
+   "sharpe_exbil": 0.6765,
    "sharpe_rf0_recorded": 0.8692,
    "n_trials": 2,
-   "months": 280,
-   "window": "2003-06 to 2026-09",
+   "months": 279,
+   "window": "2003-06 to 2026-08",
    "error_note": "Recorded on an rf = 0 basis; corrected to the Sharpe ex-BIL basis.",
    "recorded_unit_note": null,
    "source": "data/processed/hub/dsr_exbil_recompute.csv"
@@ -13991,7 +13991,7 @@
   },
   {
    "gate": "DSR / C4",
-   "value": 0.9993,
+   "value": 0.9994,
    "basis": "Sharpe ex-BIL basis (corrected; Quant recompute)",
    "as_recorded": "1.000 (trial_count=2)",
    "error_note": "Recorded on an rf = 0 basis; corrected to the Sharpe ex-BIL basis.",

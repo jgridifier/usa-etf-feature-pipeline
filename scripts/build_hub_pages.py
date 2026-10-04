@@ -375,6 +375,10 @@ def subject_charts(d):
     comparisons = [(k.replace('_',' '),v) for k,v in d.get('vs_core',{}).items() if k != 'standin_sensitivity' and v] + [(r['label'],r) for r in d.get('vs_nulls',[])]
     pairs = [(name,c) for name,c in comparisons if c.get('power',{}).get('detectable_sharpe_gap') is not None]
     opt = charts.bar_chart([name for name,c in pairs],[{'name':'Observed Sharpe difference','values':[c['diff'].get('sharpe_exbil') for name,c in pairs]}, {'name':'Detectable gap','values':[c['power']['detectable_sharpe_gap'] for name,c in pairs]}],y_label='Sharpe gap',horizontal=True) if pairs else None
+    if opt:
+        # Long null names ("LW MinVar (capped QP)") wrap inside a fixed label width instead of being cut off at 375px.
+        opt['yAxis']['axisLabel'] = {'width': 96, 'overflow': 'break', 'lineHeight': 12, 'fontSize': 10}
+        opt.setdefault('grid', {}).update(left=8, right=16, containLabel=True)
     add(16,'Head-to-head power',opt,extra=''.join(p(f'{name}: {power(c)}','power') for name,c in comparisons))
     return ''.join(out)
 
@@ -619,6 +623,51 @@ def nice_step(span, ticks=4):
     return 1.0
 
 
+def place_labels(data, x0, x1, y0, y1, mid, w=290.0, h=250.0, ch=5.6, lh=12.0, r=5.0):
+    """Choose a label side per point so no two labels (or a label and a dot) overlap at the narrowest (375px) plot.
+
+    Pixel geometry is estimated from the axis bounds for a ~290×250 px plot; sides are tried in order
+    default (right, or left in the right half), top, bottom, the other side."""
+    def px(v):
+        return ((v[0] - x0) / ((x1 - x0) or 1) * w, (y1 - v[1]) / ((y1 - y0) or 1) * h)
+
+    def box(cx, cy, side, text):
+        tw = ch * len(text)
+        if side == 'right':
+            return (cx + r + 2, cy - lh / 2, cx + r + 2 + tw, cy + lh / 2)
+        if side == 'left':
+            return (cx - r - 2 - tw, cy - lh / 2, cx - r - 2, cy + lh / 2)
+        if side == 'top':
+            return (cx - tw / 2, cy - r - 2 - lh, cx + tw / 2, cy - r - 2)
+        return (cx - tw / 2, cy + r + 2, cx + tw / 2, cy + r + 2 + lh)
+
+    def hit(a, b):
+        return a[0] < b[2] and b[0] < a[2] and a[1] < b[3] and b[1] < a[3]
+
+    items = [it for it in data]
+    dots = [(lambda c: (c[0] - r, c[1] - r, c[0] + r, c[1] + r))(px(it['value'])) for it in items if isinstance(it, dict) and it.get('value')]
+    placed, out = [], []
+    for it in items:
+        if not (isinstance(it, dict) and it.get('value')):
+            out.append(it)
+            continue
+        cx, cy = px(it['value'])
+        first = 'left' if it['value'][0] > mid else 'right'
+        other = 'right' if first == 'left' else 'left'
+        own = (cx - r, cy - r, cx + r, cy + r)
+        choice = first
+        for side in (first, 'top', 'bottom', other):
+            b = box(cx, cy, side, str(it.get('name', '')))
+            if b[0] < 0 or b[2] > w:
+                continue
+            if not any(hit(b, q) for q in placed) and not any(hit(b, d) for d in dots if d != own):
+                choice = side
+                break
+        placed.append(box(cx, cy, choice, str(it.get('name', ''))))
+        out.append(dict(it, label={'position': choice}) if choice != 'right' else it)
+    return out
+
+
 def scatter_option(ranked):
     pts = [{'name': SHORT.get(r['id'], short(r['name'])), 'x': r['cagr_diff'], 'y': r['maxdd_diff']} for r in ranked]
     opt = charts.scatter_chart(pts, x_label='CAGR diff vs core', y_label='MaxDD diff vs core', percent=True, quadrant_lines=True)
@@ -634,13 +683,17 @@ def scatter_option(ranked):
     main = opt['series'][0]
     mid = (x0 + x1) / 2
     main.update(symbolSize=9, label={'show': True, 'formatter': '{b}', 'position': 'right', 'fontSize': 10, 'color': '#3f434a'},
-                labelLayout={'hideOverlap': True}, itemStyle={'color': '#1c2d6b'})
-    # Points in the right half label to their left so names are not clipped at the plot edge.
-    main['data'] = [dict(item, label={'position': 'left'}) if isinstance(item, dict) and (item.get('value') or [0])[0] > mid else item
-                    for item in main.get('data', [])]
+                itemStyle={'color': '#1c2d6b'}, z=5,
+                emphasis={'scale': 1.6})
+    # Zero lines sit under the dots and never take the tap (PM: Backbone dot on the dashed line had no tooltip).
+    if main.get('markLine'):
+        main['markLine'].update(silent=True, z=1)
+    # Points in the right half label to their left so names are not clipped at the plot edge; close
+    # neighbours (PM: Spectral RP / EPO, RR-ERC / Regime dual) get the first free side from place_labels.
+    main['data'] = place_labels(main.get('data', []), x0, x1, y0, y1, mid)
     quads = [('Higher CAGR\nshallower DD', x1, y1), ('Lower CAGR\nshallower DD', x0, y1),
              ('Lower CAGR\ndeeper DD', x0, y0), ('Higher CAGR\ndeeper DD', x1, y0)]
-    opt['series'].append({'name': 'Quadrants', 'type': 'scatter', 'silent': True, 'symbolSize': 0, 'tooltip': {'show': False},
+    opt['series'].append({'name': 'Quadrants', 'type': 'scatter', 'silent': True, 'z': 0, 'symbolSize': 0, 'tooltip': {'show': False},
                           'data': [{'name': q[0].replace('\n', ', '), 'value': [round(q[1], 4), round(q[2], 4)],
                                     'label': {'show': True, 'formatter': q[0], 'fontSize': 9, 'lineHeight': 11, 'color': '#6b7079',
                                               'position': 'inside', 'offset': [-34 if q[1] == x1 else 34, 14 if q[2] == y1 else -14],

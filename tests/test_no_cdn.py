@@ -1,7 +1,7 @@
 """Runtime scripts must work offline without remote code dependencies.
 
-Known exception: Google Fonts stylesheet links at fonts.googleapis.com and font
-assets at fonts.gstatic.com remain site-wide; these are not JavaScript loads.
+Fonts are self-hosted too (docs/assets/fonts.css); tests/test_no_outside_host.py checks
+that no page or stylesheet loads anything from an outside host.
 """
 from pathlib import Path
 import re

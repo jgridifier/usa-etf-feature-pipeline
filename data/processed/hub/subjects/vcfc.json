@@ -4555,17 +4555,17 @@
  "dsr": {
   "recorded": "1.000 (trial_count=12)",
   "recorded_basis": "rf = 0 basis",
-  "primary": 0.6625,
+  "primary": 0.6898,
   "primary_basis": "Sharpe ex-BIL basis (corrected; Quant recompute)",
   "corrected": {
    "trial": "VCFC_option_a_vt_L21_C12_g0p5_mkt_vol",
-   "dsr_exbil": 0.6625,
+   "dsr_exbil": 0.6898,
    "dsr_rf0_recorded": 1.0,
-   "sharpe_exbil": 0.7516,
+   "sharpe_exbil": 0.789,
    "sharpe_rf0_recorded": 1.0487,
    "n_trials": 12,
-   "months": 70,
-   "window": "2020-12 to 2026-09",
+   "months": 69,
+   "window": "2020-12 to 2026-08",
    "error_note": "Recorded value used an annual Sharpe in a monthly formula; corrected value shown.",
    "recorded_unit_note": "recorded DSR passed ANNUAL Sharpe into a monthly-scale formula",
    "source": "data/processed/hub/dsr_exbil_recompute.csv"
@@ -4603,7 +4603,7 @@
   },
   {
    "gate": "DSR / C4",
-   "value": 0.6625,
+   "value": 0.6898,
    "basis": "Sharpe ex-BIL basis (corrected; Quant recompute)",
    "as_recorded": "1.000 (trial_count=12)",
    "error_note": "Recorded value used an annual Sharpe in a monthly formula; corrected value shown.",

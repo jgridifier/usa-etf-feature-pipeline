@@ -211,6 +211,19 @@ def note_a6(html: str, which: str) -> str:
     return html[:j] + note + html[j:]
 
 
+DSR6_NOTE = "Lab note: 0.563 on complete months (Quant's Sept recompute, sha fe895441…) supersedes 0.533."
+DSR6_MARKER = 'it is 0.533 at N = 72'
+
+
+def note_dsr6(html: str) -> str:
+    """Lab note after Addendum 3 E6 (the #6 grid DSR 0.533); the pinned text is not edited."""
+    i = html.find(DSR6_MARKER)
+    if i < 0:
+        raise SystemExit('Addendum 3: E6 0.533 line not found; cannot place the DSR lab note')
+    j = html.find('</li>', i) + len('</li>')
+    return html[:j] + f'<li class="lab-link dsr6-note" aria-label="Lab note">{escape(DSR6_NOTE)}</li>' + html[j:]
+
+
 def build_recheck(page_shell, write_page, docs: Path) -> bool:
     if not RECHECK_SRC.exists():
         return False
@@ -233,7 +246,7 @@ def build_addendum3(page_shell, write_page, docs: Path) -> bool:
              + '</p>')
     content = ('<article class="prose stage2">' f'<h1>{escape(ADDENDUM3_TITLE)}</h1>'
                + _header(ADDENDUM3_SHA256, 'data/processed/stage2/PROVENANCE.md') + links
-               + note_a6(link_e4(anchor_first_ruling(render_markdown(body))), 'addendum3') + '</article>')
+               + note_dsr6(note_a6(link_e4(anchor_first_ruling(render_markdown(body))), 'addendum3')) + '</article>')
     write_page(ADDENDUM3_PAGE, page_shell(ADDENDUM3_TITLE, content, prefix='../', active='methods/index.html', extra_head=STYLE))
     return True
 

@@ -4992,18 +4992,18 @@
   "corrected": null,
   "grid_reference": {
    "trial": "SM_option_a_vt_L63_SL21_g0p5_realizedamaya_cvar5",
-   "dsr_exbil": 0.5331,
+   "dsr_exbil": 0.5625,
    "dsr_rf0_recorded": 1.0,
-   "sharpe_exbil": 0.9664,
+   "sharpe_exbil": 1.0054,
    "sharpe_rf0_recorded": 1.2798,
    "n_trials": 72,
-   "months": 68,
-   "window": "2021-02 to 2026-09",
+   "months": 67,
+   "window": "2021-02 to 2026-08",
    "error_note": "Recorded value used an annual Sharpe in a monthly formula; corrected value shown.",
    "recorded_unit_note": "recorded DSR passed ANNUAL Sharpe into a monthly-scale formula",
    "source": "data/processed/hub/dsr_exbil_recompute.csv"
   },
-  "note": "Eligibility never rested on DSR: the gate-first spec has N = 1, so no DSR is defined and only PSR applies. The #6 grid row for this spec (N = 72) is shown for reference: 0.53 corrected (Sharpe ex-BIL), 1.00 as recorded."
+  "note": "Eligibility never rested on DSR: the gate-first spec has N = 1, so no DSR is defined and only PSR applies. The #6 grid row for this spec (N = 72) is shown for reference: 0.56 corrected (Sharpe ex-BIL), 1.00 as recorded."
  },
  "gates": [
   {
@@ -5037,11 +5037,11 @@
    "grid_reference": {
     "trial": "SM_option_a_vt_L63_SL21_g0p5_realizedamaya_cvar5",
     "n_trials": 72,
-    "dsr_exbil": 0.5331,
+    "dsr_exbil": 0.5625,
     "as_recorded": 1.0,
     "error_note": "Recorded value used an annual Sharpe in a monthly formula; corrected value shown."
    },
-   "note": "Eligibility never rested on DSR: the gate-first spec has N = 1, so no DSR is defined and only PSR applies. The #6 grid row for this spec (N = 72) is shown for reference: 0.53 corrected (Sharpe ex-BIL), 1.00 as recorded."
+   "note": "Eligibility never rested on DSR: the gate-first spec has N = 1, so no DSR is defined and only PSR applies. The #6 grid row for this spec (N = 72) is shown for reference: 0.56 corrected (Sharpe ex-BIL), 1.00 as recorded."
   },
   {
    "gate": "Empirical gate (recorded criteria and tripwires)",
@@ -5087,7 +5087,7 @@
    },
    {
     "criterion": "DSR / trial count (reported)",
-    "recorded": "≈1.0 at 72 grid trials as recorded; corrected 0.53 ex-BIL (unit bug)",
+    "recorded": "≈1.0 at 72 grid trials as recorded; corrected 0.56 ex-BIL on complete months (unit bug; Quant's Sept recompute, sha fe895441…, supersedes 0.53)",
     "result": "reported; eligibility never rested on DSR (gate-first spec N = 1, PSR only)"
    },
    {
