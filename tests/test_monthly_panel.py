@@ -158,7 +158,8 @@ PUBLISHED_SHA256 = {
     'data/processed/nonlinear_shrinkage_gmv_v3/variance_tests.csv': '957b13d432b9d512a3265db8bdd444ddd2b6abc90c3c6e377532fc65b422ed5c',
     'data/processed/nonlinear_shrinkage_gmv_v3/weights.csv': 'd23fe0ba9655e0da05945940cea45dbd2f5b5b04e9a58a8ef24418710dc3b060',
     'data/processed/live/skew_managed_gatefirst_registry.csv': '66e244bb744397665e837d60654974d2e221f65be26eb3c10c289abe3b4e5d78',
-    'data/processed/live/skew_managed_gatefirst_returns.csv': 'dfee6ca05ef24a847c13d9b9cecd2275846d5ad31a8e056e444f40f323703f02',
+    # Re-pinned 2026-10-04: skew-managed EW / MinVar / ERC null 2026-09 cells restored from their complete-month re-run (skew_nulls_rerun_2026-09/; only those three cells and r_active_vs_c..e changed).
+    'data/processed/live/skew_managed_gatefirst_returns.csv': '740010ca5c2013452d33cefc29fe9007153de6f24e4f8cd36d778342f250ff81',
     'data/processed/live/skew_managed_gatefirst_state.csv': 'd1f3eeb9f469bc94b8de9b3c7b572a3f25421a285ef06def43ffc2e12b4feac1',
     'data/processed/live/skew_managed_gatefirst_summary.csv': '0e95eab5d021042331a0aa1a131e6e879a76711530c2ea230219d6d489d35ad2',
     'data/processed/live/skew_managed_gatefirst_weights.csv': 'cd66db8cd45f12d17ab10a199275d5249b401f637e4d1e2a31172cd447368a92',

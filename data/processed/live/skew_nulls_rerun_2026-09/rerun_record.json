@@ -1,0 +1,89 @@
+{
+ "file": "data/processed/live/skew_managed_gatefirst_returns.csv",
+ "month": "2026-09",
+ "row": "2026-09-30",
+ "trial_id": "SM_option_a_vt_L63_SL21_g0p5_realizedamaya_cvar5",
+ "nulls": {
+  "r_null_c": "EW",
+  "r_null_d": "LW MinVar",
+  "r_null_e": "ERC"
+ },
+ "restored": {
+  "r_null_c": -0.009814917499939884,
+  "r_active_vs_c": 0.008702646305459624,
+  "r_null_d": -0.0032092819326397432,
+  "r_active_vs_d": 0.0020970107381594826,
+  "r_null_e": -0.006988083893757187,
+  "r_active_vs_e": 0.0058758126992769265
+ },
+ "cell_before_restore": {
+  "r_null_c": "",
+  "r_null_d": "",
+  "r_null_e": ""
+ },
+ "partial_month_values_blanked_in_53": {
+  "r_null_c": -0.009814917499939884,
+  "r_null_d": -0.0032092819326397432,
+  "r_null_e": -0.006988083893757187
+ },
+ "core_equivalent_2026_09": -0.001112271194480285,
+ "other_months_checked": 67,
+ "max_abs_diff_other_months": {
+  "r_method": 0.0,
+  "r_method_gross": 0.0,
+  "cost_return": 0.0,
+  "r_null_a": 0.0,
+  "r_null_b": 0.0,
+  "r_null_c": 0.0,
+  "r_null_d": 0.0,
+  "r_null_e": 0.0,
+  "r_active_vs_a": 0.0,
+  "r_active_vs_b": 0.0,
+  "r_active_vs_c": 0.0,
+  "r_active_vs_d": 0.0,
+  "r_active_vs_e": 0.0,
+  "turnover": 0.0,
+  "f": 0.0,
+  "g": 0.0,
+  "f_tilde": 0.0,
+  "left_tail_score": 0.0,
+  "skew": 0.0
+ },
+ "tolerance": 1e-07,
+ "code_commit": "079717978071c3538a96fc9e5d72992aca990d59",
+ "code_note": "skewness_managed path unchanged since #41 (991a754); identical to the files the September refresh ran.",
+ "code_sha256": {
+  "src/usa_etf_features/skewness_managed.py": "074b98f52766c5a22c9d8a29640fe760d64a941c9f95908cdc4d72198702e189",
+  "src/usa_etf_features/vol_target.py": "b0936e97b04adaf04fc92f8a877d79d4929deceee694068a24152bd3f1fd7ef0",
+  "src/usa_etf_features/prices.py": "e6b9ccc653653a6715dc4e2ceb99515029ee07e42ce5beb68b0f66a15f4e759a",
+  "src/usa_etf_features/rotation.py": "5a37c11a185e7d2aafb41b96b3176e5f7a656b1d873e86fb6aa76a712c9b9103",
+  "src/usa_etf_features/universe.py": "6ca84a350293f5adca0c3bb73da4e3275004e978ac3f0b4a5f8bb235c23169ff",
+  "src/usa_etf_features/features.py": "fd02a88156e46fcf2954f3b354c4f31199b54fbd46462dc937750ace3860ec49",
+  "src/usa_etf_features/monthly_panel.py": "df33f7eb24e39fdb62081bf43558e6ddea553713e63ba28846393cd34df7e86a",
+  "src/usa_etf_features/cli.py": "a56a65322471e393869ca7783530b2c523c0a961a540eda50b474ad293add2f6"
+ },
+ "function_source_sha256": {
+  "skewness_managed.run_skewness_managed_grid": "2126a3274ede1f52d22a94fbdaa2c878872be31a46096651b8fed411bef4cb59",
+  "skewness_managed.make_skew_managed_trials": "b414790cd2f5f80f253fdcd5d9d4828200c1e2a90f444effd14366d1f74ee26f",
+  "vol_target.option_core_daily_returns": "e3e817687848913314183d6298ffb060e18c03e6fd3f3e5396e44af1968b2fec",
+  "vol_target.portfolio_month_return": "3afbf27d3ac4271e506061a7d054f4e94c2a336536f224d96c5ea96fbe76d436"
+ },
+ "inputs_sha256": {
+  "prices (complete-month copy, built by `prices`)": "0875d2a453ad315f9466133ba21a76797ddaa7c59dd5e4a88d8794af0cfbc7ee",
+  "/workspace/investments/growth_alpha_adj_close.csv": "6af174a5a0f9096e68e22a9a25695ba770c9877e1c761abe121432835b7c6d5c",
+  "/workspace/investments/usa_universe_adj_close.csv": "631022f37fa1b990024af4b328bde96d2fc1c400bd2cec5b674bf062bbc3ee66",
+  "/workspace/investments/usa_universe_categorized.csv": "63d81888c0402e1fdf9ac9bfa62dc819adadacb1ed3b2b9c5f547445ce9f528a",
+  "data/raw/usa_universe_panel_monthly_returns.csv": "8107825beeb01c0239eefe236a329813b1e218b57e9a5ca7618c73c6f10d1642",
+  "data/processed/live/skew_nulls_rerun_2026-09/prices_corrected_rows_2026-09-16_to_30.csv": "d1905e34ce8af1f0e96cacbf95a5af305acf226ff1c4712872f1c87a67f01fc4"
+ },
+ "output_sha256": {
+  "data/processed/live/skew_nulls_rerun_2026-09/skew_managed_gatefirst_registry.csv": "66e244bb744397665e837d60654974d2e221f65be26eb3c10c289abe3b4e5d78",
+  "data/processed/live/skew_nulls_rerun_2026-09/skew_managed_gatefirst_returns.csv": "735129ce36e71486e345b17dec8232213d7ecb1493fd0f03b9119d2bc2a52fed",
+  "data/processed/live/skew_nulls_rerun_2026-09/skew_managed_gatefirst_state.csv": "d1f3eeb9f469bc94b8de9b3c7b572a3f25421a285ef06def43ffc2e12b4feac1",
+  "data/processed/live/skew_nulls_rerun_2026-09/skew_managed_gatefirst_summary.csv": "61bdff763356436eac6c28e9947c57331c50b8bdfb89f011d4e31059f95d7e5d",
+  "data/processed/live/skew_nulls_rerun_2026-09/skew_managed_gatefirst_weights.csv": "cd66db8cd45f12d17ab10a199275d5249b401f637e4d1e2a31172cd447368a92"
+ },
+ "command": "OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1 PYTHONPATH=src python -m usa_etf_features.cli walkforward-skewness-managed --prices <complete-month prices> --universe /workspace/investments/usa_universe_categorized.csv --monthly data/raw/usa_universe_panel_monthly_returns.csv --lookback 63 --skew-lookback 21 --g-min 0.5 --f-min 0.25 --f-max 1.0 --cost-bps 5 --out/--weights/--returns/--registry/--state-out data/processed/live/skew_nulls_rerun_2026-09/skew_managed_gatefirst_*.csv",
+ "prices_last_date": "2026-09-30",
+ "note": "The three nulls are built from the complete-month monthly panel (--monthly), so a first re-run on the uncorrected spliced price file gave the same three 2026-09 values to the last bit, and they equal the values #53 blanked. That run reproduced the partial-month core (+0.2412%) in the core-equivalent columns; the complete-month prices give the committed panel core (-0.1112%) there, so every committed cell is reproduced."
+}

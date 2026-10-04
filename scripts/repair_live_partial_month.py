@@ -10,7 +10,8 @@ Repair (no strategy is re-run):
   panel core, 70/20/10 VOO/QQQM/IJR.
 - Active-return columns are re-derived as method minus null.
 - Columns that are not the core (EW / MinVar / ERC nulls, m3_p2_core_rotate) cannot be rebuilt without a
-  re-run; their 2026-09 value is blanked rather than kept from a partial month.
+  re-run; their 2026-09 value is blanked rather than kept from a partial month, unless it is the value restored
+  from a complete-month re-run (m3_p2_rerun_2026-09/, skew_nulls_rerun_2026-09/ rerun_record.json).
 The log is written to data/processed/live/partial_month_repair.json. Idempotent.
 
     .venv/bin/python scripts/repair_live_partial_month.py
@@ -57,7 +58,7 @@ def repair_wide(name, core_cols, blank_cols, active, core, log):
             elif v and abs(float(v) - core) > 1e-12:
                 raise SystemExit(f'{name}:{c} 2026-09 is neither the partial-month core nor the panel core: {v}')
         for c in blank_cols:
-            if df.at[i, c]:
+            if df.at[i, c] and not _rerun_restored_cell(name, c, df.at[i, c]):
                 log.append(dict(file=name, column=c, month=MONTH, was=float(df.at[i, c]), now=None, action='blanked: not the core, needs a re-run'))
                 df.at[i, c] = ''
         for c, (a, b) in active.items():
@@ -87,6 +88,16 @@ def _rerun_restored(sid, v) -> bool:
         return False
     r = json.loads(rec.read_text())
     return r['strategy_id'] == sid and abs(float(v) - r['restored_return']) < 1e-15
+
+
+def _rerun_restored_cell(name, col, v) -> bool:
+    """True when a wide-file cell holds the value restored from a complete-month re-run
+    (scripts/restore_skew_nulls_rerun.py: skew-managed gate-first EW / MinVar / ERC nulls)."""
+    rec = LIVE / 'skew_nulls_rerun_2026-09' / 'rerun_record.json'
+    if not rec.exists():
+        return False
+    r = json.loads(rec.read_text())
+    return r['file'] == f'data/processed/live/{name}' and col in r['restored'] and abs(float(v) - r['restored'][col]) < 1e-15
 
 
 def _simple_stats(r: pd.Series) -> dict:

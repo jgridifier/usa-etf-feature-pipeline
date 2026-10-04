@@ -39,3 +39,18 @@ registry entry enabled. The other 179 months reproduce the committed returns (ma
 blank 2026-09 cell was written: −0.2340%. Output, registry, command and the code / input / output sha256 values are
 in `m3_p2_rerun_2026-09/` (`rerun_record.json`); `scripts/restore_m3_p2_rerun.py` checks and applies it, and the
 repair script no longer blanks the restored value. The strategy comparison is back to 68 months (2021-02..2026-09).
+
+### Skew-managed EW / MinVar / ERC nulls 2026-09 restored from a re-run (2026-10-04)
+
+The gate-first file's EW / LW MinVar / ERC nulls (`r_null_c..e`) were re-run unchanged with the September
+refresh's command (frozen code at main 0797179; the skewness_managed path is unchanged since #41) on the
+complete-month inputs. The nulls are built from the complete-month monthly panel, so they come out identical to
+the values #53 blanked. Before the re-run, the refresh price file (`growth_alpha_adj_close.csv`) was corrected:
+its 2026-09-16 row is a partial-day snapshot with the later rows spliced onto it. The copy keeps every line through
+2026-09-15 byte-for-byte and chains 2026-09-16..30 from the full price history, so the re-run's core-equivalent
+columns give the committed panel core (−0.1112%). Every other cell of all 68 months reproduces the committed
+file exactly. Only the three blank 2026-09 cells were written: EW −0.9815%, LW MinVar −0.3209%, ERC −0.6988%.
+`r_active_vs_c..e` were re-derived as method minus null. Output, corrected price rows, command and the code,
+function-source, input and output sha256 values are in `skew_nulls_rerun_2026-09/` (`rerun_record.json`).
+`scripts/restore_skew_nulls_rerun.py` builds the prices and checks and applies the re-run. The repair script no
+longer blanks the restored cells. Run summaries (NW t, CIs) are unchanged, as run.
