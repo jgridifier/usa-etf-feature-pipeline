@@ -13,10 +13,12 @@ import os
 from pathlib import Path
 import re
 
+import build_stage2_pages as stage2
 import hub_charts as charts
 
 ROOT = Path(__file__).resolve().parents[1]
 DATA = ROOT / 'data/processed/hub'
+DEMIGUEL = ROOT / 'data/processed/stage2/demiguel_book_rule.json'
 DOCS = ROOT / 'docs'
 PILOTS = ('schur', 'ft_med', 'book2')
 SECTIONS = [('vs-core', 'Result vs the static core'), ('nulls', 'Against its own nulls'),
@@ -26,7 +28,7 @@ PALETTE = ['#1c2d6b', '#1a1410', '#858a94', '#0e1a42', '#3f434a', '#b8bcc4', '#6
 HEAD = '''<style>
 .hub{max-width:1200px;margin:auto;padding:1rem;min-width:0;overflow-wrap:anywhere}
 .hub section{margin:2rem 0}.hub h2{margin-top:1.5rem}.hub .table-scroll{max-width:100%;overflow-x:auto}
-.hub table{font-size:.85rem}.hub td,.hub th{min-width:6rem}.hub summary{cursor:pointer;font-weight:600;padding:.75rem 0}
+.hub table{font-size:.85rem;width:max-content;min-width:100%}.hub td,.hub th{min-width:5rem;overflow-wrap:normal;word-break:normal}.hub td{max-width:22rem}.hub tbody td:first-child{min-width:7.5rem}#leaderboard td:first-child,#leaderboard th:first-child{min-width:2.5rem}.hub tbody td:first-child,#leaderboard td:nth-child(2){max-width:11rem}#leaderboard td:first-child{max-width:3rem}.hub summary{cursor:pointer;font-weight:600;padding:.75rem 0}
 .hub-chart{border-top:1px solid #c3c7cf;margin:1rem 0}.hub-chart-box{width:100%;height:300px;min-width:0}
 .hub .badge,.hub .chip{color:#1c2d6b;background:#f4f5f7;padding:.2rem .4rem}
 .hub button{color:#1c2d6b;background:#ffffff;border:1px solid #c3c7cf;cursor:pointer;font:inherit}
@@ -92,16 +94,18 @@ def source(d, kind='series'):
 
 def chart_content(id, option, caption, extra=''):
     option['color'] = PALETTE
-    for axis in ('xAxis', 'yAxis'):
-        if option.get(axis, {}).get('type') == 'value':
-            option[axis].update(nameLocation='middle', nameGap=30)
+    for axis, gap in (('xAxis', 30), ('yAxis', 52)):
+        if option.get(axis, {}).get('type') in ('value', 'log'):
+            option[axis].update(nameLocation='middle', nameGap=gap)
     if option.get('yAxis', {}).get('type') == 'category':
-        option['yAxis']['axisLabel'] = {'width': 105, 'overflow': 'truncate'}
+        option['yAxis']['axisLabel'] = {'width': 105, 'overflow': 'truncate', **option['yAxis'].get('axisLabel', {})}
     headers, rows = charts.table_rows(option)
     fmt = pct if option['_hub'].get('percent') else num
     cells = [[fmt(v) if isinstance(v, (int, float)) else text(v) for v in row] for row in rows]
     payload = json.dumps(option, ensure_ascii=False, allow_nan=False, separators=(',', ':')).replace('<', '\\u003c')
-    return (p(caption, 'muted') + f'<div class="hub-chart-box" data-hub-chart="opt-{id}" role="img" aria-label="{e(caption)}"></div>'
+    height = option['_hub'].get('height')
+    style = f' style="height:{int(height)}px"' if height else ''
+    return (p(caption, 'muted') + f'<div class="hub-chart-box" data-hub-chart="opt-{id}"{style} role="img" aria-label="{e(caption)}"></div>'
             f'<script type="application/json" id="opt-{id}">{payload}</script>' + extra
             + '<details><summary>Data table</summary>' + table(headers, cells, caption) + '</details>')
 
@@ -206,6 +210,10 @@ def subject_charts(d):
     add(9, 'Turnover per rebalance', opt, caption=f"Per year: {pct(t.get('per_year'))}. {text(t.get('basis'))}. {text(t.get('nulls_note'))}.")
     w = d.get('weights') or {}
     opt = charts.stacked_area(w['months'],series(d,w['top']),y_label='Weight') if w.get('top') else None
+    if opt:
+        opt['yAxis']['max'] = 1
+        for s_ in opt['series']:
+            s_['areaStyle'] = {'opacity': 0.22}
     add(10, 'Weights over time', opt, 'weights', text(w.get('basis')))
     opt = line(d,w.get('months'),{'Effective N':w.get('effective_n'),'Largest weight (fraction)':w.get('largest_weight')}, 'Concentration')
     add(11, 'Effective N and largest weight',opt,'weights')
@@ -304,7 +312,7 @@ def subject_body(d, manifest):
     body += f'<p><span class="badge">{e(d["label"])}</span></p>'
     if d.get('verdict',{}).get('text'): body += p(d['verdict']['text'])
     if d.get('vintage_note'):
-        body += p(d['vintage_note']) + '<p>The #6 skew overlay page arrives in PR D; see <a href="index.html">its hub listing</a>.</p>'
+        body += p(d['vintage_note']) + '<p>The #6 skew overlay gets its own page next; for now see <a href="index.html">its hub listing</a>.</p>'
     parts.append(body)
     rows = []
     for r in d.get('vs_nulls',[]):
@@ -387,20 +395,21 @@ def leaderboard_body(d, manifest, subjects, archive):
     out = '<article class="hub"><h1>' + title + '</h1><div class="callout">' + p(d['common_window']['label']) + p(d['benchmark']) + p('Ranked by: '+d['ranked_by']) + '</div>'
     counts = Counter(c['badge'] for c in archive['cards'])
     out += p('Archive: ' + ', '.join(f'{integer(counts[label])} {label}' for label in ('FAIL','VOID','AUDIT NULL')))
-    headers = ['Rank','Subject','Label','CAGR diff','Sharpe ex-BIL diff','MaxDD diff (single path, no test)',
+    headers = ['Rank','Subject','CAGR diff','Sharpe ex-BIL diff','MaxDD diff (single path, no test)','Label',
                'Total return (subject)','Total return diff','CAGR','Sharpe ex-BIL','MaxDD','Detectable Sharpe gap','Own window','Excess vs core']
-    keys = {3:'cagrDiff',4:'sharpeDiff',5:'maxddDiff'}
+    keys = {2:'cagrDiff',3:'sharpeDiff',4:'maxddDiff'}
     out += '<div class="table-scroll" tabindex="0" role="region" aria-label="Leaderboard"><table id="leaderboard"><caption>Common-window leaderboard</caption><thead><tr>'
     for i,h in enumerate(headers):
-        out += (f'<th scope="col" aria-sort="{"descending" if i==3 else "none"}"><button type="button" data-key="{keys[i]}">{h}</button></th>' if i in keys else f'<th scope="col">{h}</th>')
+        out += (f'<th scope="col" aria-sort="{"descending" if i==2 else "none"}"><button type="button" data-key="{keys[i]}">{h}</button></th>' if i in keys else f'<th scope="col">{h}</th>')
     out += '</tr></thead><tbody id="ranked-body">'
     rows = sorted(d['rows'],key=lambda r:r['cagr_diff'],reverse=True)
     for r in rows:
         out += f'<tr data-subject="{r["id"]}" data-cagr-diff="{r["cagr_diff"]}" data-sharpe-diff="{r["sharpe_diff"]}" data-maxdd-diff="{r["maxdd_diff"]}">'
-        cells = [e(integer(r.get('rank'))),subject_link(r),e('benchmark (zero line)' if r.get('is_benchmark') else r['label'])]
-        out += ''.join(f'<td>{v}</td>' for v in cells)
-        for key in ('cagr_diff','sharpe_diff','maxdd_diff','total_return','total_return_diff','cagr','sharpe_exbil','maxdd'):
-            out += f'<td data-sort="{r[key]}">{num(r[key]) if key in ("sharpe_diff","sharpe_exbil") else pct(r[key])}</td>'
+        cell = lambda key: f'<td data-sort="{r[key]}">{num(r[key]) if key in ("sharpe_diff","sharpe_exbil") else pct(r[key])}</td>'
+        out += f'<td>{e(integer(r.get("rank")))}</td><td>{subject_link(r)}</td>'
+        out += ''.join(cell(k) for k in ('cagr_diff','sharpe_diff','maxdd_diff'))
+        out += f'<td>{e("benchmark (zero line)" if r.get("is_benchmark") else r["label"])}</td>'
+        out += ''.join(cell(k) for k in ('total_return','total_return_diff','cagr','sharpe_exbil','maxdd'))
         own = r['own_window']
         out += f'<td>{e(r["power"]["text"])}</td><td>{integer(own["n"])} of {integer(own["months"])} months covered; CAGR diff {pct(own.get("cagr_diff"))}</td><td>{spark(r.get("excess_spark"))}</td></tr>'
     out += '</tbody></table></div>' + SORT_SCRIPT
@@ -413,6 +422,8 @@ def leaderboard_body(d, manifest, subjects, archive):
     forest = [{'name':'Backbone' if r['id']=='backbone' else r['name'],'value':r['sharpe_diff'],
                'lower':r['sharpe_diff']-r['power']['detectable_sharpe_gap'],'upper':r['sharpe_diff']+r['power']['detectable_sharpe_gap']} for r in ranked]
     opt = charts.forest_plot(forest,x_label='Sharpe ex-BIL diff')
+    opt['_hub']['height'] = 120 + 26 * len(forest)
+    opt['yAxis']['axisLabel'] = {'width': 110, 'overflow': 'truncate', 'interval': 0, 'fontSize': 10}
     opt['_hub']['table'] = {'headers':['Subject','Sharpe ex-BIL diff','Detectable gap','Months','Power'],
         'rows':[[f['name'],r['sharpe_diff'],r['power']['detectable_sharpe_gap'],integer(r['power']['n']),r['power']['text']] for f,r in zip(forest,ranked)]}
     out += chart('forest','Sharpe differences and detectable gaps',opt,'Source: data/processed/hub/leaderboard.json; saved returns in the source manifest. Intervals are observed difference ± detectable gap, not confidence intervals.',first=True)
@@ -427,13 +438,39 @@ def leaderboard_body(d, manifest, subjects, archive):
     opt['series'][0]['markArea'] = {'itemStyle':{'color':'#f4f5f7'},'data':[[{'xAxis':month(d['common_window']['start'])},{'xAxis':month(d['common_window']['end'])}]]}
     opt['series'][0]['markLine'] = {'data':[{'xAxis':month(manifest['static_core']['first_month'])}],'label':{'formatter':'Core starts'}}
     opt['_hub']['monthIndex'] = True
+    opt['_hub']['height'] = 120 + 26 * len(timeline)
+    opt['xAxis']['minInterval'] = 72
+    opt['yAxis']['axisLabel'] = {'width': 110, 'overflow': 'truncate', 'interval': 0, 'fontSize': 10}
+    opt['series'][0]['markLine']['label'] = {'show': False}  # named in the caption
     opt['_hub']['table'] = {'headers':['Subject','Start','End'],'rows':[[s['name'],s['own']['start'],s['own']['end']] for s in subjects]}
     out += chart('coverage','Own-window coverage',opt,f"Source: data/processed/hub/manifest.json and subjects/*.json; saved series named in each manifest entry. Core starts {manifest['static_core']['first_month']}; shaded: {d['common_window']['label']}.")
+    out += forward_tracked_html()
     out += '<section><h2>Related pages</h2><ul><li><a href="../stage2_robustness.html">Stage-two robustness appendix</a></li>'
-    if (DOCS/'methods/stage2_demiguel_kwz.html').exists():
-        out += '<li><a href="../stage2_demiguel_kwz.html">Teaching note</a></li>'
+    if (DOCS/'methods'/stage2.TEACHING).exists():
+        out += f'<li><a href="../{stage2.TEACHING}">Stage-two teaching note: the DeMiguel tilt</a></li>'
     out += '<li><a href="../justina_round1_scoreboard.html">Archive scoreboard</a></li><li><a href="../index.html">Methods index</a></li></ul></section></article>'
     return out
+
+
+def forward_tracked_html():
+    """Forward-tracked research lines (not ranked): figures from data/processed/stage2/demiguel_book_rule.json."""
+    if not DEMIGUEL.exists():
+        return ''
+    d = json.loads(DEMIGUEL.read_text(encoding='utf-8'))
+    a, b = d['book_rule']
+    rows = [[f"({a['rule']}) {a['test']}", f"{pct(a['value'])} {a['unit']}", f"limit {pct(a['limit'])}", a['outcome']],
+            [f"({b['rule']}) {b['test']}", f"CAGR {pct(b['cagr'])} vs static core {pct(b['core_cagr'])} at {integer(b['cost_bp_one_way'])} bp one-way",
+             f"difference {pct(b['diff'])} ({pct(b['diff_at_5bp_one_way'])} at 5 bp one-way)", b['outcome']]]
+    src = d['source']
+    return ('<section id="forward-tracked"><h2>Forward-tracked research lines (not ranked)</h2>'
+            f"<p><strong>{e(d['name'])}</strong> · <span class=\"badge\">{e(d['status'])}</span></p>"
+            + p(d['status_note']) + p('Book-eligible: ' + ('yes' if d['book_eligible'] else 'no. It fails the CIO Book rule:'))
+            + table(['Book rule', 'Value', 'Threshold / result', 'Outcome'], rows, 'DeMiguel tilt against the CIO Book rule')
+            + p(b['core_basis'], 'muted') + p(d['fix_variants_note'])
+            + p('Cost convention: ' + d['cost_convention'])
+            + p(f"Source: {src['document']}, body sha256 {src['body_sha256_short']}; {src['window']}. "
+                'Transcribed to data/processed/stage2/demiguel_book_rule.json.', 'muted')
+            + '</section>')
 
 
 def build_hub_pages(page_shell, write_page):

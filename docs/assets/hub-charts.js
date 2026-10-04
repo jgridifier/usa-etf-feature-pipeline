@@ -27,7 +27,7 @@
           (typeof value === 'number' ? number.format(value) : value);
         const month = value => {
           const index = Math.round(value);
-          return `${Math.floor(index / 12)}-${String(index % 12 + 1).padStart(2, '0')}`;
+          return String(Math.floor(index / 12));
         };
         option.tooltip = {...option.tooltip, valueFormatter: format};
         for (const key of ['xAxis', 'yAxis']) {
@@ -37,7 +37,7 @@
         }
         if (hints.monthIndex) {
           option.xAxis.axisLabel.formatter = month;
-          option.xAxis.minInterval = 12;
+          option.xAxis.minInterval = option.xAxis.minInterval || 12;
           option.tooltip.formatter = point => {
             const row = hints.table.rows[point.dataIndex];
             if (!row) return '';

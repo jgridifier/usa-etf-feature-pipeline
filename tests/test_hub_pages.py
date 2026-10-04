@@ -60,6 +60,7 @@ def test_rebuild_and_every_visible_figure_from_json(built,id):
     if id=='index':
         archive = json.loads((ROOT/'apps/pages/src/data/archive_verdicts.json').read_text())
         inputs += [manifest,dict(hub.Counter(c['badge'] for c in archive['cards']))]
+        inputs += [json.loads(hub.DEMIGUEL.read_text())]
     else:
         inputs += [next(s for s in manifest['subjects'] if s['id']==id)]
     allowed = allowed_numbers(inputs)
@@ -183,3 +184,18 @@ def test_null_safe_chart_inputs_and_generic_subjects():
     raw = hub.subject_charts(d)
     assert raw.count('class="hub-chart"')==16
     assert 'Not saved for this run: Source: data/processed/schur_allocator/weights.csv' in raw
+
+
+def test_demiguel_forward_tracked_from_data(built):
+    raw = built['methods/results/index.html']
+    d = json.loads(hub.DEMIGUEL.read_text())
+    section = re.search(r'<section id="forward-tracked">.*?</section>', raw, re.S)[0]
+    text = main_text('<main>' + section + '</main>')
+    a, b = d['book_rule']
+    for v in (a['value'], a['limit'], b['cagr'], b['core_cagr'], b['diff']):
+        assert hub.pct(v) in text
+    assert 'forward-tracked research line' in text and 'Not a holdout candidate' in text
+    assert d['source']['body_sha256_short'] in text and 'two-way' in text
+    ranked = re.search(r'<tbody id="ranked-body">(.*?)</tbody>', raw, re.S)[1]
+    assert 'demiguel' not in ranked.lower()
+    assert f'href="../{hub.stage2.TEACHING}"' in raw and 'stage2_demiguel_kwz' not in raw
