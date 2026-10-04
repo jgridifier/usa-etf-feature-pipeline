@@ -74,10 +74,19 @@ def repair_long(name, core_ids, blank_ids, core, log):
         if sid in core_ids and v and abs(float(v) - BAD_CORE) < 1e-15:
             df.at[i, 'return'] = _fmt(core)
             log.append(dict(file=name, column=f'return[{sid}]', month=MONTH, was=float(v), now=core, action='rebuilt from panel core'))
-        elif sid in blank_ids and v:
+        elif sid in blank_ids and v and not _rerun_restored(sid, v):
             df.at[i, 'return'] = ''
             log.append(dict(file=name, column=f'return[{sid}]', month=MONTH, was=float(v), now=None, action='blanked: not the core, needs a re-run'))
     df.to_csv(path, index=False)
+
+
+def _rerun_restored(sid, v) -> bool:
+    """True when the cell holds the value restored from a complete-month re-run (scripts/restore_m3_p2_rerun.py)."""
+    rec = LIVE / 'm3_p2_rerun_2026-09' / 'rerun_record.json'
+    if not rec.exists():
+        return False
+    r = json.loads(rec.read_text())
+    return r['strategy_id'] == sid and abs(float(v) - r['restored_return']) < 1e-15
 
 
 def _simple_stats(r: pd.Series) -> dict:

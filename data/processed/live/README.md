@@ -30,3 +30,12 @@ Every changed cell is in `partial_month_repair.json`. In the `*_summary.csv` fil
 fields (AnnReturn, AnnVol, MaxDD, Sharpe_rf0 for the method, Book 2 and Option A blocks) are re-derived from the
 rebuilt returns; test statistics (NW t, CIs, DSR, skew/CVaR) stay as run and still include the partial month. `site_sharpe.json` and `docs/data/live_figures.json` were regenerated
 (Book 1 0.7699 → 0.7657, Book 2 0.9967 → 0.9901, vol-target backbone 0.8615 → 0.8567, Sharpe ex-BIL, 2021-02..2026-09).
+
+### m3_p2_core_rotate 2026-09 restored from a re-run (2026-10-04)
+
+`m3_p2_core_rotate` was re-run unchanged (frozen code at main 85002a8; the M3/P2 path is identical to the original
+refresh 111fbc7) on the complete-month prices (`growth_alpha_adj_close.csv` through 2026-09-30), with only that
+registry entry enabled. The other 179 months reproduce the committed returns (max |diff| 1.6e-8), so only the
+blank 2026-09 cell was written: −0.2340%. Output, registry, command and the code / input / output sha256 values are
+in `m3_p2_rerun_2026-09/` (`rerun_record.json`); `scripts/restore_m3_p2_rerun.py` checks and applies it, and the
+repair script no longer blanks the restored value. The strategy comparison is back to 68 months (2021-02..2026-09).

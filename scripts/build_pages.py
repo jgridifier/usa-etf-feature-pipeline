@@ -77,8 +77,8 @@ def regenerate_comparison() -> None:
     panel; scripts/repair_live_partial_month.py) instead of copying run_latest's partial-month figures.
 
     Same function as the registry run (strategy_registry.comparison_frame). strategy_comparison.csv uses the months
-    every strategy covers (m3_p2_core_rotate's 2026-09 is blank, so 67 months); the shortlist slice is computed on
-    its three strategies alone (68 months). The external run_latest files are not modified."""
+    every strategy covers (68 months since m3_p2_core_rotate's 2026-09 was restored from its complete-month re-run,
+    data/processed/live/m3_p2_rerun_2026-09/); the shortlist slice is computed on its three strategies alone. The external run_latest files are not modified."""
     import pandas as pd
     from usa_etf_features.strategy_registry import comparison_frame
     ret = pd.read_csv(LIVE / 'strategy_returns.csv', parse_dates=['date'])
