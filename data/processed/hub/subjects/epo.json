@@ -7057,7 +7057,7 @@
  "dsr": {
   "recorded": "0.125 on Sharpe ex-BIL, not legacy (trial_count=11)",
   "recorded_basis": "Sharpe ex-BIL basis",
-  "primary": null,
+  "primary": 0.125,
   "primary_basis": "Sharpe ex-BIL basis",
   "corrected": null,
   "grid_reference": null,

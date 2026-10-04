@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>Stage 2 holdout: the DeMiguel tilt (Quant teaching note)</title>
+<style>
+  :root { --navy:#0b1f3a; --fg:#111; --muted:#555; --border:#d6d9de; --bg:#f5f6f8; }
+  * { box-sizing: border-box; }
+  body { font-family: Georgia, "Times New Roman", serif; color: var(--fg); line-height: 1.55; max-width: 42rem; margin: 2rem auto; padding: 0 1.25rem; background: #fff; overflow-wrap: anywhere; }
+  h1,h2,h3 { font-family: system-ui, -apple-system, "Segoe UI", sans-serif; line-height: 1.25; color: var(--navy); }
+  h1 { font-size: 1.6rem; margin-bottom: 0.25rem; }
+  h2 { font-size: 1.22rem; margin-top: 2rem; border-bottom: 1px solid var(--border); padding-bottom: 0.3rem; }
+  h3 { font-size: 1.04rem; margin-top: 1.4rem; }
+  .meta { color: var(--muted); font-family: system-ui, sans-serif; font-size: 0.9rem; margin-bottom: 1.5rem; }
+  .disclaimer { background: var(--bg); border: 1px solid var(--border); padding: 0.75rem 1rem; border-radius: 6px; font-size: 0.92rem; margin: 1rem 0 1.5rem; }
+  .callout { background: var(--bg); border-left: 4px solid var(--navy); padding: 0.75rem 1rem; margin: 1rem 0; }
+  .warn { background: #fff; border: 2px solid var(--navy); padding: 0.75rem 1rem; margin: 1rem 0; }
+  .wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+  table { border-collapse: collapse; width: 100%; font-size: 0.9rem; margin: 0.75rem 0 1rem; }
+  th, td { border: 1px solid var(--border); padding: 0.4rem 0.5rem; text-align: left; vertical-align: top; }
+  th { background: var(--navy); color: #fff; font-family: system-ui, sans-serif; font-weight: 600; }
+  td.n { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+  code, .math { font-family: Menlo, Consolas, monospace; font-size: 0.88em; background: #eef0f3; padding: 0 0.2em; border-radius: 3px; }
+  pre.math { display: block; padding: 0.7rem 0.9rem; overflow-x: auto; line-height: 1.5; white-space: pre; }
+  figure { margin: 1rem 0; } figcaption { font-size: 0.86rem; color: var(--muted); }
+  a { color: var(--navy); text-decoration: underline; }
+  .small { font-size: 0.88rem; color: var(--muted); }
+  @media (max-width: 420px) { body { padding: 0 0.8rem; margin: 1rem auto; } h1 { font-size: 1.35rem; } table { font-size: 0.82rem; } th, td { padding: 0.3rem 0.35rem; } }
+</style>
+</head>
+<body>
+<h1>Stage 2 holdout: the DeMiguel tilt</h1>
+<div class="meta">Quant teaching note · 2026-10-04 · status: <strong>frozen, holdout not yet run</strong> · one candidate (N = 1, unless a new-family candidate qualifies by 2026-10-18 23:59 ET) · prereg <code>42f01906…</code> · Addendum 1 <code>46010264…</code> · Addendum 2 <code>f004527e…</code></div>
+<p class="small">This page replaces <code>stage2_demiguel_kwz.html</code>, which now only points here. It was renamed because KWZ was dropped from the holdout.</p>
+
+<div class="disclaimer">Research only. This note explains a methodology test on a research panel of ETFs. It is not personalized investment advice, it carries no approval status, and it changes no Book. Nothing here uses holdout returns (2008-01 to 2016-10). Every number comes from the spent development window (2019-11 to 2026-09), from public Ken French data, or from simulation.</div>
+
+<div class="callout"><strong>One-sentence version.</strong> We take one rule from 2020: start from equal weight and lean a little toward funds with strong 12-month momentum and away from volatile ones. It gets exactly one run on a 106-month holdout, with every setting frozen in advance. Even if it passes, it cannot become a Book, because it trades too much and lagged the static core on the development window.</div>
+
+<div class="warn"><strong>For Jared: correction, and why KWZ was dropped.</strong> The research plan described Kan, Wang &amp; Zhou (2022) as "an optimal blend of 1/N and a mean-variance rule that falls back to 1/N under noise." That is not what the paper says. Its rule is <span class="math">ŵ = ŵ<sub>GMV</sub> + (ĉ/γ)·ŵ<sub>z</sub></span>, and under noise it falls back to the <strong>global minimum-variance portfolio</strong>, not to equal weight. CIO and CoS dropped it from the holdout for three reasons:
+<ol>
+<li><strong>Wrong anchor.</strong> It falls back to minimum variance, which our earlier tests already found loses to equal weight on this panel.</li>
+<li><strong>Infeasible here.</strong> It needs more observations than funds (h &gt; N+3). With 45–96 funds, a 36-month lookback is impossible for every N, and 60 months is impossible from N = 60 up. On 156 weekly returns, the estimated ĉ was only 0.01–0.19, so the rule is essentially minimum variance.</li>
+<li><strong>Our caps would change it into a different rule.</strong> On the development window, the raw KWZ weights carried about <strong>290% in short positions</strong> on average. The long-only cap removes them, so what we could test would not be the paper's rule.</li>
+</ol>
+The EW-anchored blend the plan had in mind belongs to Tu &amp; Zhou (2011). That paper predates the 2020+ rule, and no waiver was granted. The KWZ derivation, simulations and replication stay in the robustness appendix.</div>
+
+<h2>1. The rule in plain language</h2>
+<p>DeMiguel, Martín-Utrera, Nogales and Uppal (2020) start from equal weight across the eligible equity ETFs and tilt each fund's weight using two traits: 12-1 month momentum (MOM) and 12-month volatility (VOL). The formula is <span class="math">w = 1/N + X·θ/N</span>. X holds each fund's standardized traits, and θ says how hard to lean on each one. Each month θ is re-picked from a fixed grid by asking which tilt would have done best over the last 24 months on return, minus a risk charge, minus a trading-cost penalty (κ = 5 times the cost). The paper's headline is that trading costs <em>increase</em> the number of traits worth using, because trades for different traits partly cancel. We reproduced that direction on public industry data: 1 significant trait with no costs, 2 at 50 bp.</p>
+
+<h2>2. What the development window showed</h2>
+<p>All runs were pre-declared and logged, 6 of 6 selectable slots are used, and failures are published too. Figures are net of 10 bp one-way. Capped EW Sharpe is 0.600, and the stand-in core (70/20/10 IVV/QQQ/IJR) has CAGR 16.6%.</p>
+<div class="wrap"><table>
+<tr><th>Variant</th><th>Sharpe above BIL</th><th>Edge vs EW, bootstrap 95% CI</th><th>One-way turnover / yr</th><th>θ on grid edge</th><th>Placebo p</th><th>CAGR vs core</th></tr>
+<tr><td><strong>Linear penalty κ = 5 (frozen)</strong></td><td class='n'>0.633</td><td class='n'>+0.034 [-0.10, +0.16]</td><td class='n'>178%</td><td class='n'>88%</td><td class='n'>0.08</td><td class='n'>-4.3 pp</td></tr><tr><td>Quadratic cost penalty, κ<sub>q</sub> by CV</td><td class='n'>0.565</td><td class='n'>-0.034 [-0.16, +0.08]</td><td class='n'>220%</td><td class='n'>55%</td><td class='n'>0.75</td><td class='n'>-5.5 pp</td></tr><tr><td>Ridge shrinkage of θ, ρ by CV</td><td class='n'>0.565</td><td class='n'>-0.035 [-0.13, +0.05]</td><td class='n'>192%</td><td class='n'>46%</td><td class='n'>0.85</td><td class='n'>-5.4 pp</td></tr><tr><td>Quadratic + ridge, joint CV</td><td class='n'>0.568</td><td class='n'>-0.033 [-0.14, +0.07]</td><td class='n'>216%</td><td class='n'>47%</td><td class='n'>0.70</td><td class='n'>-5.4 pp</td></tr>
+</table></div>
+<p><strong>Placebo.</strong> Each fund was given another fund's traits, which keeps how the traits are spread across funds and how they evolve, but breaks the link to the fund's own returns. Across 100 such runs, the frozen rule's real result had a p-value of 0.08. The fixes scored 0.70–0.85, no better than noise. In-sample, the real traits do beat the placebo (p = 0.01). Out of sample, the edge over EW sits inside noise.</p>
+<p><strong>The fixes.</strong> We tried the paper's quadratic (price-impact) cost formulation and ridge shrinkage of θ, with the strength of each chosen by cross-validation on past data only. They kept θ off the grid edge more often but traded <em>more</em>, because the chosen penalty itself jumped from month to month. They also scored lower. Under the pre-declared rule, the original κ = 5 stays frozen.</p>
+<figure><svg viewBox="0 0 640 250" width="100%" role="img" aria-label="One-way turnover per year on the dev window against the 100 percent CIO limit" xmlns="http://www.w3.org/2000/svg" style="max-width:100%;height:auto;font-family:system-ui,sans-serif;font-size:12px"><rect width="640" height="250" fill="#fff"/><text x="122" y="33.0" text-anchor="end" fill="#111">EW (null)</text><rect x="130" y="14" width="37.8" height="30" fill="#8a95a5"/><text x="173.8" y="33.0" fill="#111">20%</text><text x="122" y="73.0" text-anchor="end" fill="#111">κ = 5 (frozen)</text><rect x="130" y="54" width="332.9" height="30" fill="#0b1f3a"/><text x="468.9" y="73.0" fill="#111">178%</text><text x="122" y="113.0" text-anchor="end" fill="#111">quadratic TC</text><rect x="130" y="94" width="412.2" height="30" fill="#0b1f3a"/><text x="548.2" y="113.0" fill="#111">220%</text><text x="122" y="153.0" text-anchor="end" fill="#111">ridge θ</text><rect x="130" y="134" width="360.7" height="30" fill="#0b1f3a"/><text x="496.7" y="153.0" fill="#111">192%</text><text x="122" y="193.0" text-anchor="end" fill="#111">quadratic + ridge</text><rect x="130" y="174" width="405.4" height="30" fill="#0b1f3a"/><text x="541.4" y="193.0" fill="#111">216%</text><line x1="317.5" x2="317.5" y1="8" y2="236" stroke="#111" stroke-width="2" stroke-dasharray="5 3"/><text x="321.5" y="248" fill="#111">CIO Book limit 100%/yr</text></svg><figcaption>One-way turnover on the development window. The frozen rule trades about 1.8 times its whole portfolio a year, against about 0.2 for equal weight.</figcaption></figure>
+
+<h2>3. Turnover outcome and the CIO Book rule</h2>
+<p>A stage-2 candidate is Book-eligible only if both of these hold (CIO + CoS, set before the freeze):</p>
+<ul>
+<li>(a) one-way turnover is at or below 100% a year on the development window;</li>
+<li>(b) its CAGR stays above the static core's with costs doubled to 10 bp.</li>
+</ul>
+<p>The frozen rule fails both. Turnover is 178%, and CAGR is 12.3% against 16.6% for the core, which is -4.3 pp. All three fixes fail too. <strong>A holdout PASS would be a research result only, not Book-eligible.</strong></p>
+
+<h2>4. The holdout gate and how hard it is</h2>
+<p>There is one run over 2008-01 to 2016-10 (T = 106), charged 5 bp one-way. The candidate must clear all of these:</p>
+<ul>
+<li>the composition tripwires;</li>
+<li>C1: higher Sharpe than capped EW on a one-sided Memmel test with <strong>p ≤ 0.20</strong>;</li>
+<li>C2: at least match LW minimum variance;</li>
+<li>C3: drawdown no more than 5 points worse than EW, with the 2008-09 drawdown shown beside EW and the core;</li>
+<li>C4: deflated Sharpe ratio of at least 0.95.</li>
+</ul>
+<p>For C4, the trial count N is the number of candidates actually taken to the run.</p>
+<div class="wrap"><table>
+<tr><th>Trials counted</th><th>Benchmark SR₀ (annual)</th><th>Sharpe needed for DSR ≥ 0.95</th><th>Same, skew −0.5 / kurtosis 5</th></tr>
+<tr><td><strong>N = 1 (gate if DeMiguel runs alone)</strong></td><td class="n">0.00</td><td class="n">0.56</td><td class="n">0.59</td></tr>
+<tr><td><strong>N = 2 (gate if one new-family candidate qualifies)</strong></td><td class="n">0.21</td><td class="n">0.78</td><td class="n">0.82</td></tr>
+<tr><td><strong>N = 3 (gate if both qualify)</strong></td><td class="n">0.35</td><td class="n">0.92</td><td class="n">0.96</td></tr>
+<tr><td>N = 13 (allocator line incl. this stage; sensitivity)</td><td class="n">0.70</td><td class="n">1.27</td><td class="n">1.34</td></tr>
+<tr><td>N ≈ 117 (all trials project-wide; sensitivity)</td><td class="n">1.06</td><td class="n">1.65</td><td class="n">1.74</td></tr>
+</table></div>
+<figure><svg viewBox="0 0 640 230" width="100%" role="img" aria-label="Annual Sharpe needed for DSR 0.95 at T=106 by number of trials" xmlns="http://www.w3.org/2000/svg" style="max-width:100%;height:auto;font-family:system-ui,sans-serif;font-size:12px"><rect width="640" height="230" fill="#fff"/><text x="82" y="33.0" text-anchor="end" fill="#111">N = 1 (PSR)</text><rect x="90" y="14" width="152.4" height="30" fill="#0b1f3a"/><text x="248.4" y="33.0" fill="#111">0.56</text><text x="82" y="73.0" text-anchor="end" fill="#111">N = 2</text><rect x="90" y="54" width="211.4" height="30" fill="#0b1f3a"/><text x="307.4" y="73.0" fill="#111">0.78</text><text x="82" y="113.0" text-anchor="end" fill="#111">N = 3</text><rect x="90" y="94" width="249.4" height="30" fill="#0b1f3a"/><text x="345.4" y="113.0" fill="#111">0.92</text><text x="82" y="153.0" text-anchor="end" fill="#111">N = 13</text><rect x="90" y="134" width="346.9" height="30" fill="#8a95a5"/><text x="442.9" y="153.0" fill="#111">1.27</text><text x="82" y="193.0" text-anchor="end" fill="#111">N = 117</text><rect x="90" y="174" width="448.8" height="30" fill="#8a95a5"/><text x="544.8" y="193.0" fill="#111">1.65</text><line x1="253.3" x2="253.3" y1="8" y2="218" stroke="#111" stroke-dasharray="4 3"/><text x="257.3" y="228" fill="#111">dev-window EW 0.60</text></svg><figcaption>Annual Sharpe above BIL needed for DSR ≥ 0.95 over 106 months (BLP formula, trial variance 0.014061). About 117 trials have been run project-wide, against 12 in the allocator line before this stage.</figcaption></figure>
+<p><strong>The holdout window has been used before.</strong> FT-MED (from 2002-07), RR-ERC (from 2003-06), Regime-dual (from 2004-11) and the Spectral RP sleeve (from 1998-02) all evaluated returns over 2008–2016, along with their nulls. We already know EW beat LW MinVar from 2002 on (0.524 vs 0.366 above BIL). The holdout is lightly used, not untouched, so every DSR above should be read with that in mind.</p>
+<p><strong>Power.</strong> Assume EW's true Sharpe is 0.55 and the run has N = 1. A rule that is truly no better than EW passes C1 and C4 about 11% of the time; under the old point-estimate C1 that figure was 26%. A rule that is truly 0.3 better passes about 81% of the time, falling to about 60% if 2008–2016 was harder on equal-weight-like portfolios (true EW Sharpe 0.35).</p>
+<p><strong>New-family candidates.</strong> Two candidates may still join the 2008–16 run, provided they qualify by 2026-10-18 23:59 ET, with no extensions:</p>
+<ul>
+<li>the Deng–Gao–Wang plus Antulov-Fantulin–Kolm–Šikić tilt layer, counted as one candidate;</li>
+<li>Guo–Wachter.</li>
+</ul>
+<p>Each joins only if its development-window bootstrap 95% CI for the Sharpe difference excludes zero: against EW for the tilt layer, against the static core for Guo–Wachter. Otherwise it is tracked forward only.</p>
+
+<h2>5. Holdout risk: the 2009 momentum crash</h2>
+<p>The frozen rule leans positive on momentum (θ<sub>MOM</sub> ≈ +1). In public Ken French data the momentum factor fell 39% in March 2009, 45% in April and 21% in May. Over those three months the past-loser decile gained 158% while past winners gained 7%. ETF-level spreads are far smaller than single-stock spreads, but spring 2009 is the most likely place for this rule to fail C1 or C3. That risk was stated before the run.</p>
+
+<h2>References</h2>
+<ul class="small">
+<li>DeMiguel, V., Martín-Utrera, A., Nogales, F. J., &amp; Uppal, R. (2020). A transaction-cost perspective on the multitude of firm characteristics. <em>Review of Financial Studies</em>, 33(5), 2180–2222. <a href="https://doi.org/10.1093/rfs/hhz085">doi:10.1093/rfs/hhz085</a></li>
+<li>Kan, R., Wang, X., &amp; Zhou, G. (2022). Optimal portfolio choice with estimation risk: No risk-free asset case. <em>Management Science</em>, 68(3), 2047–2068. <a href="https://doi.org/10.1287/mnsc.2021.3989">doi:10.1287/mnsc.2021.3989</a> (dropped from the holdout; see the correction above)</li>
+<li>Tu, J., &amp; Zhou, G. (2011). Markowitz meets Talmud: A combination of sophisticated and naive diversification strategies. <em>Journal of Financial Economics</em>, 99(1), 204–215. <a href="https://doi.org/10.1016/j.jfineco.2010.08.013">doi:10.1016/j.jfineco.2010.08.013</a></li>
+<li>Bailey, D. H., &amp; López de Prado, M. (2014). The deflated Sharpe ratio. <em>Journal of Portfolio Management</em>, 40(5), 94–107. <a href="https://doi.org/10.3905/jpm.2014.40.5.094">doi:10.3905/jpm.2014.40.5.094</a></li>
+<li>Memmel, C. (2003). Performance hypothesis testing with the Sharpe ratio. <em>Finance Letters</em>, 1, 21–23.</li>
+</ul>
+<p class="small">Source files: <code>justina_shortlist/QUANT_PREREG_stage2_holdout.md</code>, <code>…_ADDENDUM.md</code>, <code>…_ADDENDUM2.md</code>, <code>QUANT_dev_fixes_PREDECLARE.md</code>, <code>QUANT_stage2_robustness.md</code>, <code>stage2_code/</code>.</p>
+</body>
+</html>

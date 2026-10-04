@@ -66,3 +66,24 @@ def test_publish_refuses_wrong_or_unpinned_hash(tmp_path, monkeypatch):
     with pytest.raises(SystemExit):
         st.publish_teaching(src, tmp_path)
     assert not (tmp_path / 'methods' / st.TEACHING).exists()
+
+
+def test_final_teaching_note_is_pinned_and_the_kwz_version_never_ships():
+    assert st.TEACHING == 'stage2_demiguel.html'
+    assert st.TEACHING_SHA256 == '8091157e656d740ceae02f2f53ec75ff049c02a8e8c56364d05ce379a9e1625d'
+    assert hashlib.sha256(TEACH.read_bytes()).hexdigest() == st.TEACHING_SHA256
+    assert not (ROOT / 'docs/methods/stage2_demiguel_kwz.html').exists()
+    raw = TEACH.read_text()
+    assert '<script' not in raw.lower() and 'cdn' not in raw.lower()
+
+
+def test_demiguel_book_rule_json_is_sourced_and_consistent():
+    import json
+    d = json.loads((ROOT / 'data/processed/stage2/demiguel_book_rule.json').read_text())
+    assert d['source']['body_sha256'] == 'f004527e2c41183ef679b7ca5b9de18bc9884ef1c64816201df9963c96496e0c'
+    assert d['source']['body_sha256'] in (ROOT / 'data/processed/stage2/PROVENANCE.md').read_text()
+    assert d['status'] == 'forward-tracked research line' and d['book_eligible'] is False
+    a, b = d['book_rule']
+    assert a['value'] > a['limit'] and a['outcome'] == 'FAIL' and a['unit'].startswith('one-way')
+    assert abs((b['cagr'] - b['core_cagr']) - b['diff']) < 1e-9 and b['diff'] < 0 and b['outcome'] == 'FAIL'
+    assert b['cost_bp_one_way'] == 10 and 'two-way' in d['cost_convention'] and '10 bp one-way' in d['cost_convention']

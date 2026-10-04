@@ -1,0 +1,36 @@
+{
+  "id": "demiguel_s_k5",
+  "name": "DeMiguel et al. (2020) characteristic tilt, S_k5 (linear turnover penalty, kappa = 5)",
+  "status": "forward-tracked research line",
+  "status_note": "Not a holdout candidate for now (CoS, 2026-10-04). Tracked forward as research only.",
+  "book_eligible": false,
+  "source": {
+    "document": "Quant stage-2 holdout pre-registration, Addendum 2 (section 7, CIO Book rule)",
+    "body_sha256": "f004527e2c41183ef679b7ca5b9de18bc9884ef1c64816201df9963c96496e0c",
+    "body_sha256_short": "f004527e…96e0",
+    "window": "dev OOS 2019-11 to 2026-09 (T = 83)"
+  },
+  "book_rule": [
+    {
+      "rule": "a",
+      "test": "One-way turnover at most 100% a year on the dev window",
+      "value": 1.78,
+      "limit": 1.00,
+      "unit": "one-way turnover per year",
+      "outcome": "FAIL"
+    },
+    {
+      "rule": "b",
+      "test": "CAGR minus the static core's CAGR stays above 0 with costs doubled to 10 bp one-way",
+      "cagr": 0.123,
+      "core_cagr": 0.166,
+      "diff": -0.043,
+      "diff_at_5bp_one_way": -0.042,
+      "cost_bp_one_way": 10,
+      "core_basis": "stand-in static core 70% IVV / 20% QQQ / 10% IJR (Addendum 2 benchmark list)",
+      "outcome": "FAIL"
+    }
+  ],
+  "cost_convention": "The dev engine charged 5 bp per unit of two-way (L1) turnover, which is 10 bp one-way. Turnover figures quoted earlier (e.g. 355%/yr) were two-way; one-way is half of that (178%/yr for S_k5). The holdout charges 5 bp one-way.",
+  "fix_variants_note": "All three fix variants (S_q_cv, S_ridge_cv, S_q_ridge_cv) also fail rules (a) and (b)."
+}

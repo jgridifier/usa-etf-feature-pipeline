@@ -270,6 +270,7 @@ def test_every_dsr_with_a_recompute_match_uses_the_corrected_value_as_primary():
     assert vc['primary'] == 0.6625 and vc['recorded'].startswith('1.000') and vc['corrected']['error_note'] == hd.UNIT_NOTE
     assert _load('subjects/spectral_rp.json')['dsr']['primary'] == 0.5041
     assert _load('subjects/schur.json')['dsr']['corrected'] is None
+    assert _load('subjects/schur.json')['dsr']['primary'] == 0.433 and _load('subjects/epo.json')['dsr']['primary'] == 0.125
     for sid in ('book2', 'skew_overlay'):
         d = _load(f'subjects/{sid}.json')['dsr']
         assert d['primary'] is None and d['grid_reference']['n_trials'] == 72 and 'N = 1' in d['note']
