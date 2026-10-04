@@ -1,0 +1,12 @@
+{
+  "file": "strategy_comparison.csv",
+  "source": "data/processed/prices_fix_2026-10/m3_p2_restatement.json",
+  "notes": [
+    {
+      "strategy_id": "m3_p2_core_rotate",
+      "label": "M3 P2 (held off)",
+      "kind": "data restatement, not a new trial",
+      "text": "56 of 179 earlier months changed picks between the two price files; largest monthly gap 2020-03, \u22121.02 pp; picks flip on price differences under 1e-4, so this stays a lab run."
+    }
+  ]
+}
