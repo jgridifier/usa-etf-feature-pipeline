@@ -23,7 +23,9 @@ NOTES = [
     ('stage2_wrap', 'CIO note: stage 2 wrap-up (Oct 2026)', 'published', ''),
 ]
 # Pinned notes: published verbatim; the build refuses a copy whose bytes differ (CIO + CoS approved 2026-10-04).
-NOTE_SHA256 = {'stage2_wrap': '2efdf27b345d152cdb111406ea10dd4167617d0f47b21591bf68308063814491'}
+NOTE_SHA256 = {'stage2_wrap': '2efdf27b345d152cdb111406ea10dd4167617d0f47b21591bf68308063814491',
+               # pinned 2026-10-04 with its build-time lab note (CIO): the .md stays verbatim
+               'book2_reframe': 'e32ea4f0b8c05d97bc5aefbf09cc423e388fe96a5c8384f8818b6429e971c7b3'}
 # Build-time banners: injected above the note body; the .md sources are not edited (PM, 2026-10-04).
 SEPT_FIX_BANNER = 'Superseded: Book 2 Sharpe ex-BIL is 0.99 after the September full-month fix.'
 NOTE_BANNERS = {'book2_reframe': SEPT_FIX_BANNER, 'book2_lw2008_drawdowns': SEPT_FIX_BANNER}
@@ -45,8 +47,49 @@ def backbone_cagr_banner() -> str:
             f"The note itself is published verbatim at its pinned hash.")
 
 
-# Callable banners are computed from data at build time.
+BOOK2_JSON = ROOT / 'data' / 'processed' / 'hub' / 'subjects' / 'book2.json'
+
+
+def _minus(s: str) -> str:
+    return s.replace('-', '\u2212')
+
+
+def book2_reframe_figures() -> dict:
+    """Every corrected figure for the book2_reframe lab note: books_window (68 months, 2021-02..2026-09) of
+    backbone.json and book2.json; the Sharpe-edge p is book2.json vs_nulls[backbone].sharpe_test (HAC, two-sided)."""
+    import json
+    bb = json.loads(BACKBONE_JSON.read_text(encoding='utf-8'))
+    b2 = json.loads(BOOK2_JSON.read_text(encoding='utf-8'))
+    w_bb, w_b2 = bb['books_window'], b2['books_window']
+    assert (w_bb['n'], w_bb['start'], w_bb['end']) == (w_b2['n'], w_b2['start'], w_b2['end'])
+    vs = next(r for r in b2['vs_nulls'] if r['key'] == 'backbone')
+    assert (vs['n'], vs['end']) == (w_b2['n'], w_b2['end'])
+    return dict(n=w_b2['n'], start=w_b2['start'], end=w_b2['end'],
+                backbone_cagr=w_bb['cagr'], book2_cagr=w_b2['cagr'],
+                gap_pp=100 * (w_bb['cagr'] - w_b2['cagr']),
+                book2_sharpe=w_b2['sharpe_exbil'], backbone_sharpe=w_bb['sharpe_exbil'],
+                p_two_sided=vs['sharpe_test']['p_two_sided'],
+                book2_maxdd=w_b2['maxdd'], backbone_maxdd=w_bb['maxdd'])
+
+
+def book2_reframe_banner() -> str:
+    """Dated lab note for book2_reframe.md (CIO, 2026-10-04). The note prints Backbone CAGR 15.1%, a 1.2-point
+    yearly give-up and Book 2 Sharpe 1.00; the corrected values are computed here from the hub JSON."""
+    f = book2_reframe_figures()
+    pct1 = lambda x: _minus(f'{100 * x:.1f}%')
+    return (f"Lab note, 2026-10-04: figures corrected to the hub's {f['n']}-month window ({f['start']} to {f['end']}) "
+            f"on corrected prices. Backbone CAGR is {pct1(f['backbone_cagr'])} (printed 15.1%). Against the backbone, "
+            f"Book 2 gave up about {f['gap_pp']:.1f} points a year ({pct1(f['book2_cagr'])} vs "
+            f"{pct1(f['backbone_cagr'])}; printed 1.2). Book 2's Sharpe above BIL is {f['book2_sharpe']:.2f} "
+            f"(printed 1.00 in the table and under 'What the evidence does and doesn't say'). Its Sharpe edge over the "
+            f"backbone is still not significant (two-sided p {f['p_two_sided']:.2f}). The 2022 bear-market drawdowns "
+            f"are still {pct1(f['book2_maxdd'])} for Book 2 vs {pct1(f['backbone_maxdd'])} for the backbone. "
+            f"No conclusion changes.")
+
+
+# Callable banners are computed from data at build time; a list renders one callout per entry, in order.
 NOTE_BANNERS['stage2_wrap'] = backbone_cagr_banner
+NOTE_BANNERS['book2_reframe'] = [book2_reframe_banner, SEPT_FIX_BANNER]
 
 
 def _inline(text: str) -> str:
@@ -155,9 +198,17 @@ def notes_list_html(prefix: str) -> str:
     return '<ul class="method-list">' + ''.join(items) + '</ul>'
 
 
+def banner_texts(slug: str) -> list[str]:
+    b = NOTE_BANNERS.get(slug, [])
+    return [x() if callable(x) else x for x in (b if isinstance(b, list) else [b])]
+
+
 def banner_text(slug: str) -> str:
-    b = NOTE_BANNERS[slug]
-    return b() if callable(b) else b
+    return ' '.join(banner_texts(slug))
+
+
+def banners_html(slug: str) -> str:
+    return ''.join(f'<p class="callout note-banner" role="note">{escape(t)}</p>' for t in banner_texts(slug))
 
 
 def build_notes(page_shell, write_page) -> None:
@@ -175,7 +226,7 @@ def build_notes(page_shell, write_page) -> None:
         content = (
             '<section class="band"><div class="band-inner note-body">'
             '<p><span class="badge">Note for Jared</span></p>'
-            + (f'<p class="callout note-banner" role="note">{escape(banner_text(slug))}</p>' if slug in NOTE_BANNERS else '')
+            + banners_html(slug)
             + body
             + f'<p class="dl"><a href="{slug}.md">Markdown source</a> · '
             '<a href="../methods/index.html#notes">All notes</a></p>'

@@ -179,3 +179,57 @@ def test_banner_follows_the_data(monkeypatch, tmp_path):
     p.write_text(json.dumps(d))
     monkeypatch.setattr(bn, 'BACKBONE_JSON', p)
     assert 'level on CAGR (20.00% vs' in bn.banner_text('stage2_wrap')
+
+
+def _bn():
+    spec = importlib.util.spec_from_file_location('build_notes', ROOT / 'scripts' / 'build_notes.py')
+    bn = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(bn)
+    return bn
+
+
+def test_book2_reframe_lab_note_figures_equal_the_hub_json():
+    """CIO, 2026-10-04: book2_reframe.md prints Backbone CAGR 15.1%, a 1.2-point give-up and Book 2 Sharpe 1.00. A
+    dated build-time lab note gives the hub's books_window values (68 months 2021-02..2026-09, corrected prices)."""
+    import json
+    from html import unescape
+    bb = json.loads((ROOT / 'data/processed/hub/subjects/backbone.json').read_text(encoding='utf-8'))['books_window']
+    b2j = json.loads((ROOT / 'data/processed/hub/subjects/book2.json').read_text(encoding='utf-8'))
+    b2 = b2j['books_window']
+    assert (bb['n'], bb['start'], bb['end']) == (b2['n'], b2['start'], b2['end']) == (68, '2021-02', '2026-09')
+    p = next(r for r in b2j['vs_nulls'] if r['key'] == 'backbone')['sharpe_test']['p_two_sided']
+    m = lambda x: f'{100 * x:.1f}%'.replace('-', '\u2212')
+    html = (ROOT / 'docs/notes/book2_reframe.html').read_text(encoding='utf-8')
+    notes = [unescape(t) for t in re.findall(r'<p class="callout note-banner" role="note">(.*?)</p>', html, re.S)]
+    lab = [t for t in notes if t.startswith('Lab note, 2026-10-04:')]
+    assert len(lab) == 1, notes
+    t = lab[0]
+    for want in (f"hub's 68-month window (2021-02 to 2026-09) on corrected prices",
+                 f"Backbone CAGR is {m(bb['cagr'])} (printed 15.1%)",
+                 f"gave up about {100 * (bb['cagr'] - b2['cagr']):.1f} points a year ({m(b2['cagr'])} vs {m(bb['cagr'])}; printed 1.2)",
+                 f"Sharpe above BIL is {b2['sharpe_exbil']:.2f} (printed 1.00",
+                 f"still not significant (two-sided p {p:.2f})",
+                 f"still {m(b2['maxdd'])} for Book 2 vs {m(bb['maxdd'])} for the backbone",
+                 'No conclusion changes.'):
+        assert want in t, (want, t)
+    assert (m(bb['cagr']), f"{100 * (bb['cagr'] - b2['cagr']):.1f}", f"{b2['sharpe_exbil']:.2f}", f'{p:.2f}') == ('15.0%', '1.1', '0.99', '0.33')
+    assert (m(b2['maxdd']), m(bb['maxdd'])) == ('\u221210.1%', '\u221220.1%')
+    md = (ROOT / 'docs/notes/book2_reframe.md').read_text(encoding='utf-8')
+    for printed in ('| Backbone (vol target) | 15.1% |', '**1.2 points a year**', '| −10.1% | 1.00 |', 'Book 2 is at 1.00 against 0.86'):
+        assert printed in md, printed                       # the lab note names what the source prints
+    src = (ROOT / 'scripts/build_notes.py').read_text(encoding='utf-8')
+    src = '\n'.join(l for l in src.splitlines() if not l.startswith('SEPT_FIX_BANNER = '))   # PM's earlier fixed banner
+    for lit in ('0.99', '1.1 ', '0.33', '10.1', '20.1', '13.9', '15.0%'):
+        assert lit not in src, lit                           # computed, not typed in
+
+
+def test_book2_reframe_source_is_pinned_and_published_verbatim_minus_the_banners():
+    import hashlib
+    bn = _bn()
+    md = (ROOT / 'docs/notes/book2_reframe.md').read_bytes()
+    assert hashlib.sha256(md).hexdigest() == bn.NOTE_SHA256['book2_reframe'] == \
+        'e32ea4f0b8c05d97bc5aefbf09cc423e388fe96a5c8384f8818b6429e971c7b3'
+    html = (ROOT / 'docs/notes/book2_reframe.html').read_text(encoding='utf-8')
+    body = re.search(r'<span class="badge">Note for Jared</span></p>(.*?)<p class="dl">', html, re.S)[1]
+    stripped = re.sub(r'<p class="callout note-banner" role="note">.*?</p>', '', body, flags=re.S)
+    assert stripped == bn.md_to_html(md.decode('utf-8'))   # banners are the only build-time addition
