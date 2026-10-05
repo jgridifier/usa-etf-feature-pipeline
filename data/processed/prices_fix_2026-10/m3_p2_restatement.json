@@ -65,7 +65,7 @@
  "disclosure": {
   "earlier_months": 179,
   "months_returns_moved": 56,
-  "pick_tolerance": 1e-06,
+  "return_move_tolerance": 1e-06,
   "largest_gap_month": "2020-03",
   "largest_gap_pp": -1.02,
   "largest_gap_return_was": -0.14303207461262085,

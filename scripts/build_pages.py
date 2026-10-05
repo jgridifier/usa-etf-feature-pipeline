@@ -1075,7 +1075,7 @@ def m3_p2_fragility_note(rec: dict) -> str:
     d = rec['disclosure']
     gap = f"{d['largest_gap_pp']:.2f}".replace('-', '\u2212')
     return (f"{d['months_returns_moved']} of {d['earlier_months']} earlier months' returns moved by more than "
-            f"{_sci(d['pick_tolerance'])} between the two price files; largest monthly gap {d['largest_gap_month']}, "
+            f"{_sci(d['return_move_tolerance'])} between the two price files; largest monthly gap {d['largest_gap_month']}, "
             f"{gap} pp; returns move on price differences under {_sci(d['price_diff_bound'])}, so this stays a lab run.")
 
 
@@ -1087,7 +1087,8 @@ def build_comparison_notes() -> None:
         'file': 'strategy_comparison.csv',
         'source': 'data/processed/prices_fix_2026-10/m3_p2_restatement.json',
         'notes': [{'strategy_id': 'm3_p2_core_rotate', 'label': 'M3 P2 (held off)',
-                   'kind': 'data restatement, not a new trial', 'text': m3_p2_fragility_note(rec)}],
+                   'kind': 'data restatement, not a new trial',
+                   'return_move_tolerance': rec['disclosure']['return_move_tolerance'], 'text': m3_p2_fragility_note(rec)}],
     })
 
 

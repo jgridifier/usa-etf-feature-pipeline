@@ -71,9 +71,9 @@ def test_fragility_figures_recompute_from_the_two_return_series():
     d = rec()['disclosure']
     rerun = json.loads(RERUN.read_text())['other_months_changed_beyond_tolerance']   # every month that moved > 1e-7
     gaps = {m: v['now'] - v['was'] for m, v in rerun.items() if m != '2026-09'}
-    moved = sorted(m for m, g in gaps.items() if abs(g) > d['pick_tolerance'])
+    moved = sorted(m for m, g in gaps.items() if abs(g) > d['return_move_tolerance'])
     worst = max(gaps, key=lambda m: abs(gaps[m]))
-    assert d['pick_tolerance'] == 1e-6
+    assert d['return_move_tolerance'] == 1e-6
     assert (d['months_returns_moved'], d['earlier_months']) == (len(moved), 179) == (56, 179)
     assert d['months_returns_moved_list'] == moved
     assert 'months_changed' not in d and 'months' not in d
@@ -89,6 +89,9 @@ def test_note_text_is_generated_from_the_record():
     notes = json.loads(NOTES.read_text(encoding='utf-8'))
     assert notes['file'] == 'strategy_comparison.csv'
     assert [(n['strategy_id'], n['text']) for n in notes['notes']] == [('m3_p2_core_rotate', want)]
+    assert notes['notes'][0]['return_move_tolerance'] == rec()['disclosure']['return_move_tolerance'] == 1e-6
+    for path in (REC, NOTES, ROOT / 'scripts/build_pages.py', ROOT / 'scripts/record_m3_p2_restatement.py'):
+        assert 'pick_tolerance' not in path.read_text(encoding='utf-8'), path
     # CIO: no claim about picks unless the record measures them (it does not: months_picks_differ is null).
     assert rec()['disclosure']['picks_measured'] is False and rec()['disclosure']['months_picks_differ'] is None
     bad = re.compile(r'picks?\s+flip|changed\s+picks?|picks?\s+changed|picks?\s+differ', re.I)
@@ -98,7 +101,7 @@ def test_note_text_is_generated_from_the_record():
     assert not re.search(r'\bpicks?\b', want, re.I)
     fake = json.loads(json.dumps(rec()))
     fake['disclosure'].update(months_returns_moved=3, earlier_months=10, largest_gap_month='2001-01',
-                              largest_gap_pp=-0.5, pick_tolerance=1e-5)
+                              largest_gap_pp=-0.5, return_move_tolerance=1e-5)
     assert build_pages.m3_p2_fragility_note(fake).startswith("3 of 10 earlier months' returns moved by more than 1e-5 ") and '2001-01, \u22120.50 pp' in build_pages.m3_p2_fragility_note(fake)
 
 

@@ -25,7 +25,7 @@ RERUN = ROOT / 'data/processed/live/m3_p2_rerun_2026-09/rerun_record.json'
 BEFORE = 'e0ff4e3ea9f8931f4538171e497dbae53fe0a294'      # main before the price fix
 SID = 'm3_p2_core_rotate'
 LAST = '2026-09'
-PICK_TOL = 1e-6            # a month counts when its return moved by more than this
+RETURN_MOVE_TOL = 1e-6            # a month counts when its return moved by more than this
 RETURN_FILES = ['data/processed/live/strategy_returns.csv',
                 'data/processed/live/m3_p2_rerun_2026-09/strategy_returns.csv']
 
@@ -62,7 +62,7 @@ def main() -> None:
     assert list(old.index) == list(new.index)
     earlier = old.index[old.index != LAST]
     gap = (new - old).loc[earlier]
-    moved = gap[gap.abs() > PICK_TOL]
+    moved = gap[gap.abs() > RETURN_MOVE_TOL]
     worst = gap.abs().idxmax()
     # Price differences between the two files outside the removed 2026-09-16 splice.
     o = pd.read_csv(io.BytesIO(_git('docs/data/growth_alpha_adj_close.csv')), index_col=0, float_precision='round_trip')
@@ -70,7 +70,7 @@ def main() -> None:
     d = (o.pct_change(fill_method=None) - n.pct_change(fill_method=None)).abs()
     d = d[d.index < '2026-09-16'].stack()
     disclosure = dict(
-        earlier_months=int(len(earlier)), months_returns_moved=int(len(moved)), pick_tolerance=PICK_TOL,
+        earlier_months=int(len(earlier)), months_returns_moved=int(len(moved)), return_move_tolerance=RETURN_MOVE_TOL,
         largest_gap_month=str(worst), largest_gap_pp=round(float(gap[worst]) * 100, 2),
         largest_gap_return_was=float(old[worst]), largest_gap_return_now=float(new[worst]),
         max_daily_return_diff_before_splice=float(d.max()), price_diff_bound=1e-4,
