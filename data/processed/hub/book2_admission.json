@@ -27,7 +27,7 @@
     },
     {
       "criterion": "DSR / trial count (reported)",
-      "recorded": "≈1.0 at 72 grid trials as recorded; corrected 0.53 ex-BIL (unit bug)",
+      "recorded": "≈1.0 at 72 grid trials as recorded; corrected 0.56 ex-BIL on complete months (unit bug; Quant's Sept recompute, sha fe895441…, supersedes 0.53)",
       "result": "reported; eligibility never rested on DSR (gate-first spec N = 1, PSR only)"
     },
     {

@@ -1,7 +1,8 @@
 (function () {
   var btn = document.querySelector('.nav-toggle');
   var nav = document.getElementById('site-nav');
-  if (!btn || !nav) return;
+  if (!btn || !nav || window.__labNavBound) return;
+  window.__labNavBound = true;
   function setOpen(open) {
     btn.setAttribute('aria-expanded', open ? 'true' : 'false');
     btn.setAttribute('aria-label', open ? 'Close menu' : 'Open menu');

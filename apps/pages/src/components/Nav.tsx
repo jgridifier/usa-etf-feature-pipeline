@@ -69,7 +69,7 @@ export default function Nav() {
           </Link>
           <button
             type="button"
-            className="md:hidden p-1 text-muted hover:text-ink transition-colors"
+            className="md:hidden -mr-2 inline-flex min-h-[44px] min-w-[44px] items-center justify-center text-muted hover:text-ink transition-colors"
             aria-label={open ? 'Close menu' : 'Open menu'}
             aria-expanded={open}
             onClick={() => setOpen(o => !o)}
@@ -82,7 +82,7 @@ export default function Nav() {
       {/* Mobile drawer */}
       {open && (
         <div
-          className="md:hidden border-t border-border bg-surface px-4 py-4 flex flex-col gap-4"
+          className="md:hidden border-t border-border bg-surface px-4 py-2 flex flex-col gap-0"
           aria-label="Mobile navigation"
         >
           {PRIMARY_LINKS.map(({ to, label }) => (
@@ -91,7 +91,7 @@ export default function Nav() {
               to={to}
               className={({ isActive }) =>
                 cn(
-                  'text-sm font-medium uppercase tracking-label transition-colors py-1',
+                  'text-sm font-medium uppercase tracking-label transition-colors min-h-[44px] flex items-center', // 44px tap target (PM)
                   isActive ? 'text-ink' : 'text-muted hover:text-body',
                 )
               }
@@ -103,7 +103,7 @@ export default function Nav() {
           <NavLink
             to="/runs"
             className={({ isActive }) =>
-              cn('text-xs text-muted/60 hover:text-muted transition-colors', isActive && 'text-muted')
+              cn('text-xs text-muted/60 hover:text-muted transition-colors min-h-[44px] flex items-center', isActive && 'text-muted')
             }
             onClick={() => setOpen(false)}
           >

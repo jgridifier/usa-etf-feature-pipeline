@@ -25,11 +25,42 @@
         });
         const format = value => value == null || value === '-' ? '—' :
           (typeof value === 'number' ? number.format(value) : value);
+        const month = value => {
+          const index = Math.round(value);
+          return String(Math.floor(index / 12));
+        };
         option.tooltip = {...option.tooltip, valueFormatter: format};
         for (const key of ['xAxis', 'yAxis']) {
           for (const axis of [].concat(option[key] || [])) {
             if (axis.type !== 'category') axis.axisLabel = {...axis.axisLabel, formatter: format};
           }
+        }
+        if (hints.monthIndex) {
+          option.xAxis.axisLabel.formatter = month;
+          option.xAxis.minInterval = option.xAxis.minInterval || 12;
+          option.tooltip.formatter = point => {
+            const row = hints.table.rows[point.dataIndex];
+            if (!row) return '';
+            const node = document.createElement('div');
+            node.textContent = `${row[0]}: ${row[1]} to ${row[2]}`;
+            return node;
+          };
+        }
+        if (hints.pointTooltip) {
+          // Scatter points: subject name plus each coordinate with its own label.
+          option.tooltip.formatter = point => {
+            if (!point || !Array.isArray(point.value)) return '';
+            const node = document.createElement('div');
+            const title = document.createElement('strong');
+            title.textContent = point.name;
+            node.appendChild(title);
+            hints.pointTooltip.forEach((label, i) => {
+              const line = document.createElement('div');
+              line.textContent = `${label}: ${format(point.value[i])}`;
+              node.appendChild(line);
+            });
+            return node;
+          };
         }
         chart = globalThis.echarts.init(element, 'hub', {renderer: 'svg'});
         chart.setOption(option);

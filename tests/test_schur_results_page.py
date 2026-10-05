@@ -223,9 +223,17 @@ def test_teaching_page_published_byte_for_byte_and_cross_linked():
     page = DOCS / 'methods' / 'allocation_alpha_schur.html'
     raw = page.read_bytes()
     source = Path('/workspace/investments/methods/allocation_alpha_schur.html')
-    if source.exists():   # Quant's source on the shared box; CI checks the pinned hash only
-        assert hashlib.sha256(source.read_bytes()).hexdigest() == hashlib.sha256(raw).hexdigest()
-    assert hashlib.sha256(raw).hexdigest() == '410824b4c8185efbc809b7336a2a92191e5ca54948fbe19977b4ff5ec87e28ce'
+    # Quant's note is published byte-for-byte outside its <!-- lab:start -->…<!-- lab:end --> chrome blocks. The only
+    # build-time change is inside the head chrome block: the Google Fonts links became ../assets/fonts.css
+    # (PM re-test of a221d3c, item 1: no outside hosts). Source sha256 410824b4…; published sha256 pinned below.
+    lab = re.compile(r'<!-- lab:start -->.*?<!-- lab:end -->', re.S)
+    if source.exists():   # Quant's source on the shared box; CI checks the pinned hashes only
+        src = source.read_bytes()
+        assert hashlib.sha256(src).hexdigest() == '410824b4c8185efbc809b7336a2a92191e5ca54948fbe19977b4ff5ec87e28ce'
+        assert lab.sub('', src.decode('utf-8')) == lab.sub('', raw.decode('utf-8'))
+    assert hashlib.sha256(lab.sub('', raw.decode('utf-8')).encode('utf-8')).hexdigest() == 'd648271e06223228506c40b4b5e1ca25ee372572001882334f700195330c9f38'
+    assert hashlib.sha256(raw).hexdigest() == '1cca623d7f82ab40bcf5d971393bc79976d88f7101bc67187021fa7704b405fc'
+    assert 'fonts.googleapis' not in raw.decode('utf-8') and 'href="../assets/fonts.css"' in raw.decode('utf-8')
     text = raw.decode('utf-8')
     assert 'href="allocation_alpha_schur_results.html"' in text
     assert 'href="allocation_alpha_schur.html"' in PAGE.read_text(encoding='utf-8')

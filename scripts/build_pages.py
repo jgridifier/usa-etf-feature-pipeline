@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import csv
 import json
+import os
 import re
 import shutil
 from html import escape
@@ -87,6 +88,18 @@ def regenerate_comparison() -> None:
     full.to_csv(DATA / 'strategy_comparison.csv', index=False, date_format='%Y-%m-%d')
     short = comparison_frame(ret[ret.strategy_id.isin(SHORTLIST_IDS)], core)
     short.to_csv(DATA / 'shortlist_comparison.csv', index=False, date_format='%Y-%m-%d')
+
+
+def comparison_window_label() -> str:
+    """'2021-02 to 2026-08 (67 months; m3_p2_core_rotate 2026-09 awaits a re-run)' from strategy_comparison.csv."""
+    rows = read_csv('strategy_comparison.csv')
+    if not rows:
+        return ''
+    start = min(r['start_date'] for r in rows)[:7]
+    end = max(r['end_date'] for r in rows)[:7]
+    n = max(int(float(r['n_months'])) for r in rows if r.get('n_months'))
+    note = '; m3_p2_core_rotate 2026-09 awaits a re-run on the complete-month panel' if end < '2026-09' else ''
+    return f'{start} to {end} ({n} months{note})'
 
 
 def copy_cio_inputs() -> None:
@@ -359,6 +372,7 @@ def build_viz() -> None:
         })
     write_json('viz_comparison.json', {
         'source': 'strategy_comparison.csv' if (DATA / 'strategy_comparison.csv').exists() else 'shortlist_comparison.csv',
+        'window': comparison_window_label(),
         'rows': rows_out,
     })
 
@@ -471,14 +485,7 @@ def page_shell(
             f'<script src="{prefix}assets/vendor/echarts-6.1.0.custom.min.js"></script>'
             f'<script src="{prefix}assets/app.js" defer></script>'
         )
-    fonts = (
-        '<link rel="preconnect" href="https://fonts.googleapis.com">'
-        '<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>'
-        '<link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,wght@0,400;0,500;0,600;1,400;1,600'
-        '&family=Playfair+Display:wght@700;900'
-        '&family=Inter:wght@400;500;600;700'
-        '&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">'
-    )
+    fonts = f'<link rel="stylesheet" href="{prefix}assets/fonts.css">'  # self-hosted (SIL OFL 1.1); no outside hosts
     return f'''<!doctype html>
 <html lang="en">
 <head>
@@ -684,7 +691,7 @@ def build_books() -> None:
   <div class="band-inner">
     <div class="section-head">
       <h2>Comparison</h2>
-      <p class="lede">From <code>strategy_comparison.csv</code> (live Books 1–2; optional XSD sleeve may appear). Mobile-friendly table.</p>
+      <p class="lede">From <code>strategy_comparison.csv</code>, @@CMP_WINDOW@@ (live Books 1–2; optional XSD sleeve may appear). Mobile-friendly table.</p>
     </div>
     <div id="comparison-table" class="comparison-host" data-viz="comparison"></div>
   </div>
@@ -731,6 +738,7 @@ def build_books() -> None:
     if snapshot.exists():
         content += csv_table(snapshot)
     content += '</div></section>'
+    content = content.replace('@@CMP_WINDOW@@', escape(comparison_window_label()))
     write_page('books.html', page_shell(
         'Books / strategies', content, active='books.html', include_charts=True,
     ))
@@ -985,13 +993,17 @@ def restyle_methods_shell() -> None:
             continue
         s = p.read_text(encoding='utf-8')
         s = re.sub(r'<!-- lab:start -->.*?<!-- lab:end -->', '', s, flags=re.S)
+        # Pages that already ship part of the lab shell (stage-2 addenda from build_stage2_pages, pages
+        # given nav.js in #50) get only the missing parts: a second nav.js double-binds the menu toggle
+        # so the 375px menu never opens.
+        has_css, has_nav, has_footer = 'assets/style.css' in s, 'assets/nav.js' in s, 'class="site-footer"' in s
         s = re.sub(r'<header class="site-header">.*?</header>', '', s, count=1, flags=re.S)
         # Inject shared stylesheet + fonts link marker
         inject_head = (
+            ''
+            if has_css else
             '<!-- lab:start -->'
-            '<link rel="preconnect" href="https://fonts.googleapis.com">'
-            '<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>'
-            '<link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,wght@0,400;0,500;0,600;1,400;1,600&family=Playfair+Display:wght@700;900&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">'
+            '<link rel="stylesheet" href="../assets/fonts.css">'
             '<link rel="stylesheet" href="../assets/style.css">'
             '<link rel="icon" type="image/svg+xml" href="../favicon.svg">'
             '<!-- lab:end -->'
@@ -1003,20 +1015,92 @@ def restyle_methods_shell() -> None:
         )
         s = s.replace(
             '</body>',
-            '<!-- lab:start --><footer class="site-footer"><p>'
-            + DISCLAIMER
-            + '</p></footer><script src="../assets/nav.js" defer></script><!-- lab:end --></body>',
+            ('' if has_footer and has_nav else
+             '<!-- lab:start -->'
+             + ('' if has_footer else '<footer class="site-footer"><p>' + DISCLAIMER + '</p></footer>')
+             + ('' if has_nav else '<script src="../assets/nav.js" defer></script>')
+             + '<!-- lab:end -->') + '</body>',
         )
         p.write_text(s, encoding='utf-8')
 
 
+FONT_LINK_RE = re.compile(r'<link\b[^>]*https://fonts\.(?:googleapis|gstatic)\.com[^>]*>\s*')
+
+
+def self_host_fonts() -> None:
+    """Every page loads the vendored fonts (docs/assets/fonts.css); no page links an outside font host.
+
+    Hand-written method pages carried their own Google Fonts links; they are stripped here at build time."""
+    for page in sorted(DOCS.rglob('*.html')):
+        s = page.read_text(encoding='utf-8')
+        rel = os.path.relpath(ASSETS / 'fonts.css', page.parent).replace(os.sep, '/')
+        link = f'<link rel="stylesheet" href="{rel}">'
+        # The first outside font link is replaced in place (so on Quant's byte-pinned Schur note the change stays
+        # inside its <!-- lab:start --> chrome block); any further ones are dropped.
+        first = FONT_LINK_RE.search(s)
+        t = s
+        if first:
+            keep = '' if 'assets/fonts.css' in s else link
+            t = s[:first.start()] + keep + FONT_LINK_RE.sub('', s[first.end():]) if keep else FONT_LINK_RE.sub('', s)
+        # Pages on the shared stylesheet need the vendored fonts too; self-contained pages (the pinned stage-2
+        # teaching note) are left untouched.
+        if 'assets/style.css' in t and 'assets/fonts.css' not in t and '</head>' in t:
+            t = t.replace('</head>', link + '\n</head>', 1)
+        if t != s:
+            page.write_text(t, encoding='utf-8')
+
+
+GROWTH_PRICES = Path('/workspace/investments/growth_alpha_adj_close.csv')   # canonical (fixed 2026-10-04)
+
+
+def copy_growth_prices() -> None:
+    """docs/data/growth_alpha_adj_close.csv (Explorer input) is a byte-for-byte copy of the one canonical file,
+    fixed by scripts/fix_growth_alpha_prices.py; it is never edited on its own."""
+    if GROWTH_PRICES.exists():
+        shutil.copyfile(GROWTH_PRICES, DATA / 'growth_alpha_adj_close.csv')
+
+
+M3_RESTATEMENT = ROOT / 'data/processed/prices_fix_2026-10/m3_p2_restatement.json'
+
+
+def _sci(x: float) -> str:
+    """1e-06 -> '1e-6'."""
+    m, e = f'{x:.0e}'.split('e')
+    return f'{m}e{int(e)}'
+
+
+def m3_p2_fragility_note(rec: dict) -> str:
+    """Fragility disclosure for m3_p2_core_rotate, every figure from the restatement record (computed from the two
+    return series by scripts/record_m3_p2_restatement.py)."""
+    d = rec['disclosure']
+    gap = f"{d['largest_gap_pp']:.2f}".replace('-', '\u2212')
+    return (f"{d['months_returns_moved']} of {d['earlier_months']} earlier months' returns moved by more than "
+            f"{_sci(d['return_move_tolerance'])} between the two price files; largest monthly gap {d['largest_gap_month']}, "
+            f"{gap} pp; returns move on price differences under {_sci(d['price_diff_bound'])}, so this stays a lab run.")
+
+
+def build_comparison_notes() -> None:
+    """docs/data/strategy_comparison_notes.json: per-strategy row notes for strategy_comparison.csv, rendered next to
+    the 'Strategy comparison' download on the Runs page (the only place m3_p2_core_rotate appears on the site)."""
+    rec = json.loads(M3_RESTATEMENT.read_text(encoding='utf-8'))
+    write_json('strategy_comparison_notes.json', {
+        'file': 'strategy_comparison.csv',
+        'source': 'data/processed/prices_fix_2026-10/m3_p2_restatement.json',
+        'notes': [{'strategy_id': 'm3_p2_core_rotate', 'label': 'M3 P2 (held off)',
+                   'kind': 'data restatement, not a new trial',
+                   'return_move_tolerance': rec['disclosure']['return_move_tolerance'], 'text': m3_p2_fragility_note(rec)}],
+    })
+
+
 def main() -> None:
+    copy_growth_prices()
     ASSETS.mkdir(parents=True, exist_ok=True)
     DATA.mkdir(parents=True, exist_ok=True)
     copy_cio_inputs()
     refresh_weights_snapshot()
     build_viz()
     build_live_figures()
+    build_comparison_notes()
     # Pages v2 React SPA owns Home/Books/Runs via HashRouter on docs/index.html.
     # Do not emit leftover books.html / runs.html (or overwrite SPA index.html).
     for leftover in ('books.html', 'runs.html'):
@@ -1027,6 +1111,8 @@ def main() -> None:
     epo_results.build_epo_results(page_shell, write_page)
     schur_results.build_schur_results(page_shell, write_page)
     dsr_feasibility.build_dsr_feasibility(page_shell, write_page)
+    from build_hub_pages import build_hub_pages
+    build_hub_pages(page_shell, write_page)
     stage2_pages.build_page(page_shell, write_page, DOCS)
     import build_composition  # pandas: run with the repo venv (scripts/build_pages_v2.sh)
     build_composition.write_data(DOCS, build_composition.build_page(page_shell, write_page))
@@ -1034,6 +1120,7 @@ def main() -> None:
     build_archive_scoreboard()
     restyle_methods_shell()
     build_notes(page_shell, write_page)
+    self_host_fonts()
     print('Built docs viz JSON + methods under', DOCS)
 
 

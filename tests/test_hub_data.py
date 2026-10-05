@@ -246,7 +246,9 @@ def test_partial_final_months_are_dropped_not_paired():
     assert _load('subjects/schur.json')['partial_months_dropped'] == []
 
 
-RECOMPUTE_SHA256 = '94c122bb05d9c25ef3db113f7cdcc64e63fc2794edc012f9579c00d440c8b8f6'
+# Re-pinned 2026-10-04: the 86 rows ending 2026-09-16 rewritten complete-months-only from Quant's Sept recompute
+# (sept_fix_stat_recompute.csv, sha fe895441…); previous pin 94c122bb…
+RECOMPUTE_SHA256 = 'be9a847aa80473b4924a705630fbd8c66942c506b1863c795bf7c8d5659bf507'
 
 
 def test_dsr_recompute_copy_is_verbatim_and_not_named_quant():
@@ -282,7 +284,7 @@ def test_every_dsr_with_a_recompute_match_uses_the_corrected_value_as_primary():
         assert gate['value'] == d['primary'] and gate['as_recorded'] == d['recorded'], s['id']
     assert matched == 5   # vcfc, rr_erc, regime_dual, spectral_rp, backbone
     vc = _load('subjects/vcfc.json')['dsr']
-    assert vc['primary'] == 0.6625 and vc['recorded'].startswith('1.000') and vc['corrected']['error_note'] == hd.UNIT_NOTE
+    assert vc['primary'] == 0.6898  # 0.6625 before the complete-months recompute and vc['recorded'].startswith('1.000') and vc['corrected']['error_note'] == hd.UNIT_NOTE
     assert _load('subjects/spectral_rp.json')['dsr']['primary'] == 0.5041
     assert _load('subjects/schur.json')['dsr']['corrected'] is None
     assert _load('subjects/schur.json')['dsr']['primary'] == 0.433 and _load('subjects/epo.json')['dsr']['primary'] == 0.125

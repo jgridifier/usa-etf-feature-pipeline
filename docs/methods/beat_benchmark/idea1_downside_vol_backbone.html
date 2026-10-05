@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>Idea 1: downside-volatility backbone (Quant teaching note)</title>
+<style>
+  :root { --navy:#0b1f3a; --fg:#111; --muted:#555; --border:#d6d9de; --bg:#f5f6f8; }
+  * { box-sizing: border-box; }
+  html { -webkit-text-size-adjust: 100%; }
+  body { font-family: Georgia, "Times New Roman", serif; color: var(--fg); line-height: 1.55; max-width: 42rem; margin: 2rem auto; padding: 0 1.25rem; background: #fff; overflow-wrap: anywhere; }
+  h1,h2,h3 { font-family: system-ui, -apple-system, "Segoe UI", sans-serif; line-height: 1.25; color: var(--navy); }
+  h1 { font-size: 1.6rem; margin-bottom: 0.25rem; }
+  h2 { font-size: 1.22rem; margin-top: 2rem; border-bottom: 1px solid var(--border); padding-bottom: 0.3rem; }
+  h3 { font-size: 1.04rem; margin-top: 1.4rem; }
+  .meta { color: var(--muted); font-family: system-ui, sans-serif; font-size: 0.9rem; margin-bottom: 1.5rem; }
+  .disclaimer { background: var(--bg); border: 1px solid var(--border); padding: 0.75rem 1rem; border-radius: 6px; font-size: 0.92rem; margin: 1rem 0 1.5rem; }
+  .callout { background: var(--bg); border-left: 4px solid var(--navy); padding: 0.75rem 1rem; margin: 1rem 0; }
+  .warn { background: #fff; border: 2px solid var(--navy); padding: 0.75rem 1rem; margin: 1rem 0; }
+  .wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; max-width: 100%; }
+  table { border-collapse: collapse; width: 100%; font-size: 0.9rem; margin: 0.75rem 0 1rem; }
+  th, td { border: 1px solid var(--border); padding: 0.4rem 0.5rem; text-align: left; vertical-align: top; }
+  th { background: var(--navy); color: #fff; font-family: system-ui, sans-serif; font-weight: 600; }
+  td.n { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+  code, .math { font-family: Menlo, Consolas, monospace; font-size: 0.88em; background: #eef0f3; padding: 0 0.2em; border-radius: 3px; overflow-wrap: anywhere; word-break: break-word; }
+  pre.math { display: block; padding: 0.7rem 0.9rem; overflow-x: auto; line-height: 1.5; white-space: pre-wrap; word-break: break-word; max-width: 100%; }
+  a { color: var(--navy); text-decoration: underline; overflow-wrap: anywhere; }
+  .small { font-size: 0.88rem; color: var(--muted); }
+  ol li, ul li { margin-bottom: 0.3rem; }
+  @media (max-width: 420px) { body { padding: 0 0.8rem; margin: 1rem auto; } h1 { font-size: 1.35rem; } table { font-size: 0.82rem; } th, td { padding: 0.3rem 0.35rem; } }
+</style>
+</head>
+<body>
+<p class="small"><a href="index.html">← Beat-the-benchmark shortlist</a></p>
+<h1>Idea 1 · Downside-volatility backbone</h1>
+<div class="meta">Quant teaching note · 2026-10-04 · status: <strong>proposal only, no ticket, no run</strong> · target: <strong>vol-target backbone</strong> · rank 1 of 3 (top pick)</div>
+<div class="disclaimer">Research only. This note proposes a methodology test on an experimental research panel of ETFs. It is not personalized investment advice, it carries no approval status, and it changes no Book. Nothing here reads the 2008-01 to 2016-10 holdout. All numbers come from the hub's live series through 2026-08 (complete months), from an in-sample illustration on 2016-11 to 2026-08 daily prices, or from simulation. In-sample illustrations are labelled and are <strong>not gate results</strong>.</div>
+
+<div class="callout"><strong>One-sentence version.</strong> Keep Book 2 exactly as it is, but measure the risk that drives the vol-target scaling with <em>downside</em> volatility (the size of the bad days only) instead of total volatility. The 2021 paper behind this says the switch adds return timing, not just a volatility cut, which is the axis Book 2 is missing. <strong>Target benchmark: the vol-target backbone</strong> (primary null), with Book 2 shown beside it.</div>
+
+<h2>1. The idea in plain language</h2>
+<p>Book 2's edge so far is a smoother ride, not more return. Its Sharpe gain over the backbone comes from cutting volatility (NW t of the return gap −0.80). Wang &amp; Yan (2021) found, across 9 equity factors and 94 anomaly portfolios, that scaling by downside volatility beats scaling by total volatility in direct Sharpe comparisons and in real-time strategies. Their decomposition says most of the gain is <em>return timing</em>: high downside volatility tends to come before weak returns. Barroso &amp; Detzel (2021) add the piece most relevant to us: after trading costs, the volatility-managed <em>market</em> portfolio is the case that survives. Our core is market-like (70/20/10 S&amp;P 500 / Nasdaq-100 / small-cap). Cederburg et al. (2020) are the warning: across 103 strategies, real-time versions often lose to the unmanaged portfolio. So the bar has to be a real-time comparison against the backbone, not a spanning-regression alpha.</p>
+
+<h2>2. The math</h2>
+<pre class="math">Backbone today (registry vol_target_option_a_uncond):
+  σ̂_t  = √252 · sd(r_core, last 63 trading days to month-end t)
+  σ*_t = √252 · sd(r_core, all days to t)            (expanding)
+  f_t  = clip(σ*_t / σ̂_t, 0.25, 1)                    (scale down only)
+  R_{t+1} = f_t·R_core,t+1 + (1 − f_t)·R_BIL,t+1 − 5bp·|f_t − f_{t−1}|
+Book 2:  f̃_t = f_t · g_t,  g_t ∈ {0.5, 1} from the skew / CVaR5 gate</pre>
+<p>The change is one line, the risk estimate:</p>
+<pre class="math">σ̂ᴰ_t  = √252 · √( (2/63) · Σ_(s=t−62..t) min(r_s, 0)² )
+σ*ᴰ_t = same estimator, expanding over all days to t
+fᴰ_t  = clip(σ*ᴰ_t / σ̂ᴰ_t, 0.25, 1);   Book 2 variant: f̃ᴰ_t = fᴰ_t · g_t (gate unchanged)</pre>
+<p>The factor 2 makes σᴰ equal σ when returns are symmetric, so the 0.25 floor, the cap at 1 and the target keep their meaning. Nothing else changes, and there are no new knobs.</p>
+<h3>Why it could add return, not just cut risk</h3>
+<p>For a scaled strategy, <span class="math">E[f_t R_t+1] = E[f]·E[R] + Cov(f_t, μ_t)</span>, where μ_t is the conditional mean. Total-volatility scaling earns its keep through the variance term: it is cheap insurance when volatility clusters. It adds return only if Cov(f, μ) &gt; 0. Wang &amp; Yan's evidence is that downside volatility predicts μ negatively more reliably than total volatility does, so fᴰ should have a more positive Cov(fᴰ, μ). If that is false on our panel, fᴰ ≈ f and the test simply comes out flat. In our data the two scalings are nearly the same series (correlation 0.9982 in the illustration below), which is why the comparison is cheap to run and has unusually high power.</p>
+
+<h2>3. How it maps onto the panel</h2>
+<ul>
+<li>Base: the live static core (70/20/10 VOO/QQQM/IJR); stand-in IVV/QQQ/IJR for history. Daily adjusted closes from the single-download price file.</li>
+<li>Exposure moves between the core and BIL monthly, as today. The gate g_t and every Book 2 setting stay frozen.</li>
+<li>Two series get scored: the downside backbone vs the backbone (primary), and downside Book 2 vs Book 2 (secondary).</li>
+<li>Average cash (BIL) share in the illustration: 8.7% for the downside backbone vs 9.0% for the backbone, far below the 50% composition tripwire. Book 2's live average is about 25% (mean f̃ 0.754).</li>
+</ul>
+
+<h2>4. Feasibility</h2>
+<h3>Where we start (live hub series, complete months)</h3>
+<div class="wrap"><table><thead><tr><th>Series (2021-02 to 2026-08, 67 months)</th><th>CAGR</th><th>Vol</th><th>Sharpe ex-BIL</th><th>MaxDD</th></tr></thead><tbody><tr><td>Static core (70/20/10)</td><td class="n">15.2%</td><td class="n">16.0%</td><td class="n">0.776</td><td class="n">−25.6%</td></tr><tr><td>Vol-target backbone</td><td class="n">15.3%</td><td class="n">14.0%</td><td class="n">0.869</td><td class="n">−20.1%</td></tr><tr><td>Book 2 (backbone × skew gate)</td><td class="n">14.1%</td><td class="n">10.6%</td><td class="n">1.005</td><td class="n">−10.1%</td></tr><tr><td>Capped EW (equity panel)</td><td class="n">9.1%</td><td class="n">9.7%</td><td class="n">0.625</td><td class="n">−16.1%</td></tr></tbody></table></div>
+<p class="small">Recomputed from <code>data/processed/live/skew_managed_gatefirst_returns.csv</code> at origin/main, rows through 2026-08 (Book 2, backbone = null a, core = null b, EW = null c), with BIL from the monthly panel. Correlation backbone/core 0.983, Book 2/backbone 0.944.</p>
+
+<h3>In-sample illustration (NOT a gate result)</h3>
+<p>Stand-in core, daily-rebalanced approximation. Data from 2016-11 only (firewall), so σ* starts 2016-11 and the first decision needs two years of data: decisions 2018-11 to 2026-07, scored months 2018-12 to 2026-08 (T = 93). The replica backbone correlates 0.998 with the live backbone over the overlap. <strong>This window overlaps the live backbone's own out-of-sample window, so it cannot be reused as a gate.</strong></p>
+<div class="wrap"><table><thead><tr><th>Rule (in-sample, 2018-12 to 2026-08)</th><th>CAGR</th><th>Vol</th><th>Sharpe ex-BIL</th><th>MaxDD</th><th>Turnover/yr</th></tr></thead><tbody><tr><td>Static core (stand-in)</td><td class="n">16.5%</td><td class="n">17.5%</td><td class="n">0.814</td><td class="n">−25.6%</td><td class="n">—</td></tr><tr><td>Backbone replica (total vol)</td><td class="n">13.8%</td><td class="n">15.2%</td><td class="n">0.758</td><td class="n">−22.2%</td><td class="n">55%</td></tr><tr><td>Downside-vol backbone</td><td class="n">14.1%</td><td class="n">15.0%</td><td class="n">0.786</td><td class="n">−22.5%</td><td class="n">54%</td></tr></tbody></table></div>
+<p>Downside minus backbone: Sharpe +0.027, NW t of the monthly return gap 1.18. On the 2021-02 to 2026-08 sub-window the gap is essentially zero (Sharpe 0.825 vs 0.824). In this window both vol-target versions trail the unmanaged core on Sharpe (backbone −0.056), because the 2020 crash-and-rebound punished scaling down. On the hub's 2021-02 window the backbone leads the core instead. The vol-target edge depends on the window, which is exactly Cederburg et al.'s point.</p>
+
+<h3>Power: what gap can we detect?</h3>
+<p>Paired Sharpe test (Memmel/Jobson–Korkie variance, one-sided 5%, 80% power), at the in-sample correlation ρ = 0.9982:</p>
+<div class="wrap"><table><thead><tr><th>Months scored</th><th>24</th><th>36</th><th>60</th><th>67</th><th>106 (holdout length)</th></tr></thead><tbody><tr><td>Minimum detectable annual Sharpe gap</td><td class="n">0.11</td><td class="n">0.09</td><td class="n">0.07</td><td class="n">0.06</td><td class="n">0.05</td></tr></tbody></table></div>
+<p>That is the strength of this idea: the two series are so alike that a gap of about 0.05–0.07 is detectable at our sample sizes. For comparison, the hub's Book 2 vs core test can only detect about 0.42. The weakness is that the plausible true gap is also small: the in-sample point estimate is +0.027, and published gains shrink out of sample.</p>
+<h3>DSR</h3>
+<p>Annualised Sharpe ex-BIL needed for DSR ≥ 0.95 (normal moments, V = 0.014061):</p>
+<div class="wrap"><table><thead><tr><th>Trial count N</th><th>T = 67 (now)</th><th>T = 91 (+24 forward)</th><th>T = 127 (+60 forward)</th></tr></thead><tbody><tr><td>N = 1</td><td class="n">0.71</td><td class="n">0.61</td><td class="n">0.51</td></tr><tr><td>N = 3</td><td class="n">1.07</td><td class="n">0.96</td><td class="n">0.87</td></tr><tr><td>N = 12</td><td class="n">1.41</td><td class="n">1.31</td><td class="n">1.21</td></tr><tr><td>N = 73</td><td class="n">1.74</td><td class="n">1.63</td><td class="n">1.52</td></tr><tr><td>N = 120</td><td class="n">1.81</td><td class="n">1.70</td><td class="n">1.60</td></tr></tbody></table></div>
+<p>The backbone's own Sharpe ex-BIL is 0.87 and Book 2's is 1.01. At N = 73 the hurdle is about 1.6–1.7, which no equity-core overlay will reach. At N = 1 the backbone already clears it (PSR 0.976), so DSR cannot tell the variant from the backbone either way. It is reported, and the decision rests on the paired comparison.</p>
+<h3>Costs</h3>
+<p>Turnover is unchanged: 54%/yr one-way vs 55% (exposure changes only). At 5 bp that is under 0.03 pp/yr, and at 10 bp under 0.06 pp/yr. Costs cannot decide this test.</p>
+<h3>Simulated odds of a gated pass</h3>
+<p>Bivariate-normal Monte Carlo calibrated to the backbone's live mean and volatility, ρ = 0.9982, 6,000 draws. "Point gate" = Sharpe above the backbone and MaxDD no more than 2 pp worse. "Significant" adds a paired one-sided t &gt; 1.645.</p>
+<div class="wrap"><table><thead><tr><th>True Sharpe edge</th><th>T = 24: point / significant</th><th>T = 60: point / significant</th><th>T = 106: point / significant</th></tr></thead><tbody><tr><td>0.0</td><td class="n">50% / 6%</td><td class="n">51% / 5%</td><td class="n">50% / 6%</td></tr><tr><td>0.015</td><td class="n">64% / 11%</td><td class="n">71% / 14%</td><td class="n">76% / 19%</td></tr><tr><td>0.03</td><td class="n">75% / 19%</td><td class="n">86% / 30%</td><td class="n">93% / 44%</td></tr></tbody></table></div>
+<p class="small">Adding DSR ≥ 0.95 at N = 73 as a hard gate drops every cell to about 2% or less.</p>
+
+<h2>5. Honest odds and how it fails</h2>
+<div class="warn"><strong>Expected edge:</strong> Sharpe +0.00 to +0.03 over the backbone, with no material change to drawdown or CAGR. <strong>Probability of a meaningful gated PASS</strong> (point gate plus a significant paired test, DSR reported): about <strong>10–15% on 24–60 forward months</strong>, rising to about 20–25% if the holdout were spent (T = 106). This assumes about a 50% prior that a true edge of 0.015–0.03 exists. A point-estimate-only pass, like Book 2's admission, is close to a coin flip (50–75%), and it would not mean much on its own.</div>
+<ul>
+<li><strong>No return timing on a market portfolio.</strong> Wang &amp; Yan's evidence is mostly factor and anomaly long-short portfolios. On a long-only market core, downside and total volatility may carry the same information. Then fᴰ ≈ f and the result is flat.</li>
+<li><strong>Noisier estimator.</strong> Downside variance uses about half the days, so it is noisier at 63 days. It could add turnover or whipsaw in sharp V-shaped rebounds (2020).</li>
+<li><strong>Window dependence.</strong> The whole vol-target family trailed the core in the 2018-12 window and led it in the 2021-02 window. A short forward test can land on either side.</li>
+<li><strong>Interaction with the gate.</strong> On Book 2, the skew/CVaR gate already reacts to left-tail behaviour, so part of any downside-vol gain may already be captured.</li>
+</ul>
+
+<h2>6. What a gate would look like</h2>
+<ul>
+<li><strong>Candidate:</strong> one frozen spec, <code>VT_option_a_L63_downside_sigexpanding_fmax1p0</code> (and the Book 2 version with the gate unchanged). No lookback or floor grid.</li>
+<li><strong>Primary null:</strong> the unconditional vol-target backbone, on the same months, costs and core. Secondary: Book 2, static core, capped EW.</li>
+<li><strong>Pass rule (proposal):</strong> net Sharpe ex-BIL above the backbone (point estimate), with a paired one-sided p &lt; 0.05 (HAC and circular block bootstrap), and MaxDD no more than 2 pp worse. NW t of the return gap reported.</li>
+<li><strong>Window:</strong> forward from the first complete month after the registry row is written. 2021-02 to 2026-08 is seen and cannot be reused.</li>
+</ul>
+<ul>
+<li><strong>Panel:</strong> <code>load_monthly_panel(path, complete_months_only=True)</code>, which drops a partial final month. <code>write_gate_results</code> records <code>complete_months_only</code>, <code>dropped_partial_month</code> and <code>source_asof</code>. Daily prices for the volatility estimate end on the last trading day of the decision month.</li>
+<li><strong>Composition tripwire:</strong> <code>composition_tripwire(weights, universe, method=…, primary_null=…)</code> makes the run VOID if the average cash_like + short_duration + near_cash share (near_cash = FTSL, SRLN) is above 50% for the method or its primary null. The overlay parks the unused exposure in BIL, which is cash_like, so the share is real and must be printed: about 9% in the illustration. Then <code>final_gate_label(mechanical, composition)</code> sets the label and <code>composition_report_lines(result)</code> goes into the report.</li>
+<li><strong>Trial count carried forward:</strong> a new overlay inherits Book 2's overlay registry (72 skew-grid specs) plus the backbone (1), so N = 73, and this shortlist adds 3, giving about 120 project-wide (hub: about 117 before this). The registry row is written before any run.</li>
+<li><strong>DSR reported</strong> (Bailey &amp; López de Prado form used in the repo, registry cross-trial variance V = 0.014061), at the candidate's own N = 1, at N = 3 (this shortlist), at N = 73 and at N ≈ 120, with realised skew and kurtosis. As with Book 2, DSR is reported, not the admission gate, because no equity-core overlay can reach the N = 73 hurdle (see the feasibility section).</li>
+<li><strong>Costs:</strong> 5 bp one-way on |Δf| (exposure changes), 10 bp sensitivity. Leakage tests: every σ̂ and signal is dated at or before the decision month-end; returns are for the next month.</li>
+</ul>
+<h3>Holdout: proposed, not spent</h3>
+<p>This is the one idea where the 2008-01 to 2016-10 window (T = 106, including the 2008–09 crisis and the 2011 and 2015–16 drawdowns) would carry real information: minimum detectable gap about 0.05. <strong>Proposal for Jared, CIO and CoS:</strong> if Book 2's backbone would actually be switched on a pass, spend the holdout on this single spec under its own pre-registration (N carried at 73, disclosures as in Addendum 3 §1.2). The cost is that the window is then gone for a future third-book candidate. If it would not change Book 2, keep the window unspent and run forward only. Before any spend, an audit must confirm that no earlier registry ran a vol-scaled core over 2008–16; the window is already "lightly used" by FT-MED, RR-ERC, Regime-dual and the Spectral RP sleeve.</p>
+
+<h2>References (all 2020 or later, links checked 2026-10-04)</h2>
+<ol><li>Wang, F. &amp; Yan, X. S. (2021). Downside risk and the performance of volatility-managed portfolios. <em>Journal of Banking &amp; Finance</em> 131, 106198. <a href="https://doi.org/10.1016/j.jbankfin.2021.106198">doi:10.1016/j.jbankfin.2021.106198</a></li><li>Barroso, P. &amp; Detzel, A. (2021). Do limits to arbitrage explain the benefits of volatility-managed portfolios? <em>Journal of Financial Economics</em> 140(3), 744–767. <a href="https://doi.org/10.1016/j.jfineco.2021.02.009">doi:10.1016/j.jfineco.2021.02.009</a></li><li>Cederburg, S., O’Doherty, M. S., Wang, F. &amp; Yan, X. S. (2020). On the performance of volatility-managed portfolios. <em>Journal of Financial Economics</em> 138(1), 95–117. <a href="https://doi.org/10.1016/j.jfineco.2020.04.015">doi:10.1016/j.jfineco.2020.04.015</a></li></ol>
+<p class="small">Background, not cited as evidence: the vol-target backbone's own lineage predates 2020 and is documented on the existing vol-target teaching page.</p>
+
+<p class="small">Quant teaching note · beat_benchmark_2026-10 · no external requests on this page · numbers generated by <code>work/feasibility.py</code> and <code>work/feasibility2.py</code> (outputs <code>work/feasibility_results.json</code>, <code>work/feasibility2_results.json</code>).</p>
+</body>
+</html>

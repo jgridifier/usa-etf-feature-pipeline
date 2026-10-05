@@ -1,5 +1,6 @@
 {
   "source": "strategy_comparison.csv",
+  "window": "2021-02 to 2026-09 (68 months)",
   "rows": [
     {
       "strategy_id": "score_rotate_xsd",

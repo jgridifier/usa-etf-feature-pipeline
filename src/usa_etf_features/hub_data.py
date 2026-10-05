@@ -36,6 +36,7 @@ ROOT = Path(__file__).resolve().parents[2]
 P = 'data/processed/'
 PANEL = 'data/raw/usa_universe_panel_monthly_returns.csv'
 TRIAL_COUNTS = 'data/processed/hub/trial_counts.json'
+BOOKS_WINDOW = ('2021-02', '2026-09')
 ADMISSION = {'book2': 'data/processed/hub/book2_admission.json'}
 TURNOVER_CONVENTION = 'one-way, ½·Σ|Δw| per year'
 ARCHIVE = 'apps/pages/src/data/archive_verdicts.json'
@@ -87,6 +88,9 @@ SUBJECTS = [
          trials=None, prereg=None, pages=dict(books='index.html#/books')),
     dict(id='book2', name='Book 2 (vol-target backbone × gate-first skew overlay)', group='live_book', label='LIVE BOOK',
          card=None, related='skew_overlay',
+         # CIO verdict sentence (2026-10-04). Figures: live_figures.json books window 2021-02..2026-09 (MaxDD, Sharpe ex-BIL, CAGR
+         # vs Book 1 = the core) and vs_nulls backbone Sharpe test (two-sided p 0.33). Checked by tests/test_hub_verdicts.py.
+         verdict_text='Live book. Admitted as a drawdown-control overlay under its gate-first rule. Max drawdown −10.1% vs −25.6% for the core, and Sharpe ex-BIL 0.99 vs 0.77, but CAGR 13.9% vs 15.0%. Its Sharpe edge over the vol-target backbone is not significant.',
          series=dict(file=_f('live', 'skew_managed_gatefirst_returns.csv'), col='r_method', turnover='turnover'),
          nulls=[dict(key='backbone', label='Backbone', col='r_null_a', primary=True),
                 dict(key='ew', label='Equal weight', col='r_null_c'),
@@ -554,8 +558,14 @@ def weights_block(root, subject, months, cache, top=8):
     if (other.abs() > 1e-12).any():
         series['Other'] = [_r(v, 6) for v in other]
     eff_n = 1.0 / (w.pow(2).sum(axis=1))
+    # Phone-readable chart: top 5 by average weight plus "Other" (everything else), saved here so the page draws data only.
+    keep5 = keep[:5]
+    other5 = w.drop(columns=keep5).sum(axis=1)
+    top5 = {c: series[c] for c in keep5}
+    if (other5.abs() > 1e-12).any():
+        top5['Other'] = [_r(v, 6) for v in other5]
     return dict(source=spec.get('file', 'data/processed/live/cio_registry.yaml'), basis=basis,
-                months=[str(m) for m in w.index], top=series,
+                months=[str(m) for m in w.index], top=series, top5=top5,
                 effective_n=[_r(v, 4) for v in eff_n], largest_weight=[_r(v, 6) for v in w.max(axis=1)],
                 n_rebalances=len(w))
 
@@ -791,7 +801,12 @@ def compute_subject(root, subject, ctx):
         tv = tv.reindex(months)
         turnover = dict(months=mstr, per_rebalance=[_r(v, 8) for v in tv],
                         per_year=_r(tv.mean() * 12) if tv.notna().any() else None,
-                        basis='one-way turnover per monthly rebalance, as saved; per year = mean × 12',
+                        basis='one-way turnover per monthly rebalance (½·Σ|Δw|), as saved; per year = mean × 12',
+                        window=f'{mstr[0]} to {mstr[-1]}' if mstr else None,
+                        per_year_all_saved_rows=_r(float(_filter(_read(root, spec['file'], cache), spec.get('filters'))[spec['turnover']]
+                                                         .astype(float).mean() * 12)),
+                        all_rows_note=('The archive card and run summary average every saved row, including the dropped '
+                                       'partial month; the hub averages complete months only.') if dropped else None,
                         nulls_note='Nulls saved as returns only' if any('col' in n for n in subject['nulls']) else None)
     weights = weights_block(root, subject, months, cache)
     regimes = ctx['regimes']
@@ -831,7 +846,7 @@ def compute_subject(root, subject, ctx):
         id=subject['id'], name=subject['name'], group=subject['group'], label=label, card=subject.get('card'),
         related=subject.get('related'), pages=subject.get('pages', {}),
         verdict=dict(label=(verdict or {}).get('verdict_label') or label,
-                     text=prose((verdict or {}).get('verdict_line') or (card or {}).get('verdict')),
+                     text=prose(subject.get('verdict_text') or (verdict or {}).get('verdict_line') or (card or {}).get('verdict')),
                      detail=prose((card or {}).get('detail')),
                      void_reason=(card or {}).get('void_reason') if void else None,
                      banner='Reported for transparency; the test design was void.' if void else None),
@@ -841,6 +856,10 @@ def compute_subject(root, subject, ctx):
                      core='data/processed/live/strategy_returns.csv (static_option_a, S1)',
                      regimes=PANEL + ' (SPY)', rf='BIL from the saved panel; FRED TB3MS/1200 before BIL\'s first full month'),
         own=stats(s, rf, sharpe=sharpe), partial_months_dropped=dropped,
+        books_window=dict(label=f'Books window {BOOKS_WINDOW[0]} to {BOOKS_WINDOW[1]} (the archive and Books pages)',
+                          **stats(window(s, *BOOKS_WINDOW), rf, sharpe=sharpe)) if len(window(s, *BOOKS_WINDOW)) else None,
+        common_window_own=dict(label=f'Common window {COMMON_WINDOW[0]} to {COMMON_WINDOW[1]}',
+                               **stats(window(s, *COMMON_WINDOW), rf, sharpe=sharpe)) if len(window(s, *COMMON_WINDOW)) else None,
         vs_core=vs_core, vs_nulls=vs_nulls, sensitivities=sens,
         months=mstr, series=series_out, curves=curves, rolling_sharpe=rolling, calendar_years=calendar_years(s, s1),
         scatter_vs_core=dict(months=[str(m) for m in pair_core.index], subject=[_r(v, 8) for v in pair_core.iloc[:, 0]],

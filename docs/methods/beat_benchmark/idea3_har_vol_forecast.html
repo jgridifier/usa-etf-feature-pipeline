@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>Idea 3: HAR volatility forecast for the backbone (Quant teaching note)</title>
+<style>
+  :root { --navy:#0b1f3a; --fg:#111; --muted:#555; --border:#d6d9de; --bg:#f5f6f8; }
+  * { box-sizing: border-box; }
+  html { -webkit-text-size-adjust: 100%; }
+  body { font-family: Georgia, "Times New Roman", serif; color: var(--fg); line-height: 1.55; max-width: 42rem; margin: 2rem auto; padding: 0 1.25rem; background: #fff; overflow-wrap: anywhere; }
+  h1,h2,h3 { font-family: system-ui, -apple-system, "Segoe UI", sans-serif; line-height: 1.25; color: var(--navy); }
+  h1 { font-size: 1.6rem; margin-bottom: 0.25rem; }
+  h2 { font-size: 1.22rem; margin-top: 2rem; border-bottom: 1px solid var(--border); padding-bottom: 0.3rem; }
+  h3 { font-size: 1.04rem; margin-top: 1.4rem; }
+  .meta { color: var(--muted); font-family: system-ui, sans-serif; font-size: 0.9rem; margin-bottom: 1.5rem; }
+  .disclaimer { background: var(--bg); border: 1px solid var(--border); padding: 0.75rem 1rem; border-radius: 6px; font-size: 0.92rem; margin: 1rem 0 1.5rem; }
+  .callout { background: var(--bg); border-left: 4px solid var(--navy); padding: 0.75rem 1rem; margin: 1rem 0; }
+  .warn { background: #fff; border: 2px solid var(--navy); padding: 0.75rem 1rem; margin: 1rem 0; }
+  .wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; max-width: 100%; }
+  table { border-collapse: collapse; width: 100%; font-size: 0.9rem; margin: 0.75rem 0 1rem; }
+  th, td { border: 1px solid var(--border); padding: 0.4rem 0.5rem; text-align: left; vertical-align: top; }
+  th { background: var(--navy); color: #fff; font-family: system-ui, sans-serif; font-weight: 600; }
+  td.n { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+  code, .math { font-family: Menlo, Consolas, monospace; font-size: 0.88em; background: #eef0f3; padding: 0 0.2em; border-radius: 3px; overflow-wrap: anywhere; word-break: break-word; }
+  pre.math { display: block; padding: 0.7rem 0.9rem; overflow-x: auto; line-height: 1.5; white-space: pre-wrap; word-break: break-word; max-width: 100%; }
+  a { color: var(--navy); text-decoration: underline; overflow-wrap: anywhere; }
+  .small { font-size: 0.88rem; color: var(--muted); }
+  ol li, ul li { margin-bottom: 0.3rem; }
+  @media (max-width: 420px) { body { padding: 0 0.8rem; margin: 1rem auto; } h1 { font-size: 1.35rem; } table { font-size: 0.82rem; } th, td { padding: 0.3rem 0.35rem; } }
+</style>
+</head>
+<body>
+<p class="small"><a href="index.html">← Beat-the-benchmark shortlist</a></p>
+<h1>Idea 3 · HAR volatility forecast for the backbone</h1>
+<div class="meta">Quant teaching note · 2026-10-04 · status: <strong>proposal only, no ticket, no run</strong> · target: <strong>vol-target backbone</strong> · rank 3 of 3</div>
+<div class="disclaimer">Research only. This note proposes a methodology test on an experimental research panel of ETFs. It is not personalized investment advice, it carries no approval status, and it changes no Book. Nothing here reads the 2008-01 to 2016-10 holdout. All numbers come from the hub's live series through 2026-08 (complete months), from an in-sample illustration on 2016-11 to 2026-08 daily prices, or from simulation. In-sample illustrations are labelled and are <strong>not gate results</strong>.</div>
+
+<div class="callout"><strong>One-sentence version.</strong> Replace the backbone's "last 63 days" volatility with a forecast of next month's volatility from a heterogeneous-autoregressive (HAR) regression on daily, weekly and monthly squared returns. The scaling then reacts faster when risk rises and recovers faster when it falls. <strong>Target benchmark: the vol-target backbone.</strong></div>
+
+<h2>1. The idea in plain language</h2>
+<p>The backbone scales down by the ratio of long-run to recent volatility, using a 63-day window. That window is slow: it keeps the book de-risked for weeks after a shock has passed. That is the pattern Bongaerts, Kang &amp; van Dijk (2020) describe as making conventional volatility targeting worse in sharp rebounds. A HAR forecast weights yesterday, last week and last month separately, so it tracks volatility clustering more closely. Christensen, Siggaard &amp; Veliyev (2023) is a recent large comparison: HAR models are the standard benchmark, and machine-learning forecasts beat them only modestly. We stay with classical HAR (statistical, no large models) because its three coefficients are cheap to estimate on our sample.</p>
+
+<h2>2. The math</h2>
+<pre class="math">Backbone today (registry vol_target_option_a_uncond):
+  σ̂_t  = √252 · sd(r_core, last 63 trading days to month-end t)
+  σ*_t = √252 · sd(r_core, all days to t)            (expanding)
+  f_t  = clip(σ*_t / σ̂_t, 0.25, 1)                    (scale down only)
+  R_{t+1} = f_t·R_core,t+1 + (1 − f_t)·R_BIL,t+1 − 5bp·|f_t − f_{t−1}|
+Book 2:  f̃_t = f_t · g_t,  g_t ∈ {0.5, 1} from the skew / CVaR5 gate</pre>
+<pre class="math">Daily proxy: x_d = r_d²   (no intraday data on this panel)
+Target:   y_t = (1/21)·Σ_(k=1..21) x_(t+k)          (next-month mean)
+HAR:      y_t = b0 + b1·x_t + b2·mean(x_(t−4..t)) + b3·mean(x_(t−21..t)) + e_t
+OLS on an expanding window ending at month-end t (only y's fully observed by t)
+σ̂ᴴ_t = √(252 · max(ŷ_t, 0.25·mean22(x)));   fᴴ_t = clip(σ*_t / σ̂ᴴ_t, 0.25, 1)</pre>
+<p>The floor guards against a negative OLS forecast. No other knobs. HAR is a forecast of variance, and the backbone's formula needs a volatility, hence the square root.</p>
+
+<h2>3. How it maps onto the panel</h2>
+<ul><li>Same core, BIL and monthly exposure change as the backbone. Only σ̂ changes. The Book 2 variant multiplies by the frozen gate g_t.</li>
+<li>Average BIL share in the illustration: 5.0%, below the backbone's 9.0%.</li></ul>
+
+<h2>4. Feasibility</h2>
+<h3>In-sample illustration (NOT a gate result)</h3>
+<div class="wrap"><table><thead><tr><th>Rule (in-sample, 2018-12 to 2026-08)</th><th>CAGR</th><th>Vol</th><th>Sharpe ex-BIL</th><th>MaxDD</th><th>Turnover/yr</th></tr></thead><tbody><tr><td>Static core (stand-in)</td><td class="n">16.5%</td><td class="n">17.5%</td><td class="n">0.814</td><td class="n">−25.6%</td><td class="n">—</td></tr><tr><td>Backbone replica (63-day)</td><td class="n">13.8%</td><td class="n">15.2%</td><td class="n">0.758</td><td class="n">−22.2%</td><td class="n">55%</td></tr><tr><td>HAR-forecast backbone</td><td class="n">15.4%</td><td class="n">15.4%</td><td class="n">0.842</td><td class="n">−24.5%</td><td class="n">78%</td></tr><tr><td>Conditional (only above 80th pct vol), for reference</td><td class="n">13.6%</td><td class="n">15.4%</td><td class="n">0.738</td><td class="n">−22.2%</td><td class="n">49%</td></tr></tbody></table></div>
+<p>HAR minus backbone over the full window: Sharpe +0.084, NW t 1.12. The gain comes from re-risking faster (mean exposure 0.95 vs 0.91). It <em>reverses</em> on 2021-02 to 2026-08 (Sharpe 0.790 vs 0.824), and MaxDD is worse in both (−24.5% vs −22.2%). The Bongaerts-style conditional rule, shown for reference, was slightly worse than the backbone (−0.020), which is why it is not a separate idea.</p>
+<h3>Power</h3>
+<p>Correlation with the backbone 0.983. Minimum detectable annual Sharpe gap: 0.34 at 24 months, 0.21 at 60, 0.20 at 67, 0.16 at 106. That is three times the downside-vol idea's threshold, because the HAR scaling departs more from the backbone.</p>
+<h3>DSR</h3>
+<p>Same hurdles as the other ideas (T = 67: N = 1 → 0.71, N = 73 → 1.74). Reported, not gating.</p>
+<h3>Costs</h3>
+<p>Turnover rises to 78%/yr one-way from 55%. At 5 bp that is about 0.04 pp/yr, and at 10 bp about 0.08 pp/yr. Small, but larger than idea 1's.</p>
+<h3>Simulated odds</h3>
+<div class="wrap"><table><thead><tr><th>True Sharpe edge</th><th>T = 24: point / significant</th><th>T = 60: point / significant</th><th>T = 106: point / significant</th></tr></thead><tbody><tr><td>0.0</td><td class="n">49% / 6%</td><td class="n">47% / 5%</td><td class="n">46% / 5%</td></tr><tr><td>0.04</td><td class="n">60% / 10%</td><td class="n">66% / 13%</td><td class="n">70% / 16%</td></tr><tr><td>0.08</td><td class="n">71% / 16%</td><td class="n">79% / 25%</td><td class="n">85% / 35%</td></tr></tbody></table></div>
+
+<h2>5. Honest odds and how it fails</h2>
+<div class="warn"><strong>Expected edge:</strong> Sharpe −0.04 to +0.08 vs the backbone, sign uncertain, with drawdown likely <em>worse</em>. <strong>Probability of a meaningful gated PASS:</strong> about <strong>5–10%</strong>. It is ranked last because its in-sample sign flips across windows and it gives up some of the drawdown control that Book 2 was admitted for.</div>
+<ul>
+<li><strong>Noisy proxy.</strong> Without intraday data, daily r² is a poor realized-variance proxy. The HAR literature's gains assume better measures.</li>
+<li><strong>Faster re-risking cuts both ways.</strong> It helps in V-shaped rebounds (2020) and hurts in drawn-out sell-offs with relief rallies (2022).</li>
+<li><strong>Drawdown is the axis we have evidence on.</strong> A rule that raises Sharpe by holding more equity can still lose the risk-path comparison.</li>
+</ul>
+
+<h2>6. What a gate would look like</h2>
+<ul><li><strong>Candidate:</strong> one frozen spec (HAR on daily r², expanding OLS, floor as above). <strong>Primary null:</strong> the backbone. <strong>Pass rule:</strong> as idea 1 (Sharpe above the backbone with paired p &lt; 0.05, MaxDD no more than 2 pp worse), forward only.</li></ul>
+<ul>
+<li><strong>Panel:</strong> <code>load_monthly_panel(path, complete_months_only=True)</code>, which drops a partial final month. <code>write_gate_results</code> records <code>complete_months_only</code>, <code>dropped_partial_month</code> and <code>source_asof</code>. Daily prices for the volatility estimate end on the last trading day of the decision month.</li>
+<li><strong>Composition tripwire:</strong> <code>composition_tripwire(weights, universe, method=…, primary_null=…)</code> makes the run VOID if the average cash_like + short_duration + near_cash share (near_cash = FTSL, SRLN) is above 50% for the method or its primary null. The overlay parks the unused exposure in BIL, which is cash_like, so the share is real and must be printed: about 5% in the illustration. Then <code>final_gate_label(mechanical, composition)</code> sets the label and <code>composition_report_lines(result)</code> goes into the report.</li>
+<li><strong>Trial count carried forward:</strong> a new overlay inherits Book 2's overlay registry (72 skew-grid specs) plus the backbone (1), so N = 73, and this shortlist adds 3, giving about 120 project-wide (hub: about 117 before this). The registry row is written before any run.</li>
+<li><strong>DSR reported</strong> (Bailey &amp; López de Prado form used in the repo, registry cross-trial variance V = 0.014061), at the candidate's own N = 1, at N = 3 (this shortlist), at N = 73 and at N ≈ 120, with realised skew and kurtosis. As with Book 2, DSR is reported, not the admission gate, because no equity-core overlay can reach the N = 73 hurdle (see the feasibility section).</li>
+<li><strong>Costs:</strong> 5 bp one-way on |Δf| (exposure changes), 10 bp sensitivity. Leakage tests: every σ̂ and signal is dated at or before the decision month-end; returns are for the next month.</li>
+</ul>
+<p><strong>Holdout:</strong> not proposed. A 106-month test detects only about 0.16, which is too coarse to justify spending the window.</p>
+
+<h2>References (all 2020 or later, links checked 2026-10-04)</h2>
+<ol><li>Christensen, K., Siggaard, M. &amp; Veliyev, B. (2023). A machine learning approach to volatility forecasting. <em>Journal of Financial Econometrics</em> 21(5), 1680–1727. <a href="https://doi.org/10.1093/jjfinec/nbac020">doi:10.1093/jjfinec/nbac020</a> (<a href="https://papers.ssrn.com/sol3/papers.cfm?abstract_id=3766999">SSRN 3766999</a>)</li><li>Bongaerts, D., Kang, X. &amp; van Dijk, M. A. (2020). Conditional volatility targeting. <em>Financial Analysts Journal</em> 76(4), 54–71. <a href="https://doi.org/10.1080/0015198X.2020.1790853">doi:10.1080/0015198X.2020.1790853</a> (<a href="https://papers.ssrn.com/sol3/papers.cfm?abstract_id=3636727">SSRN 3636727</a>)</li><li>Cederburg, S., O’Doherty, M. S., Wang, F. &amp; Yan, X. S. (2020). On the performance of volatility-managed portfolios. <em>Journal of Financial Economics</em> 138(1), 95–117. <a href="https://doi.org/10.1016/j.jfineco.2020.04.015">doi:10.1016/j.jfineco.2020.04.015</a></li></ol>
+<p class="small">Background, not cited as evidence: the HAR model itself predates 2020. It is used here as the standard benchmark that Christensen et al. (2023) evaluate.</p>
+
+<p class="small">Quant teaching note · beat_benchmark_2026-10 · no external requests on this page · numbers generated by <code>work/feasibility.py</code> and <code>work/feasibility2.py</code> (outputs <code>work/feasibility_results.json</code>, <code>work/feasibility2_results.json</code>).</p>
+</body>
+</html>

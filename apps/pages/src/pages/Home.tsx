@@ -586,17 +586,17 @@ export default function Home() {
                   </p>
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">
                     <div className="stat-card">
-                      <div className="stat-label">Sharpe ex-BIL (vt)</div>
+                      <div className="stat-label">Sharpe ex-BIL (Backbone)</div>
                       <div className="stat-value text-accent">{num(m.Sharpe_exbil_vt, 2)}</div>
                       <div className="stat-sub">Static A: {num(m.Sharpe_exbil_a, 2)} · legacy rf=0 {num(m.Sharpe_vt, 2)} / {num(m.Sharpe_a, 2)}</div>
                     </div>
                     <div className="stat-card">
-                      <div className="stat-label">Max drawdown (vt)</div>
+                      <div className="stat-label">Max drawdown (Backbone)</div>
                       <div className="stat-value text-down">{pct(m.MaxDD_vt)}</div>
                       <div className="stat-sub">Static A: {pct(m.MaxDD_a)}</div>
                     </div>
                     <div className="stat-card">
-                      <div className="stat-label">Ann. vol (vt)</div>
+                      <div className="stat-label">Ann. vol (Backbone)</div>
                       <div className="stat-value">{pct(m.AnnVol_vt)}</div>
                       <div className="stat-sub">Static A: {pct(m.AnnVol_a)}</div>
                     </div>
