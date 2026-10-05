@@ -821,6 +821,7 @@ def related_html():
     items.append(('../stage2_addendum3.html', 'Addendum 3: final dispositions and errata', DOCS / 'methods/stage2_addendum3.html'))
     items.append(('../stage2_livecore_recheck.html', 'Live-core recheck for family 2 (correction to Addendum 3 E4)', DOCS / 'methods/stage2_livecore_recheck.html'))
     items.append(('../../notes/stage2_wrap.html', 'CIO stage-2 wrap-up: nothing beat the static core', DOCS / 'notes/stage2_wrap.html'))
+    items.append(('../beat_benchmark/index.html', 'Beat-the-benchmark shortlist (Quant, Oct 2026)', DOCS / 'methods/beat_benchmark/index.html'))
     out = '<section id="related"><h2>Related pages</h2><ul>'
     for href, label, path in items:
         out += f'<li><a href="{href}">{e(label)}</a></li>' if path.exists() else f'<li>{e(label)} <span class="muted">(link when published)</span></li>'
