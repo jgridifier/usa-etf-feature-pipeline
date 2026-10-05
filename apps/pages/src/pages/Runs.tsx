@@ -222,22 +222,22 @@ export default function Runs() {
               {/* MaxDD leads; Sharpe last with context note */}
               <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">
                 <div className="stat-card">
-                  <div className="stat-label">Max DD (vt)</div>
+                  <div className="stat-label">Max DD (Backbone)</div>
                   <div className="stat-value text-down">{pct(m.MaxDD_vt)}</div>
                   <div className="stat-sub">Static A: {pct(m.MaxDD_a)} — risk-path claim</div>
                 </div>
                 <div className="stat-card">
-                  <div className="stat-label">Ann. return (vt)</div>
+                  <div className="stat-label">Ann. return (Backbone)</div>
                   <div className="stat-value">{pct(m.AnnReturn_vt)}</div>
                   <div className="stat-sub">Static A: {pct(m.AnnReturn_a)} — same path</div>
                 </div>
                 <div className="stat-card">
-                  <div className="stat-label">Ann. vol (vt)</div>
+                  <div className="stat-label">Ann. vol (Backbone)</div>
                   <div className="stat-value">{pct(m.AnnVol_vt)}</div>
                   <div className="stat-sub">Static A: {pct(m.AnnVol_a)}</div>
                 </div>
                 <div className="stat-card">
-                  <div className="stat-label">Sharpe ex-BIL (vt)</div>
+                  <div className="stat-label">Sharpe ex-BIL (Backbone)</div>
                   <div className="stat-value text-body">{num(m.Sharpe_exbil_vt)}</div>
                   <div className="stat-sub">Static A: {num(m.Sharpe_exbil_a)} — higher via milder DD · legacy rf=0 {num(m.Sharpe_vt)} / {num(m.Sharpe_a)}</div>
                 </div>

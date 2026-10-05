@@ -27,7 +27,11 @@ import pytest
 ROOT = Path(__file__).resolve().parents[1]
 DOCS = ROOT / 'docs'
 DRIVER = ROOT / 'tests' / 'tools' / 'cdp375.mjs'
-PINNED_NO_SHELL = {'methods/stage2_demiguel.html'}  # Quant's teaching note: byte-for-byte, no lab header
+PINNED_NO_SHELL = {'methods/stage2_demiguel.html',  # Quant's teaching note: byte-for-byte, no lab header
+                   # Quant's beat-the-benchmark shortlist (Oct 2026): published byte-for-byte, no lab header (CoS, 2026-10-04);
+                   # pinned in tests/test_beat_benchmark_pages.py. Still checked for 375px overflow and outside hosts.
+                   'methods/beat_benchmark/index.html', 'methods/beat_benchmark/idea1_downside_vol_backbone.html',
+                   'methods/beat_benchmark/idea2_fixed_blend_book2_core.html', 'methods/beat_benchmark/idea3_har_vol_forecast.html'}
 PAGES = sorted(str(p.relative_to(DOCS)) for p in DOCS.rglob('*.html'))
 
 PROBE = r"""
