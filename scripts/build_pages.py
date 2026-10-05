@@ -104,6 +104,9 @@ def comparison_window_label() -> str:
 
 def copy_cio_inputs() -> None:
     DATA.mkdir(parents=True, exist_ok=True)
+    # The Backbone / Book 1 series and summary come from live/ only (the top-level copies were retired 2026-10-04).
+    for name in ('vol_target_oos_returns.csv', 'vol_target_oos_summary.csv'):
+        shutil.copyfile(ROOT / 'data' / 'processed' / 'live' / name, DATA / name)
     for src, dest_name in CIO_COPIES:
         if src.is_file():
             shutil.copy2(src, DATA / dest_name)
@@ -225,7 +228,7 @@ def build_viz() -> None:
     dd_vt = drawdowns(equity_vt)
     dd_a = drawdowns(equity_a)
     write_json('viz_equity_drawdown.json', {
-        'source': 'vol_target_oos_returns.csv',
+        'source': 'vol_target_oos_returns.csv',   # docs/data copy of data/processed/live/vol_target_oos_returns.csv
         'columns': {'vol_target': 'r_vt', 'static_option_a': 'r_option_a'},
         'citation': 'Moreira & Muir (2017)',
         'callout': 'Path/risk improvement, not return alpha (NW t ≈ 0)',
@@ -1113,6 +1116,8 @@ def main() -> None:
     dsr_feasibility.build_dsr_feasibility(page_shell, write_page)
     from build_hub_pages import build_hub_pages
     build_hub_pages(page_shell, write_page)
+    import pinned_pages   # Quant's byte-pinned pages + build-time lab header (source and published hashes pinned)
+    pinned_pages.publish(nav_html, DOCS)
     stage2_pages.build_page(page_shell, write_page, DOCS)
     import build_composition  # pandas: run with the repo venv (scripts/build_pages_v2.sh)
     build_composition.write_data(DOCS, build_composition.build_page(page_shell, write_page))

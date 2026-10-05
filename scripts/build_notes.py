@@ -27,6 +27,26 @@ NOTE_SHA256 = {'stage2_wrap': '2efdf27b345d152cdb111406ea10dd4167617d0f47b21591b
 # Build-time banners: injected above the note body; the .md sources are not edited (PM, 2026-10-04).
 SEPT_FIX_BANNER = 'Superseded: Book 2 Sharpe ex-BIL is 0.99 after the September full-month fix.'
 NOTE_BANNERS = {'book2_reframe': SEPT_FIX_BANNER, 'book2_lw2008_drawdowns': SEPT_FIX_BANNER}
+BACKBONE_JSON = ROOT / 'data' / 'processed' / 'hub' / 'subjects' / 'backbone.json'
+
+
+def backbone_cagr_banner() -> str:
+    """Dated lab note for the pinned stage-2 wrap-up (CoS, 2026-10-04): its table prints the Backbone CAGR as 15.1%.
+    Every figure comes from data/processed/hub/subjects/backbone.json (own; vs_core.own_window.b is the core)."""
+    import json
+    d = json.loads(BACKBONE_JSON.read_text(encoding='utf-8'))
+    own, core = d['own'], d['vs_core']['own_window']['b']
+    assert (own['n'], own['start'], own['end']) == (core['n'], core['start'], core['end'])
+    pct = lambda x: f'{100 * x:.2f}%'
+    return (f"Lab note, 2026-10-04: the Backbone row of the table in §6 prints CAGR 15.1%; from the hub data it is "
+            f"{pct(own['cagr'])}. Over the {own['n']} months {own['start']} to {own['end']}, the backbone and the core are "
+            f"level on CAGR ({pct(own['cagr'])} vs {pct(core['cagr'])}), and the backbone's edge is lower risk "
+            f"(Sharpe {own['sharpe_exbil']:.2f} vs {core['sharpe_exbil']:.2f}), not higher return. No verdict changes. "
+            f"The note itself is published verbatim at its pinned hash.")
+
+
+# Callable banners are computed from data at build time.
+NOTE_BANNERS['stage2_wrap'] = backbone_cagr_banner
 
 
 def _inline(text: str) -> str:
@@ -135,6 +155,11 @@ def notes_list_html(prefix: str) -> str:
     return '<ul class="method-list">' + ''.join(items) + '</ul>'
 
 
+def banner_text(slug: str) -> str:
+    b = NOTE_BANNERS[slug]
+    return b() if callable(b) else b
+
+
 def build_notes(page_shell, write_page) -> None:
     for slug, title, status, _ in NOTES:
         if status != 'published':
@@ -150,7 +175,7 @@ def build_notes(page_shell, write_page) -> None:
         content = (
             '<section class="band"><div class="band-inner note-body">'
             '<p><span class="badge">Note for Jared</span></p>'
-            + (f'<p class="callout note-banner" role="note">{escape(NOTE_BANNERS[slug])}</p>' if slug in NOTE_BANNERS else '')
+            + (f'<p class="callout note-banner" role="note">{escape(banner_text(slug))}</p>' if slug in NOTE_BANNERS else '')
             + body
             + f'<p class="dl"><a href="{slug}.md">Markdown source</a> · '
             '<a href="../methods/index.html#notes">All notes</a></p>'

@@ -223,77 +223,7 @@
   }
  },
  "vs_nulls": [],
- "sensitivities": [
-  {
-   "key": "frozen",
-   "label": "Frozen snapshot (research run, cash 0)",
-   "source": "data/processed/vol_target_oos_returns.csv",
-   "own": {
-    "n": 67,
-    "start": "2021-02",
-    "end": "2026-08",
-    "total_return": 1.1901984996,
-    "cagr": 0.1507529988,
-    "ann_vol": 0.1396340925,
-    "maxdd": -0.2027582781,
-    "sharpe_exbil": 0.856716342
-   },
-   "vs_core": {
-    "n": 67,
-    "start": "2021-02",
-    "end": "2026-08",
-    "a": {
-     "n": 67,
-     "start": "2021-02",
-     "end": "2026-08",
-     "total_return": 1.1901984996,
-     "cagr": 0.1507529988,
-     "ann_vol": 0.1396340925,
-     "maxdd": -0.2027582781,
-     "sharpe_exbil": 0.856716342
-    },
-    "b": {
-     "n": 67,
-     "start": "2021-02",
-     "end": "2026-08",
-     "total_return": 1.2058876689,
-     "cagr": 0.15222508,
-     "ann_vol": 0.1596429086,
-     "maxdd": -0.2556271385,
-     "sharpe_exbil": 0.7763499416
-    },
-    "diff": {
-     "total_return": -0.0156891693,
-     "cagr": -0.0014720812,
-     "maxdd": 0.0528688604,
-     "maxdd_note": "single path, no test",
-     "sharpe_exbil": 0.0803664004
-    },
-    "return_test": {
-     "nw_t": -0.350437337,
-     "lags": 3,
-     "p_two_sided": 0.7260105098,
-     "detectable_ann_return_gap": 0.0305540085
-    },
-    "sharpe_test": {
-     "z": 1.1161712014,
-     "p_one_sided": 0.1321744296,
-     "p_two_sided": 0.2643488591,
-     "significant_5pct_two_sided": false,
-     "se_hac_annual": 0.072545276,
-     "detectable_sharpe_gap": 0.1803820051
-    },
-    "power": {
-     "n": 67,
-     "detectable_sharpe_gap": 0.1803820051,
-     "text": "67 paired months can only detect a Sharpe gap of about 0.18 (one-sided 5%, 80% power)."
-    }
-   },
-   "partial_months_dropped": [
-    "2026-09"
-   ]
-  }
- ],
+ "sensitivities": [],
  "months": [
   "2021-02",
   "2021-03",

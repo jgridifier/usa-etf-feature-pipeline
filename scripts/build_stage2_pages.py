@@ -4,7 +4,8 @@
 - docs/methods/stage2_robustness.html is rendered from data/processed/stage2/stage2_robustness.md, a
   byte-for-byte copy of Quant's appendix (renamed; working-file names stay out of the repo). Its sha256 is
   pinned in APPENDIX_SHA256 and in data/processed/stage2/PROVENANCE.md.
-- docs/methods/stage2_demiguel_kwz.html is Quant's teaching note, published byte-for-byte and never restyled.
+- docs/methods/stage2_demiguel.html is Quant's teaching note: source bytes pinned in data/pinned_pages/ and published
+  with only the lab-header blocks added (scripts/pinned_pages.py); never restyled.
   It is copied ONLY when TEACHING_SHA256 is set and the source matches it:
       python scripts/build_stage2_pages.py --teaching-source /path/to/stage2_demiguel.html
   While TEACHING_SHA256 is None (Quant is revising the note), no teaching page ships and the appendix says so.
@@ -43,17 +44,25 @@ def sha256(p: Path) -> str:
 
 
 def teaching_published(docs: Path) -> bool:
+    """Published = docs/methods/<TEACHING> is the pinned source plus lab-header blocks only (scripts/pinned_pages.py)."""
+    import pinned_pages
     p = docs / 'methods' / TEACHING
-    return TEACHING_SHA256 is not None and p.exists() and sha256(p) == TEACHING_SHA256
+    return (TEACHING_SHA256 is not None and p.exists()
+            and hashlib.sha256(pinned_pages.strip_lab(p.read_text(encoding='utf-8')).encode('utf-8')).hexdigest() == TEACHING_SHA256)
 
 
 def publish_teaching(source: Path, docs: Path) -> None:
+    """Stage Quant's note as the pinned source (data/pinned_pages/methods/<TEACHING>); the build publishes it with the
+    lab header (scripts/pinned_pages.py). Refuses a source whose sha256 is not the pinned one."""
     if TEACHING_SHA256 is None:
         raise SystemExit('TEACHING_SHA256 is not pinned yet: the teaching note is not published until its final hash is set')
     got = sha256(source)
     if got != TEACHING_SHA256:
         raise SystemExit(f'teaching note sha256 {got} != pinned {TEACHING_SHA256}; not copied')
-    shutil.copyfile(source, docs / 'methods' / TEACHING)
+    import pinned_pages
+    dest = pinned_pages.source_path('methods/' + TEACHING) if docs == pinned_pages.DOCS else docs / 'methods' / TEACHING
+    dest.parent.mkdir(parents=True, exist_ok=True)
+    shutil.copyfile(source, dest)
 
 
 # ── minimal Markdown renderer (the subset the appendix uses) ──────────────────

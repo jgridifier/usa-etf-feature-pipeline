@@ -139,3 +139,43 @@ def test_stage2_wrap_is_published_verbatim_at_its_pinned_hash():
     assert ('stage2_wrap', 'CIO note: stage 2 wrap-up (Oct 2026)', 'published', '') in bn.NOTES
     html = (ROOT / 'docs/notes/stage2_wrap.html').read_text(encoding='utf-8')
     assert 'Stage 2 wrap-up: nothing beat the static core' in html
+
+
+def test_stage2_wrap_backbone_cagr_banner_is_dated_and_from_backbone_json():
+    """The pinned wrap-up note prints the Backbone CAGR as 15.1%; the true figure is 15.0016% (68m 2021-02..2026-09).
+    The note's bytes stay pinned, so a dated build-time lab note carries the correction, every figure from
+    data/processed/hub/subjects/backbone.json (CoS, 2026-10-04)."""
+    import json
+    import re
+    d = json.loads((ROOT / 'data/processed/hub/subjects/backbone.json').read_text(encoding='utf-8'))
+    own, core = d['own'], d['vs_core']['own_window']['b']
+    assert (own['n'], own['start'], own['end']) == (68, '2021-02', '2026-09')
+    assert abs(own['cagr'] - 0.150016) < 1e-6
+    html = (ROOT / 'docs/notes/stage2_wrap.html').read_text(encoding='utf-8')
+    m = re.search(r'<p class="callout note-banner" role="note">(.*?)</p>', html, re.S)
+    assert m, 'no banner on the wrap-up note'
+    text = m.group(1).replace('&#x27;', "'")
+    assert text.startswith('Lab note, 2026-10-04:')
+    want = (f"Over the 68 months 2021-02 to 2026-09, the backbone and the core are level on CAGR "
+            f"({100 * own['cagr']:.2f}% vs {100 * core['cagr']:.2f}%), and the backbone's edge is lower risk "
+            f"(Sharpe {own['sharpe_exbil']:.2f} vs {core['sharpe_exbil']:.2f}), not higher return.")
+    assert want in text, text
+    assert '15.00% vs 14.96%' in text and 'Sharpe 0.86 vs 0.77' in text and 'No verdict changes' in text
+    md = (ROOT / 'docs/notes/stage2_wrap.md').read_text(encoding='utf-8')
+    assert [l for l in md.splitlines() if '15.1%' in l] == ['| Backbone | 15.1% | 0.86 |']   # the only 15.1%
+    src = (ROOT / 'scripts/build_notes.py').read_text(encoding='utf-8')
+    for lit in ('15.00', '14.96', '0.86 vs', '0.77'):
+        assert lit not in src, lit                          # computed, not typed in
+
+
+def test_banner_follows_the_data(monkeypatch, tmp_path):
+    import json
+    spec = importlib.util.spec_from_file_location('build_notes', ROOT / 'scripts' / 'build_notes.py')
+    bn = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(bn)
+    d = json.loads(bn.BACKBONE_JSON.read_text(encoding='utf-8'))
+    d['own']['cagr'] = 0.2
+    p = tmp_path / 'backbone.json'
+    p.write_text(json.dumps(d))
+    monkeypatch.setattr(bn, 'BACKBONE_JSON', p)
+    assert 'level on CAGR (20.00% vs' in bn.banner_text('stage2_wrap')

@@ -1,0 +1,21 @@
+{
+  "date": "2026-10-04",
+  "kind": "data correction (input retirement), not a trial",
+  "trial_counts_changed": false,
+  "retired": {
+    "data/processed/vol_target_oos_returns.csv": {"sha256": "3434b1a569a77d2e8f17fd6b465267ab9e2c898317755cca70b63468c1fae358", "last_row": "2026-09-16", "cash_price_source": "zero_return_proxy_rf0"},
+    "data/processed/vol_target_oos_summary.csv": {"sha256": "eeb5a5a8864c00f912f9eb7aa04c9a041c8439ecc4e6f9744c15185823a7d1ed", "end_date": "2026-09-16"}
+  },
+  "moved_to": "data/processed/frozen/vol_target_cash0_2026-09-16/ (bytes unchanged; README pointer at data/processed/vol_target_oos_README.md)",
+  "live_source": "data/processed/live/vol_target_oos_{returns,summary}.csv (68 months 2021-02..2026-09, BIL priced)",
+  "docs_data_copies": "docs/data/vol_target_oos_{returns,summary}.csv were already byte-identical to live/ (end 2026-09-30); now copied from live/ on every build",
+  "readers": [
+    {"file": "src/usa_etf_features/hub_data.py", "line": 123, "was": "backbone sensitivity 'frozen' -> _f('vol_target_oos_returns.csv')", "now": "retired (sensitivities=[]); live/ has no cash-0 run, so repointing would duplicate the primary series under a 'cash 0' label"},
+    {"file": "scripts/build_pages.py", "line": 108, "was": "read docs/data copies (no writer)", "now": "copy_cio_inputs copies live/ -> docs/data each build"},
+    {"file": "src/usa_etf_features/cash_null_audit.py", "line": 151, "was": "processed/vol_target_oos_returns.csv", "now": "processed/frozen/vol_target_cash0_2026-09-16/ (gate audit evidence; same bytes)"},
+    {"file": "src/usa_etf_features/epo_allocator.py", "line": 32, "was": "data/processed/vol_target_oos_returns.csv", "now": "data/processed/frozen/vol_target_cash0_2026-09-16/ (EPO gross Book 1 reference line; same bytes)"}
+  ],
+  "displayed_figures_moved": [],
+  "undisplayed_json_removed": {"data/processed/hub/subjects/backbone.json": "sensitivities[0] (frozen cash-0 snapshot: own and vs-core stats over 67 months to 2026-08); not rendered on any page", "data/processed/hub/manifest.json": "backbone sensitivities entry"},
+  "method": "built Pages + hub on main (8703174), snapshotted the visible numeric text of all 39 docs pages and every numeric leaf of docs/data, apps/pages/src/data, data/processed/hub and cash_null_audit JSON; repointed; rebuilt; diffed"
+}

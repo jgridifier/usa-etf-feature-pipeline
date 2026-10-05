@@ -137,7 +137,8 @@ def test_legacy_bil_and_rotation():
 # Re-pinned 2026-10-01: data refresh through 2026-09-30 close
 PUBLISHED_SHA256 = {
     'data/processed/skewness_managed/skew_managed_gatefirst_returns.csv': '68ad0748fc3af670d7eb2e6d665ccf40131ab0b8e4469779ade3fc6891aab0f3',
-    'data/processed/vol_target_oos_returns.csv': '3434b1a569a77d2e8f17fd6b465267ab9e2c898317755cca70b63468c1fae358',
+    'data/processed/frozen/vol_target_cash0_2026-09-16/vol_target_oos_returns.csv':   # moved 2026-10-04 (retired from top level; bytes unchanged)
+        '3434b1a569a77d2e8f17fd6b465267ab9e2c898317755cca70b63468c1fae358',
     'docs/data/vol_target_oos_returns.csv': 'a0e76aa34212821d4cad5b5dd6d473696af4997139129078afa0279cceb452c6',
     'docs/data/viz_metrics.json': 'b00ae1db0d390f52834c25811676a0e15dd3fde22266d770e7b4021f0bd42993',
     # Re-pinned 2026-10-01: audit-null stance quotes the live Book 2 Sharpe (1.00); label 'VT' -> 'Backbone'.
