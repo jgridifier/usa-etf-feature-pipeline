@@ -57,14 +57,12 @@ months move by more than 1e-6 (max 1.02 points, 2020-03). Its whole series is re
 ### Skew-managed EW / MinVar / ERC nulls 2026-09 restored from a re-run (2026-10-04)
 
 The gate-first file's EW / LW MinVar / ERC nulls (`r_null_c..e`) were re-run unchanged with the September
-refresh's command (frozen code at main 0797179; the skewness_managed path is unchanged since #41) on the
-complete-month inputs. The nulls are built from the complete-month monthly panel, so they come out identical to
-the values #53 blanked. Before the re-run, the refresh price file (`growth_alpha_adj_close.csv`) was corrected:
-its 2026-09-16 row is a partial-day snapshot with the later rows spliced onto it. The copy keeps every line through
-2026-09-15 byte-for-byte and chains 2026-09-16..30 from the full price history, so the re-run's core-equivalent
-columns give the committed panel core (−0.1112%). Every other cell of all 68 months reproduces the committed
-file exactly. Only the three blank 2026-09 cells were written: EW −0.9815%, LW MinVar −0.3209%, ERC −0.6988%.
-`r_active_vs_c..e` were re-derived as method minus null. Output, corrected price rows, command and the code,
-function-source, input and output sha256 values are in `skew_nulls_rerun_2026-09/` (`rerun_record.json`).
-`scripts/restore_skew_nulls_rerun.py` builds the prices and checks and applies the re-run. The repair script no
-longer blanks the restored cells. Run summaries (NW t, CIs) are unchanged, as run.
+refresh's command (the skewness_managed path is unchanged since #41) on the shared fixed price file
+(`/workspace/investments/growth_alpha_adj_close.csv`, sha256 6306e082…, rebuilt by #59). The nulls are built from
+the complete-month monthly panel, so they equal the values #53 blanked. The re-run's core-equivalent 2026-09 columns
+give the committed panel core (−0.1112%); every earlier month agrees with the committed file within 1e-6 (the two
+price vintages differ by ~1e-6 a day; the gate g is identical in all 68 months) and is kept as committed. Only the
+three blank 2026-09 cells were written: EW −0.9815%, LW MinVar −0.3209%, ERC −0.6988%. `r_active_vs_c..e` were
+re-derived as method minus null. Output, command and the code, function-source, input and output sha256 values are
+in `skew_nulls_rerun_2026-09/` (`rerun_record.json`); `scripts/restore_skew_nulls_rerun.py` checks and applies the
+re-run. The repair script no longer blanks the restored cells. Run summaries (NW t, CIs) are unchanged, as run.

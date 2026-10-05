@@ -1,5 +1,5 @@
-"""Skew-managed gate-first EW / MinVar / ERC nulls, 2026-09: restored from an unchanged complete-month re-run
-(follow-up to #53, same approach as #56). See scripts/restore_skew_nulls_rerun.py."""
+"""Skew-managed gate-first EW / MinVar / ERC nulls, 2026-09: restored from an unchanged re-run on the shared fixed
+price file (#59; follow-up to #53, same approach as #56). See scripts/restore_skew_nulls_rerun.py."""
 from __future__ import annotations
 
 import hashlib
@@ -42,11 +42,13 @@ def test_restored_cells_equal_the_saved_rerun_output():
 def test_every_other_cell_reproduces_the_committed_file():
     live, rerun = frames()
     assert list(live.index) == list(rerun.index) and len(live) == 68
-    numeric = [c for c in live.columns if c not in ('decision_date', 'trial_id', 'gate_binding')]
-    assert (live[numeric] - rerun[numeric]).abs().max().max() <= 1e-7
-    assert (live['gate_binding'] == rerun['gate_binding']).all()
+    numeric = [c for c in live.columns if c not in ('decision_date', 'trial_id', 'gate_binding', 'skew')]
+    assert (live[numeric] - rerun[numeric]).abs().max().max() <= 1e-6       # two price vintages, ~1e-6 a day (#59)
+    assert (live['g'] == rerun['g']).all() and (live['gate_binding'] == rerun['gate_binding']).all()
     rec = record()
-    assert rec['other_months_checked'] == 67 and max(rec['max_abs_diff_other_months'].values()) <= rec['tolerance'] == 1e-7
+    assert rec['other_months_checked'] == 67 and rec['tolerance'] == 1e-6
+    assert max(v for c, v in rec['max_abs_diff_other_months'].items() if c != 'skew') <= rec['tolerance']
+    assert rec['max_abs_diff_other_months']['g'] == 0.0
     # September core-equivalent columns equal the committed complete-month panel core (not the partial +0.2412%).
     for c in ('r_method', 'r_null_a', 'r_null_b'):
         assert rerun.at[ROW, c] == pytest.approx(live.at[ROW, c], abs=1e-15)
@@ -54,14 +56,16 @@ def test_every_other_cell_reproduces_the_committed_file():
     assert abs(rec['core_equivalent_2026_09'] - 0.002411878710272353) > 1e-3
 
 
-def test_outputs_and_corrected_price_rows_match_recorded_hashes():
+def test_rerun_read_the_shared_fixed_price_file():
     rec = record()
+    fixed = json.loads((ROOT / 'data/processed/prices_fix_2026-10/growth_alpha_fix_record.json').read_text())['new_sha256']
+    assert rec['inputs_sha256']['/workspace/investments/growth_alpha_adj_close.csv'] == fixed
+    assert not any('corrected' in k or 'complete-month copy' in k for k in rec['inputs_sha256'])
+    assert not list(RUN.glob('prices_corrected*'))
+    src = (ROOT / 'scripts/restore_skew_nulls_rerun.py').read_text()
+    assert 'def build_prices' not in src and 'prices_corrected' not in src
     for rel, h in rec['output_sha256'].items():
         assert hashlib.sha256((ROOT / rel).read_bytes()).hexdigest() == h, rel
-    rows = 'data/processed/live/skew_nulls_rerun_2026-09/prices_corrected_rows_2026-09-16_to_30.csv'
-    assert hashlib.sha256((ROOT / rows).read_bytes()).hexdigest() == rec['inputs_sha256'][rows]
-    p = pd.read_csv(ROOT / rows, index_col=0)
-    assert p.index[0] == '2026-09-16' and p.index[-1] == ROW and len(p) == 11
     panel = 'data/raw/usa_universe_panel_monthly_returns.csv'
     assert hashlib.sha256((ROOT / panel).read_bytes()).hexdigest() == rec['inputs_sha256'][panel]
 
