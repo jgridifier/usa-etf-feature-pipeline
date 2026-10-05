@@ -1050,13 +1050,57 @@ def self_host_fonts() -> None:
             page.write_text(t, encoding='utf-8')
 
 
+GROWTH_PRICES = Path('/workspace/investments/growth_alpha_adj_close.csv')   # canonical (fixed 2026-10-04)
+
+
+def copy_growth_prices() -> None:
+    """docs/data/growth_alpha_adj_close.csv (Explorer input) is a byte-for-byte copy of the one canonical file,
+    fixed by scripts/fix_growth_alpha_prices.py; it is never edited on its own."""
+    if GROWTH_PRICES.exists():
+        shutil.copyfile(GROWTH_PRICES, DATA / 'growth_alpha_adj_close.csv')
+
+
+M3_RESTATEMENT = ROOT / 'data/processed/prices_fix_2026-10/m3_p2_restatement.json'
+
+
+def _sci(x: float) -> str:
+    """1e-06 -> '1e-6'."""
+    m, e = f'{x:.0e}'.split('e')
+    return f'{m}e{int(e)}'
+
+
+def m3_p2_fragility_note(rec: dict) -> str:
+    """Fragility disclosure for m3_p2_core_rotate, every figure from the restatement record (computed from the two
+    return series by scripts/record_m3_p2_restatement.py)."""
+    d = rec['disclosure']
+    gap = f"{d['largest_gap_pp']:.2f}".replace('-', '\u2212')
+    return (f"{d['months_returns_moved']} of {d['earlier_months']} earlier months' returns moved by more than "
+            f"{_sci(d['return_move_tolerance'])} between the two price files; largest monthly gap {d['largest_gap_month']}, "
+            f"{gap} pp; returns move on price differences under {_sci(d['price_diff_bound'])}, so this stays a lab run.")
+
+
+def build_comparison_notes() -> None:
+    """docs/data/strategy_comparison_notes.json: per-strategy row notes for strategy_comparison.csv, rendered next to
+    the 'Strategy comparison' download on the Runs page (the only place m3_p2_core_rotate appears on the site)."""
+    rec = json.loads(M3_RESTATEMENT.read_text(encoding='utf-8'))
+    write_json('strategy_comparison_notes.json', {
+        'file': 'strategy_comparison.csv',
+        'source': 'data/processed/prices_fix_2026-10/m3_p2_restatement.json',
+        'notes': [{'strategy_id': 'm3_p2_core_rotate', 'label': 'M3 P2 (held off)',
+                   'kind': 'data restatement, not a new trial',
+                   'return_move_tolerance': rec['disclosure']['return_move_tolerance'], 'text': m3_p2_fragility_note(rec)}],
+    })
+
+
 def main() -> None:
+    copy_growth_prices()
     ASSETS.mkdir(parents=True, exist_ok=True)
     DATA.mkdir(parents=True, exist_ok=True)
     copy_cio_inputs()
     refresh_weights_snapshot()
     build_viz()
     build_live_figures()
+    build_comparison_notes()
     # Pages v2 React SPA owns Home/Books/Runs via HashRouter on docs/index.html.
     # Do not emit leftover books.html / runs.html (or overwrite SPA index.html).
     for leftover in ('books.html', 'runs.html'):

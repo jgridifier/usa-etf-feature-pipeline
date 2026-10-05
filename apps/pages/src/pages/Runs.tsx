@@ -6,6 +6,7 @@ import { pct, num } from '../lib/utils'
 import { ArrowDownToLine } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import { LiveFig } from '../lib/liveFigures'
+import { StrategyComparisonNotes } from '../components/StrategyComparisonNotes'
 
 interface MetricsPayload {
   trial_id: string
@@ -344,6 +345,7 @@ export default function Runs() {
                 </a>
               ))}
             </div>
+            <StrategyComparisonNotes />
           </div>
         </div>
       </section>

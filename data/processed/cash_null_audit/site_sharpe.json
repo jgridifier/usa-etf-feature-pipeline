@@ -48,8 +48,8 @@
   },
   "comparison": {
     "m3_p2_core_rotate": {
-      "exbil": 0.6032,
-      "rf0_legacy": 0.7576,
+      "exbil": 0.5885,
+      "rf0_legacy": 0.7405,
       "n_months": 68,
       "window": "2021-02..2026-09",
       "rf_fallback_share": 0.0
