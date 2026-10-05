@@ -288,14 +288,7 @@
    "trials": null,
    "prereg": null,
    "verdict": null,
-   "sensitivities": [
-    {
-     "key": "frozen",
-     "label": "Frozen snapshot (research run, cash 0)",
-     "file": "data/processed/vol_target_oos_returns.csv",
-     "col": "r_vt"
-    }
-   ],
+   "sensitivities": [],
    "pages": {
     "teaching": "methods/allocation_alpha_vol_target.html"
    }

@@ -27,11 +27,10 @@ import pytest
 ROOT = Path(__file__).resolve().parents[1]
 DOCS = ROOT / 'docs'
 DRIVER = ROOT / 'tests' / 'tools' / 'cdp375.mjs'
-PINNED_NO_SHELL = {'methods/stage2_demiguel.html',  # Quant's teaching note: byte-for-byte, no lab header
-                   # Quant's beat-the-benchmark shortlist (Oct 2026): published byte-for-byte, no lab header (CoS, 2026-10-04);
-                   # pinned in tests/test_beat_benchmark_pages.py. Still checked for 375px overflow and outside hosts.
-                   'methods/beat_benchmark/index.html', 'methods/beat_benchmark/idea1_downside_vol_backbone.html',
-                   'methods/beat_benchmark/idea2_fixed_blend_book2_core.html', 'methods/beat_benchmark/idea3_har_vol_forecast.html'}
+# Pages without the lab header (exempt from the open-menu tap-target check). Empty since 2026-10-04: the byte-pinned
+# pages (stage2_demiguel.html and the four beat_benchmark pages) get the shared header at build time
+# (scripts/pinned_pages.py), so the menu check now runs on them too.
+PINNED_NO_SHELL: set[str] = set()
 PAGES = sorted(str(p.relative_to(DOCS)) for p in DOCS.rglob('*.html'))
 
 PROBE = r"""
@@ -55,6 +54,9 @@ PROBE = r"""
       [...document.querySelectorAll('button')].find(b => /menu/i.test(b.getAttribute('aria-label') || ''));
     toggle.click(); await sleep(200);
   }
+  // Injected lab back-links on byte-pinned pages (results hub, Glossary): 44px tap targets.
+  res.backlinks = [...document.querySelectorAll('.lab-backlink a')]
+    .map(a => [a.textContent.trim(), Math.round(a.getBoundingClientRect().height), a.getAttribute('href')]);
   const rectOf = e => { const b = e.getBoundingRect().clone(); b.applyTransform(e.getComputedTransform()); return [b.x, b.y, b.width, b.height]; };
   const sc = document.querySelector('#chart-scatter');
   if (sc && window.echarts) {
@@ -154,6 +156,16 @@ def test_open_menu_links_are_44px_tap_targets(rendered, page):
     assert len(r['menu']) >= 4, (page, r['menu'])
     short = [m for m in r['menu'] if m[1] < 44]
     assert not short, (page, short)
+
+
+@pytest.mark.parametrize('page', [p for p in PAGES if p.startswith('methods/beat_benchmark/') or p == 'methods/stage2_demiguel.html'])
+def test_pinned_page_backlinks_are_44px_tap_targets(rendered, page):
+    links = rendered[page]['backlinks']
+    names = [l[0] for l in links]
+    assert '← Results hub' in names, (page, links)
+    if page.startswith('methods/beat_benchmark/'):
+        assert 'Glossary' in names, (page, links)
+    assert all(l[1] >= 44 for l in links), (page, links)
 
 
 @pytest.mark.parametrize('page', PAGES)

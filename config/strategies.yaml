@@ -14,7 +14,7 @@ strategies:
   # Unconditional VT null — disabled, for Quant audit only.
   # Preserves the primary null (Sharpe_rf0 ≈ 1.059 / MaxDD ≈ −20.1%) so the
   # Justina #6 gate-first overlay claim remains checkable.
-  # Artifact: data/processed/vol_target_oos_{returns,summary}.csv
+  # Artifact: data/processed/live/vol_target_oos_{returns,summary}.csv (frozen cash-0 run: data/processed/frozen/vol_target_cash0_2026-09-16/)
   # Do NOT enable as a live shortlist book.
   - id: vol_target_option_a_uncond
     display_name: "Unconditional Vol-Target Option A (Quant audit null — NOT a live book)"

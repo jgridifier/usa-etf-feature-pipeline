@@ -147,7 +147,8 @@ def gate_frames(processed: Path = PROCESSED) -> dict[str, pd.DataFrame]:
     g["#6 skew gate-first (live Book 2)"] = _wide(sk, None, {
         "r_method": "VT x gate-first", "r_null_a": "Book-2 VT (BIL priced)", "r_null_b": "Option A static",
         "r_null_c": "EW", "r_null_d": "MinVar", "r_null_e": "ERC"})
-    vt = _read("vol_target_oos_returns.csv", processed)
+    # Frozen cash = 0 research run (ends 2026-09-16); moved out of the top level 2026-10-04, bytes unchanged.
+    vt = _read("frozen/vol_target_cash0_2026-09-16/vol_target_oos_returns.csv", processed)
     g["Book-2 VT committed run (cash = 0 proxy)"] = _wide(vt, None, {"r_vt": "Book-2 VT",
                                                                      "r_option_a": "Option A static"})
     return g

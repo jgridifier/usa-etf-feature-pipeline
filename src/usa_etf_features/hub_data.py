@@ -118,8 +118,9 @@ SUBJECTS = [
     dict(id='backbone', name='Backbone (unconditional vol-target)', group='audit_null', card='uncond_book2_vt',
          series=dict(file=_f('live', 'vol_target_oos_returns.csv'), col='r_vt', turnover='turnover'),
          nulls=[],
-         sensitivities=[dict(key='frozen', label='Frozen snapshot (research run, cash 0)',
-                             file=_f('vol_target_oos_returns.csv'), col='r_vt')],
+         # Retired 2026-10-04: the 'frozen snapshot (cash 0)' sensitivity read the top-level vol_target_oos_returns.csv
+         # (ends 2026-09-16). Hub inputs come from live/ only; the frozen file is archived for the gate audits.
+         sensitivities=[],
          weights=dict(kind='wide', file=_f('live', 'vol_target_monthly_weights.csv')),
          timing=dict(file=_f('live', 'vol_target_oos_returns.csv')),
          trials=None, prereg=None, pages=dict(teaching='methods/allocation_alpha_vol_target.html')),

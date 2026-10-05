@@ -13,6 +13,8 @@ import build_stage2_pages as st  # noqa: E402
 
 PAGE = ROOT / 'docs' / st.PAGE
 TEACH = ROOT / 'docs/methods' / st.TEACHING
+# Quant's bytes; the published page adds only lab-header blocks (scripts/pinned_pages.py, 2026-10-04).
+TEACH_SRC = ROOT / 'data/pinned_pages/methods' / st.TEACHING
 
 
 def test_appendix_copy_matches_pin_and_provenance():
@@ -49,7 +51,8 @@ def test_teaching_note_ships_only_at_its_final_pinned_hash():
         assert not TEACH.exists(), 'teaching note must not ship before its final sha256 is pinned'
         assert 'being revised' in PAGE.read_text()
     else:
-        assert hashlib.sha256(TEACH.read_bytes()).hexdigest() == st.TEACHING_SHA256
+        assert hashlib.sha256(TEACH_SRC.read_bytes()).hexdigest() == st.TEACHING_SHA256
+        assert st.teaching_published(ROOT / 'docs')
         assert f'href="{st.TEACHING}"' in PAGE.read_text()
         assert st.TEACHING_SHA256 in (ROOT / 'data/processed/stage2/PROVENANCE.md').read_text()
 
@@ -71,9 +74,11 @@ def test_publish_refuses_wrong_or_unpinned_hash(tmp_path, monkeypatch):
 def test_final_teaching_note_is_pinned_and_the_kwz_version_never_ships():
     assert st.TEACHING == 'stage2_demiguel.html'
     assert st.TEACHING_SHA256 == '08b251a2425b1802ddf5c8e7de63ab8b97469744d5fbff8490c3c8cb56fb0893'   # replaces 8091157e…
-    assert hashlib.sha256(TEACH.read_bytes()).hexdigest() == st.TEACHING_SHA256
+    assert hashlib.sha256(TEACH_SRC.read_bytes()).hexdigest() == st.TEACHING_SHA256
     assert not (ROOT / 'docs/methods/stage2_demiguel_kwz.html').exists()
-    raw = TEACH.read_text()
+    import pinned_pages
+    raw = pinned_pages.strip_lab(TEACH.read_text())
+    assert raw.encode('utf-8') == TEACH_SRC.read_bytes()
     assert '<script' not in raw.lower() and 'cdn' not in raw.lower()
 
 
