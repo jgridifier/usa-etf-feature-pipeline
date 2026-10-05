@@ -66,6 +66,23 @@ def num(value):
     return '—' if value is None else f'{value:.2f}'.replace('-', '−')
 
 
+def p3(value):
+    return '—' if value is None else f'{value:.3f}'.replace('-', '−')
+
+
+# Per-row notes for the own-null table (Quant / CIO, #57): a null that is not the subject's judging null gets a note
+# naming the null it is judged against, with that null's two-sided p. Figures come from the data.
+NULL_NOTES = {('book2', 'LW MinVar'): 'secondary null; Book 2 is judged against the vol-target backbone (two-sided p {primary_p})'}
+
+
+def null_note(d, r):
+    tpl = NULL_NOTES.get((d['id'], r['label']))
+    if not tpl:
+        return '—'
+    primary = next(x for x in d.get('vs_nulls', []) if x.get('primary'))
+    return tpl.format(primary_p=num((primary.get('sharpe_test') or {}).get('p_two_sided')))
+
+
 def pct(value):
     return '—' if value is None else f'{value * 100:.1f}%'.replace('-', '−')
 
@@ -87,7 +104,8 @@ def text(value):
     if isinstance(value, (float, int)):
         return num(value)
     if isinstance(value, dict):
-        return '; '.join(f'{k}: {text(v)}' for k, v in value.items())
+        # The boolean 5% flag is not shown: pages give p-values, not 'significant' labels (#57).
+        return '; '.join(f'{k}: {text(v)}' for k, v in value.items() if k != 'significant_5pct_two_sided')
     if isinstance(value, list):
         return '; '.join(text(v) for v in value) or 'none'
     # Saved identifiers stay intact; standalone display labels use the table name.
@@ -217,13 +235,16 @@ STANDIN_CORE = 'stand-in core (IVV / QQQ / IJR, gross)'
 
 
 def null_windows_caption(nulls):
-    """Caption naming each null row's paired window when the rows do not all share one (PM/CIO: Book 2's EW /
-    MinVar / ERC rows cover 67 months to 2026-08 while the Backbone row covers 68 to 2026-09)."""
+    """Caption naming each null row's paired window (PM/CIO: when Book 2's EW / MinVar / ERC rows covered 67 months to
+    2026-08 the Backbone row covered 68 to 2026-09; with every row on one window, that window is stated explicitly)."""
     groups = {}
     for r in nulls:
         groups.setdefault((r.get('start'), r.get('end'), r.get('n')), []).append(r['label'])
-    if len(groups) < 2:
+    if not groups:
         return ''
+    if len(groups) == 1:
+        (start, end, n), labels = next(iter(groups.items()))
+        return p(f"Windows: {', '.join(labels)}: {start} to {end}, {integer(n)} months each.", 'caption null-windows')
     latest = max(k[1] for k in groups if k[1])
     parts = []
     for (start, end, n), labels in groups.items():
@@ -254,9 +275,8 @@ def comparison(d, c, label, core_label=LIVE_CORE):
     rt, st = c.get('return_test') or {}, c.get('sharpe_test') or {}
     out += p(f"HAC return difference (Newey–West t): NW t {num(rt.get('nw_t'))}; two-sided p {num(rt.get('p_two_sided'))}.")
     if st and d['label'] != 'VOID':
-        sig = 'not significant' if not st.get('significant_5pct_two_sided') else 'significant at 5%'
         out += p(f"LW2008 HAC Sharpe difference: z {num(st.get('z'))}; one-sided p {num(st.get('p_one_sided'))}; "
-                 f"two-sided p {num(st.get('p_two_sided'))} ({sig}).")
+                 f"two-sided p {num(st.get('p_two_sided'))}.")
     return out + p(power(c), 'power')
 
 
@@ -534,11 +554,10 @@ def subject_body(d, manifest):
     rows = []
     for r in d.get('vs_nulls',[]):
         st = r.get('sharpe_test') or {}
-        sig = '—' if not st else ('not significant' if not st.get('significant_5pct_two_sided') else 'significant at 5%')
         rows.append([text(r['label']) + (' (primary)' if r.get('primary') else ''),num(r['diff'].get('sharpe_exbil')),
-                     num(st.get('z')),num(st.get('p_one_sided')),num(st.get('p_two_sided')),sig,
+                     num(st.get('z')),p3(st.get('p_one_sided')),p3(st.get('p_two_sided')),null_note(d, r),
                      num((r.get('return_test') or {}).get('nw_t')),integer(r['n']),num(r.get('power',{}).get('detectable_sharpe_gap')),power(r)])
-    parts.append((table(['Null','Sharpe ex-BIL diff','z (LW2008)','p (one-sided)','p (two-sided)','Significance (two-sided 5%)',
+    parts.append((table(['Null','Sharpe ex-BIL diff','z (LW2008)','p (one-sided)','p (two-sided)','Note',
                          'NW t','Months','Detectable gap','Power'],rows,'Own null comparisons (Sharpe ex-BIL, own paired months)')
                    + null_windows_caption(d.get('vs_nulls', [])))
                  if rows else p('No pre-registered null saved.'))

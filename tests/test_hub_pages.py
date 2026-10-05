@@ -45,7 +45,7 @@ def allowed_numbers(value):
     if isinstance(value,list):
         return set().union(*(allowed_numbers(v) for v in value))
     if isinstance(value,(int,float)) and not isinstance(value,bool):
-        result = {hub.num(value),hub.pct(value),hub.pp(value).split()[0]}
+        result = {hub.num(value),hub.p3(value),hub.pct(value),hub.pp(value).split()[0]}   # p3: null-table p-values (#57)
         if int(value)==value: result.add(hub.integer(value))
         return result
     # Recorded verdicts, power sentences, dates and source identifiers are saved
