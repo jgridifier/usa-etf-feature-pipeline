@@ -59,3 +59,6 @@
   .nav-open .site-header .site-nav { display: flex; }
   .site-header .site-nav a { display: flex; }
 }
+/* Anchor targets land below the sticky header (49px tall: 4px rule + 44px row + 1px border). This file is linked only
+   from pages that get the injected header, so the rule reaches only those pages; Quant's bytes are unchanged. */
+:target, [id] { scroll-margin-top: 60px; }

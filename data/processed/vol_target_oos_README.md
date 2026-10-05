@@ -8,5 +8,7 @@ The top-level copies were retired. They ended at the partial day 2026-09-16 and 
 - **Frozen research run (cash = 0, ends 2026-09-16), bytes unchanged:** `data/processed/frozen/vol_target_cash0_2026-09-16/`.
   Only the gate audits read it (`cash_null_audit.gate_frames`, `epo_allocator.PUBLISHED_BOOK1`).
 
+Record of the move: `data/processed/prices_fix_2026-10/vol_target_top_level_retirement.json`.
+
 `tests/test_vol_target_live_only.py` fails if a page build, hub builder or app data import reads `vol_target_oos_*`
 from anywhere but `live/`.

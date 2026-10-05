@@ -78,8 +78,12 @@ def test_header_css_is_scoped_to_the_injected_header():
             part = part.strip()
             if part.startswith(('(', 'media')) or not part:
                 continue
+            if part in (':target', '[id]'):      # anchor offset under the sticky header (PM, 2026-10-04)
+                continue
             assert re.match(r'(\.nav-open\s+)?\.(site-header|lab-backlink)\b', part), part
     assert 'http' not in css
+    rule = re.search(r':target,\s*\[id\]\s*\{([^}]*)\}', css)
+    assert rule and rule.group(1).strip() == 'scroll-margin-top: 60px;', rule
 
 
 def test_beat_benchmark_header_glossary_link_resolves_to_the_index_glossary():
@@ -95,3 +99,35 @@ def test_beat_benchmark_header_glossary_link_resolves_to_the_index_glossary():
         path, frag = href.split('#')
         assert (DOCS / rel).parent.joinpath(path).resolve() == index.resolve(), (rel, href)
         assert frag == 'glossary', (rel, href)
+
+
+@pytest.mark.parametrize('width', [375, 768, 1280])
+def test_glossary_anchor_lands_below_the_sticky_header(width):
+    """PM, 2026-10-04: the header's Glossary link must not hide the heading under the sticky header."""
+    import functools, http.server, json, os, shutil, subprocess, threading
+    chrome = next((shutil.which(n) for n in (os.environ.get('CHROME'), 'google-chrome', 'google-chrome-stable',
+                                             'chromium', 'chromium-browser') if n and shutil.which(n)), None)
+    node = shutil.which('node')
+    if chrome is None or node is None:
+        if os.environ.get('CI'):
+            pytest.fail('headless Chrome and node are required in CI')
+        pytest.skip('no Chrome/node available locally')
+    handler = functools.partial(http.server.SimpleHTTPRequestHandler, directory=str(DOCS))
+    handler.log_message = lambda *a, **k: None
+    server = http.server.ThreadingHTTPServer(('127.0.0.1', 0), handler)
+    threading.Thread(target=server.serve_forever, daemon=True).start()
+    url = f'http://127.0.0.1:{server.server_address[1]}/methods/beat_benchmark/index.html#glossary'
+    probe = ("(() => { const h = document.getElementById('glossary'), s = document.querySelector('.site-header');"
+             " return {top: h.getBoundingClientRect().top, bottom: s.getBoundingClientRect().bottom,"
+             " scrollY: window.scrollY, tag: h.tagName, margin: getComputedStyle(h).scrollMarginTop}; })()")
+    try:
+        cfg = {'urls': [url], 'expression': probe, 'settle_ms': 1500, 'width': width, 'height': 812 if width < 1000 else 900,
+               'mobile': width < 1000}
+        out = subprocess.run([node, '--experimental-websocket', str(ROOT / 'tests/tools/cdp375.mjs'), chrome, json.dumps(cfg)],
+                             capture_output=True, text=True, timeout=300, check=True).stdout
+    finally:
+        server.shutdown()
+    r = json.loads(out.strip().splitlines()[-1])[url]
+    assert r['tag'] == 'H2' and r['margin'] == '60px', r
+    assert r['scrollY'] > 0, r                       # the fragment navigation actually scrolled
+    assert r['top'] >= r['bottom'], (width, r)

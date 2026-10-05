@@ -89,7 +89,7 @@ def book2_reframe_banner() -> str:
 
 # Callable banners are computed from data at build time; a list renders one callout per entry, in order.
 NOTE_BANNERS['stage2_wrap'] = backbone_cagr_banner
-NOTE_BANNERS['book2_reframe'] = [book2_reframe_banner, SEPT_FIX_BANNER]
+NOTE_BANNERS['book2_reframe'] = book2_reframe_banner   # the only correction on this note (PM + CIO, 2026-10-04)
 
 
 def _inline(text: str) -> str:

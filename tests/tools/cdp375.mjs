@@ -1,5 +1,6 @@
 // Headless-Chrome check at a phone viewport (375x812, mobile): node --experimental-websocket cdp375.mjs <chrome> <json>
-// <json> = {"urls": [...], "expression": "<JS returning a JSON-able value>", "shots": {"url": "out.png"}}
+// <json> = {"urls": [...], "expression": "<JS returning a JSON-able value>", "shots": {"url": "out.png"},
+//           "width": 375, "height": 812, "mobile": true}   (viewport optional; defaults to the 375x812 phone)
 // Prints {url: value} as JSON. Used by tests/test_mobile_375.py and to take the PM screenshots.
 import {spawn} from 'node:child_process';
 import {mkdtempSync, writeFileSync} from 'node:fs';
@@ -19,7 +20,8 @@ let id = 0; const pending = new Map(); let loaded = false;
 ws.onmessage = e => { const m = JSON.parse(e.data); if (m.id && pending.has(m.id)) { pending.get(m.id)(m); pending.delete(m.id); } else if (m.method === 'Page.loadEventFired') loaded = true; };
 const send = (method, params = {}) => new Promise(r => { const i = ++id; pending.set(i, r); ws.send(JSON.stringify({id: i, method, params})); });
 await send('Page.enable'); await send('Runtime.enable');
-await send('Emulation.setDeviceMetricsOverride', {width: 375, height: 812, deviceScaleFactor: 2, mobile: true});
+await send('Emulation.setDeviceMetricsOverride', {width: cfg.width ?? 375, height: cfg.height ?? 812, deviceScaleFactor: 2,
+  mobile: cfg.mobile ?? true});
 const out = {};
 for (const url of cfg.urls) {
   loaded = false;

@@ -50,12 +50,48 @@ def test_demiguel_book_rule_caption_names_the_standin_weights():
     assert 'stand-in core only (70% IVV / 20% QQQ / 10% IJR)' in cap
 
 
-def test_superseded_banner_on_both_book2_notes_md_untouched():
+def test_one_correction_per_figure_and_book2_reframe_lab_note_shows_hub_sharpe():
+    """PM + CIO, 2026-10-04: the 2026-10-04 lab note is the only correction on book2_reframe (the earlier
+    'Superseded: Book 2 Sharpe ex-BIL is 0.99' callout was removed there; book2_lw2008_drawdowns keeps it).
+    (1) The lab note shows Book 2's Sharpe from book2.json. (2) No published page carries two correction callouts or
+    banners for the same figure."""
+    import html as _h
+    b2 = json.loads((ROOT / 'data/processed/hub/subjects/book2.json').read_text(encoding='utf-8'))
+    sharpe = f"{b2['books_window']['sharpe_exbil']:.2f}"
+    assert sharpe == '0.99'
+    raw = read('notes/book2_reframe.html')
+    lab = [_h.unescape(t) for t in re.findall(r'<p class="callout note-banner" role="note">(.*?)</p>', raw, re.S)]
+    assert len(lab) == 1 and lab[0].startswith('Lab note, 2026-10-04:'), lab
+    assert f"Book 2's Sharpe above BIL is {sharpe}" in lab[0], lab[0]
+    assert BANNER not in raw
+    if '<h1' in raw:
+        assert raw.index('Lab note, 2026-10-04:') < raw.index('<h1')
+    assert BANNER in read('notes/book2_lw2008_drawdowns.html')
     for slug in ('book2_reframe', 'book2_lw2008_drawdowns'):
-        raw = read(f'notes/{slug}.html')
-        assert raw.count(BANNER) == 1
-        assert raw.index(BANNER) < raw.index('<h1') if '<h1' in raw else True
-        assert BANNER not in read(f'notes/{slug}.md')
+        assert BANNER not in read(f'notes/{slug}.md') and 'Lab note' not in read(f'notes/{slug}.md')
+    figures = {   # figure label -> pattern in a correction's text
+        'Book 2 Sharpe': r"Book 2(?:'s)? Sharpe",
+        'Backbone CAGR': r'\b[Bb]ackbone\b[^.;]{0,40}\bCAGR\b',
+        'Book 2 vs backbone return gap': r'points a year',
+        'Book 2 / backbone drawdown': r'drawdowns? (?:are|is) still',
+    }
+    corr = re.compile(r'<(p|div|aside|section)\b[^>]*class="[^"]*\b(?:note-banner|lab-note|correction|banner)\b[^"]*"[^>]*>(.*?)</\1>', re.S)
+    seen = {}
+    for page in sorted(DOCS.rglob('*.html')):
+        if '/assets/' in str(page):
+            continue
+        texts = [_h.unescape(re.sub(r'<[^>]+>', ' ', m.group(2))) for m in corr.finditer(page.read_text(encoding='utf-8'))]
+        for label, rx in figures.items():
+            n = sum(bool(re.search(rx, t)) for t in texts)
+            assert n <= 1, (page.relative_to(DOCS).as_posix(), label, n, texts)
+            if n:
+                seen.setdefault(page.relative_to(DOCS).as_posix(), []).append(label)
+    assert 'Backbone CAGR' in seen['notes/stage2_wrap.html'], seen
+    assert {'Book 2 Sharpe', 'Backbone CAGR', 'Book 2 vs backbone return gap', 'Book 2 / backbone drawdown'} <= set(seen['notes/book2_reframe.html']), seen
+    # the check bites: a second Book 2 Sharpe callout on book2_reframe fails it
+    doubled = raw.replace('</h1>', '</h1><p class="callout note-banner" role="note">' + BANNER + '</p>', 1) if '</h1>' in raw else raw + '<p class="callout note-banner">' + BANNER + '</p>'
+    texts = [_h.unescape(re.sub(r'<[^>]+>', ' ', m.group(2))) for m in corr.finditer(doubled)]
+    assert sum(bool(re.search(figures['Book 2 Sharpe'], t)) for t in texts) == 2
 
 
 def test_comparison_labelled_to_2026_08_until_m3_p2_rerun():
